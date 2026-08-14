@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Northstar | AI Resume Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link rel="stylesheet" href="css/northstar.css">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "error": "#ba1a1a",
+                    "surface": "#f7f9fb",
+                    "tertiary-container": "#0d1c2f",
+                    "surface-variant": "#e0e3e5",
+                    "on-primary-container": "#7c839b",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-fixed-dim": "#bec6e0",
+                    "on-surface": "#191c1e",
+                    "surface-tint": "#565e74",
+                    "on-background": "#191c1e",
+                    "tertiary": "#000000",
+                    "secondary": "#6d5e00",
+                    "primary-fixed": "#dae2fd",
+                    "on-primary": "#ffffff",
+                    "surface-container-low": "#f2f4f6",
+                    "tertiary-fixed": "#d5e3fd",
+                    "on-error-container": "#93000a",
+                    "on-primary-fixed": "#131b2e",
+                    "secondary-fixed-dim": "#e2c62d",
+                    "background": "#f7f9fb",
+                    "on-tertiary-fixed-variant": "#3a485c",
+                    "primary-container": "#131b2e",
+                    "tertiary-fixed-dim": "#b9c7e0",
+                    "outline": "#76777d",
+                    "surface-container": "#eceef0",
+                    "on-tertiary-container": "#76859b",
+                    "on-surface-variant": "#45464d",
+                    "on-secondary": "#ffffff",
+                    "on-secondary-fixed": "#211b00",
+                    "outline-variant": "#c6c6cd",
+                    "surface-container-highest": "#e0e3e5",
+                    "on-error": "#ffffff",
+                    "surface-container-high": "#e6e8ea",
+                    "on-tertiary-fixed": "#0d1c2f",
+                    "primary": "#0d1c2f",
+                    "surface-dim": "#d8dadc",
+                    "surface-bright": "#f7f9fb",
+                    "secondary-fixed": "#ffe24c",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary-fixed-variant": "#524600",
+                    "inverse-on-surface": "#eff1f3",
+                    "secondary-container": "#fcdf46",
+                    "inverse-surface": "#2d3133",
+                    "error-container": "#ffdad6",
+                    "on-secondary-container": "#726200",
+                    "inverse-primary": "#bec6e0",
+                    "on-primary-fixed-variant": "#3f465c"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "2xl": "1rem",
+                    "3xl": "1.5rem",
+                    "full": "9999px"
+            }
+          },
+        },
+      }
+</script>
+
+<style>
+/* Print Stylesheet for ATS Single Page Export */
+@media print {
+  body {
+    background: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .app-frame {
+    max-w-none !important;
+    width: 100% !important;
+    min-height: auto !important;
+    max-height: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+  .no-print, header, nav, .status-bar-wrapper, .view-mode-tabs, .action-buttons-toolbar {
+    display: none !important;
+  }
+  #printable-resume {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+  .edit-bullet-btn, .delete-bullet-btn, .add-bullet-btn {
+    display: none !important;
+  }
+  [contenteditable] {
+    border: none !important;
+    outline: none !important;
+  }
+}
+</style>
+</head>
+<body class="bg-slate-950 min-h-screen flex items-center justify-center p-0 sm:py-6 text-on-surface">
+
+<!-- Mobile Frame Shell -->
+<div class="app-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-surface sm:rounded-[44px] shadow-[0_0_60px_rgba(0,0,0,0.6)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800">
+
+    <!-- Top Status Bar -->
+    <div class="bg-surface px-6 pt-3 pb-1 flex justify-between items-center text-xs font-semibold text-slate-500 z-50 select-none status-bar-wrapper">
+        <span class="status-clock">9:41</span>
+        <div class="w-16 h-4 bg-slate-900 rounded-full flex items-center justify-center">
+            <div class="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
+        </div>
+        <div class="flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-xs">signal_cellular_4_bar</span>
+            <span class="material-symbols-outlined text-xs">wifi</span>
+            <span class="material-symbols-outlined text-xs text-amber-500">battery_50</span>
+        </div>
+    </div>
+
+    <!-- App Header -->
+    <header class="bg-surface/90 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center w-full px-6 py-3 border-b border-slate-200/60 no-print">
+        <div class="flex items-center gap-3">
+            <a href="seeker-dashboard.html" class="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center text-primary hover:bg-slate-200 transition-colors">
+                <span class="material-symbols-outlined text-lg">arrow_back</span>
+            </a>
+            <div>
+                <h1 class="text-base font-extrabold text-primary flex items-center gap-1">
+                    <span class="material-symbols-outlined text-amber-500 text-lg">auto_awesome</span> AI Resume Builder
+                </h1>
+                <p class="text-[11px] text-slate-500 font-medium">Empowering your career step-by-step</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-1">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                Gemini 2.5 AI
+            </span>
+        </div>
+    </header>
+
+    <!-- View Mode Selector Tabs -->
+    <div class="bg-slate-100 px-4 py-2 border-b border-slate-200 flex justify-between gap-1 select-none no-print view-mode-tabs">
+        <button id="tab-wizard" onclick="switchView('wizard')" class="flex-1 py-1.5 text-xs font-bold rounded-xl text-center bg-primary text-white shadow-sm transition-all flex items-center justify-center gap-1">
+            <span class="material-symbols-outlined text-sm">edit_note</span> Guided Wizard
+        </button>
+        <button id="tab-preview" onclick="switchView('preview')" class="flex-1 py-1.5 text-xs font-bold rounded-xl text-center text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center gap-1">
+            <span class="material-symbols-outlined text-sm">badge</span> Resume Preview
+        </button>
+        <button id="tab-text" onclick="switchView('text')" class="flex-1 py-1.5 text-xs font-bold rounded-xl text-center text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center gap-1">
+            <span class="material-symbols-outlined text-sm">description</span> Clean ATS Text
+        </button>
+    </div>
+
+    <!-- Main Scrollable Content Area -->
+    <main class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5 pb-40">
+
+        <!-- VIEW 1: GUIDED WIZARD FORM -->
+        <div id="view-wizard-container" class="space-y-5">
+            <!-- Low-Barrier Welcome Banner -->
+            <div class="glass-card-dark rounded-2xl p-4 text-white space-y-2 relative overflow-hidden">
+                <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-amber-400/20 rounded-full blur-xl pointer-events-none"></div>
+                <div class="flex items-center gap-2 text-secondary-fixed font-bold text-xs">
+                    <span class="material-symbols-outlined text-sm">star</span> NO FANCY RESUME NEEDED
+                </div>
+                <h2 class="text-sm font-extrabold leading-tight text-white">Turn your everyday skills & informal work into a powerful job resume.</h2>
+                <p class="text-xs text-slate-300">Tap your experience, licenses, or volunteer tasks. Our AI handles the professional formatting.</p>
+            </div>
+
+            <!-- Step Indicator Progress -->
+            <div class="flex justify-between items-center text-xs font-bold text-slate-500 px-1">
+                <span id="wizard-step-label">Step 1 of 4: Contact Information</span>
+                <span id="wizard-progress-percent" class="text-primary font-black">25%</span>
+            </div>
+            <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                <div id="wizard-progress-bar" class="bg-amber-400 h-full w-1/4 transition-all duration-300"></div>
+            </div>
+
+            <!-- WIZARD STEP 1: CONTACT INFO -->
+            <section id="step-1" class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-4">
+                <h3 class="text-xs font-black tracking-wider uppercase text-primary flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-amber-500 text-sm">person</span> 1. Basic Contact Details
+                </h3>
+
+                <div class="space-y-3 text-xs">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Your Name <span class="text-red-500">*</span></label>
+                        <input type="text" id="input-name" placeholder="e.g. Alex Johnson" class="w-full rounded-xl border border-slate-300 p-2.5 text-xs focus:ring-2 focus:ring-amber-400 font-semibold" required value="Alex Johnson">
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Phone Number (or Message Phone)</label>
+                        <input type="text" id="input-phone" placeholder="e.g. (555) 234-5678" class="w-full rounded-xl border border-slate-300 p-2.5 text-xs focus:ring-2 focus:ring-amber-400" value="(555) 234-5678">
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">Shelter / Case Worker / Email Contact</label>
+                        <input type="text" id="input-contact" placeholder="e.g. St. Jude Shelter Contact / alex.j@email.com" class="w-full rounded-xl border border-slate-300 p-2.5 text-xs focus:ring-2 focus:ring-amber-400" value="Shelter Contact: St. Jude Hope Center / alex.j@email.com">
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">City, State / Zip Code</label>
+                        <input type="text" id="input-location" placeholder="e.g. Seattle, WA 98101" class="w-full rounded-xl border border-slate-300 p-2.5 text-xs focus:ring-2 focus:ring-amber-400" value="Seattle, WA 98101">
+                    </div>
+                </div>
+            </section>
+
+            <!-- WIZARD STEP 2: WORK & INFORMAL EXPERIENCE -->
+            <section id="step-2" class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-4">
+                <h3 class="text-xs font-black tracking-wider uppercase text-primary flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-amber-500 text-sm">work</span> 2. Experience & Informal Tasks
+                </h3>
+                <p class="text-xs text-slate-500">Tap all jobs, volunteer work, day labor, or informal tasks you have done:</p>
+
+                <div class="flex flex-wrap gap-2" id="experience-chips-container">
+                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-amber-100 border-amber-400 text-amber-900 active-chip" data-val="Day Labor">
+                        🛠️ Day Labor
+                    </button>
+                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-amber-100 border-amber-400 text-amber-900 active-chip" data-val="Kitchen & Food Prep">
+                        🍳 Kitchen & Food Prep
+                    </button>
+                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-amber-100 border-amber-400 text-amber-900 active-chip" data-val="Shelter & Pantry Volunteering">
+                        🤝 Shelter & Pantry Volunteering
+                    </button>
+                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-300 text-slate-700" data-val="Warehouse & Freight">
+                        📦 Warehouse & Freight
+                    </button>
+                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-300 text-slate-700" data-val="Caregiving & Family Support">
+                        ❤️ Caregiving & Support
+                    </button>
+                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-300 text-slate-700" data-val="Janitorial & Cleaning">
+                        🧹 Janitorial & Cleaning
+                    </button>
+                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-300 text-slate-700" data-val="Landscaping & Grounds Keeping">
+                        🌱 Landscaping & Yardwork
+                    </button>
+                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-300 text-slate-700" data-val="Retail & Customer Service">
+                        🛒 Customer Service
+                    </button>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Optional Details / Brief Description</label>
+                    <textarea id="input-informal-notes" rows="2" placeholder="e.g. Prepped food for 100+ daily meals, unloaded delivery trucks, organized food pantry inventory..." class="w-full rounded-xl border border-slate-300 p-2.5 text-xs focus:ring-2 focus:ring-amber-400">Prepped daily meals, sanitized workstations, unloaded supply trucks, and organized community pantry storage.</textarea>
+                </div>
+            </section>
+
+            <!-- WIZARD STEP 3: SKILLS & CERTIFICATIONS -->
+            <section id="step-3" class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-4">
+                <h3 class="text-xs font-black tracking-wider uppercase text-primary flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-amber-500 text-sm">verified</span> 3. Practical Skills & Badges
+                </h3>
+                <p class="text-xs text-slate-500">Select any certifications, strengths, or practical skills you have:</p>
+
+                <div class="flex flex-wrap gap-2" id="skills-chips-container">
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-amber-100 border-amber-400 text-amber-900 active-chip" data-val="Food Handler Card">
+                        📜 Food Handler Card
+                    </button>
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-amber-100 border-amber-400 text-amber-900 active-chip" data-val="Forklift Certified">
+                        🚜 Forklift Certified
+                    </button>
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-amber-100 border-amber-400 text-amber-900 active-chip" data-val="Heavy Lifting 50+ lbs">
+                        💪 Heavy Lifting 50+ lbs
+                    </button>
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-amber-100 border-amber-400 text-amber-900 active-chip" data-val="Reliable & Punctual">
+                        ⏰ Reliable & Punctual
+                    </button>
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-300 text-slate-700" data-val="Bilingual / Multilingual">
+                        🗣️ Bilingual
+                    </button>
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-300 text-slate-700" data-val="OSHA 10 Safety">
+                        🪖 OSHA 10 Safety
+                    </button>
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-300 text-slate-700" data-val="Pallet Jack Operator">
+                        📦 Pallet Jack
+                    </button>
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-300 text-slate-700" data-val="First Aid & CPR">
+                        🩹 First Aid / CPR
+                    </button>
+                </div>
+            </section>
+
+            <!-- WIZARD STEP 4: TARGET JOB TYPES -->
+            <section id="step-4" class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-4">
+                <h3 class="text-xs font-black tracking-wider uppercase text-primary flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-amber-500 text-sm">target</span> 4. Target Job Types
+                </h3>
+                <p class="text-xs text-slate-500">What kind of job are you looking for right now?</p>
+
+                <div class="flex flex-wrap gap-2" id="roles-chips-container">
+                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-amber-100 border-amber-400 text-amber-900 active-chip" data-val="Kitchen Prep & Dishwasher">
+                        🍽️ Kitchen Staff & Prep
+                    </button>
+                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-amber-100 border-amber-400 text-amber-900 active-chip" data-val="Warehouse & Logistics Associate">
+                        🏢 Warehouse Associate
+                    </button>
+                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-amber-100 border-amber-400 text-amber-900 active-chip" data-val="General Laborer">
+                        🏗️ General Laborer
+                    </button>
+                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-300 text-slate-700" data-val="Sanitation & Janitorial">
+                        🧼 Sanitation & Custodial
+                    </button>
+                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-300 text-slate-700" data-val="Retail Stocker & Cashier">
+                        🛒 Retail Stocker
+                    </button>
+                </div>
+            </section>
+
+            <!-- Sticky Action Container for Generate Button -->
+            <div class="sticky bottom-0 z-30 pt-3 pb-8 bg-gradient-to-t from-surface via-surface/95 to-transparent">
+                <button id="btn-generate-resume" onclick="generateResume()" class="w-full py-4 bg-primary text-secondary-fixed font-black text-sm rounded-2xl shadow-2xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2 starlight-pulse border-2 border-amber-400">
+                    <span class="material-symbols-outlined text-lg">auto_awesome</span> Generate AI Resume with Gemini
+                </button>
+            </div>
+        </div>
+
+        <!-- LOADING INDICATOR -->
+        <div id="loading-spinner" class="hidden flex-col items-center justify-center py-16 space-y-4 text-center">
+            <div class="w-16 h-16 border-4 border-amber-200 border-t-amber-500 rounded-full animate-spin"></div>
+            <div>
+                <h3 class="text-sm font-extrabold text-primary">Crafting Your Professional Resume...</h3>
+                <p class="text-xs text-slate-500 max-w-xs mt-1">Google Gemini is converting your skills into strong ATS action verbs and bullet points.</p>
+            </div>
+        </div>
+
+        <!-- VIEW 2: INTERACTIVE RESUME PREVIEW -->
+        <div id="view-preview-container" class="hidden space-y-4">
+            
+            <!-- Quick Actions Toolbar -->
+            <div class="flex items-center justify-between gap-2 bg-slate-900 text-white p-3 rounded-2xl shadow-md no-print action-buttons-toolbar">
+                <span class="text-xs font-bold text-amber-400 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">edit</span> Tap text to edit
+                </span>
+                <div class="flex items-center gap-2">
+                    <button onclick="copyCleanText()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-colors border border-slate-700">
+                        <span class="material-symbols-outlined text-xs">content_copy</span> Copy Text
+                    </button>
+                    <button onclick="exportToPDF()" class="px-3 py-1.5 bg-amber-400 text-slate-950 hover:bg-amber-300 rounded-xl text-xs font-bold flex items-center gap-1 transition-colors">
+                        <span class="material-symbols-outlined text-xs">print</span> Print / PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- PRINTABLE ATS RESUME CARD -->
+            <div id="printable-resume" class="bg-white border border-slate-300 rounded-2xl p-5 shadow-lg space-y-5 text-slate-900 font-sans">
+                
+                <!-- Resume Header -->
+                <div class="border-b-2 border-slate-900 pb-3 text-center sm:text-left">
+                    <h1 id="res-name" contenteditable="true" class="text-xl font-extrabold text-slate-900 tracking-tight outline-none focus:bg-amber-50 rounded px-1">
+                        Alex Johnson
+                    </h1>
+                    <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold text-slate-600 mt-1 justify-center sm:justify-start">
+                        <span id="res-phone" contenteditable="true" class="outline-none focus:bg-amber-50 rounded px-1">(555) 234-5678</span>
+                        <span>•</span>
+                        <span id="res-location" contenteditable="true" class="outline-none focus:bg-amber-50 rounded px-1">Seattle, WA 98101</span>
+                        <span>•</span>
+                        <span id="res-contact" contenteditable="true" class="outline-none focus:bg-amber-50 rounded px-1">Shelter Contact: St. Jude Hope Center / alex.j@email.com</span>
+                    </div>
+                </div>
+
+                <!-- Professional Summary -->
+                <div class="space-y-1.5">
+                    <h2 class="text-xs font-black uppercase tracking-wider text-slate-900 border-b border-slate-200 pb-1">
+                        Professional Summary
+                    </h2>
+                    <p id="res-summary" contenteditable="true" class="text-xs text-slate-700 leading-relaxed outline-none focus:bg-amber-50 rounded p-1">
+                        Dependable, hardworking team member with hands-on experience in kitchen preparation, warehouse logistics, and general labor. Proven track record of punctuality, safety compliance, and physical stamina. Possesses a valid Food Handler Card and Forklift Certification.
+                    </p>
+                </div>
+
+                <!-- Skills & Certifications -->
+                <div class="space-y-1.5">
+                    <h2 class="text-xs font-black uppercase tracking-wider text-slate-900 border-b border-slate-200 pb-1">
+                        Core Competencies & Skills
+                    </h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                        <div>
+                            <span class="font-bold text-slate-900">Certifications & Licenses:</span>
+                            <ul id="res-skills-certs" contenteditable="true" class="list-disc list-inside text-slate-700 outline-none focus:bg-amber-50 rounded p-1">
+                                <li>State Food Handler Card</li>
+                                <li>Forklift Safety Certification</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <span class="font-bold text-slate-900">Practical & Soft Skills:</span>
+                            <ul id="res-skills-practical" contenteditable="true" class="list-disc list-inside text-slate-700 outline-none focus:bg-amber-50 rounded p-1">
+                                <li>Heavy Lifting (50+ lbs) & Freight Handling</li>
+                                <li>Reliability, Punctuality & Team Collaboration</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Work Experience -->
+                <div class="space-y-3">
+                    <h2 class="text-xs font-black uppercase tracking-wider text-slate-900 border-b border-slate-200 pb-1">
+                        Work & Practical Experience
+                    </h2>
+                    
+                    <div id="res-experience-list" class="space-y-3">
+                        <!-- Dynamic Experience Items -->
+                        <div class="space-y-1 exp-block">
+                            <div class="flex justify-between items-baseline text-xs font-bold text-slate-900">
+                                <span contenteditable="true" class="exp-role outline-none focus:bg-amber-50 rounded">Logistics & General Operations Worker</span>
+                                <span contenteditable="true" class="exp-duration text-slate-500 font-medium outline-none focus:bg-amber-50 rounded">Recent</span>
+                            </div>
+                            <div contenteditable="true" class="exp-org text-xs text-slate-600 italic outline-none focus:bg-amber-50 rounded">
+                                Independent Work & Day Labor Operations
+                            </div>
+                            <ul class="exp-bullets list-disc list-inside text-xs text-slate-700 space-y-1 outline-none focus:bg-amber-50 rounded p-1">
+                                <li contenteditable="true">Unloaded commercial freight trucks and safely stacked heavy inventory up to 50 lbs.</li>
+                                <li contenteditable="true">Operated forklift and manual material handling equipment following strict workplace safety guidelines.</li>
+                                <li contenteditable="true">Collaborated with site supervisors to complete daily tasks efficiently.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Education & Training -->
+                <div class="space-y-1.5">
+                    <h2 class="text-xs font-black uppercase tracking-wider text-slate-900 border-b border-slate-200 pb-1">
+                        Certifications & Education
+                    </h2>
+                    <ul id="res-education" contenteditable="true" class="list-disc list-inside text-xs text-slate-700 outline-none focus:bg-amber-50 rounded p-1">
+                        <li>High School Diploma / GED</li>
+                        <li>Workplace Safety & Hazard Awareness Training</li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <!-- Bottom Action Toolbar -->
+            <div class="flex gap-2 pt-2 no-print">
+                <button onclick="switchView('wizard')" class="flex-1 py-3 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-1">
+                    <span class="material-symbols-outlined text-sm">tune</span> Edit Inputs
+                </button>
+                <button onclick="copyCleanText()" class="flex-1 py-3 bg-primary text-white font-bold text-xs rounded-xl shadow-md hover:bg-slate-800 transition-colors flex items-center justify-center gap-1">
+                    <span class="material-symbols-outlined text-sm">content_copy</span> Copy ATS Text
+                </button>
+            </div>
+        </div>
+
+        <!-- VIEW 3: CLEAN ATS PLAIN TEXT MODE -->
+        <div id="view-text-container" class="hidden space-y-4">
+            <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-amber-900 text-xs space-y-1">
+                <div class="font-extrabold flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">info</span> ATS Job Portal Plain Text Format
+                </div>
+                <p>Copy this raw text directly into online job applications, email submissions, or SMS application forms.</p>
+            </div>
+
+            <textarea id="ats-plain-text-area" rows="18" readonly class="w-full font-mono text-xs p-4 bg-slate-900 text-emerald-400 rounded-2xl border border-slate-800 shadow-inner focus:outline-none select-all"></textarea>
+
+            <button onclick="copyCleanText()" class="w-full py-3.5 bg-secondary-container text-on-secondary-container font-black text-xs rounded-xl shadow-md hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-sm">content_copy</span> Copy All Text to Clipboard
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bg-surface/95 backdrop-blur-lg border-t border-slate-200/80 fixed sm:absolute bottom-0 left-0 right-0 z-40 flex justify-around items-center px-2 py-2 select-none no-print">
+        <a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-3 py-1.5 transition-colors" href="index.html">
+            <span class="material-symbols-outlined text-xl">home</span>
+            <span class="text-[11px] font-medium">Home</span>
+        </a>
+        <a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-3 py-1.5 transition-colors" href="seeker-dashboard.html">
+            <span class="material-symbols-outlined text-xl">dashboard</span>
+            <span class="text-[11px] font-medium">Dashboard</span>
+        </a>
+        <a class="flex flex-col items-center justify-center text-secondary-fixed-variant font-bold bg-secondary-container rounded-2xl px-3 py-1.5 shadow-md starlight-glow" href="resume-builder.html">
+            <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">description</span>
+            <span class="text-[11px] font-bold">Resume</span>
+        </a>
+        <a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-3 py-1.5 transition-colors" href="resource-map.html">
+            <span class="material-symbols-outlined text-xl">map</span>
+            <span class="text-[11px] font-medium">Map</span>
+        </a>
+        <a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-3 py-1.5 transition-colors" href="call-shelter.html">
+            <span class="material-symbols-outlined text-xl">call</span>
+            <span class="text-[11px] font-medium">Shelter</span>
+        </a>
+    </nav>
+
+</div>
+
+<script src="js/northstar.js"></script>
+<script>
+// Resume Builder Specific JavaScript Logic
+
+document.addEventListener('DOMContentLoaded', () => {
+  initChipToggles();
+});
+
+function initChipToggles() {
+  const chipGroups = ['.chip-btn', '.skill-chip', '.role-chip'];
+  chipGroups.forEach(selector => {
+    document.querySelectorAll(selector).forEach(btn => {
+      btn.addEventListener('click', () => {
+        btn.classList.toggle('active-chip');
+        if (btn.classList.contains('active-chip')) {
+          btn.classList.remove('bg-slate-100', 'border-slate-300', 'text-slate-700');
+          btn.classList.add('bg-amber-100', 'border-amber-400', 'text-amber-900');
+        } else {
+          btn.classList.add('bg-slate-100', 'border-slate-300', 'text-slate-700');
+          btn.classList.remove('bg-amber-100', 'border-amber-400', 'text-amber-900');
+        }
+      });
+    });
+  });
+}
+
+function getSelectedChips(selector) {
+  const selected = [];
+  document.querySelectorAll(`${selector}.active-chip`).forEach(el => {
+    selected.push(el.dataset.val || el.innerText.trim());
+  });
+  return selected;
+}
+
+function switchView(viewName) {
+  const wizardContainer = document.getElementById('view-wizard-container');
+  const previewContainer = document.getElementById('view-preview-container');
+  const textContainer = document.getElementById('view-text-container');
+  
+  const tabWizard = document.getElementById('tab-wizard');
+  const tabPreview = document.getElementById('tab-preview');
+  const tabText = document.getElementById('tab-text');
+
+  // Reset tab styles
+  [tabWizard, tabPreview, tabText].forEach(t => {
+    t.className = "flex-1 py-1.5 text-xs font-bold rounded-xl text-center text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center gap-1";
+  });
+
+  wizardContainer.classList.add('hidden');
+  previewContainer.classList.add('hidden');
+  textContainer.classList.add('hidden');
+
+  if (viewName === 'wizard') {
+    wizardContainer.classList.remove('hidden');
+    tabWizard.className = "flex-1 py-1.5 text-xs font-bold rounded-xl text-center bg-primary text-white shadow-sm transition-all flex items-center justify-center gap-1";
+  } else if (viewName === 'preview') {
+    previewContainer.classList.remove('hidden');
+    tabPreview.className = "flex-1 py-1.5 text-xs font-bold rounded-xl text-center bg-primary text-white shadow-sm transition-all flex items-center justify-center gap-1";
+  } else if (viewName === 'text') {
+    textContainer.classList.remove('hidden');
+    tabText.className = "flex-1 py-1.5 text-xs font-bold rounded-xl text-center bg-primary text-white shadow-sm transition-all flex items-center justify-center gap-1";
+    generatePlainText();
+  }
+}
+
+async function generateResume() {
+  const name = document.getElementById('input-name').value.trim();
+  const phone = document.getElementById('input-phone').value.trim();
+  const contactInfo = document.getElementById('input-contact').value.trim();
+  const location = document.getElementById('input-location').value.trim();
+  const informalNotes = document.getElementById('input-informal-notes').value.trim();
+
+  const experienceTypes = getSelectedChips('.chip-btn');
+  const skillsCertifications = getSelectedChips('.skill-chip');
+  const targetRoles = getSelectedChips('.role-chip');
+
+  if (!name) {
+    showNotification('Please enter your name.', 'error');
+    return;
+  }
+
+  // Show loading spinner
+  document.getElementById('view-wizard-container').classList.add('hidden');
+  document.getElementById('loading-spinner').classList.remove('hidden');
+  document.getElementById('loading-spinner').classList.add('flex');
+
+  try {
+    const response = await fetch('/api/generate-resume', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        phone,
+        contactInfo,
+        location,
+        experienceTypes,
+        informalNotes,
+        skillsCertifications,
+        targetRoles
+      })
+    });
+
+    const result = await response.json();
+
+    if (!result.success || !result.data) {
+      throw new Error(result.error || 'Failed to generate resume');
+    }
+
+    populateResumeData(result.data);
+    
+    // Hide spinner, show preview
+    document.getElementById('loading-spinner').classList.add('hidden');
+    document.getElementById('loading-spinner').classList.remove('flex');
+    switchView('preview');
+    showNotification('✨ AI Resume Generated Successfully!', 'success');
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById('loading-spinner').classList.add('hidden');
+    document.getElementById('loading-spinner').classList.remove('flex');
+    document.getElementById('view-wizard-container').classList.remove('hidden');
+    showNotification(`Error: ${err.message}`, 'error');
+  }
+}
+
+function populateResumeData(data) {
+  const c = data.contact_info || {};
+  document.getElementById('res-name').innerText = c.name || 'Alex Johnson';
+  document.getElementById('res-phone').innerText = c.phone || '';
+  document.getElementById('res-location').innerText = c.location || '';
+  document.getElementById('res-contact').innerText = c.contact || '';
+
+  document.getElementById('res-summary').innerText = data.summary || '';
+
+  // Certifications & Skills
+  const certsList = document.getElementById('res-skills-certs');
+  const practicalList = document.getElementById('res-skills-practical');
+  
+  if (data.skills) {
+    certsList.innerHTML = (data.skills.certifications || []).map(item => `<li contenteditable="true">${item}</li>`).join('');
+    practicalList.innerHTML = [...(data.skills.practical_skills || []), ...(data.skills.core_strengths || [])].map(item => `<li contenteditable="true">${item}</li>`).join('');
+  }
+
+  // Work Experience
+  const expContainer = document.getElementById('res-experience-list');
+  if (data.experience && data.experience.length > 0) {
+    expContainer.innerHTML = data.experience.map(exp => `
+      <div class="space-y-1 exp-block">
+          <div class="flex justify-between items-baseline text-xs font-bold text-slate-900">
+              <span contenteditable="true" class="exp-role outline-none focus:bg-amber-50 rounded">${exp.role}</span>
+              <span contenteditable="true" class="exp-duration text-slate-500 font-medium outline-none focus:bg-amber-50 rounded">${exp.duration}</span>
+          </div>
+          <div contenteditable="true" class="exp-org text-xs text-slate-600 italic outline-none focus:bg-amber-50 rounded">
+              ${exp.organization}
+          </div>
+          <ul class="exp-bullets list-disc list-inside text-xs text-slate-700 space-y-1 outline-none focus:bg-amber-50 rounded p-1">
+              ${(exp.bullets || []).map(b => `<li contenteditable="true">${b}</li>`).join('')}
+          </ul>
+      </div>
+    `).join('');
+  }
+
+  // Certifications & Education
+  const eduList = document.getElementById('res-education');
+  if (data.certifications_education) {
+    eduList.innerHTML = data.certifications_education.map(e => `<li contenteditable="true">${e}</li>`).join('');
+  }
+}
+
+function generatePlainText() {
+  const name = document.getElementById('res-name').innerText;
+  const phone = document.getElementById('res-phone').innerText;
+  const location = document.getElementById('res-location').innerText;
+  const contact = document.getElementById('res-contact').innerText;
+  const summary = document.getElementById('res-summary').innerText;
+
+  let text = `${name.toUpperCase()}\n`;
+  text += `${phone} | ${location}\n${contact}\n\n`;
+  text += `========================================\n`;
+  text += `PROFESSIONAL SUMMARY\n`;
+  text += `========================================\n`;
+  text += `${summary}\n\n`;
+
+  text += `========================================\n`;
+  text += `CORE COMPETENCIES & SKILLS\n`;
+  text += `========================================\n`;
+  document.querySelectorAll('#res-skills-certs li, #res-skills-practical li').forEach(li => {
+    text += `• ${li.innerText}\n`;
+  });
+  text += `\n`;
+
+  text += `========================================\n`;
+  text += `WORK & PRACTICAL EXPERIENCE\n`;
+  text += `========================================\n`;
+
+  document.querySelectorAll('.exp-block').forEach(block => {
+    const role = block.querySelector('.exp-role')?.innerText || '';
+    const duration = block.querySelector('.exp-duration')?.innerText || '';
+    const org = block.querySelector('.exp-org')?.innerText || '';
+    text += `${role.toUpperCase()} (${duration})\n${org}\n`;
+    block.querySelectorAll('.exp-bullets li').forEach(bullet => {
+      text += `  - ${bullet.innerText}\n`;
+    });
+    text += `\n`;
+  });
+
+  text += `========================================\n`;
+  text += `CERTIFICATIONS & EDUCATION\n`;
+  text += `========================================\n`;
+  document.querySelectorAll('#res-education li').forEach(li => {
+    text += `• ${li.innerText}\n`;
+  });
+
+  document.getElementById('ats-plain-text-area').value = text;
+}
+
+function copyCleanText() {
+  generatePlainText();
+  const textArea = document.getElementById('ats-plain-text-area');
+  navigator.clipboard.writeText(textArea.value).then(() => {
+    showNotification('📋 Clean ATS resume copied to clipboard!', 'success');
+  }).catch(err => {
+    showNotification('Copied to clipboard!', 'success');
+  });
+}
+
+function exportToPDF() {
+  window.print();
+}
+</script>
+</body>
+</html>

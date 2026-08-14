@@ -1,0 +1,16 @@
+{
+  "name": "northstar-homeless-nonprofit",
+  "version": "1.0.0",
+  "description": "NorthStar Homeless Nonprofit Portal & AI Resume Builder",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@google/genai": "^2.17.1",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  }
+}

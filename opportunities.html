@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Northstar | Job & Task Opportunities</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link rel="stylesheet" href="css/northstar.css">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "error": "#ba1a1a",
+                    "surface": "#f7f9fb",
+                    "tertiary-container": "#0d1c2f",
+                    "surface-variant": "#e0e3e5",
+                    "on-primary-container": "#7c839b",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-fixed-dim": "#bec6e0",
+                    "on-surface": "#191c1e",
+                    "surface-tint": "#565e74",
+                    "on-background": "#191c1e",
+                    "tertiary": "#000000",
+                    "secondary": "#6d5e00",
+                    "primary-fixed": "#dae2fd",
+                    "on-primary": "#ffffff",
+                    "surface-container-low": "#f2f4f6",
+                    "tertiary-fixed": "#d5e3fd",
+                    "on-error-container": "#93000a",
+                    "on-primary-fixed": "#131b2e",
+                    "secondary-fixed-dim": "#e2c62d",
+                    "background": "#f7f9fb",
+                    "on-tertiary-fixed-variant": "#3a485c",
+                    "primary-container": "#131b2e",
+                    "tertiary-fixed-dim": "#b9c7e0",
+                    "outline": "#76777d",
+                    "surface-container": "#eceef0",
+                    "on-tertiary-container": "#76859b",
+                    "on-surface-variant": "#45464d",
+                    "on-secondary": "#ffffff",
+                    "on-secondary-fixed": "#211b00",
+                    "outline-variant": "#c6c6cd",
+                    "surface-container-highest": "#e0e3e5",
+                    "on-error": "#ffffff",
+                    "surface-container-high": "#e6e8ea",
+                    "on-tertiary-fixed": "#0d1c2f",
+                    "primary": "#0d1c2f",
+                    "surface-dim": "#d8dadc",
+                    "surface-bright": "#f7f9fb",
+                    "secondary-fixed": "#ffe24c",
+                    "on-tertiary": "#ffffff",
+                    "on-secondary-fixed-variant": "#524600",
+                    "inverse-on-surface": "#eff1f3",
+                    "secondary-container": "#fcdf46",
+                    "inverse-surface": "#2d3133",
+                    "error-container": "#ffdad6",
+                    "on-secondary-container": "#726200",
+                    "inverse-primary": "#bec6e0",
+                    "on-primary-fixed-variant": "#3f465c"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "2xl": "1rem",
+                    "3xl": "1.5rem",
+                    "full": "9999px"
+            }
+          },
+        },
+      }
+</script>
+</head>
+<body class="bg-slate-950 min-h-screen flex items-center justify-center p-0 sm:py-6 text-on-surface">
+
+<!-- Mobile Frame Shell -->
+<div class="app-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-surface sm:rounded-[44px] shadow-[0_0_60px_rgba(0,0,0,0.6)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800">
+
+    <!-- Top Status Bar -->
+    <div class="bg-surface px-6 pt-3 pb-1 flex justify-between items-center text-xs font-semibold text-slate-500 z-50 select-none">
+        <span class="status-clock">9:41</span>
+        <div class="w-16 h-4 bg-slate-900 rounded-full flex items-center justify-center">
+            <div class="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
+        </div>
+        <div class="flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-xs">signal_cellular_4_bar</span>
+            <span class="material-symbols-outlined text-xs">wifi</span>
+            <span class="material-symbols-outlined text-xs text-amber-500">battery_50</span>
+        </div>
+    </div>
+
+    <!-- App Header -->
+    <header class="bg-surface/90 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center w-full px-6 py-3 border-b border-slate-200/60">
+        <div class="flex items-center gap-2">
+            <a href="helper-dashboard.html" class="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center text-primary hover:bg-slate-200 transition-colors">
+                <span class="material-symbols-outlined text-lg">arrow_back</span>
+            </a>
+            <h1 class="text-lg font-bold text-primary tracking-tight">Work Opportunities</h1>
+        </div>
+        <button onclick="openModal('post-job-modal')" class="px-3 py-1.5 bg-primary text-secondary-fixed rounded-full text-xs font-bold flex items-center gap-1 shadow-md hover:bg-slate-800 transition-colors">
+            <span class="material-symbols-outlined text-sm">add</span> Post Job
+        </button>
+    </header>
+
+    <!-- Main Content Canvas -->
+    <main class="flex-grow p-4 sm:p-5 space-y-5 overflow-y-auto pb-24">
+        
+        <!-- Post Job Banner -->
+        <div class="glass-card-dark rounded-2xl p-4 text-white space-y-2 relative overflow-hidden shadow-xl border border-slate-700">
+            <div class="flex justify-between items-center">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-slate-950 uppercase tracking-wide flex items-center gap-1">
+                    <span class="material-symbols-outlined text-xs">work</span> Employer & Community Board
+                </span>
+                <span class="text-xs text-amber-300 font-bold">AI Matching Active</span>
+            </div>
+            <h2 class="text-sm font-bold">Post an entry-level job or task opportunity for community members.</h2>
+            <button onclick="openModal('post-job-modal')" class="w-full py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-1">
+                <span class="material-symbols-outlined text-sm">post_add</span> Post New Opportunity
+            </button>
+        </div>
+
+        <!-- AI Match Run Action -->
+        <div class="flex items-center justify-between bg-white border border-slate-200 p-3.5 rounded-2xl shadow-sm">
+            <div>
+                <h3 class="font-bold text-xs text-primary flex items-center gap-1">
+                    <span class="material-symbols-outlined text-amber-500 text-sm">auto_awesome</span> Gemini AI Connector
+                </h3>
+                <p class="text-[11px] text-slate-500">Matches candidate skills against active job listings.</p>
+            </div>
+            <button onclick="runAIMatchingEngine()" class="px-3 py-2 bg-primary text-white text-xs font-bold rounded-xl shadow hover:bg-slate-800 transition-colors flex items-center gap-1">
+                Run AI Match
+            </button>
+        </div>
+
+        <!-- Opportunities List Feed -->
+        <section class="space-y-3">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Active Job & Task Listings</h3>
+                <span id="jobs-count-badge" class="text-[10px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full">3 Active</span>
+            </div>
+
+            <div id="opportunities-feed" class="space-y-3">
+                <!-- Loaded dynamically via JS -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-3 py-3 bg-surface/95 backdrop-blur-xl border-t border-slate-200/80">
+        <!-- Dynamically rendered by northstar.js -->
+    </nav>
+
+</div>
+
+<!-- Modal: Post New Opportunity -->
+<div id="post-job-modal" class="fixed inset-0 z-[100] hidden items-end sm:items-center justify-center bg-slate-950/80 backdrop-blur-md p-0 sm:p-4">
+    <div class="modal-drawer w-full sm:max-w-md bg-surface border border-slate-200 rounded-t-3xl sm:rounded-3xl p-6 text-on-surface space-y-4 shadow-2xl transform translate-y-full">
+        <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto sm:hidden"></div>
+        <div class="flex justify-between items-center">
+            <h3 class="text-lg font-bold text-primary flex items-center gap-2">
+                <span class="material-symbols-outlined text-amber-500">work</span> Post Opportunity
+            </h3>
+            <button onclick="closeModal('post-job-modal')" class="text-slate-400 hover:text-slate-600">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <form onsubmit="submitNewJob(event)" class="space-y-3 pt-1">
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Job Title <span class="text-red-500">*</span></label>
+                <input type="text" id="job-title-input" placeholder="e.g. Warehouse Associate / Day Prep" class="w-full rounded-xl border border-slate-300 p-2.5 text-xs focus:ring-2 focus:ring-amber-400" required>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Company / Org</label>
+                    <input type="text" id="job-company-input" placeholder="e.g. Metro Catering" class="w-full rounded-xl border border-slate-300 p-2.5 text-xs focus:ring-2 focus:ring-amber-400">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Pay Rate</label>
+                    <input type="text" id="job-pay-input" placeholder="e.g. $20.00 / hr" class="w-full rounded-xl border border-slate-300 p-2.5 text-xs focus:ring-2 focus:ring-amber-400">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Location / Intersection</label>
+                <input type="text" id="job-location-input" placeholder="e.g. Seattle, WA (Downtown)" class="w-full rounded-xl border border-slate-300 p-2.5 text-xs focus:ring-2 focus:ring-amber-400">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Key Requirements (Comma Separated)</label>
+                <input type="text" id="job-reqs-input" placeholder="e.g. Heavy Lifting, Food Handler Card, Punctual" class="w-full rounded-xl border border-slate-300 p-2.5 text-xs focus:ring-2 focus:ring-amber-400">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Contact Email or Phone <span class="text-red-500">*</span></label>
+                <input type="text" id="job-contact-input" placeholder="e.g. jobs@company.org or (555) 234-5678" class="w-full rounded-xl border border-slate-300 p-2.5 text-xs focus:ring-2 focus:ring-amber-400" required>
+            </div>
+
+            <button type="submit" class="w-full py-3.5 bg-primary text-white font-bold rounded-xl text-xs shadow-lg hover:bg-slate-800 transition-colors">
+                Publish Opportunity & Enable AI Matching
+            </button>
+        </form>
+    </div>
+</div>
+
+<script src="js/northstar.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  loadOpportunities();
+});
+
+async function loadOpportunities() {
+  const feed = document.getElementById('opportunities-feed');
+  try {
+    const res = await fetch('/api/jobs');
+    const data = await res.json();
+    if (data.jobs) {
+      renderJobFeed(data.jobs);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function renderJobFeed(jobs) {
+  const feed = document.getElementById('opportunities-feed');
+  document.getElementById('jobs-count-badge').innerText = `${jobs.length} Active`;
+
+  feed.innerHTML = jobs.map(j => `
+    <div class="bg-surface-container-lowest p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
+        <div class="flex justify-between items-start">
+            <div>
+                <span class="px-2 py-0.5 bg-amber-100 text-amber-900 rounded-full text-[10px] font-bold">${j.pay || '$20.00 / hr'}</span>
+                <h4 class="font-bold text-sm text-primary mt-1">${j.title}</h4>
+                <p class="text-xs text-slate-500 font-medium">${j.company} • ${j.location}</p>
+            </div>
+        </div>
+        <p class="text-xs text-slate-600 leading-snug">${j.description || ''}</p>
+        <div class="flex flex-wrap gap-1">
+            ${(j.requirements || []).map(r => `<span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md text-[10px] font-semibold">${r}</span>`).join('')}
+        </div>
+        <div class="flex justify-between items-center pt-2 border-t border-slate-100 text-xs">
+            <span class="text-slate-500 font-medium">${j.contact}</span>
+            <button onclick="showNotification('Contact details copied: ${j.contact}', 'success')" class="px-3 py-1.5 bg-primary text-white font-bold rounded-xl text-xs hover:bg-slate-800">
+                Apply / Contact
+            </button>
+        </div>
+    </div>
+  `).join('');
+}
+
+async function submitNewJob(e) {
+  e.preventDefault();
+  const title = document.getElementById('job-title-input').value.trim();
+  const company = document.getElementById('job-company-input').value.trim();
+  const pay = document.getElementById('job-pay-input').value.trim();
+  const location = document.getElementById('job-location-input').value.trim();
+  const reqs = document.getElementById('job-reqs-input').value.split(',').map(s => s.trim()).filter(Boolean);
+  const contact = document.getElementById('job-contact-input').value.trim();
+
+  try {
+    const res = await fetch('/api/jobs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, company, pay, location, requirements: reqs, contact })
+    });
+    const data = await res.json();
+    if (data.success) {
+      closeModal('post-job-modal');
+      showNotification('✨ Opportunity published! AI Connector will now match seekers.', 'success');
+      loadOpportunities();
+    }
+  } catch (err) {
+    console.error(err);
+    showNotification('Failed to publish opportunity.', 'error');
+  }
+}
+
+async function runAIMatchingEngine() {
+  showNotification('🤖 Running Gemini AI Job Matcher against active seeker resumes...', 'info');
+}
+</script>
+</body>
+</html>
