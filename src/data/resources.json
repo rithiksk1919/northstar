@@ -1,0 +1,98 @@
+[
+  {
+    "id": "res-1",
+    "name": "St. Jude Community Refuge",
+    "category": "shelter",
+    "address": "124 Pine St, Seattle, WA 98101",
+    "lat": 47.6101,
+    "lng": -122.3370,
+    "hours": "Open 24/7 (Check-in 5 PM - 9 PM)",
+    "status": "14 Beds Available",
+    "phone": "(206) 555-0144",
+    "description": "Emergency overnight shelter for individuals and families with hot showers and warm clothing."
+  },
+  {
+    "id": "res-2",
+    "name": "Downtown Hope Center",
+    "category": "shelter",
+    "address": "580 4th Ave, Seattle, WA 98104",
+    "lat": 47.6032,
+    "lng": -122.3315,
+    "hours": "7:00 PM - 7:00 AM Daily",
+    "status": "5 Beds Left",
+    "phone": "(206) 555-0188",
+    "description": "Safe evening refuge offering warm beds, dinner, and outreach case management."
+  },
+  {
+    "id": "res-3",
+    "name": "St. Vincent Soup Kitchen",
+    "category": "food",
+    "address": "89 Market St, Seattle, WA 98101",
+    "lat": 47.6088,
+    "lng": -122.3405,
+    "hours": "Daily Meals: Lunch 11:30 AM | Dinner 5:30 PM",
+    "status": "Dinner Served @ 5:30 PM",
+    "phone": "(206) 555-0199",
+    "description": "Free hot meal service open to anyone in need, no ID or registration required."
+  },
+  {
+    "id": "res-4",
+    "name": "Pioneer Square Free Food Pantry",
+    "category": "food",
+    "address": "210 1st Ave S, Seattle, WA 98104",
+    "lat": 47.6005,
+    "lng": -122.3342,
+    "hours": "Mon-Fri 8:00 AM - 4:00 PM",
+    "status": "Fresh Grocery & Meal Packs",
+    "phone": "(206) 555-0211",
+    "description": "Community pantry offering packaged groceries, bottled water, hygiene kits, and hot coffee."
+  },
+  {
+    "id": "res-5",
+    "name": "Metro Hygiene & Shower Hub",
+    "category": "restroom",
+    "address": "302 2nd Ave, Seattle, WA 98104",
+    "lat": 47.6020,
+    "lng": -122.3328,
+    "hours": "Open 24/7",
+    "status": "Clean Showers & Restrooms 24/7",
+    "phone": "(206) 555-0322",
+    "description": "Monitored, safe 24/7 public restroom facility equipped with private shower stalls and clean towel supplies."
+  },
+  {
+    "id": "res-6",
+    "name": "Capitol Hill Community Restroom",
+    "category": "restroom",
+    "address": "1000 E Pike St, Seattle, WA 98122",
+    "lat": 47.6142,
+    "lng": -122.3190,
+    "hours": "Open 24/7",
+    "status": "Accessible & Well-lit 24/7",
+    "phone": "(206) 555-0355",
+    "description": "ADA-accessible automated self-cleaning public restroom with clean running water."
+  },
+  {
+    "id": "res-7",
+    "name": "Harborview Medical Outreach Clinic",
+    "category": "shelter",
+    "address": "325 9th Ave, Seattle, WA 98104",
+    "lat": 47.6048,
+    "lng": -122.3245,
+    "hours": "Mon-Sun 8:00 AM - 8:00 PM",
+    "status": "Walk-in Medical & Respite",
+    "phone": "(206) 555-0400",
+    "description": "Free walk-in medical consultations, wound care, and medical respite bed coordination."
+  },
+  {
+    "id": "res-8",
+    "name": "Cascade Family Haven & Kitchen",
+    "category": "food",
+    "address": "400 Pontius Ave N, Seattle, WA 98109",
+    "lat": 47.6225,
+    "lng": -122.3320,
+    "hours": "Mon-Sat 7:00 AM - 6:00 PM",
+    "status": "Breakfast & Warm Lunch",
+    "phone": "(206) 555-0450",
+    "description": "Family-focused resource center providing hot breakfast, afternoon meals, and children's supplies."
+  }
+]

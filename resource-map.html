@@ -73,6 +73,126 @@
         },
       }
 </script>
+<!-- Google Maps JavaScript API Script with explicit callback -->
+<script>
+  let map;
+  let mapMarkers = [];
+
+  const allResources = [
+    { id: '1', name: "St. Jude Community Refuge", category: "shelter", lat: 47.6101, lng: -122.3370, status: "14 Beds Available", address: "124 Pine St", distance: "0.4 mi (8 min walk)" },
+    { id: '2', name: "Downtown Hope Center", category: "shelter", lat: 47.6032, lng: -122.3315, status: "5 Beds Left", address: "580 4th Ave", distance: "1.2 mi (18 min walk)" },
+    { id: '3', name: "St. Vincent Soup Kitchen", category: "food", lat: 47.6088, lng: -122.3405, status: "Dinner @ 5:30 PM", address: "89 Market St", distance: "0.8 mi (12 min walk)" },
+    { id: '4', name: "Pioneer Pantry & Bottled Water", category: "food", lat: 47.6005, lng: -122.3342, status: "Free Meal Packs", address: "210 1st Ave S", distance: "0.5 mi (10 min walk)" },
+    { id: '5', name: "Metro Hygiene & Shower Hub", category: "restroom", lat: 47.6020, lng: -122.3328, status: "Clean Showers 24/7", address: "302 2nd Ave", distance: "0.3 mi (6 min walk)" },
+    { id: '6', name: "Capitol Hill Public Restroom", category: "restroom", lat: 47.6142, lng: -122.3190, status: "Clean & Accessible 24/7", address: "1000 E Pike St", distance: "0.9 mi (15 min walk)" },
+    { id: '7', name: "Pacific Freight Day Labor Hub", category: "work", lat: 47.6010, lng: -122.3360, status: "$21.50/hr • Walk-in Work", address: "450 1st Ave S", distance: "0.6 mi (11 min walk)" },
+    { id: '8', name: "CleanCity Community Work Center", category: "work", lat: 47.6115, lng: -122.3280, status: "$20.00/hr • Flexible Shift", address: "800 E Denny Way", distance: "0.7 mi (13 min walk)" }
+  ];
+
+  window.gm_authFailure = function() {
+    console.error("Google Maps API Auth Failure: Key restricted or Maps JavaScript API not enabled.");
+  };
+
+  function initGoogleMapEmbed() {
+    const seattleCenter = { lat: 47.6062, lng: -122.3321 };
+    const mapElement = document.getElementById('google-map-iframe-container');
+    if (!mapElement) return;
+
+    try {
+      map = new google.maps.Map(mapElement, {
+        zoom: 14,
+        center: seattleCenter,
+        disableDefaultUI: true,
+        zoomControl: true,
+        styles: [
+          { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+          { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+          { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+          {
+            featureType: "administrative.locality",
+            elementType: "labels.text.fill",
+            stylers: [{ color: "#d59563" }],
+          },
+          {
+            featureType: "poi",
+            elementType: "labels.text.fill",
+            stylers: [{ color: "#d59563" }],
+          },
+          {
+            featureType: "road",
+            elementType: "geometry",
+            stylers: [{ color: "#38414e" }],
+          },
+          {
+            featureType: "road",
+            elementType: "geometry.stroke",
+            stylers: [{ color: "#212a37" }],
+          },
+          {
+            featureType: "water",
+            elementType: "geometry",
+            stylers: [{ color: "#17263c" }],
+          }
+        ]
+      });
+
+      renderMarkers(allResources);
+    } catch(err) {
+      console.error('Google Maps Init Error:', err);
+    }
+  }
+
+  function renderMarkers(items) {
+    // Clear existing markers
+    mapMarkers.forEach(m => m.setMap(null));
+    mapMarkers = [];
+
+    if (!map) return;
+
+    items.forEach(res => {
+      const marker = new google.maps.Marker({
+        position: { lat: res.lat, lng: res.lng },
+        map: map,
+        title: res.name
+      });
+
+      const infowindow = new google.maps.InfoWindow({
+        content: `
+          <div style="color:#0f172a; padding:6px; font-family:sans-serif;">
+            <h4 style="font-weight:bold; margin:0 0 4px 0; font-size:13px;">${res.name}</h4>
+            <p style="font-size:11px; margin:0 0 4px 0; color:#475569;">📍 ${res.address} (${res.distance})</p>
+            <p style="font-size:11px; font-weight:bold; margin:0 0 6px 0; color:#059669;">${res.status}</p>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${res.lat},${res.lng}&travelmode=walking" target="_blank" style="display:inline-block; padding:5px 10px; background:#0f172a; color:#fff; text-decoration:none; font-size:11px; border-radius:6px; font-weight:bold;">
+              🚶 Get Walking Directions
+            </a>
+          </div>
+        `
+      });
+
+      marker.addListener('click', () => {
+        infowindow.open(map, marker);
+      });
+
+      mapMarkers.push(marker);
+    });
+  }
+
+  function filterMapResources(category = 'all', searchQuery = '') {
+    const q = searchQuery.toLowerCase().trim();
+    const filtered = allResources.filter(res => {
+      const matchCategory = category === 'all' || res.category === category;
+      const matchQuery = !q || 
+        res.name.toLowerCase().includes(q) || 
+        res.address.toLowerCase().includes(q) || 
+        res.status.toLowerCase().includes(q) ||
+        res.category.toLowerCase().includes(q);
+      return matchCategory && matchQuery;
+    });
+
+    renderMarkers(filtered);
+  }
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCzEt3AWGJrePRSa8Gp9JgTCx7oEHnrAP8&callback=initGoogleMapEmbed" async defer></script>
 </head>
 <body class="bg-slate-950 min-h-screen flex items-center justify-center p-0 sm:py-6 text-on-surface">
 
@@ -95,109 +215,58 @@
     <!-- App Header -->
     <header class="bg-surface/90 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center w-full px-6 py-3 border-b border-slate-200/60">
         <div class="flex items-center gap-2">
-            <a href="index.html" class="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center text-primary hover:bg-slate-200 transition-colors">
+            <a href="seeker-dashboard.html" class="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center text-primary hover:bg-slate-200 transition-colors">
                 <span class="material-symbols-outlined text-lg">arrow_back</span>
             </a>
-            <h1 class="text-lg font-bold text-primary tracking-tight">Resource Map</h1>
+            <h1 class="text-lg font-bold text-primary tracking-tight">Live Resource Map</h1>
         </div>
         <button onclick="downloadOfflineMapData()" class="flex items-center gap-1 text-[11px] font-extrabold bg-primary text-secondary-fixed px-3 py-1 rounded-full shadow hover:bg-slate-800 transition-colors">
             <span class="material-symbols-outlined text-sm">download_for_offline</span> Offline Save
         </button>
     </header>
 
-    <!-- Map Canvas Container -->
-    <div class="relative flex-grow flex flex-col overflow-hidden">
+    <!-- Filter & Search Bar Floating Top Section -->
+    <div class="bg-slate-900 text-white px-4 py-3 border-b border-slate-800 space-y-2 z-30 shadow-md">
         
-        <!-- Filter Bar Floating Top -->
-        <div class="absolute top-3 left-0 w-full z-30 px-4 overflow-x-auto no-scrollbar">
-            <div class="flex gap-2 min-w-max pb-1">
-                <button data-filter="all" class="map-filter-pill px-3 py-1.5 rounded-full text-xs font-bold bg-primary text-on-primary shadow-md">
-                    All Services
-                </button>
-                <button data-filter="shelter" class="map-filter-pill px-3 py-1.5 rounded-full text-xs font-bold bg-surface-container-lowest text-on-surface-variant border border-slate-200 shadow-sm hover:bg-slate-100">
-                    🛏️ Shelters (42 Beds)
-                </button>
-                <button data-filter="food" class="map-filter-pill px-3 py-1.5 rounded-full text-xs font-bold bg-surface-container-lowest text-on-surface-variant border border-slate-200 shadow-sm hover:bg-slate-100">
-                    🍲 Food & Water
-                </button>
-                <button data-filter="restroom" class="map-filter-pill px-3 py-1.5 rounded-full text-xs font-bold bg-surface-container-lowest text-on-surface-variant border border-slate-200 shadow-sm hover:bg-slate-100">
-                    🚿 Restrooms & Showers
-                </button>
-                <button data-filter="transit" class="map-filter-pill px-3 py-1.5 rounded-full text-xs font-bold bg-surface-container-lowest text-on-surface-variant border border-slate-200 shadow-sm hover:bg-slate-100">
-                    🚌 Transit Hubs
-                </button>
-            </div>
+        <!-- Live Walkable Search Box -->
+        <div class="relative w-full">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+            <input 
+                id="walkable-search-input" 
+                type="text" 
+                placeholder="Search food, restroom, shelters, work..." 
+                oninput="handleSearchFilterInput()"
+                class="w-full bg-slate-800 text-white placeholder-slate-400 text-xs rounded-xl pl-9 pr-8 py-2 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-400"
+            />
+            <button onclick="clearSearchInput()" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white">
+                <span class="material-symbols-outlined text-sm">cancel</span>
+            </button>
         </div>
 
-        <!-- Simulated Interactive Map Graphics -->
-        <div class="w-full h-full bg-slate-900 relative overflow-hidden flex items-center justify-center">
-            
-            <!-- Map Vector Roads Background Mockup -->
-            <svg class="absolute inset-0 w-full h-full opacity-30 pointer-events-none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M 0 100 Q 150 120 400 80" stroke="#475569" stroke-width="8" fill="none" />
-                <path d="M 120 0 Q 140 250 200 600" stroke="#334155" stroke-width="12" fill="none" />
-                <path d="M 0 350 L 400 320" stroke="#475569" stroke-width="6" fill="none" />
-                <path d="M 280 0 L 260 600" stroke="#334155" stroke-width="10" fill="none" />
-            </svg>
-
-            <!-- User Location Marker -->
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex flex-col items-center pointer-events-none">
-                <div class="w-6 h-6 rounded-full bg-blue-500/30 flex items-center justify-center calling-pulse">
-                    <div class="w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-lg"></div>
-                </div>
-                <span class="text-[9px] font-bold text-white bg-slate-900/90 px-1.5 py-0.5 rounded shadow mt-1">You are here</span>
-            </div>
-
-            <!-- Map Pin 1: St. Jude -->
-            <button onclick="selectMapLocation('St. Jude Community Refuge', '14 Open Beds • 0.4 mi away', '124 Pine St', '14')" class="absolute top-[32%] left-[28%] z-20 flex flex-col items-center group active:scale-90 transition-transform">
-                <div class="px-2 py-1 bg-emerald-600 text-white font-extrabold text-[11px] rounded-xl shadow-lg border-2 border-white flex items-center gap-1 group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-xs">bed</span> St. Jude (14 Beds)
-                </div>
-                <div class="w-2 h-2 bg-emerald-600 rotate-45 -mt-1 border-r border-b border-white"></div>
+        <!-- Filter Category Pills -->
+        <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+            <button data-cat="all" onclick="selectCategoryFilter('all')" class="cat-filter-btn px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-400 text-slate-950 shadow">
+                All Walkable
             </button>
-
-            <!-- Map Pin 2: Downtown Hope -->
-            <button onclick="selectMapLocation('Downtown Hope Center', '5 Open Beds • 1.2 mi away', '580 4th Ave', '5')" class="absolute top-[65%] left-[55%] z-20 flex flex-col items-center group active:scale-90 transition-transform">
-                <div class="px-2 py-1 bg-amber-500 text-slate-950 font-extrabold text-[11px] rounded-xl shadow-lg border-2 border-white flex items-center gap-1 group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-xs">bed</span> Hope Center (5 Beds)
-                </div>
-                <div class="w-2 h-2 bg-amber-500 rotate-45 -mt-1 border-r border-b border-white"></div>
+            <button data-cat="restroom" onclick="selectCategoryFilter('restroom')" class="cat-filter-btn px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700">
+                🚿 Restroom/Hygiene
             </button>
-
-            <!-- Map Pin 3: St. Vincent Meals -->
-            <button onclick="selectMapLocation('St. Vincent Soup Kitchen', 'Warm Dinner @ 5:30 PM • 0.8 mi', '89 Market St', 'Meal')" class="absolute top-[22%] left-[62%] z-20 flex flex-col items-center group active:scale-90 transition-transform">
-                <div class="px-2 py-1 bg-blue-600 text-white font-extrabold text-[11px] rounded-xl shadow-lg border-2 border-white flex items-center gap-1 group-hover:scale-110 transition-transform">
-                    <span class="material-symbols-outlined text-xs">soup_kitchen</span> St. Vincent Meal
-                </div>
-                <div class="w-2 h-2 bg-blue-600 rotate-45 -mt-1 border-r border-b border-white"></div>
+            <button data-cat="food" onclick="selectCategoryFilter('food')" class="cat-filter-btn px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700">
+                🍲 Food & Drinks
             </button>
-
+            <button data-cat="shelter" onclick="selectCategoryFilter('shelter')" class="cat-filter-btn px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700">
+                🛏️ Shelters
+            </button>
+            <button data-cat="work" onclick="selectCategoryFilter('work')" class="cat-filter-btn px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700">
+                💼 Work & Jobs
+            </button>
         </div>
 
-        <!-- Selected Location Sheet (Fixed at bottom above nav) -->
-        <div id="map-detail-sheet" class="absolute bottom-16 left-0 w-full z-40 px-4 pb-2">
-            <div class="glass-card-dark text-white p-4 rounded-2xl shadow-2xl border border-slate-700/80 space-y-3">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <span id="sheet-status-badge" class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 font-bold text-[10px] rounded-full">VERIFIED ACTIVE • 14 BEDS FREE</span>
-                        <h3 id="sheet-title" class="font-bold text-base mt-1">St. Jude Community Refuge</h3>
-                        <p id="sheet-address" class="text-xs text-slate-300 flex items-center gap-1 mt-0.5">
-                            <span class="material-symbols-outlined text-xs text-slate-400">location_on</span> 124 Pine St (0.4 mi away)
-                        </p>
-                    </div>
-                </div>
+    </div>
 
-                <div class="flex gap-2 pt-1 border-t border-slate-700/60">
-                    <button onclick="showNotification('Bed reserved! Show your confirmation code at check-in.', 'success')" class="flex-1 py-2.5 bg-amber-400 text-slate-950 rounded-xl text-xs font-bold hover:bg-amber-300 transition-colors flex items-center justify-center gap-1 shadow">
-                        <span class="material-symbols-outlined text-sm">bookmark_add</span> Reserve Bed
-                    </button>
-                    <a href="call-shelter.html" class="px-3 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1 border border-slate-600">
-                        <span class="material-symbols-outlined text-sm">call</span> Call
-                    </a>
-                </div>
-            </div>
-        </div>
-
+    <!-- Map Canvas Container (Google Maps Embed) -->
+    <div class="relative flex-grow w-full h-[580px] min-h-[450px] flex flex-col overflow-hidden pb-14">
+        <div id="google-map-iframe-container" class="w-full h-full min-h-[450px] bg-slate-900"></div>
     </div>
 
     <!-- Bottom Navigation Bar (Pinned inside frame) -->
@@ -228,11 +297,33 @@
 
 <script src="js/northstar.js"></script>
 <script>
-function selectMapLocation(name, status, address, beds) {
-    document.getElementById('sheet-title').textContent = name;
-    document.getElementById('sheet-address').innerHTML = `<span class="material-symbols-outlined text-xs text-slate-400">location_on</span> ${address}`;
-    document.getElementById('sheet-status-badge').textContent = status.toUpperCase();
-    showNotification(`Selected ${name}`, 'info');
+let currentSelectedCategory = 'all';
+
+function selectCategoryFilter(cat) {
+  currentSelectedCategory = cat;
+  
+  // Highlight active pill button
+  document.querySelectorAll('.cat-filter-btn').forEach(btn => {
+    if (btn.dataset.cat === cat) {
+      btn.className = 'cat-filter-btn px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-400 text-slate-950 shadow';
+    } else {
+      btn.className = 'cat-filter-btn px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700';
+    }
+  });
+
+  const query = document.getElementById('walkable-search-input').value;
+  filterMapResources(currentSelectedCategory, query);
+}
+
+function handleSearchFilterInput() {
+  const query = document.getElementById('walkable-search-input').value;
+  filterMapResources(currentSelectedCategory, query);
+}
+
+function clearSearchInput() {
+  const input = document.getElementById('walkable-search-input');
+  input.value = '';
+  filterMapResources(currentSelectedCategory, '');
 }
 
 function downloadOfflineMapData() {
@@ -240,11 +331,10 @@ function downloadOfflineMapData() {
         { name: 'St. Jude Community Refuge', address: '124 Pine St', beds: 14, type: 'shelter' },
         { name: 'Downtown Hope Center', address: '580 4th Ave', beds: 5, type: 'shelter' },
         { name: 'St. Vincent Soup Kitchen', address: '89 Market St', dinner: '5:30 PM', type: 'food' },
-        { name: 'Metro Hygiene & Shower Hub', address: '302 2nd Ave', type: 'restroom' },
-        { name: 'Central Transit Center Bus Stop', address: '3rd & Pine St', type: 'transit' }
+        { name: 'Metro Hygiene & Shower Hub', address: '302 2nd Ave', type: 'restroom' }
     ];
     localStorage.setItem('northstar_offline_map_pins', JSON.stringify(offlinePins));
-    showNotification('📥 Map & Shelter Pins saved for offline access!', 'success');
+    showNotification('📥 Walkable Resources saved for offline access!', 'success');
 }
 </script>
 </body>

@@ -35,6 +35,12 @@ function initInstantPageTransitions() {
 
 async function navigateToPageInstant(url, pushState = true) {
   try {
+    // React app or dynamically mounted pages must perform full browser load to initialize React root scripts
+    if (url.includes('resource-map.html') || window.location.pathname.includes('resource-map.html')) {
+      window.location.href = url;
+      return;
+    }
+
     const response = await fetch(url);
     if (!response.ok) {
       window.location.href = url;
@@ -414,7 +420,7 @@ function showNotification(message, type = 'info') {
   
   toast.innerHTML = `
     <div class="flex items-center gap-3">
-      <span class="material-symbols-outlined text-secondary-fixed text-xl">star</span>
+      <img src="northstar-logo.png" class="w-5 h-5 object-contain" alt="Northstar" />
       <span>${message}</span>
     </div>
     <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-white p-1">
