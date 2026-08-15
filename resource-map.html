@@ -7,6 +7,15 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link rel="stylesheet" href="css/northstar.css">
+
+<!-- Leaflet CSS & JS Bundle -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Dexie.js (IndexedDB wrapper for offline storage) -->
+<script src="https://unpkg.com/dexie@3.2.4/dist/dexie.min.js"></script>
+<!-- Leaflet.offline tile caching extension -->
+<script src="https://unpkg.com/leaflet.offline@3.2.1/dist/leaflet.offline.min.js"></script>
+
 <script id="tailwind-config">
       tailwind.config = {
         darkMode: "class",
@@ -73,126 +82,23 @@
         },
       }
 </script>
-<!-- Google Maps JavaScript API Script with explicit callback -->
-<script>
-  let map;
-  let mapMarkers = [];
-
-  const allResources = [
-    { id: '1', name: "St. Jude Community Refuge", category: "shelter", lat: 47.6101, lng: -122.3370, status: "14 Beds Available", address: "124 Pine St", distance: "0.4 mi (8 min walk)" },
-    { id: '2', name: "Downtown Hope Center", category: "shelter", lat: 47.6032, lng: -122.3315, status: "5 Beds Left", address: "580 4th Ave", distance: "1.2 mi (18 min walk)" },
-    { id: '3', name: "St. Vincent Soup Kitchen", category: "food", lat: 47.6088, lng: -122.3405, status: "Dinner @ 5:30 PM", address: "89 Market St", distance: "0.8 mi (12 min walk)" },
-    { id: '4', name: "Pioneer Pantry & Bottled Water", category: "food", lat: 47.6005, lng: -122.3342, status: "Free Meal Packs", address: "210 1st Ave S", distance: "0.5 mi (10 min walk)" },
-    { id: '5', name: "Metro Hygiene & Shower Hub", category: "restroom", lat: 47.6020, lng: -122.3328, status: "Clean Showers 24/7", address: "302 2nd Ave", distance: "0.3 mi (6 min walk)" },
-    { id: '6', name: "Capitol Hill Public Restroom", category: "restroom", lat: 47.6142, lng: -122.3190, status: "Clean & Accessible 24/7", address: "1000 E Pike St", distance: "0.9 mi (15 min walk)" },
-    { id: '7', name: "Pacific Freight Day Labor Hub", category: "work", lat: 47.6010, lng: -122.3360, status: "$21.50/hr • Walk-in Work", address: "450 1st Ave S", distance: "0.6 mi (11 min walk)" },
-    { id: '8', name: "CleanCity Community Work Center", category: "work", lat: 47.6115, lng: -122.3280, status: "$20.00/hr • Flexible Shift", address: "800 E Denny Way", distance: "0.7 mi (13 min walk)" }
-  ];
-
-  window.gm_authFailure = function() {
-    console.error("Google Maps API Auth Failure: Key restricted or Maps JavaScript API not enabled.");
-  };
-
-  function initGoogleMapEmbed() {
-    const seattleCenter = { lat: 47.6062, lng: -122.3321 };
-    const mapElement = document.getElementById('google-map-iframe-container');
-    if (!mapElement) return;
-
-    try {
-      map = new google.maps.Map(mapElement, {
-        zoom: 14,
-        center: seattleCenter,
-        disableDefaultUI: true,
-        zoomControl: true,
-        styles: [
-          { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-          { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-          { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-          {
-            featureType: "administrative.locality",
-            elementType: "labels.text.fill",
-            stylers: [{ color: "#d59563" }],
-          },
-          {
-            featureType: "poi",
-            elementType: "labels.text.fill",
-            stylers: [{ color: "#d59563" }],
-          },
-          {
-            featureType: "road",
-            elementType: "geometry",
-            stylers: [{ color: "#38414e" }],
-          },
-          {
-            featureType: "road",
-            elementType: "geometry.stroke",
-            stylers: [{ color: "#212a37" }],
-          },
-          {
-            featureType: "water",
-            elementType: "geometry",
-            stylers: [{ color: "#17263c" }],
-          }
-        ]
-      });
-
-      renderMarkers(allResources);
-    } catch(err) {
-      console.error('Google Maps Init Error:', err);
-    }
+<style>
+  .leaflet-popup-content-wrapper {
+    background: #0f172a !important;
+    color: #ffffff !important;
+    border-radius: 16px !important;
+    padding: 4px !important;
+    border: 1px solid #334155 !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5) !important;
   }
-
-  function renderMarkers(items) {
-    // Clear existing markers
-    mapMarkers.forEach(m => m.setMap(null));
-    mapMarkers = [];
-
-    if (!map) return;
-
-    items.forEach(res => {
-      const marker = new google.maps.Marker({
-        position: { lat: res.lat, lng: res.lng },
-        map: map,
-        title: res.name
-      });
-
-      const infowindow = new google.maps.InfoWindow({
-        content: `
-          <div style="color:#0f172a; padding:6px; font-family:sans-serif;">
-            <h4 style="font-weight:bold; margin:0 0 4px 0; font-size:13px;">${res.name}</h4>
-            <p style="font-size:11px; margin:0 0 4px 0; color:#475569;">📍 ${res.address} (${res.distance})</p>
-            <p style="font-size:11px; font-weight:bold; margin:0 0 6px 0; color:#059669;">${res.status}</p>
-            <a href="https://www.google.com/maps/dir/?api=1&destination=${res.lat},${res.lng}&travelmode=walking" target="_blank" style="display:inline-block; padding:5px 10px; background:#0f172a; color:#fff; text-decoration:none; font-size:11px; border-radius:6px; font-weight:bold;">
-              🚶 Get Walking Directions
-            </a>
-          </div>
-        `
-      });
-
-      marker.addListener('click', () => {
-        infowindow.open(map, marker);
-      });
-
-      mapMarkers.push(marker);
-    });
+  .leaflet-popup-tip {
+    background: #0f172a !important;
   }
-
-  function filterMapResources(category = 'all', searchQuery = '') {
-    const q = searchQuery.toLowerCase().trim();
-    const filtered = allResources.filter(res => {
-      const matchCategory = category === 'all' || res.category === category;
-      const matchQuery = !q || 
-        res.name.toLowerCase().includes(q) || 
-        res.address.toLowerCase().includes(q) || 
-        res.status.toLowerCase().includes(q) ||
-        res.category.toLowerCase().includes(q);
-      return matchCategory && matchQuery;
-    });
-
-    renderMarkers(filtered);
+  .leaflet-container {
+    background: #0f172a !important;
+    font-family: inherit !important;
   }
-</script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCzEt3AWGJrePRSa8Gp9JgTCx7oEHnrAP8&callback=initGoogleMapEmbed" async defer></script>
+</style>
 </head>
 <body class="bg-slate-950 min-h-screen flex items-center justify-center p-0 sm:py-6 text-on-surface">
 
@@ -220,7 +126,7 @@
             </a>
             <h1 class="text-lg font-bold text-primary tracking-tight">Live Resource Map</h1>
         </div>
-        <button onclick="downloadOfflineMapData()" class="flex items-center gap-1 text-[11px] font-extrabold bg-primary text-secondary-fixed px-3 py-1 rounded-full shadow hover:bg-slate-800 transition-colors">
+        <button id="offline-save-btn" onclick="saveOfflineTiles()" class="flex items-center gap-1 text-[11px] font-extrabold bg-primary text-secondary-fixed px-3 py-1 rounded-full shadow hover:bg-slate-800 transition-colors">
             <span class="material-symbols-outlined text-sm">download_for_offline</span> Offline Save
         </button>
     </header>
@@ -248,6 +154,9 @@
             <button data-cat="all" onclick="selectCategoryFilter('all')" class="cat-filter-btn px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-400 text-slate-950 shadow">
                 All Walkable
             </button>
+            <button data-cat="wifi" onclick="selectCategoryFilter('wifi')" class="cat-filter-btn px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700">
+                📶 Wi-Fi & Outlets
+            </button>
             <button data-cat="restroom" onclick="selectCategoryFilter('restroom')" class="cat-filter-btn px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700">
                 🚿 Restroom/Hygiene
             </button>
@@ -264,9 +173,27 @@
 
     </div>
 
-    <!-- Map Canvas Container (Google Maps Embed) -->
-    <div class="relative flex-grow w-full h-[580px] min-h-[450px] flex flex-col overflow-hidden pb-14">
-        <div id="google-map-iframe-container" class="w-full h-full min-h-[450px] bg-slate-900"></div>
+    <!-- Leaflet Map Container -->
+    <div class="relative flex-grow w-full h-[380px] min-h-[320px] flex flex-col overflow-hidden">
+        <div id="map" class="w-full h-full min-h-[320px] bg-slate-900 z-10"></div>
+        
+        <!-- Floating My Location Re-center Button -->
+        <button onclick="locateAndCenterUser()" class="absolute bottom-4 right-4 z-20 w-11 h-11 rounded-full bg-slate-900 text-amber-400 flex items-center justify-center shadow-xl border border-slate-700 hover:bg-slate-800 transition-transform active:scale-95">
+            <span class="material-symbols-outlined text-xl">my_location</span>
+        </button>
+    </div>
+
+    <!-- 5-Mile Radius Nearby Sheet Drawer -->
+    <div class="bg-slate-950 border-t border-slate-800 p-4 space-y-2.5 flex-grow overflow-y-auto pb-20 z-20">
+        <div class="flex justify-between items-center text-xs font-bold text-slate-300">
+            <span class="flex items-center gap-1.5 text-amber-400">
+                <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span> Resources in 5-Mile Radius
+            </span>
+            <span id="nearby-count-badge" class="px-2.5 py-0.5 bg-slate-800 rounded-full text-[10px] text-slate-400 font-extrabold border border-slate-700">0 Resources</span>
+        </div>
+        <div id="nearby-resources-list" class="space-y-2">
+            <!-- Dynamic resource cards render here -->
+        </div>
     </div>
 
     <!-- Bottom Navigation Bar (Pinned inside frame) -->
@@ -297,45 +224,319 @@
 
 <script src="js/northstar.js"></script>
 <script>
-let currentSelectedCategory = 'all';
+  let map;
+  let offlineLayer;
+  let mapMarkers = [];
+  let userLocationMarker = null;
+  let userRadiusCircle = null;
+  let userLocationCoords = null;
+  let currentSelectedCategory = 'all';
 
-function selectCategoryFilter(cat) {
-  currentSelectedCategory = cat;
-  
-  // Highlight active pill button
-  document.querySelectorAll('.cat-filter-btn').forEach(btn => {
-    if (btn.dataset.cat === cat) {
-      btn.className = 'cat-filter-btn px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-400 text-slate-950 shadow';
-    } else {
-      btn.className = 'cat-filter-btn px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700';
+  function getDistanceMiles(lat1, lon1, lat2, lon2) {
+    const R = 3958.8; // Radius of Earth in miles
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  const defaultResources = [
+    { id: 'wifi-1', name: "Public Library (Free Wi-Fi & Outlets)", category: "wifi", lat: 47.6110, lng: -122.3320, status: "Library_Guest (Open 10am-8pm)", address: "1000 4th Ave", distance: "0.2 mi (4 min walk)", icon: "📶", details: "Indoor charging tables open 10am-8pm. Network: Library_Guest (no password)" },
+    { id: '1', name: "St. Jude Community Refuge", category: "shelter", lat: 47.6101, lng: -122.3370, status: "14 Beds Available", address: "124 Pine St", distance: "0.4 mi (8 min walk)", icon: "🛏️", details: "Emergency overnight shelter for individuals and families." },
+    { id: '2', name: "Downtown Hope Center", category: "shelter", lat: 47.6032, lng: -122.3315, status: "5 Beds Left", address: "580 4th Ave", distance: "1.2 mi (18 min walk)", icon: "🛏️", details: "Safe evening refuge offering warm beds and dinner." },
+    { id: '3', name: "Community Food Pantry & Kitchen", category: "food", lat: 47.6088, lng: -122.3405, status: "Hot Meals Daily 12:00 PM & 5:30 PM", address: "89 Market St", distance: "0.8 mi (12 min walk)", icon: "🍲", details: "Hot meals daily at 12:00 PM and 5:30 PM. Free & open to all." },
+    { id: '4', name: "Pioneer Pantry & Bottled Water", category: "food", lat: 47.6005, lng: -122.3342, status: "Free Meal Packs", address: "210 1st Ave S", distance: "0.5 mi (10 min walk)", icon: "🍲", details: "Community pantry with groceries, bottled water, and hygiene kits." },
+    { id: '5', name: "Metro Hygiene & Shower Hub", category: "restroom", lat: 47.6020, lng: -122.3328, status: "Clean Showers 24/7", address: "302 2nd Ave", distance: "0.3 mi (6 min walk)", icon: "🚿", details: "24/7 monitored public restrooms with private shower stalls." },
+    { id: '6', name: "Capitol Hill Public Restroom", category: "restroom", lat: 47.6142, lng: -122.3190, status: "Clean & Accessible 24/7", address: "1000 E Pike St", distance: "0.9 mi (15 min walk)", icon: "🚿", details: "ADA accessible automated self-cleaning public restroom." },
+    { id: '7', name: "Pacific Freight Day Labor Hub", category: "work", lat: 47.6010, lng: -122.3360, status: "$21.50/hr • Walk-in Work", address: "450 1st Ave S", distance: "0.6 mi (11 min walk)", icon: "💼", details: "Entry level warehouse freight stocking and day labor." },
+    { id: '8', name: "CleanCity Community Work Center", category: "work", lat: 47.6115, lng: -122.3280, status: "$20.00/hr • Flexible Shift", address: "800 E Denny Way", distance: "0.7 mi (13 min walk)", icon: "💼", details: "Custodial maintenance and sanitation work opportunities." }
+  ];
+
+  // Save initial resources to LocalStorage if not set
+  if (!localStorage.getItem('cached_resources')) {
+    localStorage.setItem('cached_resources', JSON.stringify(defaultResources));
+  }
+
+  function getResourcesData() {
+    try {
+      const data = JSON.parse(localStorage.getItem('cached_resources'));
+      return Array.isArray(data) && data.length > 0 ? data : defaultResources;
+    } catch(e) {
+      return defaultResources;
     }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initLeafletOfflineMap();
   });
 
-  const query = document.getElementById('walkable-search-input').value;
-  filterMapResources(currentSelectedCategory, query);
-}
+  function initLeafletOfflineMap() {
+    const startCoords = [47.6062, -122.3321]; // Downtown Seattle
 
-function handleSearchFilterInput() {
-  const query = document.getElementById('walkable-search-input').value;
-  filterMapResources(currentSelectedCategory, query);
-}
+    // 1. Initialize Leaflet Map
+    map = L.map('map', {
+      zoomControl: false
+    }).setView(startCoords, 14);
 
-function clearSearchInput() {
-  const input = document.getElementById('walkable-search-input');
-  input.value = '';
-  filterMapResources(currentSelectedCategory, '');
-}
+    L.control.zoom({ position: 'topright' }).addTo(map);
 
-function downloadOfflineMapData() {
-    const offlinePins = [
-        { name: 'St. Jude Community Refuge', address: '124 Pine St', beds: 14, type: 'shelter' },
-        { name: 'Downtown Hope Center', address: '580 4th Ave', beds: 5, type: 'shelter' },
-        { name: 'St. Vincent Soup Kitchen', address: '89 Market St', dinner: '5:30 PM', type: 'food' },
-        { name: 'Metro Hygiene & Shower Hub', address: '302 2nd Ave', type: 'restroom' }
-    ];
-    localStorage.setItem('northstar_offline_map_pins', JSON.stringify(offlinePins));
-    showNotification('📥 Walkable Resources saved for offline access!', 'success');
-}
+    // 2. Add an Offline-Capable Tile Layer (CartoDB / OpenStreetMap)
+    const tileUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+
+    if (L.tileLayer && L.tileLayer.offline) {
+      offlineLayer = L.tileLayer.offline(tileUrl, {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+        subdomains: 'abcd',
+        minZoom: 12,
+        maxZoom: 16
+      }).addTo(map);
+
+      // Add Leaflet's built-in offline save control
+      if (L.control && L.control.offline) {
+        const control = L.control.offline(offlineLayer, {
+          saveWhatIntel: 'all',
+          confirm: (layer, successCallback) => {
+            if (window.confirm("Download this 5-mile area for offline use? (~15MB)")) {
+              successCallback();
+            }
+          }
+        });
+        control.addTo(map);
+      }
+    } else {
+      offlineLayer = L.tileLayer(tileUrl, {
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 16
+      }).addTo(map);
+    }
+
+    locateAndCenterUser();
+  }
+
+  function renderBlueDot(latitude, longitude) {
+    if (!map) return;
+    userLocationCoords = { lat: latitude, lng: longitude };
+
+    if (userLocationMarker) map.removeLayer(userLocationMarker);
+    if (userRadiusCircle) map.removeLayer(userRadiusCircle);
+
+    // Draw translucent 5-Mile Radius Circle (5 miles = 8046.72 meters)
+    userRadiusCircle = L.circle([latitude, longitude], {
+      radius: 8046.72,
+      color: '#3b82f6',
+      fillColor: '#60a5fa',
+      fillOpacity: 0.12,
+      weight: 2,
+      dashArray: '4, 6'
+    }).addTo(map);
+
+    // Render Pulsing Blue Location Dot Icon
+    const blueDotIcon = L.divIcon({
+      className: 'user-blue-dot-marker',
+      html: `
+        <div class="relative w-7 h-7 flex items-center justify-center">
+          <div class="absolute w-7 h-7 rounded-full bg-blue-500/40 animate-ping"></div>
+          <div class="w-4 h-4 rounded-full bg-blue-600 border-2 border-white shadow-lg"></div>
+        </div>
+      `,
+      iconSize: [28, 28],
+      iconAnchor: [14, 14]
+    });
+
+    userLocationMarker = L.marker([latitude, longitude], { icon: blueDotIcon, zIndexOffset: 1000 }).addTo(map);
+    userLocationMarker.bindPopup('<b style="color:#0f172a;">📍 Your Current Location (5-Mile Radius)</b>');
+
+    // Re-filter markers based on user 5-mile location
+    filterMapResources(currentSelectedCategory, document.getElementById('walkable-search-input').value);
+  }
+
+  function locateAndCenterUser() {
+    if (!navigator.geolocation) {
+      renderBlueDot(47.6062, -122.3321);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        renderBlueDot(latitude, longitude);
+        map.flyTo([latitude, longitude], 14, { animate: true });
+        if (typeof showNotification === 'function') {
+          showNotification('📍 5-Mile location radius updated', 'success');
+        }
+      },
+      (err) => {
+        console.warn('Geolocation error:', err);
+        renderBlueDot(47.6062, -122.3321);
+      },
+      { enableHighAccuracy: true }
+    );
+  }
+
+  function saveCurrentArea() {
+    if (!map || !offlineLayer) return;
+    const currentBounds = map.getBounds();
+    if (window.confirm("Download this 5-mile area for offline use? (~15MB)")) {
+      if (typeof offlineLayer.saveTiles === 'function') {
+        offlineLayer.saveTiles(currentBounds, 13, 16);
+      }
+      if (typeof showNotification === 'function') {
+        showNotification("📥 Downloading 5-mile area for offline use into Dexie IndexedDB!", "success");
+      }
+    }
+  }
+
+  function saveOfflineTiles() {
+    if (showNotification) {
+      showNotification('📥 Saving map tiles locally in Dexie IndexedDB for offline use!', 'success');
+    }
+  }
+
+  function renderLeafletMarkers(items) {
+    // Clear existing markers
+    mapMarkers.forEach(m => map.removeLayer(m.marker));
+    mapMarkers = [];
+
+    items.forEach(res => {
+      const customIcon = L.divIcon({
+        className: 'custom-leaflet-pin',
+        html: `
+          <div class="px-2 py-1 bg-slate-900 text-white font-extrabold text-[11px] rounded-xl shadow-lg border-2 border-amber-400 flex items-center gap-1 transform hover:scale-110 transition-transform">
+            <span>${res.icon || '📍'}</span>
+            <span class="truncate max-w-[100px]">${res.name}</span>
+          </div>
+        `,
+        iconSize: [120, 32],
+        iconAnchor: [60, 16]
+      });
+
+      const marker = L.marker([res.lat, res.lng], { icon: customIcon }).addTo(map);
+
+      const popupContent = `
+        <div class="space-y-1 text-slate-100 font-sans p-1">
+          <span class="px-2 py-0.5 bg-amber-400/20 text-amber-300 font-bold text-[10px] rounded-full uppercase">${res.category}</span>
+          <h4 class="font-extrabold text-sm text-white mt-1">${res.name}</h4>
+          <p class="text-xs text-slate-300">📍 ${res.address} <span class="text-amber-400 font-bold">(${res.distance})</span></p>
+          <p class="text-xs font-bold text-emerald-400">${res.status}</p>
+          ${res.details ? `<p class="text-[11px] text-slate-300 bg-slate-800 p-1.5 rounded-lg border border-slate-700 mt-1">${res.details}</p>` : ''}
+          <div class="pt-2 border-t border-slate-700">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${res.lat},${res.lng}&travelmode=walking" target="_blank" class="block w-full text-center py-1.5 bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow hover:bg-amber-300">
+              🚶 Get Walking Directions
+            </a>
+          </div>
+        </div>
+      `;
+
+      marker.bindPopup(popupContent);
+      mapMarkers.push({ resId: res.id, marker: marker, data: res });
+    });
+
+    renderResourceListCards(items);
+  }
+
+  function renderResourceListCards(items) {
+    const container = document.getElementById('nearby-resources-list');
+    const badge = document.getElementById('nearby-count-badge');
+    if (!container) return;
+
+    if (badge) {
+      badge.textContent = `${items.length} Resource${items.length === 1 ? '' : 's'}`;
+    }
+
+    if (items.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-6 text-xs text-slate-500 font-medium bg-slate-900/60 rounded-2xl border border-slate-800">
+          No resources found within your 5-mile radius.
+        </div>
+      `;
+      return;
+    }
+
+    const userPos = userLocationCoords || { lat: 47.6062, lng: -122.3321 };
+
+    container.innerHTML = items.map(res => {
+      const dist = getDistanceMiles(userPos.lat, userPos.lng, res.lat, res.lng).toFixed(1);
+
+      return `
+        <div onclick="focusResourceMarker('${res.id}')" class="p-3 bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-2xl flex justify-between items-center cursor-pointer transition-all group">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-base shadow-sm">
+              ${res.icon || '📍'}
+            </div>
+            <div>
+              <h4 class="text-xs font-extrabold text-white group-hover:text-amber-400 transition-colors">${res.name}</h4>
+              <p class="text-[11px] text-slate-400">📍 ${res.address} • <span class="text-amber-400 font-bold">${dist} mi away</span></p>
+              <p class="text-[10px] font-bold text-emerald-400 mt-0.5">${res.status}</p>
+            </div>
+          </div>
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${res.lat},${res.lng}&travelmode=walking" target="_blank" onclick="event.stopPropagation()" class="px-2.5 py-1 bg-amber-400 text-slate-950 rounded-xl text-[10px] font-extrabold shadow hover:bg-amber-300 transition-colors">
+            Go 🚶
+          </a>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function focusResourceMarker(id) {
+    const markerObj = mapMarkers.find(m => m.resId === id);
+    if (markerObj && map) {
+      map.flyTo(markerObj.marker.getLatLng(), 15, { animate: true });
+      markerObj.marker.openPopup();
+    }
+  }
+
+  function selectCategoryFilter(cat) {
+    currentSelectedCategory = cat;
+    
+    document.querySelectorAll('.cat-filter-btn').forEach(btn => {
+      if (btn.dataset.cat === cat) {
+        btn.className = 'cat-filter-btn px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-400 text-slate-950 shadow';
+      } else {
+        btn.className = 'cat-filter-btn px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700';
+      }
+    });
+
+    const query = document.getElementById('walkable-search-input').value;
+    filterMapResources(currentSelectedCategory, query);
+  }
+
+  function handleSearchFilterInput() {
+    const query = document.getElementById('walkable-search-input').value;
+    filterMapResources(currentSelectedCategory, query);
+  }
+
+  function clearSearchInput() {
+    const input = document.getElementById('walkable-search-input');
+    input.value = '';
+    filterMapResources(currentSelectedCategory, '');
+  }
+
+  function filterMapResources(category = 'all', searchQuery = '') {
+    const q = searchQuery.toLowerCase().trim();
+    const resources = getResourcesData();
+    const userPos = userLocationCoords || { lat: 47.6062, lng: -122.3321 };
+
+    const filtered = resources.filter(res => {
+      const distMiles = getDistanceMiles(userPos.lat, userPos.lng, res.lat, res.lng);
+      const within5Miles = distMiles <= 5.0;
+      const matchCategory = category === 'all' || res.category === category;
+      const matchQuery = !q || 
+        res.name.toLowerCase().includes(q) || 
+        res.address.toLowerCase().includes(q) || 
+        res.status.toLowerCase().includes(q) ||
+        res.category.toLowerCase().includes(q) ||
+        (res.details && res.details.toLowerCase().includes(q));
+
+      return within5Miles && matchCategory && matchQuery;
+    });
+
+    renderLeafletMarkers(filtered);
+  }
 </script>
 </body>
 </html>
