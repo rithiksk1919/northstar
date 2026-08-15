@@ -4,6 +4,29 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+  const session = JSON.parse(localStorage.getItem('northstar_session'));
+  
+  // Session check on index.html: show gateway if no session, else show nav
+  if (currentPath === 'index.html' || currentPath === '') {
+    const gw = document.getElementById('welcome-gateway');
+    const nav = document.getElementById('main-nav');
+    
+    if (session) {
+      if (gw) gw.classList.add('hidden');
+      if (nav) nav.classList.remove('hidden');
+    } else {
+      // Gateway is visible by default; nav stays hidden by default
+      if (gw) gw.classList.remove('hidden');
+    }
+  }
+  
+  // Automatic Trigger: Viewing Shelter Info
+  if (currentPath === 'call-shelter.html') {
+    // Slight delay to ensure DOM is ready and it doesn't block rendering
+    setTimeout(() => updateMilestone('safePlace', true), 500);
+  }
+
   initClock();
   initRoleNavigation();
   initDonationForm();
@@ -12,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCallModal();
   initTaskClaiming();
   initInstantPageTransitions();
+  renderProgressPage();
 });
 
 // Instant Zero-Lag Page Swapping Engine (SPA Router)
@@ -87,6 +111,22 @@ async function navigateToPageInstant(url, pushState = true) {
         if (typeof window.updateProgressUI === 'function') {
           window.updateProgressUI();
         }
+        
+        const path = url.split('/').pop();
+        if (path === 'call-shelter.html') updateMilestone('safePlace', true);
+        
+        // Re-run session gate check when navigating to Home so gateway stays hidden
+        if (path === 'index.html' || path === '') {
+          const gw = document.getElementById('welcome-gateway');
+          const nav = document.getElementById('main-nav');
+          const sess = JSON.parse(localStorage.getItem('northstar_session'));
+          if (sess) {
+            if (gw) gw.classList.add('hidden');
+            if (nav) nav.classList.remove('hidden');
+          }
+        }
+        
+        renderProgressPage();
         window.scrollTo(0, 0);
       }, 90);
     } else {
@@ -322,6 +362,7 @@ function initResourceMapFilter() {
             card.style.display = 'none';
           }
         });
+        updateMilestone('firstStep', true);
       });
     });
   }
@@ -353,6 +394,7 @@ function initCallModal() {
       if (modalNameEl) modalNameEl.textContent = shelterName;
       if (modalPhoneEl) modalPhoneEl.textContent = phoneNum;
       
+      updateMilestone('connected', true);
       openModal('call-overlay-modal');
     });
   });
@@ -447,3 +489,212 @@ window.showNotification = showNotification;
 window.switchUserRole = switchUserRole;
 window.setRole = setRole;
 window.getRole = getRole;
+window.loginAsGuest = loginAsGuest;
+window.loginAsUser = loginAsUser;
+window.saveResumeData = saveResumeData;
+window.setGatewayMode = setGatewayMode;
+window.handleGatewayLogin = handleGatewayLogin;
+window.logout = logout;
+
+// --- Progress State Management ---
+
+let currentGatewayMode = 'seeker';
+
+function setGatewayMode(mode) {
+  currentGatewayMode = mode;
+  const pill = document.getElementById('gateway-pill');
+  const btnSeeker = document.getElementById('gateway-btn-seeker');
+  const btnVolunteer = document.getElementById('gateway-btn-volunteer');
+  
+  if (pill) {
+    if (mode === 'volunteer') {
+      pill.style.transform = 'translateX(100%)';
+      if (btnSeeker) { btnSeeker.classList.remove('text-white'); btnSeeker.classList.add('text-slate-500'); }
+      if (btnVolunteer) { btnVolunteer.classList.remove('text-slate-500'); btnVolunteer.classList.add('text-white'); }
+    } else {
+      pill.style.transform = 'translateX(0)';
+      if (btnSeeker) { btnSeeker.classList.remove('text-slate-500'); btnSeeker.classList.add('text-white'); }
+      if (btnVolunteer) { btnVolunteer.classList.remove('text-white'); btnVolunteer.classList.add('text-slate-500'); }
+    }
+  }
+}
+
+function handleGatewayLogin() {
+  const username = document.getElementById('gateway-username').value;
+  if (!username) return showNotification('Please enter a username', 'error');
+  loginAsUser(username, currentGatewayMode);
+}
+
+function logout() {
+  localStorage.removeItem('northstar_session');
+  window.location.href = 'index.html';
+}
+
+function getSession() {
+  return JSON.parse(localStorage.getItem('northstar_session')) || { role: 'seeker', isGuest: true, username: 'Guest' };
+}
+
+const defaultUserData = {
+  isGuest: true,
+  username: 'Guest',
+  resumeData: null,
+  progress: {
+    firstStep: false,       // Milestone 1
+    safePlace: false,       // Milestone 2
+    basicNeeds: false,      // Milestone 3
+    connected: false,      // Milestone 4
+    movingForward: false,  // Milestone 5
+  }
+};
+
+function getUserData() {
+  const session = getSession();
+  const key = `northstar_data_${session.username}`;
+  return JSON.parse(localStorage.getItem(key)) || defaultUserData;
+}
+
+function updateMilestone(milestoneKey, isCompleted) {
+  const session = getSession();
+  const key = `northstar_data_${session.username}`;
+  const userData = getUserData();
+  userData.progress[milestoneKey] = isCompleted;
+  
+  const completedCount = Object.keys(userData.progress).filter(k => userData.progress[k] === true).length;
+  userData.progress.movingForward = completedCount >= 5;
+  
+  localStorage.setItem(key, JSON.stringify(userData));
+  renderProgressPage();
+}
+
+function loginAsGuest() {
+  const session = { role: 'seeker', isGuest: true, username: 'Guest' };
+  localStorage.setItem('northstar_session', JSON.stringify(session));
+  setRole('seeker');
+  
+  const gw = document.getElementById('welcome-gateway');
+  if (gw) gw.classList.add('hidden');
+  const nav = document.getElementById('main-nav');
+  if (nav) nav.classList.remove('hidden');
+}
+
+function loginAsUser(username, role) {
+  if (!username) username = 'User';
+  const session = { role: role, isGuest: false, username: username };
+  localStorage.setItem('northstar_session', JSON.stringify(session));
+  setRole(role);
+  
+  const gw = document.getElementById('welcome-gateway');
+  if (gw) gw.classList.add('hidden');
+  const nav = document.getElementById('main-nav');
+  if (nav) nav.classList.remove('hidden');
+}
+
+function saveResumeData(data) {
+  const session = getSession();
+  const key = `northstar_data_${session.username}`;
+  const userData = getUserData();
+  userData.resumeData = data;
+  localStorage.setItem(key, JSON.stringify(userData));
+}
+
+function renderProgressPage() {
+  const stepperContainer = document.getElementById('stepper-nodes');
+  const listContainer = document.getElementById('journey-list-container');
+  if (!stepperContainer || !listContainer) return;
+
+  const userData = getUserData();
+  const state = userData.progress;
+  const completedCount = Object.keys(state).filter(k => state[k] === true).length;
+  
+  const session = getSession();
+  const accountLabel = document.getElementById('progress-account-label');
+  if (accountLabel) {
+    accountLabel.textContent = session.isGuest ? 'Browsing as Guest' : `Signed in as ${session.username}`;
+  }
+
+  const progressText = document.getElementById('journey-progress-text');
+  if (progressText) {
+    progressText.innerText = `${completedCount} of 5 milestones completed`;
+  }
+
+  const milestones = [
+    {
+      id: 'firstStep', icon: 'star', title: 'First Step', desc: 'Found your first resource through NorthStar.', 
+      status: state.firstStep ? 'completed' : 'pending', color: 'amber', hasModal: true
+    },
+    {
+      id: 'safePlace', icon: 'home', title: 'Safe Place', desc: 'Found a shelter that can provide support.', 
+      status: state.safePlace ? 'completed' : 'pending', color: 'blue', hasModal: true
+    },
+    {
+      id: 'basicNeeds', icon: 'restaurant', title: 'Basic Needs Connected', desc: 'Found a food, meal, clothing, or essential-needs resource.', 
+      status: state.basicNeeds ? 'completed' : 'pending', color: 'emerald', hasModal: true
+    },
+    {
+      id: 'connected', icon: 'call', title: 'Connected', desc: 'Reached out to a resource for help.', 
+      status: state.connected ? 'completed' : 'pending', color: 'slate', hasModal: false,
+      customAction: '<a href="resource-map.html" class="mt-2 inline-block px-3 py-1.5 bg-primary text-on-primary text-xs font-bold rounded-lg shadow hover:bg-slate-800 transition-colors">Search Resources &rarr;</a>'
+    },
+    {
+      id: 'movingForward', icon: 'trending_up', title: 'Moving Forward', desc: 'Completed 5 helpful actions through NorthStar.', 
+      status: state.movingForward ? 'completed' : 'in-progress', color: 'slate', hasModal: false,
+      customAction: `
+        <div class="mt-2.5">
+            <div class="flex justify-between text-[10px] font-semibold text-slate-500 mb-1">
+                <span>Progress</span>
+                <span>${completedCount} / 5 actions</span>
+            </div>
+            <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                <div class="bg-amber-500 h-full transition-all duration-500" style="width: ${(completedCount/5)*100}%"></div>
+            </div>
+        </div>
+      `
+    }
+  ];
+
+  stepperContainer.innerHTML = milestones.map(m => {
+    const isCompleted = m.status === 'completed';
+    return `
+      <div class="w-6 h-6 rounded-full flex items-center justify-center ${isCompleted ? 'bg-amber-400 text-slate-900 shadow-[0_0_10px_rgba(251,191,36,0.5)]' : 'bg-slate-800 border-2 border-slate-600 text-slate-400'} z-10 text-xs transition-colors duration-300">
+          <span class="material-symbols-outlined text-[14px]">${isCompleted ? 'circle' : 'radio_button_unchecked'}</span>
+      </div>
+    `;
+  }).join('');
+
+  listContainer.innerHTML = milestones.map((m, index) => {
+    const isCompleted = m.status === 'completed';
+    const isLast = index === milestones.length - 1;
+    let clickHandler = m.hasModal ? `onclick="openMilestoneModal('${m.id}')"` : '';
+    let cursorClass = m.hasModal ? 'cursor-pointer hover:bg-slate-50 transition-colors' : '';
+    
+    return `
+      <div class="relative flex gap-4 ${!isLast ? 'pb-6' : ''}">
+        ${!isLast ? '<div class="absolute left-[19px] top-10 bottom-0 w-0.5 bg-slate-200"></div>' : ''}
+        
+        <div class="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center z-10 ${isCompleted ? 'bg-' + m.color + '-100 text-' + m.color + '-600 shadow-sm border border-' + m.color + '-200' : 'bg-slate-100 text-slate-400 border border-slate-200'} transition-colors duration-300">
+            <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' ${isCompleted ? '1' : '0'};">${m.icon}</span>
+        </div>
+        
+        <div class="bg-surface-container-lowest border border-slate-200/80 p-4 rounded-2xl shadow-sm flex-1 ${cursorClass}" ${clickHandler}>
+            <div class="flex justify-between items-start">
+                <h4 class="font-bold text-sm text-primary">${m.title}</h4>
+                ${isCompleted ? '<span class="material-symbols-outlined text-emerald-500 text-lg">check_circle</span>' : (m.status === 'in-progress' ? '<span class="material-symbols-outlined text-amber-500 text-lg">pending</span>' : '<span class="material-symbols-outlined text-slate-300 text-lg">lock</span>')}
+            </div>
+            <p class="text-[11px] text-slate-500 mt-1 leading-snug">${m.desc}</p>
+            ${(!isCompleted && m.customAction) || m.id === 'movingForward' ? m.customAction : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+window.northstarTest = {
+  unlockConnected: () => updateMilestone('connected', true),
+  resetData: () => {
+    const session = getSession();
+    localStorage.removeItem(`northstar_data_${session.username}`);
+    localStorage.removeItem('northstar_session');
+    location.reload();
+  }
+};
+

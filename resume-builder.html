@@ -603,6 +603,9 @@ async function generateResume() {
     }
 
     populateResumeData(result.data);
+    if (typeof window.saveResumeData === 'function') {
+        window.saveResumeData(result.data);
+    }
     
     // Hide spinner, show preview
     document.getElementById('loading-spinner').classList.add('hidden');
