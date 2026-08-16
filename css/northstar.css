@@ -291,4 +291,25 @@ input:focus, textarea:focus, select:focus {
   outline: none;
 }
 
+/* Ensure views swap inside the phone frame instead of sitting side-by-side */
+.phone-frame, .app-frame {
+  position: relative;
+  width: 100%;
+  max-width: 412px;
+  overflow: hidden;
+}
 
+#auth-gateway-view,
+#main-app-layout {
+  width: 100%;
+  height: 100%;
+  /* We use flex layout in index.html, so we just need .hidden to work */
+}
+
+#auth-gateway-view {
+  background-color: #020617; /* slate-950 */
+}
+
+.hidden {
+  display: none !important;
+}

@@ -6,21 +6,130 @@
 document.addEventListener('DOMContentLoaded', () => {
   const currentPath = window.location.pathname.split('/').pop() || 'index.html';
   const session = JSON.parse(localStorage.getItem('northstar_session'));
-  
-  // Session check on index.html: show gateway if no session, else show nav
+
+  // Session check on index.html: show gateway if no session, else show nav and layout
   if (currentPath === 'index.html' || currentPath === '') {
-    const gw = document.getElementById('welcome-gateway');
-    const nav = document.getElementById('main-nav');
-    
+    const gatewayView = document.getElementById('auth-gateway-view');
+    const mainLayout = document.getElementById('main-app-layout');
+    const bottomNav = document.querySelector('.bottom-nav');
+
     if (session) {
-      if (gw) gw.classList.add('hidden');
-      if (nav) nav.classList.remove('hidden');
+      if (gatewayView) gatewayView.classList.add('hidden');
+      if (mainLayout) mainLayout.classList.remove('hidden');
+      if (bottomNav) bottomNav.style.display = 'flex';
+      setRole(session.role);
     } else {
-      // Gateway is visible by default; nav stays hidden by default
-      if (gw) gw.classList.remove('hidden');
+      if (gatewayView) gatewayView.classList.remove('hidden');
+      if (mainLayout) mainLayout.classList.add('hidden');
+    }
+
+    function enterApp(userData) {
+      console.log('Unlocking app with user:', userData);
+      localStorage.setItem('northstar_session', JSON.stringify(userData));
+      setRole(userData.role);
+
+      // Hide BOTH possible gateway overlays
+      ['auth-gateway-view', 'welcome-gateway'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.classList.add('hidden'); el.style.display = 'none'; }
+      });
+
+      // Show main app layout
+      if (mainLayout) {
+        mainLayout.classList.remove('hidden');
+        mainLayout.style.display = 'flex';
+      }
+
+      // Show nav
+      if (bottomNav) {
+        bottomNav.style.display = 'flex';
+      }
+    }
+
+    let currentMode = 'login';
+    let selectedRole = 'seeker';
+
+    // Single delegated click listener covers BOTH overlays
+    document.body.addEventListener('click', (e) => {
+
+      // ── #welcome-gateway buttons ──────────────────────────────────────────
+
+      // Guest button (both overlays share this id)
+      if (e.target.closest('#guest-btn')) {
+        e.preventDefault();
+        enterApp({ username: 'Guest', role: 'seeker', isGuest: true });
+        return;
+      }
+
+      // Sign In button (#welcome-gateway)
+      if (e.target.closest('#sign-in-btn')) {
+        e.preventDefault();
+        const username = (document.getElementById('gateway-username') || {}).value || '';
+        const password = (document.getElementById('gateway-password') || {}).value || '';
+        if (!username.trim()) { showNotification('Please enter a username.', 'error'); return; }
+        enterApp({ username: username.trim(), role: currentGatewayMode || selectedRole, isGuest: false, mode: 'signin' });
+        return;
+      }
+
+      // Create Account button (#welcome-gateway)
+      if (e.target.closest('#create-account-btn')) {
+        e.preventDefault();
+        const username = (document.getElementById('gateway-username') || {}).value || '';
+        const password = (document.getElementById('gateway-password') || {}).value || '';
+        if (!username.trim()) { showNotification('Please enter a username.', 'error'); return; }
+        enterApp({ username: username.trim(), role: currentGatewayMode || selectedRole, isGuest: false, mode: 'signup' });
+        return;
+      }
+
+      // ── #auth-gateway-view tab toggles ───────────────────────────────────
+
+      const tabLogin = e.target.closest('#tab-login');
+      const tabSignup = e.target.closest('#tab-signup');
+      const roleSelection = document.getElementById('role-selection');
+      const submitBtn = document.getElementById('auth-submit-btn');
+
+      if (tabLogin) {
+        currentMode = 'login';
+        tabLogin.className = 'flex-1 py-2 text-xs font-semibold rounded-lg bg-slate-800 text-white';
+        if (tabSignup) tabSignup.className = 'flex-1 py-2 text-xs font-semibold rounded-lg text-slate-400';
+        roleSelection?.classList.add('hidden');
+        if (submitBtn) submitBtn.textContent = 'Sign In';
+      }
+      if (tabSignup) {
+        currentMode = 'signup';
+        tabSignup.className = 'flex-1 py-2 text-xs font-semibold rounded-lg bg-slate-800 text-white';
+        if (tabLogin) tabLogin.className = 'flex-1 py-2 text-xs font-semibold rounded-lg text-slate-400';
+        roleSelection?.classList.remove('hidden');
+        if (submitBtn) submitBtn.textContent = 'Create Account';
+      }
+
+      // Role selection buttons
+      const roleBtn = e.target.closest('.role-btn');
+      if (roleBtn) {
+        selectedRole = roleBtn.dataset.role;
+        document.querySelectorAll('.role-btn').forEach(b => {
+          b.className = 'role-btn py-2 text-xs font-semibold bg-slate-900 text-slate-400 border border-slate-800 rounded-lg';
+        });
+        roleBtn.className = 'role-btn py-2 text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/50 rounded-lg';
+      }
+    });
+
+    // Form submit on #auth-gateway-view
+    const authForm = document.getElementById('auth-form');
+    if (authForm) {
+      authForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const usernameInput = document.getElementById('auth-username');
+        const username = usernameInput ? usernameInput.value : 'User';
+        enterApp({
+          username,
+          role: currentMode === 'signup' ? selectedRole : 'seeker',
+          isGuest: false
+        });
+      });
     }
   }
-  
+
   // Automatic Trigger: Viewing Shelter Info
   if (currentPath === 'call-shelter.html') {
     // Slight delay to ensure DOM is ready and it doesn't block rendering
@@ -80,14 +189,14 @@ async function navigateToPageInstant(url, pushState = true) {
 
     if (newAppFrame && currentAppFrame) {
       currentAppFrame.classList.add('opacity-0', 'transition-opacity', 'duration-100');
-      
+
       setTimeout(() => {
         currentAppFrame.innerHTML = newAppFrame.innerHTML;
         document.title = doc.title;
         if (pushState) {
           window.history.pushState({}, doc.title, url);
         }
-        
+
         currentAppFrame.classList.remove('opacity-0');
         currentAppFrame.classList.add('animate-fade-in-up');
 
@@ -111,21 +220,24 @@ async function navigateToPageInstant(url, pushState = true) {
         if (typeof window.updateProgressUI === 'function') {
           window.updateProgressUI();
         }
-        
+
         const path = url.split('/').pop();
         if (path === 'call-shelter.html') updateMilestone('safePlace', true);
-        
+
         // Re-run session gate check when navigating to Home so gateway stays hidden
         if (path === 'index.html' || path === '') {
-          const gw = document.getElementById('welcome-gateway');
-          const nav = document.getElementById('main-nav');
+          const gw = document.getElementById('auth-gateway-view');
+          const layout = document.getElementById('main-app-layout');
           const sess = JSON.parse(localStorage.getItem('northstar_session'));
           if (sess) {
             if (gw) gw.classList.add('hidden');
-            if (nav) nav.classList.remove('hidden');
+            if (layout) layout.classList.remove('hidden');
+          } else {
+            if (gw) gw.classList.remove('hidden');
+            if (layout) layout.classList.add('hidden');
           }
         }
-        
+
         renderProgressPage();
         window.scrollTo(0, 0);
       }, 90);
@@ -228,7 +340,7 @@ function renderRoleHeaderToggle() {
 function switchUserRole(role) {
   setRole(role);
   showNotification(`Switched mode to: ${role === 'seeker' ? 'Seeker (I Need Help)' : 'Volunteer (I Want to Help)'}`, 'info');
-  
+
   const currentPath = window.location.pathname.split('/').pop() || 'index.html';
   if (role === 'seeker' && (currentPath === 'helper-dashboard.html' || currentPath === 'opportunities.html')) {
     window.location.href = 'seeker-dashboard.html';
@@ -269,7 +381,7 @@ function renderDynamicNav() {
     const activeClass = isActive
       ? 'bg-secondary-container text-on-secondary-container rounded-2xl px-3 py-1.5 shadow-md starlight-glow font-bold animate-switch-pop'
       : 'text-on-surface-variant hover:text-primary px-3 py-1.5 font-medium';
-    
+
     const fillStyle = isActive ? "style=\"font-variation-settings: 'FILL' 1;\"" : "";
 
     return `
@@ -287,7 +399,7 @@ function initDonationForm() {
   const customInput = document.getElementById('custom-amount-input');
   const freqBtns = document.querySelectorAll('.freq-btn');
   const donateSubmitBtn = document.getElementById('donate-submit-btn');
-  
+
   let selectedAmount = '25';
 
   if (amountBtns.length > 0) {
@@ -387,13 +499,13 @@ function initCallModal() {
       e.preventDefault();
       const shelterName = btn.dataset.shelter || 'Northstar Emergency Dispatch';
       const phoneNum = btn.dataset.phone || '1-800-555-0199';
-      
+
       const modalNameEl = document.getElementById('call-modal-name');
       const modalPhoneEl = document.getElementById('call-modal-phone');
-      
+
       if (modalNameEl) modalNameEl.textContent = shelterName;
       if (modalPhoneEl) modalPhoneEl.textContent = phoneNum;
-      
+
       updateMilestone('connected', true);
       openModal('call-overlay-modal');
     });
@@ -457,9 +569,9 @@ function showNotification(message, type = 'info') {
 
   const toast = document.createElement('div');
   const bgClass = type === 'success' ? 'bg-slate-900 border-secondary-fixed text-white' : 'bg-slate-900 border-slate-700 text-white';
-  
+
   toast.className = `${bgClass} border px-4 py-3 rounded-2xl shadow-2xl backdrop-blur-lg flex items-center justify-between pointer-events-auto transition-all duration-300 transform -translate-y-4 opacity-0 text-sm font-medium`;
-  
+
   toast.innerHTML = `
     <div class="flex items-center gap-3">
       <img src="northstar-logo.png" class="w-5 h-5 object-contain" alt="Northstar" />
@@ -480,6 +592,52 @@ function showNotification(message, type = 'info') {
     toast.classList.add('-translate-y-4', 'opacity-0');
     setTimeout(() => toast.remove(), 300);
   }, 4000);
+}
+
+// --- Auth Entry Functions ---
+
+function loginAsGuest() {
+  const session = { username: 'Guest', role: 'seeker', isGuest: true };
+  localStorage.setItem('northstar_session', JSON.stringify(session));
+
+  // Hide the welcome-gateway overlay
+  const gateway = document.getElementById('welcome-gateway');
+  if (gateway) gateway.style.display = 'none';
+
+  // Also hide the auth-gateway-view if present
+  const authView = document.getElementById('auth-gateway-view');
+  if (authView) { authView.classList.add('hidden'); authView.style.display = 'none'; }
+
+  // Show main app layout
+  const mainLayout = document.getElementById('main-app-layout');
+  if (mainLayout) { mainLayout.classList.remove('hidden'); mainLayout.style.display = 'flex'; }
+
+  console.log('Logged in as Guest');
+}
+
+function loginAsUser(username, mode) {
+  if (!username || !username.trim()) {
+    showNotification('Please enter a username to continue.', 'error');
+    return;
+  }
+
+  const role = currentGatewayMode || 'seeker';
+  const session = { username: username.trim(), role, isGuest: false, mode };
+  localStorage.setItem('northstar_session', JSON.stringify(session));
+
+  // Hide the welcome-gateway overlay
+  const gateway = document.getElementById('welcome-gateway');
+  if (gateway) gateway.style.display = 'none';
+
+  // Also hide the auth-gateway-view if present
+  const authView = document.getElementById('auth-gateway-view');
+  if (authView) { authView.classList.add('hidden'); authView.style.display = 'none'; }
+
+  // Show main app layout
+  const mainLayout = document.getElementById('main-app-layout');
+  if (mainLayout) { mainLayout.classList.remove('hidden'); mainLayout.style.display = 'flex'; }
+
+  console.log(`Logged in as ${username} (${mode}, role: ${role})`);
 }
 
 // Expose globally for HTML handlers
@@ -505,7 +663,7 @@ function setGatewayMode(mode) {
   const pill = document.getElementById('gateway-pill');
   const btnSeeker = document.getElementById('gateway-btn-seeker');
   const btnVolunteer = document.getElementById('gateway-btn-volunteer');
-  
+
   if (pill) {
     if (mode === 'volunteer') {
       pill.style.transform = 'translateX(100%)';
@@ -519,10 +677,12 @@ function setGatewayMode(mode) {
   }
 }
 
-function handleGatewayLogin() {
+function handleGatewayLogin(mode) {
   const username = document.getElementById('gateway-username').value;
   if (!username) return showNotification('Please enter a username', 'error');
-  loginAsUser(username, currentGatewayMode);
+  // Use the passed mode ('signin' or 'signup') or fall back to the current role toggle state
+  const resolvedMode = mode || currentGatewayMode;
+  loginAsUser(username, resolvedMode);
 }
 
 function logout() {
@@ -558,36 +718,15 @@ function updateMilestone(milestoneKey, isCompleted) {
   const key = `northstar_data_${session.username}`;
   const userData = getUserData();
   userData.progress[milestoneKey] = isCompleted;
-  
+
   const completedCount = Object.keys(userData.progress).filter(k => userData.progress[k] === true).length;
   userData.progress.movingForward = completedCount >= 5;
-  
+
   localStorage.setItem(key, JSON.stringify(userData));
   renderProgressPage();
 }
 
-function loginAsGuest() {
-  const session = { role: 'seeker', isGuest: true, username: 'Guest' };
-  localStorage.setItem('northstar_session', JSON.stringify(session));
-  setRole('seeker');
-  
-  const gw = document.getElementById('welcome-gateway');
-  if (gw) gw.classList.add('hidden');
-  const nav = document.getElementById('main-nav');
-  if (nav) nav.classList.remove('hidden');
-}
 
-function loginAsUser(username, role) {
-  if (!username) username = 'User';
-  const session = { role: role, isGuest: false, username: username };
-  localStorage.setItem('northstar_session', JSON.stringify(session));
-  setRole(role);
-  
-  const gw = document.getElementById('welcome-gateway');
-  if (gw) gw.classList.add('hidden');
-  const nav = document.getElementById('main-nav');
-  if (nav) nav.classList.remove('hidden');
-}
 
 function saveResumeData(data) {
   const session = getSession();
@@ -605,7 +744,7 @@ function renderProgressPage() {
   const userData = getUserData();
   const state = userData.progress;
   const completedCount = Object.keys(state).filter(k => state[k] === true).length;
-  
+
   const session = getSession();
   const accountLabel = document.getElementById('progress-account-label');
   if (accountLabel) {
@@ -619,24 +758,24 @@ function renderProgressPage() {
 
   const milestones = [
     {
-      id: 'firstStep', icon: 'star', title: 'First Step', desc: 'Found your first resource through NorthStar.', 
+      id: 'firstStep', icon: 'star', title: 'First Step', desc: 'Found your first resource through NorthStar.',
       status: state.firstStep ? 'completed' : 'pending', color: 'amber', hasModal: true
     },
     {
-      id: 'safePlace', icon: 'home', title: 'Safe Place', desc: 'Found a shelter that can provide support.', 
+      id: 'safePlace', icon: 'home', title: 'Safe Place', desc: 'Found a shelter that can provide support.',
       status: state.safePlace ? 'completed' : 'pending', color: 'blue', hasModal: true
     },
     {
-      id: 'basicNeeds', icon: 'restaurant', title: 'Basic Needs Connected', desc: 'Found a food, meal, clothing, or essential-needs resource.', 
+      id: 'basicNeeds', icon: 'restaurant', title: 'Basic Needs Connected', desc: 'Found a food, meal, clothing, or essential-needs resource.',
       status: state.basicNeeds ? 'completed' : 'pending', color: 'emerald', hasModal: true
     },
     {
-      id: 'connected', icon: 'call', title: 'Connected', desc: 'Reached out to a resource for help.', 
+      id: 'connected', icon: 'call', title: 'Connected', desc: 'Reached out to a resource for help.',
       status: state.connected ? 'completed' : 'pending', color: 'slate', hasModal: false,
       customAction: '<a href="resource-map.html" class="mt-2 inline-block px-3 py-1.5 bg-primary text-on-primary text-xs font-bold rounded-lg shadow hover:bg-slate-800 transition-colors">Search Resources &rarr;</a>'
     },
     {
-      id: 'movingForward', icon: 'trending_up', title: 'Moving Forward', desc: 'Completed 5 helpful actions through NorthStar.', 
+      id: 'movingForward', icon: 'trending_up', title: 'Moving Forward', desc: 'Completed 5 helpful actions through NorthStar.',
       status: state.movingForward ? 'completed' : 'in-progress', color: 'slate', hasModal: false,
       customAction: `
         <div class="mt-2.5">
@@ -645,7 +784,7 @@ function renderProgressPage() {
                 <span>${completedCount} / 5 actions</span>
             </div>
             <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                <div class="bg-amber-500 h-full transition-all duration-500" style="width: ${(completedCount/5)*100}%"></div>
+                <div class="bg-amber-500 h-full transition-all duration-500" style="width: ${(completedCount / 5) * 100}%"></div>
             </div>
         </div>
       `
@@ -666,7 +805,7 @@ function renderProgressPage() {
     const isLast = index === milestones.length - 1;
     let clickHandler = m.hasModal ? `onclick="openMilestoneModal('${m.id}')"` : '';
     let cursorClass = m.hasModal ? 'cursor-pointer hover:bg-slate-50 transition-colors' : '';
-    
+
     return `
       <div class="relative flex gap-4 ${!isLast ? 'pb-6' : ''}">
         ${!isLast ? '<div class="absolute left-[19px] top-10 bottom-0 w-0.5 bg-slate-200"></div>' : ''}

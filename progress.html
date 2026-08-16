@@ -1,160 +1,176 @@
 <!DOCTYPE html>
 <html class="light" lang="en">
+
 <head>
-<meta charset="utf-8">
-<meta content="width=device-width, initial-scale=1.0" name="viewport">
-<title>Northstar | Progress</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link rel="stylesheet" href="css/northstar.css">
-<script id="tailwind-config">
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            "colors": {
-                    "error": "#ba1a1a",
-                    "surface": "#f7f9fb",
-                    "tertiary-container": "#0d1c2f",
-                    "surface-variant": "#e0e3e5",
-                    "on-primary-container": "#7c839b",
-                    "surface-container-lowest": "#ffffff",
-                    "primary-fixed-dim": "#bec6e0",
-                    "on-surface": "#191c1e",
-                    "surface-tint": "#565e74",
-                    "on-background": "#191c1e",
-                    "tertiary": "#000000",
-                    "secondary": "#6d5e00",
-                    "primary-fixed": "#dae2fd",
-                    "on-primary": "#ffffff",
-                    "surface-container-low": "#f2f4f6",
-                    "tertiary-fixed": "#d5e3fd",
-                    "on-error-container": "#93000a",
-                    "on-primary-fixed": "#131b2e",
-                    "secondary-fixed-dim": "#e2c62d",
-                    "background": "#f7f9fb",
-                    "on-tertiary-fixed-variant": "#3a485c",
-                    "primary-container": "#131b2e",
-                    "tertiary-fixed-dim": "#b9c7e0",
-                    "outline": "#76777d",
-                    "surface-container": "#eceef0",
-                    "on-tertiary-container": "#76859b",
-                    "on-surface-variant": "#45464d",
-                    "on-secondary": "#ffffff",
-                    "on-secondary-fixed": "#211b00",
-                    "outline-variant": "#c6c6cd",
-                    "surface-container-highest": "#e0e3e5",
-                    "on-error": "#ffffff",
-                    "surface-container-high": "#e6e8ea",
-                    "on-tertiary-fixed": "#0d1c2f",
-                    "primary": "#0d1c2f",
-                    "surface-dim": "#d8dadc",
-                    "surface-bright": "#f7f9fb",
-                    "secondary-fixed": "#ffe24c",
-                    "on-tertiary": "#ffffff",
-                    "on-secondary-fixed-variant": "#524600",
-                    "inverse-on-surface": "#eff1f3",
-                    "secondary-container": "#fcdf46",
-                    "inverse-surface": "#2d3133",
-                    "error-container": "#ffdad6",
-                    "on-secondary-container": "#726200",
-                    "inverse-primary": "#bec6e0",
-                    "on-primary-fixed-variant": "#3f465c"
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Northstar | Progress</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link rel="stylesheet" href="css/northstar.css">
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "surface": "#f7f9fb",
+                        "tertiary-container": "#0d1c2f",
+                        "surface-variant": "#e0e3e5",
+                        "on-primary-container": "#7c839b",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed-dim": "#bec6e0",
+                        "on-surface": "#191c1e",
+                        "surface-tint": "#565e74",
+                        "on-background": "#191c1e",
+                        "tertiary": "#000000",
+                        "secondary": "#6d5e00",
+                        "primary-fixed": "#dae2fd",
+                        "on-primary": "#ffffff",
+                        "surface-container-low": "#f2f4f6",
+                        "tertiary-fixed": "#d5e3fd",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed": "#131b2e",
+                        "secondary-fixed-dim": "#e2c62d",
+                        "background": "#f7f9fb",
+                        "on-tertiary-fixed-variant": "#3a485c",
+                        "primary-container": "#131b2e",
+                        "tertiary-fixed-dim": "#b9c7e0",
+                        "outline": "#76777d",
+                        "surface-container": "#eceef0",
+                        "on-tertiary-container": "#76859b",
+                        "on-surface-variant": "#45464d",
+                        "on-secondary": "#ffffff",
+                        "on-secondary-fixed": "#211b00",
+                        "outline-variant": "#c6c6cd",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-error": "#ffffff",
+                        "surface-container-high": "#e6e8ea",
+                        "on-tertiary-fixed": "#0d1c2f",
+                        "primary": "#0d1c2f",
+                        "surface-dim": "#d8dadc",
+                        "surface-bright": "#f7f9fb",
+                        "secondary-fixed": "#ffe24c",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed-variant": "#524600",
+                        "inverse-on-surface": "#eff1f3",
+                        "secondary-container": "#fcdf46",
+                        "inverse-surface": "#2d3133",
+                        "error-container": "#ffdad6",
+                        "on-secondary-container": "#726200",
+                        "inverse-primary": "#bec6e0",
+                        "on-primary-fixed-variant": "#3f465c"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "3xl": "1.5rem",
+                        "full": "9999px"
+                    }
+                },
             },
-            "borderRadius": {
-                    "DEFAULT": "0.25rem",
-                    "lg": "0.5rem",
-                    "xl": "0.75rem",
-                    "2xl": "1rem",
-                    "3xl": "1.5rem",
-                    "full": "9999px"
-            }
-          },
-        },
-      }
-</script>
+        }
+    </script>
 </head>
+
 <body class="bg-slate-950 min-h-screen flex items-center justify-center p-0 sm:py-6 text-on-surface">
 
-<!-- Mobile Frame Shell -->
-<div class="app-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-surface sm:rounded-[44px] shadow-[0_0_60px_rgba(0,0,0,0.6)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800">
+    <!-- Mobile Frame Shell -->
+    <div
+        class="app-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-surface sm:rounded-[44px] shadow-[0_0_60px_rgba(0,0,0,0.6)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800">
 
-    <!-- Top Status Bar -->
-    <div class="bg-surface px-6 pt-3 pb-1 flex justify-between items-center text-xs font-semibold text-slate-500 z-50 select-none">
-        <span class="status-clock">9:41</span>
-        <div class="w-16 h-4 bg-slate-900 rounded-full flex items-center justify-center">
-            <div class="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
-        </div>
-        <div class="flex items-center gap-1.5">
-            <span class="material-symbols-outlined text-xs">signal_cellular_4_bar</span>
-            <span class="material-symbols-outlined text-xs">wifi</span>
-            <span class="material-symbols-outlined text-xs text-amber-500">battery_50</span>
-        </div>
-    </div>
-
-    <!-- App Header -->
-    <header class="bg-surface/90 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center w-full px-6 py-3 border-b border-slate-200/60">
-        <div class="flex items-center gap-2">
-            <a href="seeker-dashboard.html" class="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center text-primary hover:bg-slate-200 transition-colors">
-                <span class="material-symbols-outlined text-lg">arrow_back</span>
-            </a>
-            <div>
-              <h1 class="text-lg font-bold text-primary tracking-tight leading-tight">Progress</h1>
-              <p class="text-[10px] text-slate-500 font-medium">Every step forward matters.</p>
+        <!-- Top Status Bar -->
+        <div
+            class="bg-surface px-6 pt-3 pb-1 flex justify-between items-center text-xs font-semibold text-slate-500 z-50 select-none">
+            <span class="status-clock">9:41</span>
+            <div class="w-16 h-4 bg-slate-900 rounded-full flex items-center justify-center">
+                <div class="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-xs">signal_cellular_4_bar</span>
+                <span class="material-symbols-outlined text-xs">wifi</span>
+                <span class="material-symbols-outlined text-xs text-amber-500">battery_50</span>
             </div>
         </div>
-    </header>
 
-    <!-- Main Content Canvas -->
-    <main class="flex-grow p-4 sm:p-5 space-y-5 overflow-y-auto" style="padding-bottom: 100px; -webkit-overflow-scrolling: touch;">
-        
-        <!-- Progress Summary Header Card -->
-        <div class="glass-card-dark rounded-2xl p-5 text-white space-y-3 shadow-xl relative overflow-hidden">
-            <div class="flex justify-between items-start">
+        <!-- App Header -->
+        <header
+            class="bg-surface/90 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center w-full px-6 py-3 border-b border-slate-200/60">
+            <div class="flex items-center gap-2">
+                <a href="seeker-dashboard.html"
+                    class="w-9 h-9 rounded-full bg-surface-container flex items-center justify-center text-primary hover:bg-slate-200 transition-colors">
+                    <span class="material-symbols-outlined text-lg">arrow_back</span>
+                </a>
                 <div>
-                    <h2 class="text-lg font-extrabold text-white">Your NorthStar Journey</h2>
-                    <p class="text-xs text-slate-300 mt-1" id="journey-progress-text">0 of 5 milestones completed</p>
+                    <h1 class="text-lg font-bold text-primary tracking-tight leading-tight">Progress</h1>
+                    <p class="text-[10px] text-slate-500 font-medium">Every step forward matters.</p>
                 </div>
             </div>
-            
-            <div class="flex items-center justify-between mt-4 relative">
-                <div class="absolute left-0 top-1/2 w-full h-0.5 bg-slate-700 -z-10 -translate-y-1/2"></div>
-                <!-- Dynamic Stepper Nodes injected by JS -->
-                <div id="stepper-nodes" class="flex justify-between w-full"></div>
+        </header>
+
+        <!-- Main Content Canvas -->
+        <main class="flex-grow p-4 sm:p-5 space-y-5 overflow-y-auto"
+            style="padding-bottom: 100px; -webkit-overflow-scrolling: touch;">
+
+            <!-- Progress Summary Header Card -->
+            <div class="glass-card-dark rounded-2xl p-5 text-white space-y-3 shadow-xl relative overflow-hidden">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-lg font-extrabold text-white">Your NorthStar Journey</h2>
+                        <p class="text-xs text-slate-300 mt-1" id="journey-progress-text">0 of 5 milestones completed
+                        </p>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between mt-4 relative">
+                    <div class="absolute left-0 top-1/2 w-full h-0.5 bg-slate-700 -z-10 -translate-y-1/2"></div>
+                    <!-- Dynamic Stepper Nodes injected by JS -->
+                    <div id="stepper-nodes" class="flex justify-between w-full"></div>
+                </div>
+            </div>
+
+            <!-- Sequential Journey List injected by JS -->
+            <section class="space-y-0 relative" id="journey-list-container"></section>
+
+            <!-- Account Footer -->
+            <div class="pt-2 pb-2 text-center">
+                <p id="progress-account-label" class="text-[11px] text-slate-400 font-medium"></p>
+                <button onclick="localStorage.removeItem('northstar_session'); window.location.href='index.html';"
+                    class="mt-1 text-[11px] text-slate-400 underline underline-offset-2 hover:text-slate-600 transition-colors">Switch
+                    Account</button>
+            </div>
+
+        </main>
+
+        <!-- Bottom Navigation Bar -->
+        <nav
+            class="absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-3 py-3 bg-surface/95 backdrop-blur-xl border-t border-slate-200/80">
+            <!-- Dynamically rendered by northstar.js -->
+        </nav>
+
+        <!-- Milestone Details Drawer/Modal -->
+        <div id="milestone-modal" class="fixed inset-0 z-[100] hidden flex-col justify-end">
+            <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('milestone-modal')">
+            </div>
+            <div
+                class="modal-drawer bg-surface w-full rounded-t-3xl p-6 transform translate-y-full transition-transform duration-300 ease-in-out relative flex flex-col max-h-[85vh]">
+                <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-5"></div>
+                <h2 id="modal-title" class="text-xl font-bold text-primary mb-2">Milestone Details</h2>
+                <p id="modal-desc" class="text-sm text-slate-500 mb-6">Details will appear here.</p>
+                <div id="modal-actions" class="mt-auto pt-4 flex flex-col gap-3">
+                    <!-- Dynamic Actions -->
+                </div>
             </div>
         </div>
 
-        <!-- Sequential Journey List injected by JS -->
-        <section class="space-y-0 relative" id="journey-list-container"></section>
-
-        <!-- Account Footer -->
-        <div class="pt-2 pb-2 text-center">
-            <p id="progress-account-label" class="text-[11px] text-slate-400 font-medium"></p>
-            <button onclick="localStorage.removeItem('northstar_session'); window.location.href='index.html';" class="mt-1 text-[11px] text-slate-400 underline underline-offset-2 hover:text-slate-600 transition-colors">Switch Account</button>
-        </div>
-
-    </main>
-
-    <!-- Bottom Navigation Bar -->
-    <nav class="absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-3 py-3 bg-surface/95 backdrop-blur-xl border-t border-slate-200/80">
-        <!-- Dynamically rendered by northstar.js -->
-    </nav>
-    
-    <!-- Milestone Details Drawer/Modal -->
-    <div id="milestone-modal" class="fixed inset-0 z-[100] hidden flex-col justify-end">
-        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('milestone-modal')"></div>
-        <div class="modal-drawer bg-surface w-full rounded-t-3xl p-6 transform translate-y-full transition-transform duration-300 ease-in-out relative flex flex-col max-h-[85vh]">
-            <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-5"></div>
-            <h2 id="modal-title" class="text-xl font-bold text-primary mb-2">Milestone Details</h2>
-            <p id="modal-desc" class="text-sm text-slate-500 mb-6">Details will appear here.</p>
-            <div id="modal-actions" class="mt-auto pt-4 flex flex-col gap-3">
-               <!-- Dynamic Actions -->
-            </div>
-        </div>
     </div>
 
-</div>
-
-<script src="js/northstar.js"></script>
+    <script src="js/northstar.js"></script>
 </body>
+
 </html>
