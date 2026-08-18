@@ -225,6 +225,13 @@ function initInstantPageTransitions() {
     const href = link.getAttribute('href');
     if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('tel:')) return;
 
+    // Prevent re-rendering the exact same page if the user clicks the active tab again (Fixes layout collapsing bugs)
+    const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+    if (href === currentPath) {
+      e.preventDefault();
+      return;
+    }
+
     e.preventDefault();
     navigateToPageInstant(href);
   });
@@ -269,6 +276,10 @@ async function navigateToPageInstant(url, pushState = true) {
 
       setTimeout(() => {
         currentAppFrame.innerHTML = newAppFrame.innerHTML;
+        // Explicitly copy CSS classes (like flex, constraints) from the newly fetched frame
+        // This ensures mobile constraints and responsive styling are preserved when swapping views
+        currentAppFrame.className = newAppFrame.className;
+
         document.title = doc.title;
         if (pushState) {
           window.history.pushState({}, doc.title, url);
@@ -689,7 +700,7 @@ function closeModal(modalId) {
 }
 
 // Settings Modal Generator
-window.openSettingsModal = function() {
+window.openSettingsModal = function () {
   let modal = document.getElementById('settings-modal');
   if (!modal) {
     modal = document.createElement('div');
@@ -721,6 +732,7 @@ window.openSettingsModal = function() {
             </div>
           </div>
 
+
           <!-- Sign Out Button -->
           <div class="pt-4 border-t border-slate-200">
             <button onclick="signOutUser()" class="w-full py-3.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-xl text-sm shadow-sm transition-colors border border-rose-100 flex items-center justify-center gap-2">
@@ -735,12 +747,12 @@ window.openSettingsModal = function() {
       appFrame.appendChild(modal);
     }
   }
-  
+
   // Update role toggle UI state
   const role = getRole();
   const seekerBtn = document.getElementById('settings-role-seeker');
   const volunteerBtn = document.getElementById('settings-role-volunteer');
-  
+
   if (role === 'seeker') {
     seekerBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-amber-400 bg-amber-50 text-amber-900 transition-all flex flex-col items-center justify-center gap-1 shadow-sm';
     volunteerBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-slate-200 bg-white text-slate-500 hover:bg-slate-50 transition-all flex flex-col items-center justify-center gap-1';
@@ -1016,14 +1028,4 @@ function renderProgressPage() {
     `;
   }).join('');
 }
-
-window.northstarTest = {
-  unlockConnected: () => updateMilestone('connected', true),
-  resetData: () => {
-    const session = getSession();
-    localStorage.removeItem(`northstar_data_${session.username}`);
-    localStorage.removeItem('northstar_session');
-    location.reload();
-  }
-};
 
