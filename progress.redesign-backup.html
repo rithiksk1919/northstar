@@ -140,9 +140,7 @@
             <!-- Account Footer -->
             <div class="pt-2 pb-2 text-center">
                 <p id="progress-account-label" class="text-[11px] text-slate-400 font-medium"></p>
-                <button onclick="localStorage.removeItem('northstar_session'); window.location.href='index.html';"
-                    class="mt-1 text-[11px] text-slate-400 underline underline-offset-2 hover:text-slate-600 transition-colors">Switch
-                    Account</button>
+                <p class="mt-1 text-[11px] text-slate-400">Manage your account in Settings.</p>
             </div>
 
         </main>
@@ -154,7 +152,7 @@
         </nav>
 
         <!-- Milestone Details Drawer/Modal -->
-        <div id="milestone-modal" class="absolute inset-0 z-[100] hidden flex-col justify-end">
+        <div id="milestone-modal" class="fixed inset-0 z-[100] hidden flex-col justify-end">
             <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('milestone-modal')">
             </div>
             <div

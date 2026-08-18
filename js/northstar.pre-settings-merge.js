@@ -7,27 +7,132 @@ document.addEventListener('DOMContentLoaded', () => {
   const currentPath = window.location.pathname.split('/').pop() || 'index.html';
   const session = JSON.parse(localStorage.getItem('northstar_session'));
 
-  // Force Auth Gateway on Launch: Always require explicit login/guest access on index.html
+  // Session check on index.html: show gateway if no session, else show nav and layout
   if (currentPath === 'index.html' || currentPath === '') {
-    localStorage.removeItem('northstar_session');
-    localStorage.removeItem('northstar_user_role');
     const gatewayView = document.getElementById('auth-gateway-view');
     const mainLayout = document.getElementById('main-app-layout');
-    const bottomNav = document.querySelector('nav');
-    if (gatewayView) { gatewayView.classList.remove('hidden'); gatewayView.style.display = 'flex'; }
-    if (mainLayout) { mainLayout.classList.add('hidden'); mainLayout.style.display = 'none'; }
-    if (bottomNav) { bottomNav.style.display = 'none'; }
-    return;
-  }
+    const bottomNav = document.querySelector('.bottom-nav');
 
-  // Session Gate: Check authentication globally for internal pages
-  if (!session || (session && !session.isGuest && !session.email && !session.username)) {
-    window.location.href = 'index.html';
-    return;
+    if (session) {
+      if (gatewayView) gatewayView.classList.add('hidden');
+      if (mainLayout) mainLayout.classList.remove('hidden');
+      if (bottomNav) bottomNav.style.display = 'flex';
+      setRole(session.role);
+    } else {
+      if (gatewayView) gatewayView.classList.remove('hidden');
+      if (mainLayout) mainLayout.classList.add('hidden');
+    }
+
+    function enterApp(userData) {
+      console.log('Unlocking app with user:', userData);
+      localStorage.setItem('northstar_session', JSON.stringify(userData));
+      setRole(userData.role);
+
+      // Hide BOTH possible gateway overlays
+      ['auth-gateway-view', 'welcome-gateway'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.classList.add('hidden'); el.style.display = 'none'; }
+      });
+
+      // Show main app layout
+      if (mainLayout) {
+        mainLayout.classList.remove('hidden');
+        mainLayout.style.display = 'flex';
+      }
+
+      // Show nav
+      if (bottomNav) {
+        bottomNav.style.display = 'flex';
+      }
+    }
+
+    let currentMode = 'login';
+    let selectedRole = 'seeker';
+
+    // Single delegated click listener covers BOTH overlays
+    document.body.addEventListener('click', (e) => {
+
+      // ── #welcome-gateway buttons ──────────────────────────────────────────
+
+      // Guest button (both overlays share this id)
+      if (e.target.closest('#guest-btn')) {
+        e.preventDefault();
+        enterApp({ username: 'Guest', role: 'seeker', isGuest: true });
+        return;
+      }
+
+      // Sign In button (#welcome-gateway)
+      if (e.target.closest('#sign-in-btn')) {
+        e.preventDefault();
+        const username = (document.getElementById('gateway-username') || {}).value || '';
+        const password = (document.getElementById('gateway-password') || {}).value || '';
+        if (!username.trim()) { showNotification('Please enter a username.', 'error'); return; }
+        enterApp({ username: username.trim(), role: currentGatewayMode || selectedRole, isGuest: false, mode: 'signin' });
+        return;
+      }
+
+      // Create Account button (#welcome-gateway)
+      if (e.target.closest('#create-account-btn')) {
+        e.preventDefault();
+        const username = (document.getElementById('gateway-username') || {}).value || '';
+        const password = (document.getElementById('gateway-password') || {}).value || '';
+        if (!username.trim()) { showNotification('Please enter a username.', 'error'); return; }
+        enterApp({ username: username.trim(), role: currentGatewayMode || selectedRole, isGuest: false, mode: 'signup' });
+        return;
+      }
+
+      // ── #auth-gateway-view tab toggles ───────────────────────────────────
+
+      const tabLogin = e.target.closest('#tab-login');
+      const tabSignup = e.target.closest('#tab-signup');
+      const roleSelection = document.getElementById('role-selection');
+      const submitBtn = document.getElementById('auth-submit-btn');
+
+      if (tabLogin) {
+        currentMode = 'login';
+        tabLogin.className = 'flex-1 py-2 text-xs font-semibold rounded-lg bg-slate-800 text-white';
+        if (tabSignup) tabSignup.className = 'flex-1 py-2 text-xs font-semibold rounded-lg text-slate-400';
+        roleSelection?.classList.add('hidden');
+        if (submitBtn) submitBtn.textContent = 'Sign In';
+      }
+      if (tabSignup) {
+        currentMode = 'signup';
+        tabSignup.className = 'flex-1 py-2 text-xs font-semibold rounded-lg bg-slate-800 text-white';
+        if (tabLogin) tabLogin.className = 'flex-1 py-2 text-xs font-semibold rounded-lg text-slate-400';
+        roleSelection?.classList.remove('hidden');
+        if (submitBtn) submitBtn.textContent = 'Create Account';
+      }
+
+      // Role selection buttons
+      const roleBtn = e.target.closest('.role-btn');
+      if (roleBtn) {
+        selectedRole = roleBtn.dataset.role;
+        document.querySelectorAll('.role-btn').forEach(b => {
+          b.className = 'role-btn py-2 text-xs font-semibold bg-slate-900 text-slate-400 border border-slate-800 rounded-lg';
+        });
+        roleBtn.className = 'role-btn py-2 text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/50 rounded-lg';
+      }
+    });
+
+    // Form submit on #auth-gateway-view
+    const authForm = document.getElementById('auth-form');
+    if (authForm) {
+      authForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const usernameInput = document.getElementById('auth-username');
+        const username = usernameInput ? usernameInput.value : 'User';
+        enterApp({
+          username,
+          role: currentMode === 'signup' ? selectedRole : 'seeker',
+          isGuest: false
+        });
+      });
+    }
   }
 
   // Automatic Trigger: Viewing Shelter Info
   if (currentPath === 'call-shelter.html') {
+    // Slight delay to ensure DOM is ready and it doesn't block rendering
     setTimeout(() => updateMilestone('safePlace', true), 500);
   }
 
@@ -41,180 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initInstantPageTransitions();
   renderProgressPage();
 });
-
-// Initialize Supabase Client dynamically from server config
-async function initSupabaseClient() {
-  try {
-    const res = await fetch('/api/config');
-    const config = await res.json();
-    if (config.supabaseUrl && config.supabaseAnonKey && window.supabase && window.supabase.createClient) {
-      window.supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
-      console.log('⚡ Supabase Client Connected:', config.supabaseUrl);
-    }
-  } catch (e) {
-    console.warn('Supabase initialization warning:', e);
-  }
-}
-initSupabaseClient();
-
-// Auth Gateway State & Handlers
-let authMode = 'login';
-let authSelectedRole = 'seeker';
-
-window.switchAuthTab = function (mode) {
-  authMode = mode;
-  const tabLogin = document.getElementById('tab-login');
-  const tabSignup = document.getElementById('tab-signup');
-  const roleContainer = document.getElementById('role-selection-container');
-  const submitBtn = document.getElementById('auth-submit-btn');
-
-  if (mode === 'login') {
-    if (tabLogin) tabLogin.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-amber-400 text-slate-950 transition-all';
-    if (tabSignup) tabSignup.className = 'flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition-all';
-    if (roleContainer) roleContainer.classList.add('hidden');
-    if (submitBtn) submitBtn.textContent = 'Sign In';
-  } else {
-    if (tabSignup) tabSignup.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-amber-400 text-slate-950 transition-all';
-    if (tabLogin) tabLogin.className = 'flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition-all';
-    if (roleContainer) roleContainer.classList.remove('hidden');
-    if (submitBtn) submitBtn.textContent = 'Create Account';
-  }
-};
-
-window.setAuthRole = function (role) {
-  authSelectedRole = role;
-  const seekerBtn = document.getElementById('role-btn-seeker');
-  const volunteerBtn = document.getElementById('role-btn-volunteer');
-
-  if (role === 'seeker') {
-    if (seekerBtn) seekerBtn.className = 'py-2.5 px-3 text-xs font-extrabold rounded-xl border border-amber-400/50 bg-amber-500/20 text-amber-400 flex items-center justify-center gap-1.5 transition-all';
-    if (volunteerBtn) volunteerBtn.className = 'py-2.5 px-3 text-xs font-extrabold rounded-xl border border-slate-800 bg-slate-900 text-slate-400 flex items-center justify-center gap-1.5 transition-all';
-  } else {
-    if (volunteerBtn) volunteerBtn.className = 'py-2.5 px-3 text-xs font-extrabold rounded-xl border border-amber-400/50 bg-amber-500/20 text-amber-400 flex items-center justify-center gap-1.5 transition-all';
-    if (seekerBtn) seekerBtn.className = 'py-2.5 px-3 text-xs font-extrabold rounded-xl border border-slate-800 bg-slate-900 text-slate-400 flex items-center justify-center gap-1.5 transition-all';
-  }
-};
-
-window.handleAuthFormSubmit = async function (e) {
-  if (e) e.preventDefault();
-  const emailInput = document.getElementById('auth-email');
-  const passwordInput = document.getElementById('auth-password');
-  const email = emailInput ? emailInput.value.trim() : '';
-  const password = passwordInput ? passwordInput.value : '';
-
-  if (!email || !password) {
-    showNotification('Please enter both email and password.', 'error');
-    return;
-  }
-
-  // Password Policy Protocol: Minimum 6 characters required
-  if (authMode === 'signup' && password.length < 6) {
-    showNotification('Password protocol: Must be at least 6 characters long.', 'error');
-    return;
-  }
-
-  let role = authSelectedRole || 'seeker';
-  let supabaseUser = null;
-
-  // Supabase Auth Integration with strict validation
-  if (window.supabaseClient) {
-    try {
-      if (authMode === 'signup') {
-        const { data, error } = await window.supabaseClient.auth.signUp({
-          email,
-          password,
-          options: { data: { role } }
-        });
-
-        if (error) {
-          showNotification(`Registration Failed: ${error.message}`, 'error');
-          return;
-        }
-
-        // Supabase returns an empty identities array if email is already registered
-        if (data?.user && data?.user?.identities && data.user.identities.length === 0) {
-          showNotification('This email address is already in use. Please sign in instead.', 'error');
-          return;
-        }
-
-        if (data?.user) {
-          supabaseUser = data.user;
-          await window.supabaseClient.from('profiles').upsert({ id: data.user.id, role, email });
-          showNotification('Account created successfully!', 'success');
-        }
-      } else {
-        const { data, error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) {
-          showNotification(`Login Failed: ${error.message}`, 'error');
-          return;
-        }
-        if (data?.user) {
-          supabaseUser = data.user;
-          const { data: profile } = await window.supabaseClient.from('profiles').select('role').eq('id', data.user.id).single();
-          if (profile?.role) role = profile.role;
-          showNotification('Signed in successfully!', 'success');
-        }
-      }
-    } catch (err) {
-      console.error('Supabase authentication error:', err);
-      showNotification('Authentication error. Please check your network connection.', 'error');
-      return;
-    }
-  }
-
-  const userData = {
-    username: email,
-    email,
-    role,
-    id: supabaseUser?.id || `user-${Date.now()}`,
-    isGuest: false
-  };
-
-  localStorage.setItem('northstar_session', JSON.stringify(userData));
-  setRole(role);
-
-  const gatewayView = document.getElementById('auth-gateway-view');
-  const mainLayout = document.getElementById('main-app-layout');
-  const bottomNav = document.querySelector('nav');
-
-  if (gatewayView) {
-    gatewayView.classList.add('hidden');
-    gatewayView.style.display = 'none';
-  }
-  if (mainLayout) {
-    mainLayout.classList.remove('hidden');
-    mainLayout.style.display = 'flex';
-  }
-  if (bottomNav) {
-    bottomNav.style.display = 'flex';
-    bottomNav.classList.remove('hidden');
-  }
-
-  // Navigate directly to the user's role-specific dashboard
-  const targetDashboard = role === 'volunteer' ? 'helper-dashboard.html' : 'seeker-dashboard.html';
-  if (typeof navigateToPageInstant === 'function') {
-    navigateToPageInstant(targetDashboard);
-  } else {
-    window.location.href = targetDashboard;
-  }
-};
-
-window.signOutUser = async function () {
-  if (window.supabaseClient) {
-    try {
-      await window.supabaseClient.auth.signOut();
-    } catch (e) {
-      console.warn('Supabase signout warning:', e);
-    }
-  }
-
-  localStorage.removeItem('northstar_session');
-  localStorage.removeItem('northstar_user_role');
-  showNotification('Signed out successfully.', 'info');
-
-  // Hard navigate back to index.html so Auth Gateway is presented cleanly
-  window.location.href = 'index.html';
-};
 
 // Instant Zero-Lag Page Swapping Engine (SPA Router)
 function initInstantPageTransitions() {
@@ -237,13 +168,6 @@ function initInstantPageTransitions() {
 
 async function navigateToPageInstant(url, pushState = true) {
   try {
-    // Show Swirling Loading Overlay
-    const loader = document.getElementById('swirling-loader-overlay');
-    if (loader) {
-      loader.classList.remove('hidden');
-      loader.style.display = 'flex';
-    }
-
     // React app or dynamically mounted pages must perform full browser load to initialize React root scripts
     if (url.includes('resource-map.html') || window.location.pathname.includes('resource-map.html')) {
       window.location.href = url;
@@ -252,7 +176,6 @@ async function navigateToPageInstant(url, pushState = true) {
 
     const response = await fetch(url);
     if (!response.ok) {
-      if (loader) { loader.classList.add('hidden'); loader.style.display = 'none'; }
       window.location.href = url;
       return;
     }
@@ -277,12 +200,6 @@ async function navigateToPageInstant(url, pushState = true) {
         currentAppFrame.classList.remove('opacity-0');
         currentAppFrame.classList.add('animate-fade-in-up');
 
-        // Hide Swirling Loader
-        if (loader) {
-          loader.classList.add('hidden');
-          loader.style.display = 'none';
-        }
-
         // Re-initialize dynamic page handlers
         initClock();
         initRoleNavigation();
@@ -291,17 +208,6 @@ async function navigateToPageInstant(url, pushState = true) {
         initHelpModal();
         initCallModal();
         initTaskClaiming();
-        // Execute inline script tags present in the loaded page document
-        doc.querySelectorAll('script').forEach(s => {
-          if (s.textContent) {
-            try {
-              eval(s.textContent);
-            } catch (err) {
-              console.warn('Script execution notice:', err);
-            }
-          }
-        });
-
         if (typeof window.updateLandingRoleCards === 'function') {
           window.updateLandingRoleCards();
         }
@@ -310,10 +216,7 @@ async function navigateToPageInstant(url, pushState = true) {
         }
         if (typeof window.loadOpportunities === 'function') {
           window.loadOpportunities();
-        } else if (typeof loadOpportunities === 'function') {
-          loadOpportunities();
         }
-        renderDynamicNav();
         if (typeof window.updateProgressUI === 'function') {
           window.updateProgressUI();
         }
@@ -362,70 +265,18 @@ function initClock() {
   setInterval(updateTime, 30000);
 }
 
-// Global Role Management (Seeker vs Volunteer) with Supabase & Cache
-let cachedSupabaseRole = null;
-
-async function fetchSupabaseUserRole(userId) {
-  if (cachedSupabaseRole) return cachedSupabaseRole;
-  if (window.supabase) {
-    try {
-      const { data, error } = await window.supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
-      if (!error && data?.role) {
-        cachedSupabaseRole = data.role;
-        localStorage.setItem('northstar_user_role', data.role);
-        return data.role;
-      }
-    } catch (e) {
-      console.warn('Supabase role fetch failed, falling back to local state:', e);
-    }
-  }
-  return localStorage.getItem('northstar_user_role') || 'seeker';
-}
-
+// Global Role Management (Seeker vs Volunteer)
 function getRole() {
-  return cachedSupabaseRole || localStorage.getItem('northstar_user_role') || 'seeker';
+  return localStorage.getItem('northstar_user_role') || 'seeker';
 }
 
 function setRole(role) {
   if (role !== 'seeker' && role !== 'volunteer') role = 'seeker';
-  cachedSupabaseRole = role;
   localStorage.setItem('northstar_user_role', role);
   renderDynamicNav();
   renderRoleHeaderToggle();
-  enforceFeatureGate();
   if (typeof window.updateLandingRoleCards === 'function') {
     window.updateLandingRoleCards();
-  }
-}
-
-// Feature Gate Component: Restrict access based on role
-function enforceFeatureGate() {
-  const role = getRole();
-  const currentPath = window.location.pathname.split('/').pop() || 'index.html';
-
-  // Seeker-only routes: resume-builder.html, progress.html
-  // Volunteer-only routes: helper-dashboard.html, opportunities.html, donate.html
-  const seekerOnlyRoutes = ['resume-builder.html', 'progress.html'];
-  const volunteerOnlyRoutes = ['helper-dashboard.html', 'opportunities.html', 'donate.html'];
-
-  if (role === 'seeker' && volunteerOnlyRoutes.includes(currentPath)) {
-    showNotification('Restricted area. Redirecting to Seeker Dashboard...', 'warning');
-    if (typeof navigateToPageInstant === 'function') {
-      navigateToPageInstant('seeker-dashboard.html');
-    } else {
-      window.location.href = 'seeker-dashboard.html';
-    }
-  } else if (role === 'volunteer' && seekerOnlyRoutes.includes(currentPath)) {
-    showNotification('Restricted area. Redirecting to Helper Dashboard...', 'warning');
-    if (typeof navigateToPageInstant === 'function') {
-      navigateToPageInstant('helper-dashboard.html');
-    } else {
-      window.location.href = 'helper-dashboard.html';
-    }
   }
 }
 
@@ -433,14 +284,56 @@ function enforceFeatureGate() {
 function initRoleNavigation() {
   renderRoleHeaderToggle();
   renderDynamicNav();
-  enforceFeatureGate();
 }
 
 function renderRoleHeaderToggle() {
-  // Remove the header role toggle if it exists. Role switching is now exclusively in the Settings modal.
-  const toggleDiv = document.getElementById('role-header-toggle');
-  if (toggleDiv) {
-    toggleDiv.remove();
+  const header = document.querySelector('header');
+  if (!header) return;
+
+  let toggleDiv = document.getElementById('role-header-toggle');
+  const role = getRole();
+  const isSeeker = role === 'seeker';
+
+  if (!toggleDiv) {
+    toggleDiv = document.createElement('div');
+    toggleDiv.id = 'role-header-toggle';
+    toggleDiv.className = 'role-toggle-container no-print';
+
+    toggleDiv.innerHTML = `
+      <div id="role-sliding-pill" class="role-toggle-pill ${!isSeeker ? 'volunteer-mode' : ''}"></div>
+      <button id="btn-role-seeker" onclick="switchUserRole('seeker')" class="role-toggle-btn ${isSeeker ? 'active-seeker' : 'inactive-text'}">
+        🙋 Seeker
+      </button>
+      <button id="btn-role-volunteer" onclick="switchUserRole('volunteer')" class="role-toggle-btn ${!isSeeker ? 'active-volunteer' : 'inactive-text'}">
+        🤝 Helper
+      </button>
+    `;
+
+    header.appendChild(toggleDiv);
+  } else {
+    // Update existing toggle state & trigger sliding animation
+    const pill = document.getElementById('role-sliding-pill');
+    const seekerBtn = document.getElementById('btn-role-seeker');
+    const volunteerBtn = document.getElementById('btn-role-volunteer');
+
+    if (pill) {
+      if (!isSeeker) {
+        pill.classList.add('volunteer-mode');
+      } else {
+        pill.classList.remove('volunteer-mode');
+      }
+    }
+
+    if (seekerBtn) {
+      seekerBtn.className = `role-toggle-btn ${isSeeker ? 'active-seeker' : 'inactive-text'}`;
+    }
+    if (volunteerBtn) {
+      volunteerBtn.className = `role-toggle-btn ${!isSeeker ? 'active-volunteer' : 'inactive-text'}`;
+    }
+
+    toggleDiv.classList.remove('animate-switch-pop');
+    void toggleDiv.offsetWidth; // Reflow to restart animation
+    toggleDiv.classList.add('animate-switch-pop');
   }
 }
 
@@ -449,18 +342,10 @@ function switchUserRole(role) {
   showNotification(`Switched mode to: ${role === 'seeker' ? 'Seeker (I Need Help)' : 'Volunteer (I Want to Help)'}`, 'info');
 
   const currentPath = window.location.pathname.split('/').pop() || 'index.html';
-  if (role === 'seeker' && (currentPath === 'helper-dashboard.html' || currentPath === 'opportunities.html' || currentPath === 'donate.html')) {
-    if (typeof navigateToPageInstant === 'function') {
-      navigateToPageInstant('seeker-dashboard.html');
-    } else {
-      window.location.href = 'seeker-dashboard.html';
-    }
-  } else if (role === 'volunteer' && (currentPath === 'seeker-dashboard.html' || currentPath === 'progress.html' || currentPath === 'resume-builder.html')) {
-    if (typeof navigateToPageInstant === 'function') {
-      navigateToPageInstant('helper-dashboard.html');
-    } else {
-      window.location.href = 'helper-dashboard.html';
-    }
+  if (role === 'seeker' && (currentPath === 'helper-dashboard.html' || currentPath === 'opportunities.html')) {
+    window.location.href = 'seeker-dashboard.html';
+  } else if (role === 'volunteer' && (currentPath === 'seeker-dashboard.html' || currentPath === 'progress.html')) {
+    window.location.href = 'helper-dashboard.html';
   }
 }
 
@@ -468,52 +353,36 @@ function renderDynamicNav() {
   const nav = document.querySelector('nav');
   if (!nav) return;
 
-  nav.style.display = 'flex';
-  nav.classList.remove('hidden');
-
   const role = getRole();
   const currentPath = window.location.pathname.split('/').pop() || 'index.html';
 
   let navItems = [];
 
   if (role === 'seeker') {
-    // Seeker Funnel Tabs: [Dashboard, Resources/Map, Resume, Progress, Settings]
+    // Seeker Funnel Tabs: [Home, Resources/Map, Resume, Progress]
     navItems = [
-      { href: 'seeker-dashboard.html', label: 'Dashboard', icon: 'dashboard' },
+      { href: 'index.html', label: 'Home', icon: 'home' },
       { href: 'resource-map.html', label: 'Map', icon: 'map' },
       { href: 'resume-builder.html', label: 'Resume', icon: 'description' },
-      { href: 'progress.html', label: 'Progress', icon: 'military_tech' },
-      { href: '#', label: 'Settings', icon: 'settings', action: 'openSettingsModal()' }
+      { href: 'progress.html', label: 'Progress', icon: 'military_tech' }
     ];
   } else {
-    // Volunteer Funnel Tabs: [Dashboard, Opportunities, Donate, Shelter Info, Settings]
+    // Volunteer Funnel Tabs: [Dashboard, Opportunities, Donate, Shelter Info]
     navItems = [
       { href: 'helper-dashboard.html', label: 'Dashboard', icon: 'dashboard' },
       { href: 'opportunities.html', label: 'Opportunities', icon: 'work' },
       { href: 'donate.html', label: 'Donate', icon: 'volunteer_activism' },
-      { href: 'call-shelter.html', label: 'Shelter', icon: 'call' },
-      { href: '#', label: 'Settings', icon: 'settings', action: 'openSettingsModal()' }
+      { href: 'call-shelter.html', label: 'Shelter', icon: 'call' }
     ];
   }
 
-  // Smooth item swap animation
-  nav.classList.add('transition-opacity', 'duration-150');
   nav.innerHTML = navItems.map(item => {
     const isActive = currentPath === item.href || (currentPath === '' && item.href === 'index.html');
-    const activeClass = isActive && !item.action
+    const activeClass = isActive
       ? 'bg-secondary-container text-on-secondary-container rounded-2xl px-3 py-1.5 shadow-md starlight-glow font-bold animate-switch-pop'
       : 'text-on-surface-variant hover:text-primary px-3 py-1.5 font-medium';
 
-    const fillStyle = isActive && !item.action ? "style=\"font-variation-settings: 'FILL' 1;\"" : "";
-
-    if (item.action) {
-      return `
-        <button onclick="${item.action}" class="flex flex-col items-center justify-center transition-all ${activeClass}">
-          <span class="material-symbols-outlined text-xl" ${fillStyle}>${item.icon}</span>
-          <span class="text-[11px]">${item.label}</span>
-        </button>
-      `;
-    }
+    const fillStyle = isActive ? "style=\"font-variation-settings: 'FILL' 1;\"" : "";
 
     return `
       <a class="flex flex-col items-center justify-center transition-all ${activeClass}" href="${item.href}">
@@ -688,107 +557,41 @@ function closeModal(modalId) {
   }
 }
 
-// Settings Modal Generator
-window.openSettingsModal = function() {
-  let modal = document.getElementById('settings-modal');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'settings-modal';
-    modal.className = 'absolute inset-0 z-[150] hidden flex-col justify-end';
-    modal.innerHTML = `
-      <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('settings-modal')"></div>
-      <div class="modal-drawer bg-surface w-full rounded-t-3xl p-6 transform translate-y-full transition-transform duration-300 ease-in-out relative flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.2)]">
-        <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-5"></div>
-        <h2 class="text-xl font-bold text-primary mb-6 flex items-center gap-2">
-          <span class="material-symbols-outlined">settings</span> Settings
-        </h2>
-        
-        <div class="space-y-6">
-          <!-- Role Selector -->
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-3 uppercase tracking-wider">Account Role</label>
-            <div class="grid grid-cols-2 gap-3">
-              <button onclick="switchUserRole('seeker'); setTimeout(() => openSettingsModal(), 10);" id="settings-role-seeker" class="py-3 px-3 text-xs font-bold rounded-xl border transition-all flex flex-col items-center justify-center gap-1">
-                <span class="material-symbols-outlined text-xl">search</span>
-                <span>I need help</span>
-                <span class="text-[10px] opacity-75 font-normal">(Seeker)</span>
-              </button>
-              <button onclick="switchUserRole('volunteer'); setTimeout(() => openSettingsModal(), 10);" id="settings-role-volunteer" class="py-3 px-3 text-xs font-bold rounded-xl border transition-all flex flex-col items-center justify-center gap-1">
-                <span class="material-symbols-outlined text-xl">volunteer_activism</span>
-                <span>I want to help</span>
-                <span class="text-[10px] opacity-75 font-normal">(Helper)</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Sign Out Button -->
-          <div class="pt-4 border-t border-slate-200">
-            <button onclick="signOutUser()" class="w-full py-3.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-xl text-sm shadow-sm transition-colors border border-rose-100 flex items-center justify-center gap-2">
-              <span class="material-symbols-outlined text-sm">logout</span> Sign out
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-    const appFrame = document.querySelector('.app-frame');
-    if (appFrame) {
-      appFrame.appendChild(modal);
-    }
-  }
-  
-  // Update role toggle UI state
-  const role = getRole();
-  const seekerBtn = document.getElementById('settings-role-seeker');
-  const volunteerBtn = document.getElementById('settings-role-volunteer');
-  
-  if (role === 'seeker') {
-    seekerBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-amber-400 bg-amber-50 text-amber-900 transition-all flex flex-col items-center justify-center gap-1 shadow-sm';
-    volunteerBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-slate-200 bg-white text-slate-500 hover:bg-slate-50 transition-all flex flex-col items-center justify-center gap-1';
-  } else {
-    volunteerBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-amber-400 bg-amber-50 text-amber-900 transition-all flex flex-col items-center justify-center gap-1 shadow-sm';
-    seekerBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-slate-200 bg-white text-slate-500 hover:bg-slate-50 transition-all flex flex-col items-center justify-center gap-1';
-  }
-
-  openModal('settings-modal');
-};
-
 // Global Toast Notification System
 function showNotification(message, type = 'info') {
-  const appFrame = document.querySelector('.app-frame') || document.body;
   let container = document.getElementById('toast-container');
-  if (!container || !appFrame.contains(container)) {
-    if (container) container.remove();
+  if (!container) {
     container = document.createElement('div');
     container.id = 'toast-container';
-    container.className = 'absolute top-12 left-4 right-4 z-[300] flex flex-col gap-2 pointer-events-none';
-    appFrame.appendChild(container);
+    container.className = 'fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-11/12 max-w-md flex flex-col gap-2 pointer-events-none';
+    document.body.appendChild(container);
   }
 
   const toast = document.createElement('div');
-  const bgClass = type === 'success' ? 'bg-slate-900/95 border-amber-400/60 text-white' : 'bg-slate-900/95 border-slate-700 text-white';
+  const bgClass = type === 'success' ? 'bg-slate-900 border-secondary-fixed text-white' : 'bg-slate-900 border-slate-700 text-white';
 
-  toast.className = `${bgClass} border px-3.5 py-2.5 rounded-xl shadow-xl backdrop-blur-md flex items-center justify-between pointer-events-auto transition-all duration-300 transform -translate-y-2 opacity-0 text-xs font-semibold`;
+  toast.className = `${bgClass} border px-4 py-3 rounded-2xl shadow-2xl backdrop-blur-lg flex items-center justify-between pointer-events-auto transition-all duration-300 transform -translate-y-4 opacity-0 text-sm font-medium`;
 
   toast.innerHTML = `
-    <div class="flex items-center gap-2.5 overflow-hidden">
-      <img src="northstar-logo.png" class="w-4 h-4 object-contain flex-shrink-0" alt="Northstar" />
-      <span class="truncate">${message}</span>
+    <div class="flex items-center gap-3">
+      <img src="northstar-logo.png" class="w-5 h-5 object-contain" alt="Northstar" />
+      <span>${message}</span>
     </div>
-    <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-white p-0.5 ml-2 flex-shrink-0">
-      <span class="material-symbols-outlined text-xs">close</span>
+    <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-white p-1">
+      <span class="material-symbols-outlined text-sm">close</span>
     </button>
   `;
 
   container.appendChild(toast);
 
   requestAnimationFrame(() => {
-    toast.classList.remove('-translate-y-2', 'opacity-0');
+    toast.classList.remove('-translate-y-4', 'opacity-0');
   });
 
   setTimeout(() => {
-    toast.classList.add('-translate-y-2', 'opacity-0');
+    toast.classList.add('-translate-y-4', 'opacity-0');
     setTimeout(() => toast.remove(), 300);
-  }, 3500);
+  }, 4000);
 }
 
 // --- Auth Entry Functions ---
@@ -797,12 +600,19 @@ function loginAsGuest() {
   const session = { username: 'Guest', role: 'seeker', isGuest: true };
   localStorage.setItem('northstar_session', JSON.stringify(session));
 
-  // Navigate directly to dashboard
-  if (typeof navigateToPageInstant === 'function') {
-    navigateToPageInstant('seeker-dashboard.html');
-  } else {
-    window.location.href = 'seeker-dashboard.html';
-  }
+  // Hide the welcome-gateway overlay
+  const gateway = document.getElementById('welcome-gateway');
+  if (gateway) gateway.style.display = 'none';
+
+  // Also hide the auth-gateway-view if present
+  const authView = document.getElementById('auth-gateway-view');
+  if (authView) { authView.classList.add('hidden'); authView.style.display = 'none'; }
+
+  // Show main app layout
+  const mainLayout = document.getElementById('main-app-layout');
+  if (mainLayout) { mainLayout.classList.remove('hidden'); mainLayout.style.display = 'flex'; }
+
+  console.log('Logged in as Guest');
 }
 
 function loginAsUser(username, mode) {
