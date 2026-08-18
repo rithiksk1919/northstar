@@ -99,59 +99,97 @@
         </div>
 
         <!-- ============================================ -->
-        <!-- AUTH GATEWAY VIEW (shown when no session)    -->
+        <!-- SWIRLING PAGE TRANSITION LOADER              -->
         <!-- ============================================ -->
-        <div id="auth-gateway-view" class="absolute inset-0 z-50 bg-slate-950 p-6 flex flex-col justify-center overflow-y-auto">
-            <!-- Branding -->
-            <div class="text-center mb-6">
-            <img src="northstar-logo.png" class="w-16 h-16 mx-auto mb-2" alt="NorthStar Logo">
-            <h1 class="text-2xl font-bold text-white">Northstar</h1>
-            <p class="text-slate-400 text-xs mt-1">Navigate. Connect. Move Forward.</p>
+        <div id="swirling-loader-overlay" class="hidden fixed inset-0 z-[300] bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center transition-all duration-200">
+            <div class="flex flex-col items-center gap-3 p-6 bg-slate-900/90 border border-slate-800 rounded-3xl shadow-2xl">
+                <svg id="swirling-svg-spinner" class="w-14 h-14 text-amber-400" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+                    <style>
+                        @keyframes loading-ui-swirling-spin {
+                            to { transform: rotate(360deg); }
+                        }
+                        @keyframes loading-ui-swirling-dash {
+                            0% { stroke-dasharray: 1, 800; stroke-dashoffset: 0; }
+                            50% { stroke-dasharray: 400, 400; stroke-dashoffset: -200px; }
+                            100% { stroke-dasharray: 800, 1; stroke-dashoffset: -800px; }
+                        }
+                        .loading-ui-swirling-circle {
+                            transform-origin: center;
+                            animation:
+                                loading-ui-swirling-dash 1.5s ease-in-out infinite alternate,
+                                loading-ui-swirling-spin 2s linear infinite;
+                        }
+                    </style>
+                    <circle class="loading-ui-swirling-circle" cx="400" cy="400" r="200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="50" />
+                </svg>
+                <span class="text-xs font-bold tracking-wide text-slate-300">Loading...</span>
             </div>
-
-            <!-- Toggle Mode Header -->
-            <div class="flex bg-slate-900 p-1 rounded-xl mb-4 border border-slate-800">
-            <button id="tab-login" class="flex-1 py-2 text-xs font-semibold rounded-lg bg-slate-800 text-white">Sign In</button>
-            <button id="tab-signup" class="flex-1 py-2 text-xs font-semibold rounded-lg text-slate-400">Create Account</button>
-            </div>
-
-            <!-- Auth Form -->
-            <form id="auth-form" class="space-y-3">
-            <!-- Role Selection (Shown during Create Account mode) -->
-            <div id="role-selection" class="hidden space-y-1">
-                <label class="text-xs text-slate-400 font-medium">I am joining as a:</label>
-                <div class="grid grid-cols-2 gap-2">
-                <button type="button" data-role="seeker" class="role-btn py-2 text-xs font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/50 rounded-lg">Seeker (Need Help)</button>
-                <button type="button" data-role="volunteer" class="role-btn py-2 text-xs font-semibold bg-slate-900 text-slate-400 border border-slate-800 rounded-lg">Helper (Volunteer)</button>
-                </div>
-            </div>
-
-            <div>
-                <input type="text" id="auth-username" placeholder="Username" required class="w-full p-3 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:border-amber-500">
-            </div>
-            <div>
-                <input type="password" id="auth-password" placeholder="Password" required class="w-full p-3 rounded-xl bg-slate-900 border border-slate-800 text-white text-sm focus:outline-none focus:border-amber-500">
-            </div>
-
-            <button type="submit" id="auth-submit-btn" class="w-full py-3 bg-amber-500 hover:bg-amber-400 font-semibold text-slate-950 rounded-xl text-sm transition-colors">Sign In</button>
-            </form>
-
-            <div class="relative my-4 text-center">
-            <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-800"></div></div>
-            <span class="relative bg-slate-950 px-2 text-[10px] text-slate-500 uppercase tracking-wider">Or</span>
-            </div>
-
-            <!-- Guest Access Button -->
-            <button id="guest-btn" 
-              onclick="document.getElementById('auth-gateway-view').style.display='none'; document.getElementById('main-app-layout').classList.remove('hidden'); document.getElementById('main-app-layout').style.display='flex';"
-              class="w-full py-3 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 font-medium rounded-xl text-sm transition-colors">
-              Continue as Guest &rarr;
-            </button>
-            <p class="text-[10px] text-center text-slate-500 mt-2">Instant emergency resource access. No registration required.</p>
         </div>
 
         <!-- ============================================ -->
-        <!-- MAIN APP LAYOUT (shown after auth)           -->
+        <!-- AUTH GATEWAY OVERLAY                          -->
+        <!-- ============================================ -->
+        <div id="auth-gateway-view" class="absolute inset-0 z-[200] bg-slate-950 p-6 flex flex-col justify-center overflow-y-auto">
+            <!-- Branding -->
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-xl p-1 border border-slate-800">
+                    <img src="northstar-logo.png" class="w-full h-full object-contain" alt="NorthStar Logo">
+                </div>
+                <h1 class="text-2xl font-black text-white tracking-tight">Northstar</h1>
+                <p class="text-slate-400 text-xs mt-1 font-medium">Navigate. Connect. Move Forward.</p>
+            </div>
+
+            <!-- Tab Switcher: Sign In vs Create Account -->
+            <div class="flex bg-slate-900 p-1 rounded-xl mb-4 border border-slate-800">
+                <button type="button" id="tab-login" onclick="switchAuthTab('login')" class="flex-1 py-2 text-xs font-bold rounded-lg bg-amber-400 text-slate-950 transition-all">Sign In</button>
+                <button type="button" id="tab-signup" onclick="switchAuthTab('signup')" class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition-all">Create Account</button>
+            </div>
+
+            <!-- Auth Form -->
+            <form id="auth-form" onsubmit="handleAuthFormSubmit(event)" class="space-y-3">
+                
+                <!-- Role Selection (Shown ONLY during Create Account mode) -->
+                <div id="role-selection-container" class="hidden space-y-1.5 pb-1">
+                    <label class="text-[11px] text-slate-400 font-bold uppercase tracking-wider">Select Account Role</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button type="button" id="role-btn-seeker" onclick="setAuthRole('seeker')" 
+                            class="py-2.5 px-3 text-xs font-extrabold rounded-xl border border-amber-400/50 bg-amber-500/20 text-amber-400 flex items-center justify-center gap-1.5 transition-all">
+                            <span class="material-symbols-outlined text-sm">search</span> Seeker
+                        </button>
+                        <button type="button" id="role-btn-volunteer" onclick="setAuthRole('volunteer')" 
+                            class="py-2.5 px-3 text-xs font-extrabold rounded-xl border border-slate-800 bg-slate-900 text-slate-400 flex items-center justify-center gap-1.5 transition-all">
+                            <span class="material-symbols-outlined text-sm">volunteer_activism</span> Volunteer
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <input type="email" id="auth-email" placeholder="Email address" required class="w-full p-3.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs font-medium focus:outline-none focus:border-amber-400 transition-colors">
+                </div>
+                <div>
+                    <input type="password" id="auth-password" placeholder="Password (min 6 characters)" minlength="6" required class="w-full p-3.5 rounded-xl bg-slate-900 border border-slate-800 text-white text-xs font-medium focus:outline-none focus:border-amber-400 transition-colors">
+                </div>
+
+                <button type="submit" id="auth-submit-btn" class="w-full py-3.5 bg-amber-400 hover:bg-amber-300 font-extrabold text-slate-950 rounded-xl text-xs shadow-lg transition-all active:scale-[0.98]">
+                    Sign In
+                </button>
+            </form>
+
+            <div class="relative my-4 text-center">
+                <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-800"></div></div>
+                <span class="relative bg-slate-950 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-wider">Or</span>
+            </div>
+
+            <!-- Guest Access Button -->
+            <button id="guest-btn" onclick="continueAsGuest()" type="button"
+              class="w-full py-3 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 font-bold rounded-xl text-xs transition-all active:scale-[0.98]">
+              Continue as Guest &rarr;
+            </button>
+            <p class="text-[10px] text-center text-slate-500 mt-2 font-medium">Instant access to emergency resources. No registration required.</p>
+        </div>
+
+        <!-- ============================================ -->
+        <!-- MAIN APP LAYOUT                             -->
         <!-- ============================================ -->
         <div id="main-app-layout" class="hidden flex-1 flex flex-col overflow-hidden">
 
@@ -169,102 +207,96 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <button onclick="triggerEmergencyCall()"
-                        class="px-3 py-1.5 bg-rose-500/10 text-rose-600 hover:bg-rose-500 hover:text-white rounded-full text-xs font-bold transition-all duration-200 flex items-center gap-1 border border-rose-200">
+                        class="px-2.5 py-1.5 bg-rose-500/10 text-rose-600 hover:bg-rose-500 hover:text-white rounded-full text-xs font-bold transition-all duration-200 flex items-center gap-1 border border-rose-200">
                         <span class="material-symbols-outlined text-sm">call</span> SOS 24/7
+                    </button>
+                    <button onclick="signOutUser()" title="Sign Out"
+                        class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-full text-xs font-bold transition-all duration-200 flex items-center justify-center border border-slate-200">
+                        <span class="material-symbols-outlined text-sm">logout</span>
                     </button>
                 </div>
             </header>
 
             <!-- Main Scrollable Canvas -->
-            <main class="flex-grow px-5 pt-5 pb-28 flex flex-col justify-between overflow-y-auto space-y-6">
+            <main class="flex-grow px-5 pt-4 pb-28 flex flex-col justify-between overflow-y-auto space-y-6">
 
-                <!-- Hero Section -->
-                <div class="flex flex-col items-center text-center space-y-5 my-auto">
+                <!-- Hero Section (Bespoke Left-Aligned Mobile App Layout) -->
+                <div class="flex flex-col text-left space-y-6 pt-2">
 
-                    <!-- Glow Starlight Emblem -->
-                    <div class="relative group cursor-pointer">
+                    <!-- Badge & Emblem Header Row -->
+                    <div class="flex items-center justify-between">
                         <div
-                            class="w-28 h-28 bg-white rounded-3xl flex items-center justify-center shadow-xl border border-slate-200/80 p-3 overflow-hidden">
-                            <img src="northstar-logo.png" alt="Northstar Hero Emblem"
-                                class="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" />
+                            class="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-900 text-[11px] font-bold tracking-wide">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> 42 BEDS AVAILABLE
                         </div>
-                        <div
-                            class="absolute -top-2 -right-2 w-9 h-9 bg-white rounded-full flex items-center justify-center shadow-md border-2 border-slate-200 p-1 overflow-hidden">
-                            <img src="northstar-logo.png" alt="Star Badge" class="w-full h-full object-contain" />
+                        <div class="w-10 h-10 rounded-2xl bg-white flex items-center justify-center border border-slate-200/80 p-1 shadow-sm">
+                            <img src="northstar-logo.png" alt="Northstar Emblem" class="w-full h-full object-contain" />
                         </div>
                     </div>
 
-                    <!-- Welcome Copy -->
-                    <div class="space-y-2">
-                        <div
-                            class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-400/15 border border-amber-400/30 rounded-full text-amber-900 text-[11px] font-bold tracking-wide">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> 42 BEDS OPEN TONIGHT
-                        </div>
-                        <h2 class="text-2xl font-extrabold text-primary tracking-tight">Your path to support.</h2>
-                        <p class="text-sm text-on-surface-variant max-w-[290px] mx-auto leading-relaxed font-medium">
-                            Connecting volunteers and seekers into a constellation of shelter, hot meals, and
-                            compassionate care.
+                    <!-- Left-Aligned Headline & Subtitle -->
+                    <div class="space-y-1.5">
+                        <h2 class="text-3xl font-black text-primary tracking-tight leading-tight">Your path to support.</h2>
+                        <p class="text-xs text-slate-500 leading-relaxed font-medium">
+                            Constellation of real-time shelter, warm meals, and direct community assistance.
                         </p>
                     </div>
 
-                    <!-- Action Buttons -->
-                    <div class="w-full space-y-3 pt-2">
+                    <!-- Action Triggers (Solid Accent vs Clean Card) -->
+                    <div class="w-full space-y-3 pt-1">
+                        <!-- High Impact Solid Accent Button -->
                         <a id="card-seeker" href="seeker-dashboard.html"
-                            class="interactive-card w-full h-14 rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 transform active:scale-95 shadow-lg border-2">
-                            <span id="card-seeker-icon" class="material-symbols-outlined text-xl"
-                                style="font-variation-settings: 'FILL' 1;">search</span>
-                            <span class="font-extrabold text-sm tracking-tight">I need help (Seeker)</span>
-                            <span id="card-seeker-arrow"
-                                class="material-symbols-outlined text-sm ml-auto mr-4">arrow_forward</span>
+                            class="w-full h-14 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl flex items-center justify-between px-5 transition-all duration-200 border border-amber-300 active:scale-[0.98]">
+                            <div class="flex items-center gap-3">
+                                <span id="card-seeker-icon" class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">search</span>
+                                <span class="text-sm tracking-tight">I need help (Seeker)</span>
+                            </div>
+                            <span id="card-seeker-arrow" class="material-symbols-outlined text-base">arrow_forward</span>
                         </a>
 
+                        <!-- Clean Secondary Card Layout -->
                         <a id="card-volunteer" href="helper-dashboard.html"
-                            class="interactive-card w-full h-14 rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 transform active:scale-95 shadow-sm border-2">
-                            <span id="card-volunteer-icon" class="material-symbols-outlined text-xl"
-                                style="font-variation-settings: 'FILL' 1;">volunteer_activism</span>
-                            <span class="font-extrabold text-sm tracking-tight">I want to help (Volunteer)</span>
-                            <span id="card-volunteer-arrow"
-                                class="material-symbols-outlined text-sm ml-auto mr-4">arrow_forward</span>
+                            class="w-full h-14 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl flex items-center justify-between px-5 transition-all duration-200 border border-slate-800 active:scale-[0.98]">
+                            <div class="flex items-center gap-3">
+                                <span id="card-volunteer-icon" class="material-symbols-outlined text-xl text-amber-400" style="font-variation-settings: 'FILL' 1;">volunteer_activism</span>
+                                <span class="text-sm tracking-tight text-slate-100">I want to help (Volunteer)</span>
+                            </div>
+                            <span id="card-volunteer-arrow" class="material-symbols-outlined text-base text-slate-400">arrow_forward</span>
                         </a>
                     </div>
                 </div>
 
-                <!-- Real-time Community Stats -->
-                <div class="grid grid-cols-3 gap-2 w-full">
-                    <div
-                        class="bg-surface-container-lowest p-3 rounded-2xl border border-slate-200/80 text-center shadow-sm">
-                        <span class="material-symbols-outlined text-amber-500 text-xl">bed</span>
-                        <p class="text-lg font-bold text-primary mt-0.5">42</p>
-                        <p class="text-[10px] text-slate-500 font-semibold uppercase">Open Beds</p>
+                <!-- Integrated Metric Stat Bar (Flush Modern Card Layout) -->
+                <div class="w-full bg-slate-900/95 text-white rounded-2xl p-4 border border-slate-800/90 shadow-xl space-y-3">
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
+                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-amber-400">Live Network Metrics</span>
+                        <span class="text-[10px] font-semibold text-slate-400">Updated just now</span>
                     </div>
-                    <div
-                        class="bg-surface-container-lowest p-3 rounded-2xl border border-slate-200/80 text-center shadow-sm">
-                        <span class="material-symbols-outlined text-blue-500 text-xl">soup_kitchen</span>
-                        <p class="text-lg font-bold text-primary mt-0.5">180+</p>
-                        <p class="text-[10px] text-slate-500 font-semibold uppercase">Meals Served</p>
-                    </div>
-                    <div
-                        class="bg-surface-container-lowest p-3 rounded-2xl border border-slate-200/80 text-center shadow-sm">
-                        <span class="material-symbols-outlined text-emerald-500 text-xl">verified</span>
-                        <p class="text-lg font-bold text-primary mt-0.5">24/7</p>
-                        <p class="text-[10px] text-slate-500 font-semibold uppercase">Verified Shelters</p>
+
+                    <div class="grid grid-cols-3 gap-2 text-center divide-x divide-slate-800">
+                        <div class="px-1">
+                            <p class="text-xl font-black text-amber-400 tracking-tight">42</p>
+                            <p class="text-[10px] text-slate-400 font-semibold uppercase mt-0.5">Open Beds</p>
+                        </div>
+                        <div class="px-1">
+                            <p class="text-xl font-black text-blue-400 tracking-tight">180+</p>
+                            <p class="text-[10px] text-slate-400 font-semibold uppercase mt-0.5">Meals Served</p>
+                        </div>
+                        <div class="px-1">
+                            <p class="text-xl font-black text-emerald-400 tracking-tight">24/7</p>
+                            <p class="text-[10px] text-slate-400 font-semibold uppercase mt-0.5">Verified</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Trust & Security Card -->
-                <div
-                    class="bg-primary-container rounded-2xl p-4 w-full text-left shadow-lg relative overflow-hidden border border-slate-700/50">
-                    <div class="flex items-start gap-3 relative z-10">
-                        <div class="p-2 bg-slate-800 rounded-xl">
-                            <span class="material-symbols-outlined text-secondary-fixed text-xl"
-                                style="font-variation-settings: 'FILL' 1;">shield_with_heart</span>
-                        </div>
-                        <div>
-                            <p class="text-[11px] font-extrabold text-secondary-fixed tracking-wider uppercase">SAFE
-                                &amp; ANONYMOUS</p>
-                            <p class="text-xs text-slate-300 mt-1 leading-snug font-medium">Free immediate shelter
-                                booking, hot meal locations, and emergency transport assistance.</p>
-                        </div>
+                <!-- Trust & Safety Banner -->
+                <div class="bg-surface-container-lowest rounded-2xl p-4 w-full text-left border border-slate-200/80 shadow-sm flex items-start gap-3">
+                    <div class="p-2 bg-slate-900 text-amber-400 rounded-xl">
+                        <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">shield_with_heart</span>
+                    </div>
+                    <div>
+                        <p class="text-[11px] font-black text-primary tracking-wider uppercase">SAFE & ANONYMOUS ACCESS</p>
+                        <p class="text-xs text-slate-500 mt-0.5 leading-snug font-medium">Instant shelter booking, meal locations, and dispatch support.</p>
                     </div>
                 </div>
 
@@ -303,56 +335,7 @@
 
         </div><!-- /#main-app-layout -->
 
-        <!-- ============================================ -->
-        <!-- WELCOME GATEWAY (shown before auth)          -->
-        <!-- ============================================ -->
-        <div id="welcome-gateway" class="absolute inset-0 z-[200] bg-slate-950 flex flex-col overflow-y-auto">
-            <div class="flex-1 flex flex-col justify-center items-center p-6 text-center min-h-full">
-                <div class="w-24 h-24 bg-white rounded-3xl flex items-center justify-center shadow-2xl p-2 mb-6">
-                    <img src="northstar-logo.png" alt="Northstar Logo" class="w-full h-full object-contain" />
-                </div>
-                <h1 class="text-3xl font-extrabold text-white tracking-tight mb-2">Northstar</h1>
-                <p class="text-slate-400 text-sm max-w-[260px] leading-relaxed mb-8 font-medium">Navigate. Connect. Move Forward.</p>
 
-                <div class="w-full bg-slate-900 border border-slate-800 rounded-3xl p-5 space-y-4 shadow-xl">
-                    <!-- Role toggle: hidden by default, shown only for Create Account -->
-                    <div id="gateway-role-toggle" class="hidden flex bg-slate-950 p-1 rounded-xl mb-2 relative">
-                        <div id="gateway-pill"
-                            class="absolute top-1 bottom-1 w-[calc(50%-4px)] bg-slate-800 rounded-lg transition-transform duration-300 left-1">
-                        </div>
-                        <button onclick="setGatewayMode('seeker')" id="gateway-btn-seeker"
-                            class="flex-1 py-2 text-xs font-bold rounded-lg text-white relative z-10 transition-colors">I Need Help</button>
-                        <button onclick="setGatewayMode('volunteer')" id="gateway-btn-volunteer"
-                            class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 relative z-10 transition-colors">I Want to Help</button>
-                    </div>
-
-                    <input type="email" id="gateway-username" placeholder="Email address"
-                        class="w-full px-4 py-3.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-amber-400 transition-colors">
-                    <input type="password" id="gateway-password" placeholder="Password"
-                        class="w-full px-4 py-3.5 bg-slate-950 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-amber-400 transition-colors">
-
-                    <!-- Inline auth error message -->
-                    <p id="auth-error" class="hidden text-rose-400 text-xs text-center font-medium px-1"></p>
-
-                    <button id="sign-in-btn" type="button"
-                        class="w-full py-3.5 bg-amber-400 text-slate-900 font-extrabold rounded-xl shadow-lg hover:bg-amber-500 transition-colors">
-                        Sign In
-                    </button>
-                    <button id="create-account-btn" type="button"
-                        class="w-full py-3.5 bg-slate-800 text-slate-200 font-semibold rounded-xl border border-slate-700 hover:bg-slate-700 transition-colors">
-                        Create Account
-                    </button>
-                </div>
-
-                <div class="w-full mt-5">
-                    <button id="guest-btn" type="button"
-                        class="w-full py-3.5 border-2 border-slate-700 text-white font-bold rounded-xl hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 shadow-sm">
-                        Continue as Guest &rarr;
-                    </button>
-                    <p class="text-[11px] text-slate-500 mt-3 px-4 leading-snug">Instant access to emergency resources. No registration required.</p>
-                </div>
-            </div>
-        </div>
 
     </div><!-- /.app-frame -->
 
@@ -401,21 +384,21 @@
             if (!cardSeeker || !cardVolunteer) return;
 
             if (role === 'seeker') {
-                // Seeker Card Active Highlight
-                cardSeeker.className = 'interactive-card w-full h-14 bg-gradient-to-r from-slate-900 to-primary text-white border-2 border-amber-400 shadow-xl starlight-glow scale-[1.02] rounded-2xl flex items-center justify-center gap-3 transition-all duration-200 transform active:scale-95';
-                if (iconSeeker) iconSeeker.className = 'material-symbols-outlined text-xl text-amber-400';
+                // Seeker High-Impact Accent
+                cardSeeker.className = 'w-full h-14 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl flex items-center justify-between px-5 transition-all duration-200 border border-amber-300 active:scale-[0.98] shadow-md';
+                if (iconSeeker) iconSeeker.className = 'material-symbols-outlined text-xl text-slate-950';
 
-                // Volunteer Card Inactive
-                cardVolunteer.className = 'interactive-card w-full h-14 bg-surface-container-lowest border-2 border-slate-200 text-slate-700 hover:border-slate-400 hover:bg-slate-50 opacity-90 rounded-2xl flex items-center justify-center gap-3 transition-all duration-200 transform active:scale-95 shadow-sm';
-                if (iconVolunteer) iconVolunteer.className = 'material-symbols-outlined text-xl text-slate-500';
-            } else {
-                // Volunteer Card Active Highlight
-                cardVolunteer.className = 'interactive-card w-full h-14 bg-gradient-to-r from-slate-900 to-primary text-white border-2 border-amber-400 shadow-xl starlight-glow scale-[1.02] rounded-2xl flex items-center justify-center gap-3 transition-all duration-200 transform active:scale-95';
+                // Volunteer Clean Secondary Card
+                cardVolunteer.className = 'w-full h-14 bg-slate-900/90 hover:bg-slate-800 text-white font-bold rounded-2xl flex items-center justify-between px-5 transition-all duration-200 border border-slate-800 active:scale-[0.98]';
                 if (iconVolunteer) iconVolunteer.className = 'material-symbols-outlined text-xl text-amber-400';
+            } else {
+                // Volunteer High-Impact Accent
+                cardVolunteer.className = 'w-full h-14 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl flex items-center justify-between px-5 transition-all duration-200 border border-amber-300 active:scale-[0.98] shadow-md';
+                if (iconVolunteer) iconVolunteer.className = 'material-symbols-outlined text-xl text-slate-950';
 
-                // Seeker Card Inactive
-                cardSeeker.className = 'interactive-card w-full h-14 bg-surface-container-lowest border-2 border-slate-200 text-slate-700 hover:border-slate-400 hover:bg-slate-50 opacity-90 rounded-2xl flex items-center justify-center gap-3 transition-all duration-200 transform active:scale-95 shadow-sm';
-                if (iconSeeker) iconSeeker.className = 'material-symbols-outlined text-xl text-slate-500';
+                // Seeker Secondary Card
+                cardSeeker.className = 'w-full h-14 bg-slate-900/90 hover:bg-slate-800 text-white font-bold rounded-2xl flex items-center justify-between px-5 transition-all duration-200 border border-slate-800 active:scale-[0.98]';
+                if (iconSeeker) iconSeeker.className = 'material-symbols-outlined text-xl text-amber-400';
             }
         }
 

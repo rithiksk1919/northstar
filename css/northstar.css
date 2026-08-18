@@ -1,7 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Atkinson+Hyperlegible+Next:wght@400;500;700&display=swap');
-
-/* Northstar Custom UI System */
-
+/* UI/UX Pro Max Design Tokens & Interactions */
 :root {
   --primary-navy: #0d1c2f;
   --secondary-navy: #131b2e;
@@ -15,6 +12,10 @@
   --border-light: rgba(226, 232, 240, 0.8);
   --text-dark: #191c1e;
   --text-muted: #45464d;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+  --radius-full: 9999px;
+  --touch-target-min: 44px;
 }
 
 body {
@@ -24,9 +25,37 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* UI/UX Pro Max Touch & Interaction Targets */
+button, a, input, select {
+  touch-action: manipulation;
+}
+
+nav a {
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Button & Card Micro-Interactions (150-250ms timing) */
+button, .interactive-card, nav a {
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), 
+              box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
+              background-color 0.2s ease, 
+              color 0.15s ease;
+}
+
+button:active, .interactive-card:active {
+  transform: scale(0.96) translateY(0);
+  opacity: 0.92;
+}
+
 /* Glassmorphism & Elevation */
 .glass-card {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.6);
@@ -34,7 +63,7 @@ body {
 }
 
 .glass-card-dark {
-  background: rgba(19, 27, 46, 0.92);
+  background: rgba(19, 27, 46, 0.94);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -43,11 +72,27 @@ body {
 
 /* Starlight Glow Effects */
 .starlight-glow {
-  box-shadow: 0 0 25px rgba(252, 223, 70, 0.35);
+  box-shadow: 0 0 25px rgba(252, 223, 70, 0.38);
 }
 
 .starlight-glow-lg {
-  box-shadow: 0 0 40px rgba(252, 223, 70, 0.45);
+  box-shadow: 0 0 40px rgba(252, 223, 70, 0.5);
+}
+
+/* Nav Item Indicator Badge */
+nav a.bg-secondary-container {
+  position: relative;
+  border: 1px solid rgba(252, 223, 70, 0.6);
+}
+
+nav a.bg-secondary-container::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  width: 4px;
+  height: 4px;
+  background-color: var(--primary-navy);
+  border-radius: 50%;
 }
 
 .starlight-pulse {

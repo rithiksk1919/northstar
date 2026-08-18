@@ -713,19 +713,29 @@ function generatePlainText() {
   document.getElementById('ats-plain-text-area').value = text;
 }
 
-function copyCleanText() {
-  generatePlainText();
-  const textArea = document.getElementById('ats-plain-text-area');
-  navigator.clipboard.writeText(textArea.value).then(() => {
-    showNotification('📋 Clean ATS resume copied to clipboard!', 'success');
-  }).catch(err => {
-    showNotification('Copied to clipboard!', 'success');
+// Expose functions globally for SPA Router re-binding
+window.switchView = switchView;
+window.generateResume = generateResume;
+window.copyCleanText = copyCleanText;
+window.exportToPDF = exportToPDF;
+window.initChipToggles = function() {
+  const chipSelectors = ['.chip-btn', '.skill-chip', '.role-chip'];
+  chipSelectors.forEach(selector => {
+    document.querySelectorAll(selector).forEach(chip => {
+      chip.onclick = function() {
+        chip.classList.toggle('active-chip');
+        if (chip.classList.contains('active-chip')) {
+          chip.classList.remove('bg-slate-100', 'border-slate-300', 'text-slate-700');
+          chip.classList.add('bg-amber-100', 'border-amber-400', 'text-amber-900');
+        } else {
+          chip.classList.remove('bg-amber-100', 'border-amber-400', 'text-amber-900');
+          chip.classList.add('bg-slate-100', 'border-slate-300', 'text-slate-700');
+        }
+      };
+    });
   });
-}
-
-function exportToPDF() {
-  window.print();
-}
+};
+window.initChipToggles();
 </script>
 </body>
 </html>

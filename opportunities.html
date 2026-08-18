@@ -151,7 +151,22 @@
 
     <!-- Bottom Navigation Bar -->
     <nav class="absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-3 py-3 bg-surface/95 backdrop-blur-xl border-t border-slate-200/80">
-        <!-- Dynamically rendered by northstar.js -->
+        <a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-3 py-1.5 transition-colors" href="helper-dashboard.html">
+            <span class="material-symbols-outlined text-xl">dashboard</span>
+            <span class="text-[11px] font-medium">Dashboard</span>
+        </a>
+        <a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-2xl px-3 py-1.5 shadow-md starlight-glow" href="opportunities.html">
+            <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">work</span>
+            <span class="text-[11px] font-bold">Opportunities</span>
+        </a>
+        <a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-3 py-1.5 transition-colors" href="donate.html">
+            <span class="material-symbols-outlined text-xl">volunteer_activism</span>
+            <span class="text-[11px] font-medium">Donate</span>
+        </a>
+        <a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-3 py-1.5 transition-colors" href="call-shelter.html">
+            <span class="material-symbols-outlined text-xl">call</span>
+            <span class="text-[11px] font-medium">Shelter</span>
+        </a>
     </nav>
 
 </div>
@@ -210,12 +225,9 @@
 
 <script src="js/northstar.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  loadOpportunities();
-});
-
-async function loadOpportunities() {
+window.loadOpportunities = async function loadOpportunities() {
   const feed = document.getElementById('opportunities-feed');
+  if (!feed) return;
   try {
     const res = await fetch('/api/jobs');
     const data = await res.json();
@@ -225,7 +237,11 @@ async function loadOpportunities() {
   } catch (e) {
     console.error(e);
   }
-}
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  window.loadOpportunities();
+});
 
 function renderJobFeed(jobs) {
   const feed = document.getElementById('opportunities-feed');

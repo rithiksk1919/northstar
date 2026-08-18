@@ -23,6 +23,14 @@ if (!apiKey) {
 
 const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
+// API Endpoint: Expose public Supabase configuration
+app.get('/api/config', (req, res) => {
+  res.json({
+    supabaseUrl: process.env.SUPABASE_URL || '',
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || ''
+  });
+});
+
 // In-Memory Database for Job & Work Opportunities
 const inMemoryJobs = [
   {
