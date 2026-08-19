@@ -242,29 +242,21 @@
   }
 
   const defaultResources = [
-    { id: 'wifi-1', name: "Public Library (Free Wi-Fi & Outlets)", category: "wifi", lat: 47.6110, lng: -122.3320, status: "Library_Guest (Open 10am-8pm)", address: "1000 4th Ave", distance: "0.2 mi (4 min walk)", icon: "📶", details: "Indoor charging tables open 10am-8pm. Network: Library_Guest (no password)" },
-    { id: '1', name: "St. Jude Community Refuge", category: "shelter", lat: 47.6101, lng: -122.3370, status: "14 Beds Available", address: "124 Pine St", distance: "0.4 mi (8 min walk)", icon: "🛏️", details: "Emergency overnight shelter for individuals and families." },
-    { id: '2', name: "Downtown Hope Center", category: "shelter", lat: 47.6032, lng: -122.3315, status: "5 Beds Left", address: "580 4th Ave", distance: "1.2 mi (18 min walk)", icon: "🛏️", details: "Safe evening refuge offering warm beds and dinner." },
-    { id: '3', name: "Community Food Pantry & Kitchen", category: "food", lat: 47.6088, lng: -122.3405, status: "Hot Meals Daily 12:00 PM & 5:30 PM", address: "89 Market St", distance: "0.8 mi (12 min walk)", icon: "🍲", details: "Hot meals daily at 12:00 PM and 5:30 PM. Free & open to all." },
-    { id: '4', name: "Pioneer Pantry & Bottled Water", category: "food", lat: 47.6005, lng: -122.3342, status: "Free Meal Packs", address: "210 1st Ave S", distance: "0.5 mi (10 min walk)", icon: "🍲", details: "Community pantry with groceries, bottled water, and hygiene kits." },
-    { id: '5', name: "Metro Hygiene & Shower Hub", category: "restroom", lat: 47.6020, lng: -122.3328, status: "Clean Showers 24/7", address: "302 2nd Ave", distance: "0.3 mi (6 min walk)", icon: "🚿", details: "24/7 monitored public restrooms with private shower stalls." },
-    { id: '6', name: "Capitol Hill Public Restroom", category: "restroom", lat: 47.6142, lng: -122.3190, status: "Clean & Accessible 24/7", address: "1000 E Pike St", distance: "0.9 mi (15 min walk)", icon: "🚿", details: "ADA accessible automated self-cleaning public restroom." },
-    { id: '7', name: "Pacific Freight Day Labor Hub", category: "work", lat: 47.6010, lng: -122.3360, status: "$21.50/hr • Walk-in Work", address: "450 1st Ave S", distance: "0.6 mi (11 min walk)", icon: "💼", details: "Entry level warehouse freight stocking and day labor." },
-    { id: '8', name: "CleanCity Community Work Center", category: "work", lat: 47.6115, lng: -122.3280, status: "$20.00/hr • Flexible Shift", address: "800 E Denny Way", distance: "0.7 mi (13 min walk)", icon: "💼", details: "Custodial maintenance and sanitation work opportunities." }
+    { id: 'res-real-1', name: "Together Center - Human Services Campus", category: "shelter", lat: 47.6805, lng: -122.1225, status: "Housing Navigators & Social Services", address: "16305 NE 87th St, Redmond", icon: "🏢", details: "Hub for 20+ non-profit agencies providing emergency housing navigation, crisis support, and healthcare. Drop-in: Tue 1-3pm. Phone: (425) 869-6699" },
+    { id: 'res-real-2', name: "Hopelink Redmond Center & Food Bank", category: "food", lat: 47.6822, lng: -122.1345, status: "Fresh Groceries & Emergency Food", address: "8990 154th Ave NE, Redmond", icon: "🍲", details: "Community food market offering fresh produce, pantry staples, and emergency food packs. Phone: (425) 869-6000" },
+    { id: 'res-real-3', name: "Helen's Place Emergency Shelter (The Sophia Way)", category: "shelter", lat: 47.6755, lng: -122.1795, status: "24/7 Women's Emergency Shelter", address: "8045 120th Ave NE, Suite 200, Kirkland", icon: "🛏️", details: "Low-barrier 24/7 emergency shelter for women, offering warm beds, showers, laundry, and meals. Call (425) 572-2178 for intake." },
+    { id: 'res-real-4', name: "Redmond Regional Library (KCLS)", category: "wifi", lat: 47.6765, lng: -122.1240, status: "Free KCLS Guest Wi-Fi & Outlets", address: "15990 NE 85th St, Redmond", icon: "📶", details: "Public library featuring high-speed guest Wi-Fi, computer labs, climate control, and indoor charging desks. Phone: (425) 885-1861" },
+    { id: 'res-real-5', name: "Urban Rest Stop Hygiene Center", category: "restroom", lat: 47.6148, lng: -122.3340, status: "Free Private Showers & Laundry", address: "1924 9th Ave, Seattle", icon: "🚿", details: "Clean, private restroom and shower stalls, laundry facilities, and personal hygiene supplies. Phone: (206) 443-9935" },
+    { id: 'res-real-6', name: "Downtown Emergency Service Center (DESC)", category: "shelter", lat: 47.6025, lng: -122.3308, status: "Emergency Shelter & Crisis Support", address: "515 3rd Ave, Seattle", icon: "🛏️", details: "Overnight emergency shelter, crisis intervention, medical respite coordination, and mental health outreach. Phone: (206) 464-1570" },
+    { id: 'res-real-7', name: "Mary's Place Family Shelter Intake Hub", category: "shelter", lat: 47.6140, lng: -122.3362, status: "Family Shelter Intake & Support", address: "700 Virginia St, Seattle", icon: "🏠", details: "Central intake for families experiencing homelessness, offering emergency beds, hot meals, and medical care. Call (206) 245-1026." },
+    { id: 'res-real-8', name: "Ballard Food Bank & Community Hub", category: "food", lat: 47.6635, lng: -122.3740, status: "Free Grocery Market & Hot Meals", address: "1400 Leary Way NW, Seattle", icon: "🍲", details: "Community food market, hygiene supplies, mail pick-up service, and financial assistance navigation. Phone: (206) 789-7800" },
+    { id: 'res-real-9', name: "YouthCare Orion Center", category: "food", lat: 47.6178, lng: -122.3315, status: "Youth Meals, Showers & Housing (13-24)", address: "1828 Yale Ave, Seattle", icon: "🍲", details: "Drop-in center for youth and young adults providing hot meals, showers, laundry, and housing case management. Phone: (206) 622-5555" },
+    { id: 'res-real-10', name: "Compass Center Hygiene Center", category: "restroom", lat: 47.6015, lng: -122.3348, status: "Monitored Showers & Restrooms", address: "210 Alaskan Way S, Seattle", icon: "🚿", details: "Monitored hygiene facility offering private showers, restrooms, and personal care kits in Pioneer Square. Phone: (206) 474-1680" }
   ];
 
-  // Save initial resources to LocalStorage if not set
-  if (!localStorage.getItem('cached_resources')) {
-    localStorage.setItem('cached_resources', JSON.stringify(defaultResources));
-  }
-
   function getResourcesData() {
-    try {
-      const data = JSON.parse(localStorage.getItem('cached_resources'));
-      return Array.isArray(data) && data.length > 0 ? data : defaultResources;
-    } catch(e) {
-      return defaultResources;
-    }
+    localStorage.setItem('cached_resources', JSON.stringify(defaultResources));
+    return defaultResources;
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -518,9 +510,11 @@
     const resources = getResourcesData();
     const userPos = userLocationCoords || { lat: 47.6062, lng: -122.3321 };
 
-    const filtered = resources.filter(res => {
+    // Primary 5-mile radius search
+    let searchRadius = 5.0;
+    let filtered = resources.filter(res => {
       const distMiles = getDistanceMiles(userPos.lat, userPos.lng, res.lat, res.lng);
-      const within5Miles = distMiles <= 5.0;
+      const withinRadius = distMiles <= searchRadius;
       const matchCategory = category === 'all' || res.category === category;
       const matchQuery = !q || 
         res.name.toLowerCase().includes(q) || 
@@ -529,8 +523,18 @@
         res.category.toLowerCase().includes(q) ||
         (res.details && res.details.toLowerCase().includes(q));
 
-      return within5Miles && matchCategory && matchQuery;
+      return withinRadius && matchCategory && matchQuery;
     });
+
+    // Smart Fallback: Expand to 25 miles if no resources within 5 miles
+    if (filtered.length === 0 && !q) {
+      searchRadius = 25.0;
+      filtered = resources.filter(res => {
+        const distMiles = getDistanceMiles(userPos.lat, userPos.lng, res.lat, res.lng);
+        const matchCategory = category === 'all' || res.category === category;
+        return distMiles <= searchRadius && matchCategory;
+      });
+    }
 
     renderLeafletMarkers(filtered);
   }

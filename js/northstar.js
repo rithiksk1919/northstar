@@ -217,6 +217,8 @@ window.signOutUser = async function () {
 };
 
 // Instant Zero-Lag Page Swapping Engine (SPA Router)
+let isPageTransitioning = false;
+
 function initInstantPageTransitions() {
   document.addEventListener('click', (e) => {
     const link = e.target.closest('a[href$=".html"]');
@@ -225,9 +227,10 @@ function initInstantPageTransitions() {
     const href = link.getAttribute('href');
     if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('tel:')) return;
 
-    // Prevent re-rendering the exact same page if the user clicks the active tab again (Fixes layout collapsing bugs)
+    // Prevent re-rendering if transition is in progress or clicking the active tab
+    const cleanHref = href.split('/').pop();
     const currentPath = window.location.pathname.split('/').pop() || 'index.html';
-    if (href === currentPath) {
+    if (isPageTransitioning || cleanHref === currentPath) {
       e.preventDefault();
       return;
     }
@@ -243,6 +246,13 @@ function initInstantPageTransitions() {
 }
 
 async function navigateToPageInstant(url, pushState = true) {
+  if (isPageTransitioning) return;
+  isPageTransitioning = true;
+
+  const resetLock = () => {
+    isPageTransitioning = false;
+  };
+
   try {
     // Show Swirling Loading Overlay
     const loader = document.getElementById('swirling-loader-overlay');
@@ -253,6 +263,7 @@ async function navigateToPageInstant(url, pushState = true) {
 
     // React app or dynamically mounted pages must perform full browser load to initialize React root scripts
     if (url.includes('resource-map.html') || window.location.pathname.includes('resource-map.html')) {
+      resetLock();
       window.location.href = url;
       return;
     }
@@ -260,6 +271,7 @@ async function navigateToPageInstant(url, pushState = true) {
     const response = await fetch(url);
     if (!response.ok) {
       if (loader) { loader.classList.add('hidden'); loader.style.display = 'none'; }
+      resetLock();
       window.location.href = url;
       return;
     }
@@ -275,85 +287,91 @@ async function navigateToPageInstant(url, pushState = true) {
       currentAppFrame.classList.add('opacity-0', 'transition-opacity', 'duration-100');
 
       setTimeout(() => {
-        currentAppFrame.innerHTML = newAppFrame.innerHTML;
-        // Explicitly copy CSS classes (like flex, constraints) from the newly fetched frame
-        // This ensures mobile constraints and responsive styling are preserved when swapping views
-        currentAppFrame.className = newAppFrame.className;
+        try {
+          currentAppFrame.innerHTML = newAppFrame.innerHTML;
+          // Explicitly copy CSS classes (like flex, constraints) from the newly fetched frame
+          // This ensures mobile constraints and responsive styling are preserved when swapping views
+          currentAppFrame.className = newAppFrame.className;
 
-        document.title = doc.title;
-        if (pushState) {
-          window.history.pushState({}, doc.title, url);
-        }
+          document.title = doc.title;
+          if (pushState) {
+            window.history.pushState({}, doc.title, url);
+          }
 
-        currentAppFrame.classList.remove('opacity-0');
-        currentAppFrame.classList.add('animate-fade-in-up');
+          currentAppFrame.classList.remove('opacity-0');
+          currentAppFrame.classList.add('animate-fade-in-up');
 
-        // Hide Swirling Loader
-        if (loader) {
-          loader.classList.add('hidden');
-          loader.style.display = 'none';
-        }
+          // Hide Swirling Loader
+          if (loader) {
+            loader.classList.add('hidden');
+            loader.style.display = 'none';
+          }
 
-        // Re-initialize dynamic page handlers
-        initClock();
-        initRoleNavigation();
-        initDonationForm();
-        initResourceMapFilter();
-        initHelpModal();
-        initCallModal();
-        initTaskClaiming();
-        // Execute inline script tags present in the loaded page document
-        doc.querySelectorAll('script').forEach(s => {
-          if (s.textContent) {
-            try {
-              eval(s.textContent);
-            } catch (err) {
-              console.warn('Script execution notice:', err);
+          // Re-initialize dynamic page handlers
+          initClock();
+          initRoleNavigation();
+          initDonationForm();
+          initResourceMapFilter();
+          initHelpModal();
+          initCallModal();
+          initTaskClaiming();
+          // Execute inline script tags present in the loaded page document (skipping duplicate config script)
+          doc.querySelectorAll('script').forEach(s => {
+            if (s.textContent && s.id !== 'tailwind-config') {
+              try {
+                eval(s.textContent);
+              } catch (err) {
+                console.warn('Script execution notice:', err);
+              }
+            }
+          });
+
+          if (typeof window.updateLandingRoleCards === 'function') {
+            window.updateLandingRoleCards();
+          }
+          if (typeof window.initChipToggles === 'function') {
+            window.initChipToggles();
+          }
+          if (typeof window.loadOpportunities === 'function') {
+            window.loadOpportunities();
+          } else if (typeof loadOpportunities === 'function') {
+            loadOpportunities();
+          }
+          renderDynamicNav();
+          if (typeof window.updateProgressUI === 'function') {
+            window.updateProgressUI();
+          }
+
+          const path = url.split('/').pop();
+          if (path === 'call-shelter.html') updateMilestone('safePlace', true);
+
+          // Re-run session gate check when navigating to Home so gateway stays hidden
+          if (path === 'index.html' || path === '') {
+            const gw = document.getElementById('auth-gateway-view');
+            const layout = document.getElementById('main-app-layout');
+            const sess = JSON.parse(localStorage.getItem('northstar_session'));
+            if (sess) {
+              if (gw) gw.classList.add('hidden');
+              if (layout) layout.classList.remove('hidden');
+            } else {
+              if (gw) gw.classList.remove('hidden');
+              if (layout) layout.classList.add('hidden');
             }
           }
-        });
 
-        if (typeof window.updateLandingRoleCards === 'function') {
-          window.updateLandingRoleCards();
+          renderProgressPage();
+          window.scrollTo(0, 0);
+        } finally {
+          resetLock();
         }
-        if (typeof window.initChipToggles === 'function') {
-          window.initChipToggles();
-        }
-        if (typeof window.loadOpportunities === 'function') {
-          window.loadOpportunities();
-        } else if (typeof loadOpportunities === 'function') {
-          loadOpportunities();
-        }
-        renderDynamicNav();
-        if (typeof window.updateProgressUI === 'function') {
-          window.updateProgressUI();
-        }
-
-        const path = url.split('/').pop();
-        if (path === 'call-shelter.html') updateMilestone('safePlace', true);
-
-        // Re-run session gate check when navigating to Home so gateway stays hidden
-        if (path === 'index.html' || path === '') {
-          const gw = document.getElementById('auth-gateway-view');
-          const layout = document.getElementById('main-app-layout');
-          const sess = JSON.parse(localStorage.getItem('northstar_session'));
-          if (sess) {
-            if (gw) gw.classList.add('hidden');
-            if (layout) layout.classList.remove('hidden');
-          } else {
-            if (gw) gw.classList.remove('hidden');
-            if (layout) layout.classList.add('hidden');
-          }
-        }
-
-        renderProgressPage();
-        window.scrollTo(0, 0);
       }, 90);
     } else {
+      resetLock();
       window.location.href = url;
     }
   } catch (err) {
     console.error('Page fetch error, falling back:', err);
+    resetLock();
     window.location.href = url;
   }
 }
