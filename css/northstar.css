@@ -10,24 +10,36 @@
   --surface-card: #ffffff;
   --surface-hover: #f1f5f9;
   --border-light: rgba(226, 232, 240, 0.8);
-  --text-dark: #191c1e;
-  --text-muted: #45464d;
+  --border-glow: rgba(252, 223, 70, 0.4);
+  --text-dark: #0f172a;
+  --text-muted: #475569;
   --radius-xl: 1rem;
   --radius-2xl: 1.25rem;
   --radius-full: 9999px;
   --touch-target-min: 44px;
+  --shadow-sm: 0 2px 4px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 8px 16px -4px rgba(15, 23, 42, 0.1), 0 4px 6px -2px rgba(15, 23, 42, 0.05);
+  --shadow-lg: 0 20px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
+  --shadow-starlight: 0 0 25px rgba(252, 223, 70, 0.4);
 }
 
 body {
   background-color: var(--bg-slate);
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 /* UI/UX Pro Max Touch & Interaction Targets */
-button, a, input, select {
+button, a, input, select, textarea {
   touch-action: manipulation;
+}
+
+/* Accessible High-Contrast Focus Rings */
+:focus-visible {
+  outline: 2px solid var(--starlight-amber) !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(252, 223, 70, 0.25) !important;
 }
 
 nav a {
@@ -40,43 +52,48 @@ nav a {
   position: relative;
 }
 
-/* Button & Card Micro-Interactions (150-250ms timing) */
-button, .interactive-card, nav a {
-  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), 
+/* Button & Card Micro-Interactions (150-250ms spring timing) */
+button, .interactive-card, nav a, .chip-btn {
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), 
               box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
               background-color 0.2s ease, 
-              color 0.15s ease;
+              color 0.15s ease,
+              border-color 0.2s ease;
 }
 
-button:active, .interactive-card:active {
+button:hover, nav a:hover {
+  transform: translateY(-1px);
+}
+
+button:active, .interactive-card:active, nav a:active {
   transform: scale(0.96) translateY(0);
-  opacity: 0.92;
+  opacity: 0.94;
 }
 
 /* Glassmorphism & Elevation */
 .glass-card {
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: var(--shadow-md);
 }
 
 .glass-card-dark {
-  background: rgba(19, 27, 46, 0.94);
+  background: rgba(19, 27, 46, 0.95);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
 }
 
 /* Starlight Glow Effects */
 .starlight-glow {
-  box-shadow: 0 0 25px rgba(252, 223, 70, 0.38);
+  box-shadow: var(--shadow-starlight);
 }
 
 .starlight-glow-lg {
-  box-shadow: 0 0 40px rgba(252, 223, 70, 0.5);
+  box-shadow: 0 0 40px rgba(252, 223, 70, 0.55), 0 0 80px rgba(252, 223, 70, 0.2);
 }
 
 /* Nav Item Indicator Badge */
@@ -89,10 +106,11 @@ nav a.bg-secondary-container::after {
   content: '';
   position: absolute;
   bottom: 2px;
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
   background-color: var(--primary-navy);
   border-radius: 50%;
+  box-shadow: 0 0 6px var(--starlight-amber);
 }
 
 .starlight-pulse {
@@ -101,12 +119,12 @@ nav a.bg-secondary-container::after {
 
 @keyframes starlightGlowPulse {
   0%, 100% {
-    box-shadow: 0 0 15px rgba(252, 223, 70, 0.2);
+    box-shadow: 0 0 15px rgba(252, 223, 70, 0.25);
     transform: scale(1);
   }
   50% {
-    box-shadow: 0 0 35px rgba(252, 223, 70, 0.5);
-    transform: scale(1.03);
+    box-shadow: 0 0 35px rgba(252, 223, 70, 0.6);
+    transform: scale(1.02);
   }
 }
 
@@ -148,22 +166,23 @@ nav a.bg-secondary-container::after {
 
 /* Interactive Card Hover Effects */
 .interactive-card {
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease, border-color 0.2s ease;
 }
 
 .interactive-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px -8px rgba(15, 23, 42, 0.12);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(252, 223, 70, 0.5);
 }
 
 .interactive-card:active {
-  transform: translateY(0) scale(0.98);
+  transform: translateY(0) scale(0.97);
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -176,7 +195,7 @@ nav a.bg-secondary-container::after {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.7);
+  background: rgba(100, 116, 139, 0.8);
 }
 
 /* Bottom Sheet Modal */
@@ -197,7 +216,7 @@ nav a.bg-secondary-container::after {
   background-color: var(--starlight-amber) !important;
   color: #211b00 !important;
   font-weight: 700;
-  box-shadow: 0 4px 14px rgba(252, 223, 70, 0.35);
+  box-shadow: 0 4px 14px rgba(252, 223, 70, 0.4);
 }
 
 /* Material Symbols Adjustments */
@@ -213,7 +232,7 @@ nav a.bg-secondary-container::after {
 /* Device Shell Responsive Styling */
 @media (min-width: 640px) {
   .app-frame {
-    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7), 0 0 40px rgba(252, 223, 70, 0.1);
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.75), 0 0 40px rgba(252, 223, 70, 0.15);
   }
 }
 
@@ -254,7 +273,7 @@ nav a.bg-secondary-container::after {
 .role-toggle-btn {
   position: relative;
   z-index: 2;
-  padding: 3px 7px;
+  padding: 4px 8px;
   font-size: 10px;
   font-weight: 800;
   border-radius: 9999px;
@@ -308,32 +327,14 @@ nav a.bg-secondary-container::after {
   }
 }
 
-/* Interactive Spring Micro-Interactions */
-button, a, .interactive-card, .chip-btn, .skill-chip, .role-chip {
-  touch-action: manipulation;
-}
-
-.interactive-card {
-  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease, border-color 0.2s ease;
-}
-
-.interactive-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px -8px rgba(15, 23, 42, 0.15);
-}
-
-.interactive-card:active {
-  transform: scale(0.97) translateY(0);
-}
-
 /* Form Input Smooth Focus Elevation */
 input, textarea, select {
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.18s ease;
 }
 
 input:focus, textarea:focus, select:focus {
-  transform: scale(1.005);
-  outline: none;
+  border-color: var(--starlight-amber) !important;
+  box-shadow: 0 0 0 3px rgba(252, 223, 70, 0.3) !important;
 }
 
 /* Ensure views swap inside the phone frame instead of sitting side-by-side */
@@ -348,7 +349,6 @@ input:focus, textarea:focus, select:focus {
 #main-app-layout {
   width: 100%;
   height: 100%;
-  /* We use flex layout in index.html, so we just need .hidden to work */
 }
 
 #auth-gateway-view {
@@ -358,3 +358,365 @@ input:focus, textarea:focus, select:focus {
 .hidden {
   display: none !important;
 }
+
+/* Theme Toggle Button Animation & Styling */
+.theme-toggle-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  cursor: pointer;
+  outline: none;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+html.dark .theme-toggle-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #f59e0b; /* Amber Sun */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+html.dark .theme-toggle-btn:hover {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: rgba(245, 158, 11, 0.5);
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.35);
+  transform: scale(1.08);
+}
+
+html.light .theme-toggle-btn {
+  background: rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(15, 23, 42, 0.15);
+  color: #6366f1; /* Indigo Moon */
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+html.light .theme-toggle-btn:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 0 16px rgba(99, 102, 241, 0.3);
+  transform: scale(1.08);
+}
+
+.theme-toggle-btn .theme-icon {
+  font-size: 20px;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+}
+
+.theme-toggle-btn.toggling {
+  transform: scale(0.85);
+}
+
+.theme-toggle-btn.toggling .theme-icon {
+  transform: rotate(360deg) scale(0.5);
+  opacity: 0.2;
+}
+
+/* ---------------------------------------------------- */
+/* Comprehensive Contrast Engine (Light & Dark Modes) */
+/* ---------------------------------------------------- */
+
+html, body, div, header, nav, section, main, button, input, textarea, h1, h2, h3, h4, p, span {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* DARK MODE CONTRAST RULES */
+html.dark, html.dark body {
+  background-color: #0f1117;
+  color: #f8fafc;
+}
+
+html.dark .app-frame {
+  background-color: #0f1117 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+html.dark h1, html.dark h2, html.dark h3, html.dark h4, html.dark h5, html.dark h6 {
+  color: #ffffff !important;
+}
+
+html.dark p, html.dark label, html.dark li {
+  color: #e2e8f0;
+}
+
+html.dark .text-slate-400, html.dark .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+html.dark .text-primary {
+  color: #ffffff !important;
+}
+
+html.dark .status-bar-wrapper, html.dark header {
+  background-color: rgba(15, 17, 23, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+html.dark nav {
+  background-color: rgba(18, 20, 28, 0.85) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+html.dark nav a {
+  color: #94a3b8;
+}
+
+html.dark nav a:hover {
+  color: #ffffff;
+}
+
+html.dark input, html.dark textarea, html.dark select {
+  background-color: #12141c !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+html.dark input::placeholder, html.dark textarea::placeholder {
+  color: #64748b !important;
+}
+
+/* ==================================================== */
+/* VIBRANT NEO-HUMANITARIAN LIGHT MODE DESIGN ENGINE    */
+/* ==================================================== */
+
+html.light, html.light body {
+  background-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+html.light .app-frame {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 20px 60px -15px rgba(15, 23, 42, 0.15) !important;
+}
+
+/* Atmospheric Glow Washes in Light Mode */
+html.light .bg-indigo-600\/15 {
+  background-color: rgba(99, 102, 241, 0.25) !important;
+}
+
+html.light .bg-amber-500\/10 {
+  background-color: rgba(245, 158, 11, 0.25) !important;
+}
+
+html.light .bg-emerald-500\/10 {
+  background-color: rgba(16, 185, 129, 0.25) !important;
+}
+
+/* Top Status Bar & Header in Light Mode */
+html.light .status-bar-wrapper,
+html.light header {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(226, 232, 240, 0.9) !important;
+  color: #0f172a !important;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03) !important;
+}
+
+html.light header h1 {
+  color: #0f172a !important;
+}
+
+/* Base Card & Container Washes (Crisp White + Pastel Tint Accents) */
+html.light .bg-surface-container-lowest,
+html.light .bg-surface-container-low,
+html.light .bg-surface,
+html.light .modal-drawer {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05) !important;
+}
+
+/* VIBRANT PASTEL CARD WASHES FOR DASHBOARDS & LISTS */
+
+/* 1. Warm Amber / Emergency Beds Tint Wash */
+html.light [class*="border-amber-500\/20"],
+html.light [class*="border-amber-400\/30"],
+html.light .bg-amber-500\/10,
+html.light .bg-amber-400\/10 {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important;
+  border-color: #fcd34d !important;
+  color: #78350f !important;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.12) !important;
+}
+
+html.light [class*="border-amber-500\/20"] h2,
+html.light [class*="border-amber-500\/20"] h3,
+html.light [class*="border-amber-500\/20"] h4,
+html.light [class*="border-amber-400\/30"] h2,
+html.light [class*="border-amber-400\/30"] h3,
+html.light [class*="border-amber-400\/30"] h4 {
+  color: #78350f !important;
+}
+
+html.light [class*="border-amber-500\/20"] p,
+html.light [class*="border-amber-400\/30"] p {
+  color: #92400e !important;
+}
+
+/* 2. Soft Emerald / Food & Meal Tint Wash */
+html.light [class*="border-emerald-500\/20"],
+html.light [class*="border-emerald-400\/30"],
+html.light .bg-emerald-500\/10 {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%) !important;
+  border-color: #6ee7b7 !important;
+  color: #064e3b !important;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.12) !important;
+}
+
+html.light [class*="border-emerald-500\/20"] h2,
+html.light [class*="border-emerald-500\/20"] h3,
+html.light [class*="border-emerald-500\/20"] h4 {
+  color: #064e3b !important;
+}
+
+html.light [class*="border-emerald-500\/20"] p {
+  color: #047857 !important;
+}
+
+/* 3. Soft Indigo / Jobs & Career Tint Wash */
+html.light [class*="border-indigo-500\/20"],
+html.light [class*="border-indigo-400\/30"],
+html.light .bg-indigo-600\/15,
+html.light .bg-indigo-500\/10 {
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%) !important;
+  border-color: #a5b4fc !important;
+  color: #1e1b4b !important;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.12) !important;
+}
+
+html.light [class*="border-indigo-500\/20"] h2,
+html.light [class*="border-indigo-500\/20"] h3,
+html.light [class*="border-indigo-500\/20"] h4 {
+  color: #1e1b4b !important;
+}
+
+html.light [class*="border-indigo-500\/20"] p {
+  color: #3730a3 !important;
+}
+
+/* 4. Soft Rose / Crisis & Hotline Tint Wash */
+html.light [class*="border-rose-500\/20"],
+html.light [class*="border-rose-400\/30"],
+html.light .bg-rose-500\/10 {
+  background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%) !important;
+  border-color: #fda4af !important;
+  color: #881337 !important;
+  box-shadow: 0 4px 15px rgba(244, 63, 94, 0.12) !important;
+}
+
+html.light [class*="border-rose-500\/20"] h2,
+html.light [class*="border-rose-500\/20"] h3,
+html.light [class*="border-rose-500\/20"] h4 {
+  color: #881337 !important;
+}
+
+html.light [class*="border-rose-500\/20"] p {
+  color: #9f1239 !important;
+}
+
+/* Feature Hero Banners & Glass Cards in Light Mode */
+html.light .backdrop-blur-md.bg-white\/\[0\.04\],
+html.light .glass-card-dark {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06) !important;
+}
+
+/* Resource Map Filter & Drawer in Light Mode */
+html.light .bg-\[\#12141C\]\/90,
+html.light .bg-\[\#12141C\]\/80,
+html.light .bg-\[\#12141C\] {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 15px rgba(15, 23, 42, 0.05) !important;
+}
+
+html.light .bg-\[\#0F1117\] {
+  background-color: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Category Filter Chips & Buttons in Light Mode */
+html.light .cat-filter-btn:not(.from-amber-400),
+html.light [class*="bg-white\/5"],
+html.light .chip-btn,
+html.light .skill-chip,
+html.light .role-chip {
+  background-color: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #334155 !important;
+  font-weight: 600;
+}
+
+html.light .cat-filter-btn.from-amber-400,
+html.light .active-chip {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  border-color: #d97706 !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3) !important;
+}
+
+/* Text Hierarchy in Light Mode */
+html.light h1, html.light h2, html.light h3, html.light h4, html.light h5, html.light h6,
+html.light .text-white,
+html.light .text-primary {
+  color: #0f172a !important;
+}
+
+html.light p, 
+html.light label, 
+html.light li,
+html.light .text-slate-300,
+html.light .text-slate-400 {
+  color: #475569 !important;
+}
+
+html.light .text-slate-500,
+html.light .text-slate-600 {
+  color: #64748b !important;
+}
+
+/* Form Inputs in Light Mode */
+html.light input, html.light textarea, html.light select {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+html.light input::placeholder, html.light textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Floating Dock Bottom Navigation in Light Mode */
+html.light nav {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 -4px 25px rgba(15, 23, 42, 0.08) !important;
+}
+
+html.light nav a {
+  color: #64748b !important;
+}
+
+html.light nav a:hover {
+  color: #0f172a !important;
+}
+
+html.light nav a[class*="bg-amber-400\/15"],
+html.light nav a.bg-amber-400\/15 {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.2) 100%) !important;
+  color: #b45309 !important;
+  border: 1px solid rgba(245, 158, 11, 0.5) !important;
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.2) !important;
+}
+
+

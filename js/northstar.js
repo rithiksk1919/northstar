@@ -4,6 +4,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  initThemeToggle();
   const currentPath = window.location.pathname.split('/').pop() || 'index.html';
   const session = JSON.parse(localStorage.getItem('northstar_session'));
 
@@ -31,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => updateMilestone('safePlace', true), 500);
   }
 
+  initThemeToggle();
   initClock();
   initRoleNavigation();
   initDonationForm();
@@ -40,7 +42,89 @@ document.addEventListener('DOMContentLoaded', () => {
   initTaskClaiming();
   initInstantPageTransitions();
   renderProgressPage();
+  checkGuestLockAccess();
+  renderAccountHeaderAvatar();
 });
+
+// Render Top Right Account Avatar Badge on EVERY Page Header
+function renderAccountHeaderAvatar() {
+  const session = getSession();
+  const headers = document.querySelectorAll('header');
+  if (!headers || headers.length === 0) return;
+
+  headers.forEach(header => {
+    let container = header.querySelector('.header-actions-right');
+    if (!container) {
+      container = document.createElement('div');
+      container.className = 'header-actions-right flex items-center gap-2 flex-shrink-0';
+      const existingBtns = Array.from(header.children).filter(child => !child.querySelector('h1') && child.tagName !== 'H1' && !child.classList.contains('flex-1') && child.id !== 'offline-save-btn');
+      
+      const offlineBtn = header.querySelector('#offline-save-btn');
+      if (offlineBtn) {
+        container.appendChild(offlineBtn);
+      } else {
+        existingBtns.forEach(btn => {
+          if (!btn.classList.contains('header-account-avatar') && btn.tagName === 'BUTTON') {
+            container.appendChild(btn);
+          }
+        });
+      }
+      header.appendChild(container);
+    }
+
+    let oldAvatar = container.querySelector('.header-account-avatar');
+    if (oldAvatar) oldAvatar.remove();
+
+    const avatarBtn = document.createElement('button');
+    avatarBtn.type = 'button';
+    avatarBtn.onclick = window.openSettingsModal;
+    avatarBtn.className = 'header-account-avatar flex-shrink-0 transition-transform active:scale-95 cursor-pointer select-none';
+
+    if (session && session.isGuest) {
+      avatarBtn.innerHTML = `
+        <div class="w-8 h-8 rounded-full bg-amber-400/20 border border-amber-400/50 text-amber-300 font-extrabold text-xs flex items-center justify-center shadow-sm hover:bg-amber-400/30 transition-all" title="Browsing as Guest - Tap for Settings / Sign In">
+          ?
+        </div>
+      `;
+    } else {
+      const initial = (session && session.username ? session.username : 'User').charAt(0).toUpperCase();
+      avatarBtn.innerHTML = `
+        <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-400 to-amber-500 text-slate-950 font-black text-xs flex items-center justify-center shadow-[0_0_12px_rgba(245,158,11,0.4)] border border-amber-300 hover:brightness-110 transition-all" title="Signed in as ${session.username} - Tap for Settings">
+          ${initial}
+        </div>
+      `;
+    }
+
+    container.appendChild(avatarBtn);
+  });
+}
+
+// Theme Mode Storage & Management Engine
+function initThemeToggle() {
+  const savedTheme = localStorage.getItem('northstar_theme') || 'dark';
+  document.documentElement.className = savedTheme;
+}
+initThemeToggle();
+
+window.setThemeMode = function(mode) {
+  document.documentElement.className = mode;
+  localStorage.setItem('northstar_theme', mode);
+  updateSettingsThemeUI(mode);
+};
+
+function updateSettingsThemeUI(mode) {
+  const lightBtn = document.getElementById('settings-theme-light');
+  const darkBtn = document.getElementById('settings-theme-dark');
+  if (!lightBtn || !darkBtn) return;
+
+  if (mode === 'light') {
+    lightBtn.className = 'py-3 px-3 text-xs font-extrabold rounded-xl border-amber-400 bg-amber-400/20 text-amber-900 dark:text-amber-300 transition-all flex items-center justify-center gap-2 shadow-sm border';
+    darkBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 transition-all flex items-center justify-center gap-2 border';
+  } else {
+    darkBtn.className = 'py-3 px-3 text-xs font-extrabold rounded-xl border-amber-400 bg-amber-400/20 text-amber-900 dark:text-amber-300 transition-all flex items-center justify-center gap-2 shadow-sm border';
+    lightBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 transition-all flex items-center justify-center gap-2 border';
+  }
+}
 
 // Initialize Supabase Client dynamically from server config
 async function initSupabaseClient() {
@@ -720,6 +804,8 @@ function closeModal(modalId) {
 // Settings Modal Generator
 window.openSettingsModal = function () {
   let modal = document.getElementById('settings-modal');
+  const session = getSession();
+
   if (!modal) {
     modal = document.createElement('div');
     modal.id = 'settings-modal';
@@ -728,14 +814,19 @@ window.openSettingsModal = function () {
       <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('settings-modal')"></div>
       <div class="modal-drawer bg-surface w-full rounded-t-3xl p-6 transform translate-y-full transition-transform duration-300 ease-in-out relative flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.2)]">
         <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-5"></div>
-        <h2 class="text-xl font-bold text-primary mb-6 flex items-center gap-2">
-          <span class="material-symbols-outlined">settings</span> Settings
+        <h2 class="text-xl font-bold text-primary mb-6 flex items-center justify-between">
+          <span class="flex items-center gap-2">
+            <span class="material-symbols-outlined">settings</span> Settings
+          </span>
+          <span id="settings-guest-badge" class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-amber-400/20 text-amber-500 border border-amber-400/30">
+            ${session.isGuest ? 'Guest Mode' : 'Account Active'}
+          </span>
         </h2>
         
         <div class="space-y-6">
           <!-- Role Selector -->
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-3 uppercase tracking-wider">Account Role</label>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-3 uppercase tracking-wider">Account Role</label>
             <div class="grid grid-cols-2 gap-3">
               <button onclick="switchUserRole('seeker'); setTimeout(() => openSettingsModal(), 10);" id="settings-role-seeker" class="py-3 px-3 text-xs font-bold rounded-xl border transition-all flex flex-col items-center justify-center gap-1">
                 <span class="material-symbols-outlined text-xl">search</span>
@@ -750,12 +841,32 @@ window.openSettingsModal = function () {
             </div>
           </div>
 
+          <!-- Theme Appearance Selector -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-3 uppercase tracking-wider">Appearance</label>
+            <div class="grid grid-cols-2 gap-3">
+              <button onclick="setThemeMode('light')" id="settings-theme-light" class="py-3 px-3 text-xs font-bold rounded-xl border transition-all flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-lg text-amber-500">light_mode</span>
+                <span>Light Mode</span>
+              </button>
+              <button onclick="setThemeMode('dark')" id="settings-theme-dark" class="py-3 px-3 text-xs font-bold rounded-xl border transition-all flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-lg text-indigo-400">dark_mode</span>
+                <span>Dark Mode</span>
+              </button>
+            </div>
+          </div>
 
-          <!-- Sign Out Button -->
-          <div class="pt-4 border-t border-slate-200">
-            <button onclick="signOutUser()" class="w-full py-3.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-xl text-sm shadow-sm transition-colors border border-rose-100 flex items-center justify-center gap-2">
-              <span class="material-symbols-outlined text-sm">logout</span> Sign out
-            </button>
+          <!-- Auth Action Button (Sign In / Sign Up for Guest vs Sign Out for User Account) -->
+          <div class="pt-4 border-t border-slate-200 dark:border-white/10" id="settings-auth-container">
+            ${session.isGuest ? `
+              <button onclick="redirectToAuthGateway()" class="w-full py-3.5 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-extrabold rounded-xl text-sm shadow-md hover:from-amber-300 hover:to-amber-400 transition-all flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-base">login</span> Sign in / Create Account
+              </button>
+            ` : `
+              <button onclick="logout()" class="w-full py-3.5 bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20 font-bold rounded-xl text-sm shadow-sm transition-colors border border-rose-100 flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-sm">logout</span> Sign out (${session.username})
+              </button>
+            `}
           </div>
         </div>
       </div>
@@ -763,6 +874,20 @@ window.openSettingsModal = function () {
     const appFrame = document.querySelector('.app-frame');
     if (appFrame) {
       appFrame.appendChild(modal);
+    }
+  } else {
+    // Dynamic Auth Button Update if modal already created
+    const authContainer = document.getElementById('settings-auth-container');
+    if (authContainer) {
+      authContainer.innerHTML = session.isGuest ? `
+        <button onclick="redirectToAuthGateway()" class="w-full py-3.5 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-extrabold rounded-xl text-sm shadow-md hover:from-amber-300 hover:to-amber-400 transition-all flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined text-base">login</span> Sign in / Create Account
+        </button>
+      ` : `
+        <button onclick="logout()" class="w-full py-3.5 bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20 font-bold rounded-xl text-sm shadow-sm transition-colors border border-rose-100 flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined text-sm">logout</span> Sign out (${session.username})
+        </button>
+      `;
     }
   }
 
@@ -772,62 +897,32 @@ window.openSettingsModal = function () {
   const volunteerBtn = document.getElementById('settings-role-volunteer');
 
   if (role === 'seeker') {
-    seekerBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-amber-400 bg-amber-50 text-amber-900 transition-all flex flex-col items-center justify-center gap-1 shadow-sm';
-    volunteerBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-slate-200 bg-white text-slate-500 hover:bg-slate-50 transition-all flex flex-col items-center justify-center gap-1';
+    seekerBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-amber-400 bg-amber-50 dark:bg-amber-400/20 text-amber-900 dark:text-amber-300 transition-all flex flex-col items-center justify-center gap-1 shadow-sm';
+    volunteerBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-slate-50 transition-all flex flex-col items-center justify-center gap-1';
   } else {
-    volunteerBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-amber-400 bg-amber-50 text-amber-900 transition-all flex flex-col items-center justify-center gap-1 shadow-sm';
-    seekerBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-slate-200 bg-white text-slate-500 hover:bg-slate-50 transition-all flex flex-col items-center justify-center gap-1';
+    volunteerBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-amber-400 bg-amber-50 dark:bg-amber-400/20 text-amber-900 dark:text-amber-300 transition-all flex flex-col items-center justify-center gap-1 shadow-sm';
+    seekerBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-slate-50 transition-all flex flex-col items-center justify-center gap-1';
   }
+
+  // Update theme toggle UI state in Settings modal
+  const savedTheme = localStorage.getItem('northstar_theme') || 'dark';
+  updateSettingsThemeUI(savedTheme);
 
   openModal('settings-modal');
 };
 
-// Global Toast Notification System
+// Global Toast Notification System (Disabled per user request)
 function showNotification(message, type = 'info') {
-  const appFrame = document.querySelector('.app-frame') || document.body;
-  let container = document.getElementById('toast-container');
-  if (!container || !appFrame.contains(container)) {
-    if (container) container.remove();
-    container = document.createElement('div');
-    container.id = 'toast-container';
-    container.className = 'absolute top-12 left-4 right-4 z-[300] flex flex-col gap-2 pointer-events-none';
-    appFrame.appendChild(container);
-  }
-
-  const toast = document.createElement('div');
-  const bgClass = type === 'success' ? 'bg-slate-900/95 border-amber-400/60 text-white' : 'bg-slate-900/95 border-slate-700 text-white';
-
-  toast.className = `${bgClass} border px-3.5 py-2.5 rounded-xl shadow-xl backdrop-blur-md flex items-center justify-between pointer-events-auto transition-all duration-300 transform -translate-y-2 opacity-0 text-xs font-semibold`;
-
-  toast.innerHTML = `
-    <div class="flex items-center gap-2.5 overflow-hidden">
-      <img src="northstar-logo.png" class="w-4 h-4 object-contain flex-shrink-0" alt="Northstar" />
-      <span class="truncate">${message}</span>
-    </div>
-    <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-white p-0.5 ml-2 flex-shrink-0">
-      <span class="material-symbols-outlined text-xs">close</span>
-    </button>
-  `;
-
-  container.appendChild(toast);
-
-  requestAnimationFrame(() => {
-    toast.classList.remove('-translate-y-2', 'opacity-0');
-  });
-
-  setTimeout(() => {
-    toast.classList.add('-translate-y-2', 'opacity-0');
-    setTimeout(() => toast.remove(), 300);
-  }, 3500);
-}
-
-// --- Auth Entry Functions ---
+  const container = document.getElementById('toast-container');
+  if (container) container.remove();
+  return;
+}// --- Auth Entry Functions ---
 
 function loginAsGuest() {
   const session = { username: 'Guest', role: 'seeker', isGuest: true };
   localStorage.setItem('northstar_session', JSON.stringify(session));
+  localStorage.removeItem('northstar_data_Guest'); // Clean slate every time for Guest!
 
-  // Navigate directly to dashboard
   if (typeof navigateToPageInstant === 'function') {
     navigateToPageInstant('seeker-dashboard.html');
   } else {
@@ -844,6 +939,24 @@ function loginAsUser(username, mode) {
   const role = currentGatewayMode || 'seeker';
   const session = { username: username.trim(), role, isGuest: false, mode };
   localStorage.setItem('northstar_session', JSON.stringify(session));
+
+  // Ensure initial data structure exists for user account
+  const key = `northstar_data_${session.username.trim()}`;
+  if (!localStorage.getItem(key)) {
+    const newUserData = {
+      isGuest: false,
+      username: session.username.trim(),
+      resumeData: null,
+      progress: {
+        firstStep: false,
+        safePlace: false,
+        basicNeeds: false,
+        connected: false,
+        movingForward: false,
+      }
+    };
+    localStorage.setItem(key, JSON.stringify(newUserData));
+  }
 
   // Hide the welcome-gateway overlay
   const gateway = document.getElementById('welcome-gateway');
@@ -873,6 +986,84 @@ window.saveResumeData = saveResumeData;
 window.setGatewayMode = setGatewayMode;
 window.handleGatewayLogin = handleGatewayLogin;
 window.logout = logout;
+window.redirectToAuthGateway = function() { window.location.href = 'index.html'; };
+window.renderAccountHeaderAvatar = renderAccountHeaderAvatar;
+
+// --- Guest Feature Locking Engine ---
+function checkGuestLockAccess() {
+  const session = getSession();
+  const appFrame = document.querySelector('.app-frame') || document.body;
+  const mainContent = appFrame.querySelector('main') || appFrame;
+
+  if (!session || !session.isGuest) {
+    const existingOverlay = document.getElementById('guest-lock-overlay');
+    if (existingOverlay) existingOverlay.remove();
+
+    if (mainContent && mainContent !== appFrame) {
+      mainContent.style.filter = '';
+      mainContent.style.pointerEvents = '';
+      mainContent.style.userSelect = '';
+      mainContent.style.opacity = '';
+    }
+    return;
+  }
+
+  const path = window.location.pathname.toLowerCase();
+  const currentFileName = path.split('/').pop() || 'index.html';
+  const isDashboardOrHome = currentFileName === 'index.html' || currentFileName === 'seeker-dashboard.html' || currentFileName === 'helper-dashboard.html';
+
+  if (!isDashboardOrHome) {
+    // Blur main content area permanently for guests on all feature pages
+    if (mainContent && mainContent !== appFrame) {
+      mainContent.style.filter = 'blur(14px)';
+      mainContent.style.pointerEvents = 'none';
+      mainContent.style.userSelect = 'none';
+      mainContent.style.opacity = '0.3';
+    }
+
+    let overlay = document.getElementById('guest-lock-overlay');
+    if (overlay) overlay.remove();
+
+    overlay = document.createElement('div');
+    overlay.id = 'guest-lock-overlay';
+    overlay.className = 'absolute inset-0 z-[200] flex items-center justify-center p-5 bg-slate-950/80 backdrop-blur-md select-none';
+    overlay.innerHTML = `
+      <div class="glass-card-dark max-w-xs w-full p-6 rounded-3xl text-center space-y-4 shadow-2xl border border-amber-400/40 relative overflow-hidden animate-fade-in">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-400 to-amber-500 text-slate-950 flex items-center justify-center mx-auto shadow-lg shadow-amber-400/30">
+          <span class="material-symbols-outlined text-2xl font-bold">lock</span>
+        </div>
+        <div>
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-400/20 text-amber-300 border border-amber-400/40 inline-block mb-2">Guest Account</span>
+          <h3 class="text-base font-extrabold text-white">Unlock Feature with an Account</h3>
+          <p class="text-xs text-slate-300 mt-1.5 leading-relaxed font-medium">
+            You are browsing as a Guest. Create a free account or sign in to permanently unlock progress tracking, AI resume builder, live resource map, job placements, and donations.
+          </p>
+        </div>
+        <div class="space-y-2.5 pt-2">
+          <button onclick="redirectToAuthGateway()" class="w-full py-3.5 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-extrabold text-xs rounded-xl shadow-lg hover:from-amber-300 hover:to-amber-400 transition-all flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-base">person_add</span> Sign In / Create Account
+          </button>
+          <a href="seeker-dashboard.html" class="block w-full py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 font-bold text-xs rounded-xl border border-white/10 transition-colors">
+            Back to Home
+          </a>
+        </div>
+      </div>
+    `;
+    appFrame.appendChild(overlay);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', checkGuestLockAccess);
+} else {
+  checkGuestLockAccess();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', checkGuestLockAccess);
+} else {
+  checkGuestLockAccess();
+}
 
 // --- Progress State Management ---
 
@@ -929,12 +1120,17 @@ const defaultUserData = {
 
 function getUserData() {
   const session = getSession();
+  if (session.isGuest) {
+    return JSON.parse(JSON.stringify(defaultUserData)); // Always clean slate for Guest
+  }
   const key = `northstar_data_${session.username}`;
-  return JSON.parse(localStorage.getItem(key)) || defaultUserData;
+  return JSON.parse(localStorage.getItem(key)) || JSON.parse(JSON.stringify(defaultUserData));
 }
 
 function updateMilestone(milestoneKey, isCompleted) {
   const session = getSession();
+  if (session.isGuest) return; // Do not save milestones for Guests
+
   const key = `northstar_data_${session.username}`;
   const userData = getUserData();
   userData.progress[milestoneKey] = isCompleted;
@@ -950,6 +1146,8 @@ function updateMilestone(milestoneKey, isCompleted) {
 
 function saveResumeData(data) {
   const session = getSession();
+  if (session.isGuest) return; // Do not save resume data for Guests
+
   const key = `northstar_data_${session.username}`;
   const userData = getUserData();
   userData.resumeData = data;
@@ -1014,7 +1212,7 @@ function renderProgressPage() {
   stepperContainer.innerHTML = milestones.map(m => {
     const isCompleted = m.status === 'completed';
     return `
-      <div class="w-6 h-6 rounded-full flex items-center justify-center ${isCompleted ? 'bg-amber-400 text-slate-900 shadow-[0_0_10px_rgba(251,191,36,0.5)]' : 'bg-slate-800 border-2 border-slate-600 text-slate-400'} z-10 text-xs transition-colors duration-300">
+      <div class="w-6 h-6 rounded-full flex items-center justify-center ${isCompleted ? 'bg-amber-400 text-slate-900 shadow-[0_0_10px_rgba(251,191,36,0.5)]' : 'bg-slate-200 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400'} z-10 text-xs transition-colors duration-300">
           <span class="material-symbols-outlined text-[14px]">${isCompleted ? 'circle' : 'radio_button_unchecked'}</span>
       </div>
     `;
@@ -1024,22 +1222,22 @@ function renderProgressPage() {
     const isCompleted = m.status === 'completed';
     const isLast = index === milestones.length - 1;
     let clickHandler = m.hasModal ? `onclick="openMilestoneModal('${m.id}')"` : '';
-    let cursorClass = m.hasModal ? 'cursor-pointer hover:bg-slate-50 transition-colors' : '';
+    let cursorClass = m.hasModal ? 'cursor-pointer hover:bg-slate-50/10 transition-colors' : '';
 
     return `
       <div class="relative flex gap-4 ${!isLast ? 'pb-6' : ''}">
-        ${!isLast ? '<div class="absolute left-[19px] top-10 bottom-0 w-0.5 bg-slate-200"></div>' : ''}
+        ${!isLast ? '<div class="absolute left-[19px] top-10 bottom-0 w-0.5 bg-slate-300 dark:bg-slate-700"></div>' : ''}
         
-        <div class="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center z-10 ${isCompleted ? 'bg-' + m.color + '-100 text-' + m.color + '-600 shadow-sm border border-' + m.color + '-200' : 'bg-slate-100 text-slate-400 border border-slate-200'} transition-colors duration-300">
+        <div class="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center z-10 ${isCompleted ? 'bg-amber-400/20 text-amber-500 shadow-sm border border-amber-400/30' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-white/10'} transition-colors duration-300">
             <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' ${isCompleted ? '1' : '0'};">${m.icon}</span>
         </div>
         
-        <div class="bg-surface-container-lowest border border-slate-200/80 p-4 rounded-2xl shadow-sm flex-1 ${cursorClass}" ${clickHandler}>
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 p-4 rounded-2xl shadow-sm flex-1 ${cursorClass}" ${clickHandler}>
             <div class="flex justify-between items-start">
-                <h4 class="font-bold text-sm text-primary">${m.title}</h4>
-                ${isCompleted ? '<span class="material-symbols-outlined text-emerald-500 text-lg">check_circle</span>' : (m.status === 'in-progress' ? '<span class="material-symbols-outlined text-amber-500 text-lg">pending</span>' : '<span class="material-symbols-outlined text-slate-300 text-lg">lock</span>')}
+                <h4 class="font-bold text-sm text-slate-900 dark:text-white">${m.title}</h4>
+                ${isCompleted ? '<span class="material-symbols-outlined text-emerald-500 text-lg">check_circle</span>' : (m.status === 'in-progress' ? '<span class="material-symbols-outlined text-amber-500 text-lg">pending</span>' : '<span class="material-symbols-outlined text-slate-400 text-lg">lock</span>')}
             </div>
-            <p class="text-[11px] text-slate-500 mt-1 leading-snug">${m.desc}</p>
+            <p class="text-[11px] text-slate-600 dark:text-slate-400 mt-1 leading-snug">${m.desc}</p>
             ${(!isCompleted && m.customAction) || m.id === 'movingForward' ? m.customAction : ''}
         </div>
       </div>

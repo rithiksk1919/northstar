@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="light" lang="en">
+<html class="dark" lang="en">
 
 <head>
     <meta charset="utf-8">
@@ -17,42 +17,42 @@
                 extend: {
                     "colors": {
                         "error": "#ba1a1a",
-                        "surface": "#f7f9fb",
+                        "surface": "#0f1117",
                         "tertiary-container": "#0d1c2f",
-                        "surface-variant": "#e0e3e5",
+                        "surface-variant": "#1a1d27",
                         "on-primary-container": "#7c839b",
-                        "surface-container-lowest": "#ffffff",
+                        "surface-container-lowest": "#12141c",
                         "primary-fixed-dim": "#bec6e0",
-                        "on-surface": "#191c1e",
+                        "on-surface": "#f8fafc",
                         "surface-tint": "#565e74",
-                        "on-background": "#191c1e",
+                        "on-background": "#f8fafc",
                         "tertiary": "#000000",
-                        "secondary": "#6d5e00",
+                        "secondary": "#f59e0b",
                         "primary-fixed": "#dae2fd",
                         "on-primary": "#ffffff",
-                        "surface-container-low": "#f2f4f6",
+                        "surface-container-low": "#161922",
                         "tertiary-fixed": "#d5e3fd",
                         "on-error-container": "#93000a",
                         "on-primary-fixed": "#131b2e",
                         "secondary-fixed-dim": "#e2c62d",
-                        "background": "#f7f9fb",
+                        "background": "#0f1117",
                         "on-tertiary-fixed-variant": "#3a485c",
                         "primary-container": "#131b2e",
                         "tertiary-fixed-dim": "#b9c7e0",
-                        "outline": "#76777d",
-                        "surface-container": "#eceef0",
+                        "outline": "#475569",
+                        "surface-container": "#1e2230",
                         "on-tertiary-container": "#76859b",
-                        "on-surface-variant": "#45464d",
+                        "on-surface-variant": "#94a3b8",
                         "on-secondary": "#ffffff",
                         "on-secondary-fixed": "#211b00",
-                        "outline-variant": "#c6c6cd",
-                        "surface-container-highest": "#e0e3e5",
+                        "outline-variant": "#334155",
+                        "surface-container-highest": "#282d3f",
                         "on-error": "#ffffff",
-                        "surface-container-high": "#e6e8ea",
+                        "surface-container-high": "#222737",
                         "on-tertiary-fixed": "#0d1c2f",
                         "primary": "#0d1c2f",
-                        "surface-dim": "#d8dadc",
-                        "surface-bright": "#f7f9fb",
+                        "surface-dim": "#0b0c10",
+                        "surface-bright": "#161922",
                         "secondary-fixed": "#ffe24c",
                         "on-tertiary": "#ffffff",
                         "on-secondary-fixed-variant": "#524600",
@@ -78,33 +78,43 @@
     </script>
 </head>
 
-<body class="bg-slate-950 min-h-screen flex items-center justify-center p-0 sm:py-6 text-on-surface">
+<body class="bg-[#0F1117] min-h-screen flex items-center justify-center p-0 sm:py-6 text-slate-100 selection:bg-amber-500/30 selection:text-amber-300">
+
+    <!-- Atmospheric Background Glows -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+        <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl"></div>
+        <div class="absolute top-1/3 -right-40 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-40 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
+    </div>
 
     <!-- Mobile Frame Shell -->
     <div
-        class="app-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-surface sm:rounded-[44px] shadow-[0_0_60px_rgba(0,0,0,0.6)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800">
+        class="app-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-[#0F1117] sm:rounded-[44px] shadow-[0_0_70px_rgba(0,0,0,0.85)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800/80 z-10">
 
         <!-- Top Status Bar -->
         <div
-            class="bg-surface px-6 pt-3 pb-1 flex justify-between items-center text-xs font-semibold text-slate-500 z-50 select-none">
+            class="bg-[#0F1117]/80 backdrop-blur-md px-6 pt-3 pb-1 flex justify-between items-center text-xs font-semibold text-slate-400 z-50 select-none border-b border-white/5">
             <span class="status-clock">9:41</span>
-            <div class="w-16 h-4 bg-slate-900 rounded-full flex items-center justify-center">
+            <div class="w-16 h-4 bg-slate-900/90 rounded-full flex items-center justify-center border border-white/10">
                 <div class="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
             </div>
             <div class="flex items-center gap-1.5">
                 <span class="material-symbols-outlined text-xs">signal_cellular_4_bar</span>
                 <span class="material-symbols-outlined text-xs">wifi</span>
-                <span class="material-symbols-outlined text-xs text-amber-500">battery_50</span>
+                <span class="material-symbols-outlined text-xs text-amber-400">battery_50</span>
             </div>
         </div>
 
         <!-- App Header -->
         <header
-            class="bg-surface/90 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center w-full px-6 py-3 border-b border-slate-200/60">
+            class="bg-[#0F1117]/80 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center w-full px-6 py-3 border-b border-white/10">
             <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-amber-400 text-lg">timeline</span>
+                </div>
                 <div>
-                    <h1 class="text-lg font-bold text-primary tracking-tight leading-tight">Progress</h1>
-                    <p class="text-[10px] text-slate-500 font-medium">Every step forward matters.</p>
+                    <h1 class="text-base font-extrabold text-white tracking-tight leading-tight">Progress</h1>
+                    <p class="text-[10px] text-slate-400 font-medium">Every step forward matters.</p>
                 </div>
             </div>
         </header>
@@ -114,17 +124,17 @@
             style="padding-bottom: 100px; -webkit-overflow-scrolling: touch;">
 
             <!-- Progress Summary Header Card -->
-            <div class="glass-card-dark rounded-2xl p-5 text-white space-y-3 shadow-xl relative overflow-hidden">
+            <div class="backdrop-blur-md bg-white/[0.04] rounded-2xl p-5 text-white space-y-3 shadow-lg shadow-black/30 border border-white/10 relative overflow-hidden">
                 <div class="flex justify-between items-start">
                     <div>
                         <h2 class="text-lg font-extrabold text-white">Your NorthStar Journey</h2>
-                        <p class="text-xs text-slate-300 mt-1" id="journey-progress-text">0 of 5 milestones completed
+                        <p class="text-xs text-amber-400 font-bold mt-1" id="journey-progress-text">0 of 5 milestones completed
                         </p>
                     </div>
                 </div>
 
                 <div class="flex items-center justify-between mt-4 relative">
-                    <div class="absolute left-0 top-1/2 w-full h-0.5 bg-slate-700 -z-10 -translate-y-1/2"></div>
+                    <div class="absolute left-0 top-1/2 w-full h-0.5 bg-white/10 -z-10 -translate-y-1/2"></div>
                     <!-- Dynamic Stepper Nodes injected by JS -->
                     <div id="stepper-nodes" class="flex justify-between w-full"></div>
                 </div>
@@ -137,27 +147,27 @@
             <div class="pt-2 pb-2 text-center">
                 <p id="progress-account-label" class="text-[11px] text-slate-400 font-medium"></p>
                 <button onclick="localStorage.removeItem('northstar_session'); window.location.href='index.html';"
-                    class="mt-1 text-[11px] text-slate-400 underline underline-offset-2 hover:text-slate-600 transition-colors">Switch
+                    class="mt-1 text-[11px] text-amber-400/80 hover:text-amber-300 underline underline-offset-2 transition-colors">Switch
                     Account</button>
             </div>
 
         </main>
 
-        <!-- Bottom Navigation Bar -->
+        <!-- Floating Dock Bottom Navigation Bar -->
         <nav
-            class="absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-3 py-3 bg-surface/95 backdrop-blur-xl border-t border-slate-200/80">
+            class="absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-3 py-2.5 bg-[#12141C]/80 backdrop-blur-xl shadow-[0px_-4px_25px_rgba(0,0,0,0.5)] border-t border-white/10">
             <!-- Dynamically rendered by northstar.js -->
         </nav>
 
         <!-- Milestone Details Drawer/Modal -->
         <div id="milestone-modal" class="absolute inset-0 z-[100] hidden flex-col justify-end">
-            <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('milestone-modal')">
+            <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onclick="closeModal('milestone-modal')">
             </div>
             <div
-                class="modal-drawer bg-surface w-full rounded-t-3xl p-6 transform translate-y-full transition-transform duration-300 ease-in-out relative flex flex-col max-h-[85vh]">
-                <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-5"></div>
-                <h2 id="modal-title" class="text-xl font-bold text-primary mb-2">Milestone Details</h2>
-                <p id="modal-desc" class="text-sm text-slate-500 mb-6">Details will appear here.</p>
+                class="modal-drawer bg-[#12141C] border border-white/10 w-full rounded-t-3xl p-6 transform translate-y-full transition-transform duration-300 ease-in-out relative flex flex-col max-h-[85vh] text-white shadow-2xl">
+                <div class="w-12 h-1.5 bg-slate-700 rounded-full mx-auto mb-5"></div>
+                <h2 id="modal-title" class="text-xl font-extrabold text-white mb-2">Milestone Details</h2>
+                <p id="modal-desc" class="text-sm text-slate-300 mb-6">Details will appear here.</p>
                 <div id="modal-actions" class="mt-auto pt-4 flex flex-col gap-3">
                     <!-- Dynamic Actions -->
                 </div>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="light" lang="en">
+<html class="dark" lang="en">
 <head>
 <meta charset="utf-8">
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
@@ -14,42 +14,42 @@
           extend: {
             "colors": {
                     "error": "#ba1a1a",
-                    "surface": "#f7f9fb",
+                    "surface": "#0f1117",
                     "tertiary-container": "#0d1c2f",
-                    "surface-variant": "#e0e3e5",
+                    "surface-variant": "#1a1d27",
                     "on-primary-container": "#7c839b",
-                    "surface-container-lowest": "#ffffff",
+                    "surface-container-lowest": "#12141c",
                     "primary-fixed-dim": "#bec6e0",
-                    "on-surface": "#191c1e",
+                    "on-surface": "#f8fafc",
                     "surface-tint": "#565e74",
-                    "on-background": "#191c1e",
+                    "on-background": "#f8fafc",
                     "tertiary": "#000000",
-                    "secondary": "#6d5e00",
+                    "secondary": "#f59e0b",
                     "primary-fixed": "#dae2fd",
                     "on-primary": "#ffffff",
-                    "surface-container-low": "#f2f4f6",
+                    "surface-container-low": "#161922",
                     "tertiary-fixed": "#d5e3fd",
                     "on-error-container": "#93000a",
                     "on-primary-fixed": "#131b2e",
                     "secondary-fixed-dim": "#e2c62d",
-                    "background": "#f7f9fb",
+                    "background": "#0f1117",
                     "on-tertiary-fixed-variant": "#3a485c",
                     "primary-container": "#131b2e",
                     "tertiary-fixed-dim": "#b9c7e0",
-                    "outline": "#76777d",
-                    "surface-container": "#eceef0",
+                    "outline": "#475569",
+                    "surface-container": "#1e2230",
                     "on-tertiary-container": "#76859b",
-                    "on-surface-variant": "#45464d",
+                    "on-surface-variant": "#94a3b8",
                     "on-secondary": "#ffffff",
                     "on-secondary-fixed": "#211b00",
-                    "outline-variant": "#c6c6cd",
-                    "surface-container-highest": "#e0e3e5",
+                    "outline-variant": "#334155",
+                    "surface-container-highest": "#282d3f",
                     "on-error": "#ffffff",
-                    "surface-container-high": "#e6e8ea",
+                    "surface-container-high": "#222737",
                     "on-tertiary-fixed": "#0d1c2f",
                     "primary": "#0d1c2f",
-                    "surface-dim": "#d8dadc",
-                    "surface-bright": "#f7f9fb",
+                    "surface-dim": "#0b0c10",
+                    "surface-bright": "#161922",
                     "secondary-fixed": "#ffe24c",
                     "on-tertiary": "#ffffff",
                     "on-secondary-fixed-variant": "#524600",
@@ -111,26 +111,33 @@
 }
 </style>
 </head>
-<body class="bg-slate-950 min-h-screen flex items-center justify-center p-0 sm:py-6 text-on-surface">
+<body class="bg-[#0F1117] min-h-screen flex items-center justify-center p-0 sm:py-6 text-slate-100 selection:bg-amber-500/30 selection:text-amber-300">
+
+<!-- Atmospheric Background Glows -->
+<div class="fixed inset-0 pointer-events-none overflow-hidden z-0 no-print">
+    <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/3 -right-40 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
+    <div class="absolute -bottom-40 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
+</div>
 
 <!-- Mobile Frame Shell -->
-<div class="app-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-surface sm:rounded-[44px] shadow-[0_0_60px_rgba(0,0,0,0.6)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800">
+<div class="app-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-[#0F1117] sm:rounded-[44px] shadow-[0_0_70px_rgba(0,0,0,0.85)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800/80 z-10">
 
     <!-- Top Status Bar -->
-    <div class="bg-surface px-6 pt-3 pb-1 flex justify-between items-center text-xs font-semibold text-slate-500 z-50 select-none status-bar-wrapper">
+    <div class="bg-[#0F1117]/80 backdrop-blur-md px-6 pt-3 pb-1 flex justify-between items-center text-xs font-semibold text-slate-400 z-50 select-none status-bar-wrapper border-b border-white/5">
         <span class="status-clock">9:41</span>
-        <div class="w-16 h-4 bg-slate-900 rounded-full flex items-center justify-center">
+        <div class="w-16 h-4 bg-slate-900/90 rounded-full flex items-center justify-center border border-white/10">
             <div class="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
         </div>
         <div class="flex items-center gap-1.5">
             <span class="material-symbols-outlined text-xs">signal_cellular_4_bar</span>
             <span class="material-symbols-outlined text-xs">wifi</span>
-            <span class="material-symbols-outlined text-xs text-amber-500">battery_50</span>
+            <span class="material-symbols-outlined text-xs text-amber-400">battery_50</span>
         </div>
     </div>
 
     <!-- App Header -->
-    <header class="bg-surface/90 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center w-full px-6 py-3 border-b border-slate-200/60 no-print">
+    <header class="bg-[#0F1117]/80 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center w-full px-6 py-3 border-b border-white/10 no-print">
         <div class="flex items-center gap-3">
             <div>
                 <h1 class="text-base font-extrabold text-primary flex items-center gap-1">
@@ -147,14 +154,14 @@
     </header>
 
     <!-- View Mode Selector Tabs -->
-    <div class="bg-slate-100 px-4 py-2 border-b border-slate-200 flex justify-between gap-1 select-none no-print view-mode-tabs">
-        <button id="tab-wizard" onclick="switchView('wizard')" class="flex-1 py-1.5 text-xs font-bold rounded-xl text-center bg-primary text-white shadow-sm transition-all flex items-center justify-center gap-1">
+    <div class="bg-[#12141C]/90 backdrop-blur-md px-4 py-2 border-b border-white/10 flex justify-between gap-1 select-none no-print view-mode-tabs">
+        <button id="tab-wizard" onclick="switchView('wizard')" class="flex-1 py-1.5 text-xs font-extrabold rounded-xl text-center bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-md transition-all flex items-center justify-center gap-1">
             <span class="material-symbols-outlined text-sm">edit_note</span> Guided Wizard
         </button>
-        <button id="tab-preview" onclick="switchView('preview')" class="flex-1 py-1.5 text-xs font-bold rounded-xl text-center text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center gap-1">
+        <button id="tab-preview" onclick="switchView('preview')" class="flex-1 py-1.5 text-xs font-bold rounded-xl text-center text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1">
             <span class="material-symbols-outlined text-sm">badge</span> Resume Preview
         </button>
-        <button id="tab-text" onclick="switchView('text')" class="flex-1 py-1.5 text-xs font-bold rounded-xl text-center text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center gap-1">
+        <button id="tab-text" onclick="switchView('text')" class="flex-1 py-1.5 text-xs font-bold rounded-xl text-center text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1">
             <span class="material-symbols-outlined text-sm">description</span> Clean ATS Text
         </button>
     </div>
@@ -165,157 +172,157 @@
         <!-- VIEW 1: GUIDED WIZARD FORM -->
         <div id="view-wizard-container" class="space-y-5">
             <!-- Low-Barrier Welcome Banner -->
-            <div class="glass-card-dark rounded-2xl p-4 text-white space-y-2 relative overflow-hidden">
+            <div class="backdrop-blur-md bg-white/[0.04] rounded-2xl p-4 text-white space-y-2 relative overflow-hidden shadow-lg shadow-black/30 border border-white/10">
                 <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-amber-400/20 rounded-full blur-xl pointer-events-none"></div>
-                <div class="flex items-center gap-2 text-secondary-fixed font-bold text-xs">
+                <div class="flex items-center gap-2 text-amber-400 font-extrabold text-xs">
                     <span class="material-symbols-outlined text-sm">star</span> NO FANCY RESUME NEEDED
                 </div>
                 <h2 class="text-sm font-extrabold leading-tight text-white">Turn your everyday skills & informal work into a powerful job resume.</h2>
-                <p class="text-xs text-slate-300">Tap your experience, licenses, or volunteer tasks. Our AI handles the professional formatting.</p>
+                <p class="text-xs text-slate-300 font-medium">Tap your experience, licenses, or volunteer tasks. Our AI handles the professional formatting.</p>
             </div>
 
             <!-- Step Indicator Progress -->
-            <div class="flex justify-between items-center text-xs font-bold text-slate-500 px-1">
+            <div class="flex justify-between items-center text-xs font-bold text-slate-400 px-1">
                 <span id="wizard-step-label">Step 1 of 4: Contact Information</span>
-                <span id="wizard-progress-percent" class="text-primary font-black">25%</span>
+                <span id="wizard-progress-percent" class="text-amber-400 font-black">25%</span>
             </div>
-            <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
-                <div id="wizard-progress-bar" class="bg-amber-400 h-full w-1/4 transition-all duration-300"></div>
+            <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden border border-white/10">
+                <div id="wizard-progress-bar" class="bg-gradient-to-r from-amber-400 to-amber-500 h-full w-1/4 transition-all duration-300 shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
             </div>
 
             <!-- WIZARD STEP 1: CONTACT INFO -->
-            <section id="step-1" class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-4">
-                <h3 class="text-xs font-black tracking-wider uppercase text-primary flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-amber-500 text-sm">person</span> 1. Basic Contact Details
+            <section id="step-1" class="backdrop-blur-md bg-white/[0.04] border border-white/10 rounded-2xl p-4 shadow-lg shadow-black/30 space-y-4">
+                <h3 class="text-xs font-extrabold tracking-wider uppercase text-white flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-amber-400 text-sm">person</span> 1. Basic Contact Details
                 </h3>
 
                 <div class="space-y-3 text-xs">
                     <div>
-                        <label class="block font-bold text-slate-700 mb-1">Your Name <span class="text-red-500">*</span></label>
-                        <input type="text" id="input-name" placeholder="e.g. Alex Johnson" class="w-full rounded-xl border border-slate-300 p-2.5 text-xs focus:ring-2 focus:ring-amber-400 font-semibold" required value="Alex Johnson">
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Your Name <span class="text-rose-400">*</span></label>
+                        <input type="text" id="input-name" placeholder="e.g. Alex Johnson" class="w-full rounded-xl bg-slate-900 border border-white/10 p-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 font-semibold" required value="Alex Johnson">
                     </div>
 
                     <div>
-                        <label class="block font-bold text-slate-700 mb-1">Phone Number (or Message Phone)</label>
-                        <input type="text" id="input-phone" placeholder="e.g. (555) 234-5678" class="w-full rounded-xl border border-slate-300 p-2.5 text-xs focus:ring-2 focus:ring-amber-400" value="(555) 234-5678">
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Phone Number (or Message Phone)</label>
+                        <input type="text" id="input-phone" placeholder="e.g. (555) 234-5678" class="w-full rounded-xl bg-slate-900 border border-white/10 p-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 font-medium" value="(555) 234-5678">
                     </div>
 
                     <div>
-                        <label class="block font-bold text-slate-700 mb-1">Shelter / Case Worker / Email Contact</label>
-                        <input type="text" id="input-contact" placeholder="e.g. St. Jude Shelter Contact / alex.j@email.com" class="w-full rounded-xl border border-slate-300 p-2.5 text-xs focus:ring-2 focus:ring-amber-400" value="Shelter Contact: St. Jude Hope Center / alex.j@email.com">
+                        <label class="block text-xs font-bold text-slate-300 mb-1">Shelter / Case Worker / Email Contact</label>
+                        <input type="text" id="input-contact" placeholder="e.g. St. Jude Shelter Contact / alex.j@email.com" class="w-full rounded-xl bg-slate-900 border border-white/10 p-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 font-medium" value="Shelter Contact: St. Jude Hope Center / alex.j@email.com">
                     </div>
 
                     <div>
-                        <label class="block font-bold text-slate-700 mb-1">City, State / Zip Code</label>
-                        <input type="text" id="input-location" placeholder="e.g. Seattle, WA 98101" class="w-full rounded-xl border border-slate-300 p-2.5 text-xs focus:ring-2 focus:ring-amber-400" value="Seattle, WA 98101">
+                        <label class="block text-xs font-bold text-slate-300 mb-1">City, State / Zip Code</label>
+                        <input type="text" id="input-location" placeholder="e.g. Seattle, WA 98101" class="w-full rounded-xl bg-slate-900 border border-white/10 p-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 font-medium" value="Seattle, WA 98101">
                     </div>
                 </div>
             </section>
 
             <!-- WIZARD STEP 2: WORK & INFORMAL EXPERIENCE -->
-            <section id="step-2" class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-4">
-                <h3 class="text-xs font-black tracking-wider uppercase text-primary flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-amber-500 text-sm">work</span> 2. Experience & Informal Tasks
+            <section id="step-2" class="backdrop-blur-md bg-white/[0.04] border border-white/10 rounded-2xl p-4 shadow-lg shadow-black/30 space-y-4">
+                <h3 class="text-xs font-extrabold tracking-wider uppercase text-white flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-amber-400 text-sm">work</span> 2. Experience & Informal Tasks
                 </h3>
-                <p class="text-xs text-slate-500">Tap all jobs, volunteer work, day labor, or informal tasks you have done:</p>
+                <p class="text-xs text-slate-300 font-medium">Tap all jobs, volunteer work, day labor, or informal tasks you have done:</p>
 
                 <div class="flex flex-wrap gap-2" id="experience-chips-container">
-                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-amber-100 border-amber-400 text-amber-900 active-chip" data-val="Day Labor">
+                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-bold bg-amber-400/20 border-amber-400/50 text-amber-300 active-chip shadow-sm" data-val="Day Labor">
                         🛠️ Day Labor
                     </button>
-                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-amber-100 border-amber-400 text-amber-900 active-chip" data-val="Kitchen & Food Prep">
+                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-bold bg-amber-400/20 border-amber-400/50 text-amber-300 active-chip shadow-sm" data-val="Kitchen & Food Prep">
                         🍳 Kitchen & Food Prep
                     </button>
-                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-amber-100 border-amber-400 text-amber-900 active-chip" data-val="Shelter & Pantry Volunteering">
+                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-bold bg-amber-400/20 border-amber-400/50 text-amber-300 active-chip shadow-sm" data-val="Shelter & Pantry Volunteering">
                         🤝 Shelter & Pantry Volunteering
                     </button>
-                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-300 text-slate-700" data-val="Warehouse & Freight">
+                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-white/5 border-white/10 text-slate-300 hover:bg-white/10" data-val="Warehouse & Freight">
                         📦 Warehouse & Freight
                     </button>
-                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-300 text-slate-700" data-val="Caregiving & Family Support">
+                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-white/5 border-white/10 text-slate-300 hover:bg-white/10" data-val="Caregiving & Family Support">
                         ❤️ Caregiving & Support
                     </button>
-                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-300 text-slate-700" data-val="Janitorial & Cleaning">
+                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-white/5 border-white/10 text-slate-300 hover:bg-white/10" data-val="Janitorial & Cleaning">
                         🧹 Janitorial & Cleaning
                     </button>
-                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-300 text-slate-700" data-val="Landscaping & Grounds Keeping">
+                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-white/5 border-white/10 text-slate-300 hover:bg-white/10" data-val="Landscaping & Grounds Keeping">
                         🌱 Landscaping & Yardwork
                     </button>
-                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-300 text-slate-700" data-val="Retail & Customer Service">
+                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-white/5 border-white/10 text-slate-300 hover:bg-white/10" data-val="Retail & Customer Service">
                         🛒 Customer Service
                     </button>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Optional Details / Brief Description</label>
-                    <textarea id="input-informal-notes" rows="2" placeholder="e.g. Prepped food for 100+ daily meals, unloaded delivery trucks, organized food pantry inventory..." class="w-full rounded-xl border border-slate-300 p-2.5 text-xs focus:ring-2 focus:ring-amber-400">Prepped daily meals, sanitized workstations, unloaded supply trucks, and organized community pantry storage.</textarea>
+                    <label class="block text-xs font-bold text-slate-300 mb-1">Optional Details / Brief Description</label>
+                    <textarea id="input-informal-notes" rows="2" placeholder="e.g. Prepped food for 100+ daily meals, unloaded delivery trucks, organized food pantry inventory..." class="w-full rounded-xl bg-slate-900 border border-white/10 p-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 font-medium">Prepped daily meals, sanitized workstations, unloaded supply trucks, and organized community pantry storage.</textarea>
                 </div>
             </section>
 
             <!-- WIZARD STEP 3: SKILLS & CERTIFICATIONS -->
-            <section id="step-3" class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-4">
-                <h3 class="text-xs font-black tracking-wider uppercase text-primary flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-amber-500 text-sm">verified</span> 3. Practical Skills & Badges
+            <section id="step-3" class="backdrop-blur-md bg-white/[0.04] border border-white/10 rounded-2xl p-4 shadow-lg shadow-black/30 space-y-4">
+                <h3 class="text-xs font-extrabold tracking-wider uppercase text-white flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-amber-400 text-sm">verified</span> 3. Practical Skills & Badges
                 </h3>
-                <p class="text-xs text-slate-500">Select any certifications, strengths, or practical skills you have:</p>
+                <p class="text-xs text-slate-300 font-medium">Select any certifications, strengths, or practical skills you have:</p>
 
                 <div class="flex flex-wrap gap-2" id="skills-chips-container">
-                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-amber-100 border-amber-400 text-amber-900 active-chip" data-val="Food Handler Card">
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-bold bg-amber-400/20 border-amber-400/50 text-amber-300 active-chip shadow-sm" data-val="Food Handler Card">
                         📜 Food Handler Card
                     </button>
-                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-amber-100 border-amber-400 text-amber-900 active-chip" data-val="Forklift Certified">
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-bold bg-amber-400/20 border-amber-400/50 text-amber-300 active-chip shadow-sm" data-val="Forklift Certified">
                         🚜 Forklift Certified
                     </button>
-                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-amber-100 border-amber-400 text-amber-900 active-chip" data-val="Heavy Lifting 50+ lbs">
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-bold bg-amber-400/20 border-amber-400/50 text-amber-300 active-chip shadow-sm" data-val="Heavy Lifting 50+ lbs">
                         💪 Heavy Lifting 50+ lbs
                     </button>
-                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-amber-100 border-amber-400 text-amber-900 active-chip" data-val="Reliable & Punctual">
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-bold bg-amber-400/20 border-amber-400/50 text-amber-300 active-chip shadow-sm" data-val="Reliable & Punctual">
                         ⏰ Reliable & Punctual
                     </button>
-                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-300 text-slate-700" data-val="Bilingual / Multilingual">
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-white/5 border-white/10 text-slate-300 hover:bg-white/10" data-val="Bilingual / Multilingual">
                         🗣️ Bilingual
                     </button>
-                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-300 text-slate-700" data-val="OSHA 10 Safety">
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-white/5 border-white/10 text-slate-300 hover:bg-white/10" data-val="OSHA 10 Safety">
                         🪖 OSHA 10 Safety
                     </button>
-                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-300 text-slate-700" data-val="Pallet Jack Operator">
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-white/5 border-white/10 text-slate-300 hover:bg-white/10" data-val="Pallet Jack Operator">
                         📦 Pallet Jack
                     </button>
-                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-300 text-slate-700" data-val="First Aid & CPR">
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-white/5 border-white/10 text-slate-300 hover:bg-white/10" data-val="First Aid & CPR">
                         🩹 First Aid / CPR
                     </button>
                 </div>
             </section>
 
             <!-- WIZARD STEP 4: TARGET JOB TYPES -->
-            <section id="step-4" class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-4">
-                <h3 class="text-xs font-black tracking-wider uppercase text-primary flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-amber-500 text-sm">target</span> 4. Target Job Types
+            <section id="step-4" class="backdrop-blur-md bg-white/[0.04] border border-white/10 rounded-2xl p-4 shadow-lg shadow-black/30 space-y-4">
+                <h3 class="text-xs font-extrabold tracking-wider uppercase text-white flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-amber-400 text-sm">target</span> 4. Target Job Types
                 </h3>
-                <p class="text-xs text-slate-500">What kind of job are you looking for right now?</p>
+                <p class="text-xs text-slate-300 font-medium">What kind of job are you looking for right now?</p>
 
                 <div class="flex flex-wrap gap-2" id="roles-chips-container">
-                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-amber-100 border-amber-400 text-amber-900 active-chip" data-val="Kitchen Prep & Dishwasher">
+                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-bold bg-amber-400/20 border-amber-400/50 text-amber-300 active-chip shadow-sm" data-val="Kitchen Prep & Dishwasher">
                         🍽️ Kitchen Staff & Prep
                     </button>
-                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-amber-100 border-amber-400 text-amber-900 active-chip" data-val="Warehouse & Logistics Associate">
+                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-bold bg-amber-400/20 border-amber-400/50 text-amber-300 active-chip shadow-sm" data-val="Warehouse & Logistics Associate">
                         🏢 Warehouse Associate
                     </button>
-                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-amber-100 border-amber-400 text-amber-900 active-chip" data-val="General Laborer">
+                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-bold bg-amber-400/20 border-amber-400/50 text-amber-300 active-chip shadow-sm" data-val="General Laborer">
                         🏗️ General Laborer
                     </button>
-                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-300 text-slate-700" data-val="Sanitation & Janitorial">
+                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-white/5 border-white/10 text-slate-300 hover:bg-white/10" data-val="Sanitation & Janitorial">
                         🧼 Sanitation & Custodial
                     </button>
-                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-300 text-slate-700" data-val="Retail Stocker & Cashier">
+                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-white/5 border-white/10 text-slate-300 hover:bg-white/10" data-val="Retail Stocker & Cashier">
                         🛒 Retail Stocker
                     </button>
                 </div>
             </section>
 
             <!-- Sticky Action Container for Generate Button -->
-            <div class="sticky bottom-0 z-30 pt-3 pb-8 bg-gradient-to-t from-surface via-surface/95 to-transparent">
-                <button id="btn-generate-resume" onclick="generateResume()" class="w-full py-4 bg-primary text-secondary-fixed font-black text-sm rounded-2xl shadow-2xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2 starlight-pulse border-2 border-amber-400">
+            <div class="sticky bottom-0 z-30 pt-3 pb-8 bg-gradient-to-t from-[#0F1117] via-[#0F1117]/95 to-transparent">
+                <button id="btn-generate-resume" onclick="generateResume()" class="w-full py-4 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-extrabold text-sm rounded-2xl shadow-[0_4px_25px_rgba(245,158,11,0.4)] hover:from-amber-300 hover:to-amber-400 active:scale-95 transition-all flex items-center justify-center gap-2">
                     <span class="material-symbols-outlined text-lg">auto_awesome</span> Generate AI Resume with Gemini
                 </button>
             </div>
@@ -465,27 +472,27 @@
 
     </main>
 
-    <!-- Bottom Navigation Bar -->
-    <nav class="bg-surface/95 backdrop-blur-lg border-t border-slate-200/80 fixed sm:absolute bottom-0 left-0 right-0 z-40 flex justify-around items-center px-2 py-2 select-none no-print">
-        <a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-3 py-1.5 transition-colors" href="index.html">
+    <!-- Floating Dock Bottom Navigation Bar -->
+    <nav class="absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-3 py-2.5 bg-[#12141C]/80 backdrop-blur-xl shadow-[0px_-4px_25px_rgba(0,0,0,0.5)] border-t border-white/10 no-print">
+        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="index.html">
             <span class="material-symbols-outlined text-xl">home</span>
-            <span class="text-[11px] font-medium">Home</span>
+            <span class="text-[10px] font-medium mt-0.5">Home</span>
         </a>
-        <a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-3 py-1.5 transition-colors" href="seeker-dashboard.html">
+        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="seeker-dashboard.html">
             <span class="material-symbols-outlined text-xl">dashboard</span>
-            <span class="text-[11px] font-medium">Dashboard</span>
+            <span class="text-[10px] font-medium mt-0.5">Dashboard</span>
         </a>
-        <a class="flex flex-col items-center justify-center text-secondary-fixed-variant font-bold bg-secondary-container rounded-2xl px-3 py-1.5 shadow-md starlight-glow" href="resume-builder.html">
+        <a class="flex flex-col items-center justify-center bg-amber-400/15 text-amber-400 border border-amber-400/30 rounded-2xl px-3.5 py-1 shadow-[0_0_15px_rgba(245,158,11,0.25)]" href="resume-builder.html">
             <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">description</span>
-            <span class="text-[11px] font-bold">Resume</span>
+            <span class="text-[10px] font-extrabold mt-0.5">Resume</span>
         </a>
-        <a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-3 py-1.5 transition-colors" href="resource-map.html">
+        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="resource-map.html">
             <span class="material-symbols-outlined text-xl">map</span>
-            <span class="text-[11px] font-medium">Map</span>
+            <span class="text-[10px] font-medium mt-0.5">Map</span>
         </a>
-        <a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-3 py-1.5 transition-colors" href="call-shelter.html">
+        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="call-shelter.html">
             <span class="material-symbols-outlined text-xl">call</span>
-            <span class="text-[11px] font-medium">Shelter</span>
+            <span class="text-[10px] font-medium mt-0.5">Shelter</span>
         </a>
     </nav>
 
@@ -506,11 +513,9 @@ function initChipToggles() {
       btn.addEventListener('click', () => {
         btn.classList.toggle('active-chip');
         if (btn.classList.contains('active-chip')) {
-          btn.classList.remove('bg-slate-100', 'border-slate-300', 'text-slate-700');
-          btn.classList.add('bg-amber-100', 'border-amber-400', 'text-amber-900');
+          btn.className = `${selector.replace('.', '')} px-3 py-1.5 rounded-full border text-xs font-bold bg-amber-400/20 border-amber-400/50 text-amber-300 active-chip shadow-sm`;
         } else {
-          btn.classList.add('bg-slate-100', 'border-slate-300', 'text-slate-700');
-          btn.classList.remove('bg-amber-100', 'border-amber-400', 'text-amber-900');
+          btn.className = `${selector.replace('.', '')} px-3 py-1.5 rounded-full border text-xs font-medium bg-white/5 border-white/10 text-slate-300 hover:bg-white/10`;
         }
       });
     });
@@ -536,7 +541,7 @@ function switchView(viewName) {
 
   // Reset tab styles
   [tabWizard, tabPreview, tabText].forEach(t => {
-    t.className = "flex-1 py-1.5 text-xs font-bold rounded-xl text-center text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center gap-1";
+    t.className = "flex-1 py-1.5 text-xs font-bold rounded-xl text-center text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1";
   });
 
   wizardContainer.classList.add('hidden');
@@ -545,13 +550,13 @@ function switchView(viewName) {
 
   if (viewName === 'wizard') {
     wizardContainer.classList.remove('hidden');
-    tabWizard.className = "flex-1 py-1.5 text-xs font-bold rounded-xl text-center bg-primary text-white shadow-sm transition-all flex items-center justify-center gap-1";
+    tabWizard.className = "flex-1 py-1.5 text-xs font-extrabold rounded-xl text-center bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-md transition-all flex items-center justify-center gap-1";
   } else if (viewName === 'preview') {
     previewContainer.classList.remove('hidden');
-    tabPreview.className = "flex-1 py-1.5 text-xs font-bold rounded-xl text-center bg-primary text-white shadow-sm transition-all flex items-center justify-center gap-1";
+    tabPreview.className = "flex-1 py-1.5 text-xs font-extrabold rounded-xl text-center bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-md transition-all flex items-center justify-center gap-1";
   } else if (viewName === 'text') {
     textContainer.classList.remove('hidden');
-    tabText.className = "flex-1 py-1.5 text-xs font-bold rounded-xl text-center bg-primary text-white shadow-sm transition-all flex items-center justify-center gap-1";
+    tabText.className = "flex-1 py-1.5 text-xs font-extrabold rounded-xl text-center bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-md transition-all flex items-center justify-center gap-1";
     generatePlainText();
   }
 }

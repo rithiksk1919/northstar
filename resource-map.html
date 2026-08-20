@@ -100,36 +100,48 @@
   }
 </style>
 </head>
-<body class="bg-slate-950 min-h-screen flex items-center justify-center p-0 sm:py-6 text-on-surface">
+</style>
+</head>
+<body class="bg-[#0F1117] min-h-screen flex items-center justify-center p-0 sm:py-6 text-slate-100 selection:bg-amber-500/30 selection:text-amber-300">
+
+<!-- Atmospheric Background Glows -->
+<div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/3 -right-40 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
+    <div class="absolute -bottom-40 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
+</div>
 
 <!-- Mobile Frame Shell -->
-<div class="app-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-surface sm:rounded-[44px] shadow-[0_0_60px_rgba(0,0,0,0.6)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800">
+<div class="app-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-[#0F1117] sm:rounded-[44px] shadow-[0_0_70px_rgba(0,0,0,0.85)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800/80 z-10">
 
     <!-- Top Status Bar -->
-    <div class="bg-surface px-6 pt-3 pb-1 flex justify-between items-center text-xs font-semibold text-slate-500 z-50 select-none">
+    <div class="bg-[#0F1117]/80 backdrop-blur-md px-6 pt-3 pb-1 flex justify-between items-center text-xs font-semibold text-slate-400 z-50 select-none border-b border-white/5">
         <span class="status-clock">9:41</span>
-        <div class="w-16 h-4 bg-slate-900 rounded-full flex items-center justify-center">
+        <div class="w-16 h-4 bg-slate-900/90 rounded-full flex items-center justify-center border border-white/10">
             <div class="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
         </div>
         <div class="flex items-center gap-1.5">
             <span class="material-symbols-outlined text-xs">signal_cellular_4_bar</span>
             <span class="material-symbols-outlined text-xs">wifi</span>
-            <span class="material-symbols-outlined text-xs text-amber-500">battery_50</span>
+            <span class="material-symbols-outlined text-xs text-amber-400">battery_50</span>
         </div>
     </div>
 
     <!-- App Header -->
-    <header class="bg-surface/90 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center w-full px-6 py-3 border-b border-slate-200/60">
+    <header class="bg-[#0F1117]/80 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center w-full px-6 py-3 border-b border-white/10">
         <div class="flex items-center gap-2">
-            <h1 class="text-lg font-bold text-primary tracking-tight">Live Resource Map</h1>
+            <div class="w-8 h-8 rounded-full bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">
+                <span class="material-symbols-outlined text-amber-400 text-lg">map</span>
+            </div>
+            <h1 class="text-base font-extrabold text-white tracking-tight">Live Resource Map</h1>
         </div>
-        <button id="offline-save-btn" onclick="saveOfflineTiles()" class="flex items-center gap-1 text-[11px] font-extrabold bg-primary text-secondary-fixed px-3 py-1 rounded-full shadow hover:bg-slate-800 transition-colors">
+        <button id="offline-save-btn" onclick="saveOfflineTiles()" class="flex items-center gap-1 text-[11px] font-extrabold bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 px-3 py-1 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:from-amber-300 hover:to-amber-400 active:scale-95 transition-all">
             <span class="material-symbols-outlined text-sm">download_for_offline</span> Offline Save
         </button>
     </header>
 
     <!-- Filter & Search Bar Floating Top Section -->
-    <div class="bg-slate-900 text-white px-4 py-3 border-b border-slate-800 space-y-2 z-30 shadow-md">
+    <div class="bg-[#12141C]/90 backdrop-blur-md text-white px-4 py-3 border-b border-white/10 space-y-2 z-30 shadow-md">
         
         <!-- Live Walkable Search Box -->
         <div class="relative w-full">
@@ -139,7 +151,7 @@
                 type="text" 
                 placeholder="Search food, restroom, shelters, work..." 
                 oninput="handleSearchFilterInput()"
-                class="w-full bg-slate-800 text-white placeholder-slate-400 text-xs rounded-xl pl-9 pr-8 py-2 border border-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                class="w-full bg-slate-900/90 text-white placeholder-slate-500 text-xs rounded-xl pl-9 pr-8 py-2 border border-white/10 focus:outline-none focus:ring-2 focus:ring-amber-400"
             />
             <button onclick="clearSearchInput()" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white">
                 <span class="material-symbols-outlined text-sm">cancel</span>
@@ -148,22 +160,22 @@
 
         <!-- Filter Category Pills -->
         <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
-            <button data-cat="all" onclick="selectCategoryFilter('all')" class="cat-filter-btn px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-400 text-slate-950 shadow">
+            <button data-cat="all" onclick="selectCategoryFilter('all')" class="cat-filter-btn px-3 py-1 rounded-full text-[11px] font-extrabold bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-[0_0_12px_rgba(245,158,11,0.35)]">
                 All Walkable
             </button>
-            <button data-cat="wifi" onclick="selectCategoryFilter('wifi')" class="cat-filter-btn px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700">
+            <button data-cat="wifi" onclick="selectCategoryFilter('wifi')" class="cat-filter-btn px-3 py-1 rounded-full text-[11px] font-bold bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10">
                 📶 Wi-Fi & Outlets
             </button>
-            <button data-cat="restroom" onclick="selectCategoryFilter('restroom')" class="cat-filter-btn px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700">
+            <button data-cat="restroom" onclick="selectCategoryFilter('restroom')" class="cat-filter-btn px-3 py-1 rounded-full text-[11px] font-bold bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10">
                 🚿 Restroom/Hygiene
             </button>
-            <button data-cat="food" onclick="selectCategoryFilter('food')" class="cat-filter-btn px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700">
+            <button data-cat="food" onclick="selectCategoryFilter('food')" class="cat-filter-btn px-3 py-1 rounded-full text-[11px] font-bold bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10">
                 🍲 Food & Drinks
             </button>
-            <button data-cat="shelter" onclick="selectCategoryFilter('shelter')" class="cat-filter-btn px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700">
+            <button data-cat="shelter" onclick="selectCategoryFilter('shelter')" class="cat-filter-btn px-3 py-1 rounded-full text-[11px] font-bold bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10">
                 🛏️ Shelters
             </button>
-            <button data-cat="work" onclick="selectCategoryFilter('work')" class="cat-filter-btn px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700">
+            <button data-cat="work" onclick="selectCategoryFilter('work')" class="cat-filter-btn px-3 py-1 rounded-full text-[11px] font-bold bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10">
                 💼 Work & Jobs
             </button>
         </div>
@@ -175,45 +187,45 @@
         <div id="map" class="w-full h-full min-h-[320px] bg-slate-900 z-10"></div>
         
         <!-- Floating My Location Re-center Button -->
-        <button onclick="locateAndCenterUser()" class="absolute bottom-4 right-4 z-20 w-11 h-11 rounded-full bg-slate-900 text-amber-400 flex items-center justify-center shadow-xl border border-slate-700 hover:bg-slate-800 transition-transform active:scale-95">
+        <button onclick="locateAndCenterUser()" class="absolute bottom-4 right-4 z-20 w-11 h-11 rounded-full bg-[#12141C] text-amber-400 flex items-center justify-center shadow-xl border border-white/10 hover:bg-slate-900 transition-transform active:scale-95">
             <span class="material-symbols-outlined text-xl">my_location</span>
         </button>
     </div>
 
     <!-- 5-Mile Radius Nearby Sheet Drawer -->
-    <div class="bg-slate-950 border-t border-slate-800 p-4 space-y-2.5 flex-grow overflow-y-auto pb-20 z-20">
+    <div class="bg-[#0F1117] border-t border-white/10 p-4 space-y-2.5 flex-grow overflow-y-auto pb-20 z-20">
         <div class="flex justify-between items-center text-xs font-bold text-slate-300">
-            <span class="flex items-center gap-1.5 text-amber-400">
-                <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span> Resources in 5-Mile Radius
+            <span class="flex items-center gap-1.5 text-amber-400 font-extrabold">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Resources in 5-Mile Radius
             </span>
-            <span id="nearby-count-badge" class="px-2.5 py-0.5 bg-slate-800 rounded-full text-[10px] text-slate-400 font-extrabold border border-slate-700">0 Resources</span>
+            <span id="nearby-count-badge" class="px-2.5 py-0.5 bg-white/5 rounded-full text-[10px] text-slate-400 font-extrabold border border-white/10">0 Resources</span>
         </div>
         <div id="nearby-resources-list" class="space-y-2">
             <!-- Dynamic resource cards render here -->
         </div>
     </div>
 
-    <!-- Bottom Navigation Bar (Pinned inside frame) -->
-    <nav class="absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-2 py-2 bg-surface/95 backdrop-blur-xl shadow-[0px_-4px_25px_rgba(15,23,42,0.1)] border-t border-slate-200/80">
-        <a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-3 py-1.5 transition-colors" href="index.html">
+    <!-- Floating Dock Bottom Navigation Bar -->
+    <nav class="absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-3 py-2.5 bg-[#12141C]/80 backdrop-blur-xl shadow-[0px_-4px_25px_rgba(0,0,0,0.5)] border-t border-white/10">
+        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="index.html">
             <span class="material-symbols-outlined text-xl">home</span>
-            <span class="text-[11px] font-medium">Home</span>
+            <span class="text-[10px] font-medium mt-0.5">Home</span>
         </a>
-        <a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-3 py-1.5 transition-colors" href="seeker-dashboard.html">
+        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="seeker-dashboard.html">
             <span class="material-symbols-outlined text-xl">dashboard</span>
-            <span class="text-[11px] font-medium">Dashboard</span>
+            <span class="text-[10px] font-medium mt-0.5">Dashboard</span>
         </a>
-        <a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-3 py-1.5 transition-colors" href="resume-builder.html">
+        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="resume-builder.html">
             <span class="material-symbols-outlined text-xl">description</span>
-            <span class="text-[11px] font-medium">Resume</span>
+            <span class="text-[10px] font-medium mt-0.5">Resume</span>
         </a>
-        <a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-2xl px-3 py-1.5 shadow-md starlight-glow" href="resource-map.html">
+        <a class="flex flex-col items-center justify-center bg-amber-400/15 text-amber-400 border border-amber-400/30 rounded-2xl px-3.5 py-1 shadow-[0_0_15px_rgba(245,158,11,0.25)]" href="resource-map.html">
             <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">map</span>
-            <span class="text-[11px] font-bold">Map</span>
+            <span class="text-[10px] font-extrabold mt-0.5">Map</span>
         </a>
-        <a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-3 py-1.5 transition-colors" href="call-shelter.html">
+        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="call-shelter.html">
             <span class="material-symbols-outlined text-xl">call</span>
-            <span class="text-[11px] font-medium">Shelter</span>
+            <span class="text-[10px] font-medium mt-0.5">Shelter</span>
         </a>
     </nav>
 
@@ -439,7 +451,7 @@
 
     if (items.length === 0) {
       container.innerHTML = `
-        <div class="text-center py-6 text-xs text-slate-500 font-medium bg-slate-900/60 rounded-2xl border border-slate-800">
+        <div class="text-center py-6 text-xs text-slate-500 dark:text-slate-400 font-medium bg-white dark:bg-slate-900/60 rounded-2xl border border-slate-200 dark:border-slate-800">
           No resources found within your 5-mile radius.
         </div>
       `;
@@ -452,15 +464,15 @@
       const dist = getDistanceMiles(userPos.lat, userPos.lng, res.lat, res.lng).toFixed(1);
 
       return `
-        <div onclick="focusResourceMarker('${res.id}')" class="p-3 bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-2xl flex justify-between items-center cursor-pointer transition-all group">
+        <div onclick="focusResourceMarker('${res.id}')" class="p-3 bg-white dark:bg-slate-900/80 hover:bg-slate-50 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 rounded-2xl flex justify-between items-center cursor-pointer transition-all group shadow-sm">
           <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-base shadow-sm">
+            <div class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-base shadow-sm">
               ${res.icon || '📍'}
             </div>
             <div>
-              <h4 class="text-xs font-extrabold text-white group-hover:text-amber-400 transition-colors">${res.name}</h4>
-              <p class="text-[11px] text-slate-400">📍 ${res.address} • <span class="text-amber-400 font-bold">${dist} mi away</span></p>
-              <p class="text-[10px] font-bold text-emerald-400 mt-0.5">${res.status}</p>
+              <h4 class="text-xs font-extrabold text-slate-900 dark:text-white group-hover:text-amber-500 transition-colors">${res.name}</h4>
+              <p class="text-[11px] text-slate-600 dark:text-slate-400">📍 ${res.address} • <span class="text-amber-600 dark:text-amber-400 font-bold">${dist} mi away</span></p>
+              <p class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">${res.status}</p>
             </div>
           </div>
           <a href="https://www.google.com/maps/dir/?api=1&destination=${res.lat},${res.lng}&travelmode=walking" target="_blank" onclick="event.stopPropagation()" class="px-2.5 py-1 bg-amber-400 text-slate-950 rounded-xl text-[10px] font-extrabold shadow hover:bg-amber-300 transition-colors">
@@ -484,9 +496,9 @@
     
     document.querySelectorAll('.cat-filter-btn').forEach(btn => {
       if (btn.dataset.cat === cat) {
-        btn.className = 'cat-filter-btn px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-400 text-slate-950 shadow';
+        btn.className = 'cat-filter-btn px-3 py-1 rounded-full text-[11px] font-extrabold bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-[0_0_12px_rgba(245,158,11,0.35)]';
       } else {
-        btn.className = 'cat-filter-btn px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700';
+        btn.className = 'cat-filter-btn px-3 py-1 rounded-full text-[11px] font-bold bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10';
       }
     });
 

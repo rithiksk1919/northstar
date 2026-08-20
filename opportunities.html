@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="light" lang="en">
+<html class="dark" lang="en">
 <head>
 <meta charset="utf-8">
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
@@ -14,42 +14,42 @@
           extend: {
             "colors": {
                     "error": "#ba1a1a",
-                    "surface": "#f7f9fb",
+                    "surface": "#0f1117",
                     "tertiary-container": "#0d1c2f",
-                    "surface-variant": "#e0e3e5",
+                    "surface-variant": "#1a1d27",
                     "on-primary-container": "#7c839b",
-                    "surface-container-lowest": "#ffffff",
+                    "surface-container-lowest": "#12141c",
                     "primary-fixed-dim": "#bec6e0",
-                    "on-surface": "#191c1e",
+                    "on-surface": "#f8fafc",
                     "surface-tint": "#565e74",
-                    "on-background": "#191c1e",
+                    "on-background": "#f8fafc",
                     "tertiary": "#000000",
-                    "secondary": "#6d5e00",
+                    "secondary": "#f59e0b",
                     "primary-fixed": "#dae2fd",
                     "on-primary": "#ffffff",
-                    "surface-container-low": "#f2f4f6",
+                    "surface-container-low": "#161922",
                     "tertiary-fixed": "#d5e3fd",
                     "on-error-container": "#93000a",
                     "on-primary-fixed": "#131b2e",
                     "secondary-fixed-dim": "#e2c62d",
-                    "background": "#f7f9fb",
+                    "background": "#0f1117",
                     "on-tertiary-fixed-variant": "#3a485c",
                     "primary-container": "#131b2e",
                     "tertiary-fixed-dim": "#b9c7e0",
-                    "outline": "#76777d",
-                    "surface-container": "#eceef0",
+                    "outline": "#475569",
+                    "surface-container": "#1e2230",
                     "on-tertiary-container": "#76859b",
-                    "on-surface-variant": "#45464d",
+                    "on-surface-variant": "#94a3b8",
                     "on-secondary": "#ffffff",
                     "on-secondary-fixed": "#211b00",
-                    "outline-variant": "#c6c6cd",
-                    "surface-container-highest": "#e0e3e5",
+                    "outline-variant": "#334155",
+                    "surface-container-highest": "#282d3f",
                     "on-error": "#ffffff",
-                    "surface-container-high": "#e6e8ea",
+                    "surface-container-high": "#222737",
                     "on-tertiary-fixed": "#0d1c2f",
                     "primary": "#0d1c2f",
-                    "surface-dim": "#d8dadc",
-                    "surface-bright": "#f7f9fb",
+                    "surface-dim": "#0b0c10",
+                    "surface-bright": "#161922",
                     "secondary-fixed": "#ffe24c",
                     "on-tertiary": "#ffffff",
                     "on-secondary-fixed-variant": "#524600",
@@ -74,30 +74,40 @@
       }
 </script>
 </head>
-<body class="bg-slate-950 min-h-screen flex items-center justify-center p-0 sm:py-6 text-on-surface">
+<body class="bg-[#0F1117] min-h-screen flex items-center justify-center p-0 sm:py-6 text-slate-100 selection:bg-amber-500/30 selection:text-amber-300">
+
+<!-- Atmospheric Background Glows -->
+<div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
+    <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/3 -right-40 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
+    <div class="absolute -bottom-40 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
+</div>
 
 <!-- Mobile Frame Shell -->
-<div class="app-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-surface sm:rounded-[44px] shadow-[0_0_60px_rgba(0,0,0,0.6)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800">
+<div class="app-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-[#0F1117] sm:rounded-[44px] shadow-[0_0_70px_rgba(0,0,0,0.85)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800/80 z-10">
 
     <!-- Top Status Bar -->
-    <div class="bg-surface px-6 pt-3 pb-1 flex justify-between items-center text-xs font-semibold text-slate-500 z-50 select-none">
+    <div class="bg-[#0F1117]/80 backdrop-blur-md px-6 pt-3 pb-1 flex justify-between items-center text-xs font-semibold text-slate-400 z-50 select-none border-b border-white/5">
         <span class="status-clock">9:41</span>
-        <div class="w-16 h-4 bg-slate-900 rounded-full flex items-center justify-center">
+        <div class="w-16 h-4 bg-slate-900/90 rounded-full flex items-center justify-center border border-white/10">
             <div class="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
         </div>
         <div class="flex items-center gap-1.5">
             <span class="material-symbols-outlined text-xs">signal_cellular_4_bar</span>
             <span class="material-symbols-outlined text-xs">wifi</span>
-            <span class="material-symbols-outlined text-xs text-amber-500">battery_50</span>
+            <span class="material-symbols-outlined text-xs text-amber-400">battery_50</span>
         </div>
     </div>
 
     <!-- App Header -->
-    <header class="bg-surface/90 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center w-full px-6 py-3 border-b border-slate-200/60">
+    <header class="bg-[#0F1117]/80 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center w-full px-6 py-3 border-b border-white/10">
         <div class="flex items-center gap-2">
-            <h1 class="text-lg font-bold text-primary tracking-tight">Work Opportunities</h1>
+            <div class="w-8 h-8 rounded-full bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">
+                <span class="material-symbols-outlined text-amber-400 text-lg">work</span>
+            </div>
+            <h1 class="text-base font-extrabold text-white tracking-tight">Work Opportunities</h1>
         </div>
-        <button onclick="openModal('post-job-modal')" class="px-3 py-1.5 bg-primary text-secondary-fixed rounded-full text-xs font-bold flex items-center gap-1 shadow-md hover:bg-slate-800 transition-colors">
+        <button onclick="openModal('post-job-modal')" class="px-3.5 py-1.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-bold rounded-full text-xs flex items-center gap-1 shadow-[0_0_15px_rgba(245,158,11,0.3)] active:scale-95 transition-all">
             <span class="material-symbols-outlined text-sm">add</span> Post Job
         </button>
     </header>
@@ -106,28 +116,28 @@
     <main class="flex-grow p-4 sm:p-5 space-y-5 overflow-y-auto pb-24">
         
         <!-- Post Job Banner -->
-        <div class="glass-card-dark rounded-2xl p-4 text-white space-y-2 relative overflow-hidden shadow-xl border border-slate-700">
+        <div class="backdrop-blur-md bg-white/[0.04] rounded-2xl p-4 text-white space-y-2 relative overflow-hidden shadow-lg shadow-black/30 border border-white/10">
             <div class="flex justify-between items-center">
                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-slate-950 uppercase tracking-wide flex items-center gap-1">
-                    <span class="material-symbols-outlined text-xs">work</span> Employer & Community Board
+                    <span class="material-symbols-outlined text-xs">work</span> Community Board
                 </span>
-                <span class="text-xs text-amber-300 font-bold">AI Matching Active</span>
+                <span class="text-xs text-amber-400 font-bold">AI Matching Active</span>
             </div>
-            <h2 class="text-sm font-bold">Post an entry-level job or task opportunity for community members.</h2>
-            <button onclick="openModal('post-job-modal')" class="w-full py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl font-extrabold text-xs shadow-md transition-all flex items-center justify-center gap-1">
+            <h2 class="text-sm font-extrabold text-white">Post an entry-level job or task opportunity for community members.</h2>
+            <button onclick="openModal('post-job-modal')" class="w-full py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 rounded-xl font-extrabold text-xs shadow-[0_4px_16px_rgba(245,158,11,0.3)] active:scale-95 transition-all flex items-center justify-center gap-1">
                 <span class="material-symbols-outlined text-sm">post_add</span> Post New Opportunity
             </button>
         </div>
 
         <!-- AI Match Run Action -->
-        <div class="flex items-center justify-between bg-white border border-slate-200 p-3.5 rounded-2xl shadow-sm">
+        <div class="flex items-center justify-between backdrop-blur-md bg-white/[0.04] border border-white/10 p-3.5 rounded-2xl shadow-lg shadow-black/30">
             <div>
-                <h3 class="font-bold text-xs text-primary flex items-center gap-1">
-                    <span class="material-symbols-outlined text-amber-500 text-sm">auto_awesome</span> Gemini AI Connector
+                <h3 class="font-extrabold text-xs text-white flex items-center gap-1">
+                    <span class="material-symbols-outlined text-amber-400 text-sm">auto_awesome</span> Gemini AI Connector
                 </h3>
-                <p class="text-[11px] text-slate-500">Matches candidate skills against active job listings.</p>
+                <p class="text-[11px] text-slate-300">Matches candidate skills against active job listings.</p>
             </div>
-            <button onclick="runAIMatchingEngine()" class="px-3 py-2 bg-primary text-white text-xs font-bold rounded-xl shadow hover:bg-slate-800 transition-colors flex items-center gap-1">
+            <button onclick="runAIMatchingEngine()" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-md border border-indigo-400/30 active:scale-95 transition-all flex items-center gap-1">
                 Run AI Match
             </button>
         </div>
@@ -135,8 +145,8 @@
         <!-- Opportunities List Feed -->
         <section class="space-y-3">
             <div class="flex justify-between items-center">
-                <h3 class="text-xs font-extrabold text-slate-500 uppercase tracking-wider">Active Job & Task Listings</h3>
-                <span id="jobs-count-badge" class="text-[10px] font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full">3 Active</span>
+                <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Active Job & Task Listings</h3>
+                <span id="jobs-count-badge" class="text-[10px] font-bold bg-white/10 text-slate-300 border border-white/10 px-2.5 py-0.5 rounded-full">3 Active</span>
             </div>
 
             <div id="opportunities-feed" class="space-y-3">
@@ -146,74 +156,74 @@
 
     </main>
 
-    <!-- Bottom Navigation Bar -->
-    <nav class="absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-3 py-3 bg-surface/95 backdrop-blur-xl border-t border-slate-200/80">
-        <a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-3 py-1.5 transition-colors" href="helper-dashboard.html">
+    <!-- Floating Dock Bottom Navigation Bar -->
+    <nav class="absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-3 py-2.5 bg-[#12141C]/80 backdrop-blur-xl shadow-[0px_-4px_25px_rgba(0,0,0,0.5)] border-t border-white/10">
+        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="helper-dashboard.html">
             <span class="material-symbols-outlined text-xl">dashboard</span>
-            <span class="text-[11px] font-medium">Dashboard</span>
+            <span class="text-[10px] font-medium mt-0.5">Dashboard</span>
         </a>
-        <a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-2xl px-3 py-1.5 shadow-md starlight-glow" href="opportunities.html">
+        <a class="flex flex-col items-center justify-center bg-amber-400/15 text-amber-400 border border-amber-400/30 rounded-2xl px-3.5 py-1 shadow-[0_0_15px_rgba(245,158,11,0.25)]" href="opportunities.html">
             <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">work</span>
-            <span class="text-[11px] font-bold">Opportunities</span>
+            <span class="text-[10px] font-extrabold mt-0.5">Opportunities</span>
         </a>
-        <a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-3 py-1.5 transition-colors" href="donate.html">
+        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="donate.html">
             <span class="material-symbols-outlined text-xl">volunteer_activism</span>
-            <span class="text-[11px] font-medium">Donate</span>
+            <span class="text-[10px] font-medium mt-0.5">Donate</span>
         </a>
-        <a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-3 py-1.5 transition-colors" href="call-shelter.html">
+        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="call-shelter.html">
             <span class="material-symbols-outlined text-xl">call</span>
-            <span class="text-[11px] font-medium">Shelter</span>
+            <span class="text-[10px] font-medium mt-0.5">Shelter</span>
         </a>
     </nav>
 
 </div>
 
 <!-- Modal: Post New Opportunity -->
-<div id="post-job-modal" class="fixed inset-0 z-[100] hidden items-end sm:items-center justify-center bg-slate-950/80 backdrop-blur-md p-0 sm:p-4">
-    <div class="modal-drawer w-full sm:max-w-md bg-surface border border-slate-200 rounded-t-3xl sm:rounded-3xl p-6 text-on-surface space-y-4 shadow-2xl transform translate-y-full">
-        <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto sm:hidden"></div>
+<div id="post-job-modal" class="fixed inset-0 z-[100] hidden items-end sm:items-center justify-center bg-slate-950/85 backdrop-blur-md p-0 sm:p-4">
+    <div class="modal-drawer w-full sm:max-w-md bg-[#12141C] border border-white/10 rounded-t-3xl sm:rounded-3xl p-6 text-white space-y-4 shadow-2xl transform translate-y-full">
+        <div class="w-12 h-1.5 bg-slate-700 rounded-full mx-auto sm:hidden"></div>
         <div class="flex justify-between items-center">
-            <h3 class="text-lg font-bold text-primary flex items-center gap-2">
-                <span class="material-symbols-outlined text-amber-500">work</span> Post Opportunity
+            <h3 class="text-lg font-extrabold text-white flex items-center gap-2">
+                <span class="material-symbols-outlined text-amber-400">work</span> Post Opportunity
             </h3>
-            <button onclick="closeModal('post-job-modal')" class="text-slate-400 hover:text-slate-600">
+            <button onclick="closeModal('post-job-modal')" class="text-slate-400 hover:text-white transition-colors">
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
 
         <form onsubmit="submitNewJob(event)" class="space-y-3 pt-1">
             <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Job Title <span class="text-red-500">*</span></label>
-                <input type="text" id="job-title-input" placeholder="e.g. Warehouse Associate / Day Prep" class="w-full rounded-xl border border-slate-300 p-2.5 text-xs focus:ring-2 focus:ring-amber-400" required>
+                <label class="block text-xs font-bold text-slate-300 mb-1">Job Title <span class="text-rose-400">*</span></label>
+                <input type="text" id="job-title-input" placeholder="e.g. Warehouse Associate / Day Prep" class="w-full rounded-xl bg-slate-900 border border-white/10 p-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-amber-400 focus:border-amber-400" required>
             </div>
 
             <div class="grid grid-cols-2 gap-2">
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Company / Org</label>
-                    <input type="text" id="job-company-input" placeholder="e.g. Metro Catering" class="w-full rounded-xl border border-slate-300 p-2.5 text-xs focus:ring-2 focus:ring-amber-400">
+                    <label class="block text-xs font-bold text-slate-300 mb-1">Company / Org</label>
+                    <input type="text" id="job-company-input" placeholder="e.g. Metro Catering" class="w-full rounded-xl bg-slate-900 border border-white/10 p-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Pay Rate</label>
-                    <input type="text" id="job-pay-input" placeholder="e.g. $20.00 / hr" class="w-full rounded-xl border border-slate-300 p-2.5 text-xs focus:ring-2 focus:ring-amber-400">
+                    <label class="block text-xs font-bold text-slate-300 mb-1">Pay Rate</label>
+                    <input type="text" id="job-pay-input" placeholder="e.g. $20.00 / hr" class="w-full rounded-xl bg-slate-900 border border-white/10 p-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
                 </div>
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Location / Intersection</label>
-                <input type="text" id="job-location-input" placeholder="e.g. Seattle, WA (Downtown)" class="w-full rounded-xl border border-slate-300 p-2.5 text-xs focus:ring-2 focus:ring-amber-400">
+                <label class="block text-xs font-bold text-slate-300 mb-1">Location / Intersection</label>
+                <input type="text" id="job-location-input" placeholder="e.g. Seattle, WA (Downtown)" class="w-full rounded-xl bg-slate-900 border border-white/10 p-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Key Requirements (Comma Separated)</label>
-                <input type="text" id="job-reqs-input" placeholder="e.g. Heavy Lifting, Food Handler Card, Punctual" class="w-full rounded-xl border border-slate-300 p-2.5 text-xs focus:ring-2 focus:ring-amber-400">
+                <label class="block text-xs font-bold text-slate-300 mb-1">Key Requirements (Comma Separated)</label>
+                <input type="text" id="job-reqs-input" placeholder="e.g. Heavy Lifting, Food Handler Card, Punctual" class="w-full rounded-xl bg-slate-900 border border-white/10 p-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Contact Email or Phone <span class="text-red-500">*</span></label>
-                <input type="text" id="job-contact-input" placeholder="e.g. jobs@company.org or (555) 234-5678" class="w-full rounded-xl border border-slate-300 p-2.5 text-xs focus:ring-2 focus:ring-amber-400" required>
+                <label class="block text-xs font-bold text-slate-300 mb-1">Contact Email or Phone <span class="text-rose-400">*</span></label>
+                <input type="text" id="job-contact-input" placeholder="e.g. jobs@company.org or (555) 234-5678" class="w-full rounded-xl bg-slate-900 border border-white/10 p-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-amber-400 focus:border-amber-400" required>
             </div>
 
-            <button type="submit" class="w-full py-3.5 bg-primary text-white font-bold rounded-xl text-xs shadow-lg hover:bg-slate-800 transition-colors">
+            <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-extrabold rounded-xl text-xs shadow-[0_4px_20px_rgba(245,158,11,0.35)] hover:from-amber-300 hover:to-amber-400 active:scale-95 transition-all">
                 Publish Opportunity & Enable AI Matching
             </button>
         </form>
