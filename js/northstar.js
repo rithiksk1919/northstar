@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initInstantPageTransitions();
   renderProgressPage();
   checkGuestLockAccess();
+  checkDashboardJobMatchLock();
   renderAccountHeaderAvatar();
 });
 
@@ -425,6 +426,13 @@ async function navigateToPageInstant(url, pushState = true) {
           if (typeof window.updateProgressUI === 'function') {
             window.updateProgressUI();
           }
+          if (typeof window.checkGuestLockAccess === 'function') {
+            window.checkGuestLockAccess();
+          } else if (typeof checkGuestLockAccess === 'function') {
+            checkGuestLockAccess();
+          }
+          checkDashboardJobMatchLock();
+          if (typeof window.setDashboardGreeting === 'function') window.setDashboardGreeting();
 
           const path = url.split('/').pop();
           if (path === 'call-shelter.html') updateMilestone('safePlace', true);
@@ -1010,7 +1018,7 @@ function checkGuestLockAccess() {
 
   const path = window.location.pathname.toLowerCase();
   const currentFileName = path.split('/').pop() || 'index.html';
-  const isDashboardOrHome = currentFileName === 'index.html' || currentFileName === 'seeker-dashboard.html' || currentFileName === 'helper-dashboard.html';
+  const isDashboardOrHome = currentFileName === 'index.html' || currentFileName === 'seeker-dashboard.html' || currentFileName === 'helper-dashboard.html' || currentFileName === 'resource-map.html';
 
   if (!isDashboardOrHome) {
     // Blur main content area permanently for guests on all feature pages
@@ -1036,7 +1044,7 @@ function checkGuestLockAccess() {
           <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-400/20 text-amber-300 border border-amber-400/40 inline-block mb-2">Guest Account</span>
           <h3 class="text-base font-extrabold text-white">Unlock Feature with an Account</h3>
           <p class="text-xs text-slate-300 mt-1.5 leading-relaxed font-medium">
-            You are browsing as a Guest. Create a free account or sign in to permanently unlock progress tracking, AI resume builder, live resource map, job placements, and donations.
+            You are browsing as a Guest. Create a free account or sign in to permanently unlock progress tracking, AI resume builder, job placements, and donations.
           </p>
         </div>
         <div class="space-y-2.5 pt-2">
@@ -1145,6 +1153,7 @@ function updateMilestone(milestoneKey, isCompleted) {
 
 
 function saveResumeData(data) {
+  if (typeof window.matchAndRenderJobs === 'function') window.matchAndRenderJobs(data);
   const session = getSession();
   if (session.isGuest) return; // Do not save resume data for Guests
 
@@ -1159,15 +1168,32 @@ function renderProgressPage() {
   const listContainer = document.getElementById('journey-list-container');
   if (!stepperContainer || !listContainer) return;
 
+  const session = getSession();
   const userData = getUserData();
   const state = userData.progress;
   const completedCount = Object.keys(state).filter(k => state[k] === true).length;
-
-  const session = getSession();
-  const accountLabel = document.getElementById('progress-account-label');
-  if (accountLabel) {
-    accountLabel.textContent = session.isGuest ? 'Browsing as Guest' : `Signed in as ${session.username}`;
+  
+  const isLocked = session.isGuest;
+  if (isLocked) {
+    stepperContainer.innerHTML = '';
+    listContainer.innerHTML = `
+      <div class="relative w-full flex flex-col items-center justify-center rounded-2xl border border-white/10 p-8 text-center shadow-lg bg-slate-900/60 backdrop-blur-md my-4">
+        <span class="material-symbols-outlined text-5xl text-amber-500 mb-3">lock</span>
+        <h3 class="text-lg font-extrabold text-white mb-2">Progress Locked</h3>
+        <p class="text-xs text-slate-300 font-medium mb-5 max-w-xs mx-auto">Create a free account to permanently unlock progress tracking and milestone history.</p>
+        <a href="index.html" class="px-5 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-extrabold rounded-xl text-xs shadow-lg hover:from-amber-300 hover:to-amber-400 transition-all">
+          Create Account
+        </a>
+      </div>
+    `;
+    const progressText = document.getElementById('journey-progress-text');
+    if (progressText) progressText.innerText = 'Account Required';
+    const accountLabel = document.getElementById('progress-account-label');
+    if (accountLabel) accountLabel.textContent = 'Browsing as Guest';
+    return;
   }
+
+  const accountLabel = document.getElementById('progress-account-label');
 
   const progressText = document.getElementById('journey-progress-text');
   if (progressText) {
@@ -1245,3 +1271,115 @@ function renderProgressPage() {
   }).join('');
 }
 
+window.matchAndRenderJobs = async function(resumeData) {
+  const container = document.getElementById('matched-jobs-container');
+  if (!container || !resumeData) return;
+
+  try {
+    const res = await fetch('/api/jobs');
+    const data = await res.json();
+    if (!data.jobs || data.jobs.length === 0) return;
+
+    const userKeywords = [];
+    if (resumeData.skills) {
+      if (resumeData.skills.certifications) userKeywords.push(...resumeData.skills.certifications);
+      if (resumeData.skills.practical_skills) userKeywords.push(...resumeData.skills.practical_skills);
+      if (resumeData.skills.core_strengths) userKeywords.push(...resumeData.skills.core_strengths);
+    }
+    if (resumeData.experience) {
+      resumeData.experience.forEach(exp => {
+        if (exp.role) userKeywords.push(exp.role);
+      });
+    }
+
+    const scoredJobs = data.jobs.map(job => {
+      let score = 0;
+      const jobText = (job.title + ' ' + (job.requirements || []).join(' ')).toLowerCase();
+      userKeywords.forEach(kw => {
+        if (kw && jobText.includes(kw.toLowerCase())) score += 15;
+      });
+      return { ...job, score };
+    }).filter(j => j.score > 0).sort((a, b) => b.score - a.score).slice(0, 3);
+
+    if (scoredJobs.length === 0) {
+      container.innerHTML = '';
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="flex justify-between items-center mb-2">
+          <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+              <span class="material-symbols-outlined text-amber-400 text-sm">stars</span> Matched Job Postings
+          </h3>
+      </div>
+      ${scoredJobs.map(job => `
+        <div class="backdrop-blur-md bg-slate-900/40 p-4 rounded-2xl border border-white/10 shadow-lg relative overflow-hidden mb-3">
+            <div class="flex justify-between items-start mb-1.5">
+                <div>
+                    <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] font-extrabold">AI Match Score: ${job.score}%</span>
+                    <h4 class="font-extrabold text-sm text-white mt-1.5">${job.title}</h4>
+                    <p class="text-[11px] text-amber-400 font-semibold">${job.company} • ${job.pay}</p>
+                </div>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed mb-3">${job.description}</p>
+            <div class="flex gap-2 border-t border-white/10 pt-2.5">
+                <a href="mailto:${job.contact.split(' | ')[0]}" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold text-center border border-white/10 transition-colors">Email</a>
+                <a href="tel:${job.contact.split(' | ')[1] ? job.contact.split(' | ')[1].replace(/[^0-9]/g, '') : ''}" class="flex-1 py-2 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 rounded-lg text-xs font-bold text-center hover:from-amber-300 hover:to-amber-400 transition-colors">Call</a>
+            </div>
+        </div>
+      `).join('')}
+    `;
+  } catch (err) {
+    console.error('Error matching jobs:', err);
+  }
+};
+
+// --- Dashboard: Recommended AI Job Match Access Lock ---
+function checkDashboardJobMatchLock() {
+  const container = document.getElementById('ai-job-matches-container');
+  if (!container) return; // Not on the dashboard page, skip
+
+  const session = getSession();
+  const userData = getUserData();
+  const hasResume = !!(userData && userData.resumeData);
+
+  if (session.isGuest) {
+    // State 1: Guest — lock with account prompt
+    container.innerHTML = `
+      <div class="relative flex flex-col items-center justify-center rounded-2xl border border-white/10 p-6 text-center shadow-lg bg-slate-900/60 backdrop-blur-md">
+        <span class="material-symbols-outlined text-4xl text-amber-500 mb-3" style="font-variation-settings: 'FILL' 1;">lock</span>
+        <h4 class="text-sm font-extrabold text-white mb-1">Job Matches Locked</h4>
+        <p class="text-xs text-slate-400 font-medium mb-4 max-w-[220px] mx-auto">Make an account to access personalized AI job matches.</p>
+        <button onclick="document.getElementById('auth-gateway-view') ? (document.getElementById('auth-gateway-view').classList.remove('hidden'), document.getElementById('auth-gateway-view').style.display='flex', document.getElementById('main-app-layout') && (document.getElementById('main-app-layout').classList.add('hidden'), document.getElementById('main-app-layout').style.display='none')) : window.location.href='index.html'" class="px-5 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-extrabold rounded-xl text-xs shadow-lg hover:from-amber-300 hover:to-amber-400 transition-all active:scale-95">
+          Sign In / Create Account
+        </button>
+      </div>
+    `;
+    // Also hide the match % badge in the section header
+    const matchBadge = container.closest('section')?.querySelector('span.bg-emerald-500\\/10');
+    if (matchBadge) matchBadge.classList.add('hidden');
+    return;
+  }
+
+  if (!hasResume) {
+    // State 2: Logged-in but no resume — lock with resume prompt
+    container.innerHTML = `
+      <div class="relative flex flex-col items-center justify-center rounded-2xl border border-white/10 p-6 text-center shadow-lg bg-slate-900/60 backdrop-blur-md">
+        <span class="material-symbols-outlined text-4xl text-indigo-400 mb-3" style="font-variation-settings: 'FILL' 1;">description</span>
+        <h4 class="text-sm font-extrabold text-white mb-1">Job Matches Locked</h4>
+        <p class="text-xs text-slate-400 font-medium mb-4 max-w-[220px] mx-auto">Make a resume to unlock AI-powered job matches tailored to your skills.</p>
+        <a href="resume-builder.html" class="px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white font-extrabold rounded-xl text-xs shadow-lg hover:from-indigo-400 hover:to-indigo-500 transition-all active:scale-95 inline-flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-sm">edit_document</span> Build Your Resume
+        </a>
+      </div>
+    `;
+    // Also hide the match % badge in the section header
+    const matchBadge = container.closest('section')?.querySelector('span.bg-emerald-500\\/10');
+    if (matchBadge) matchBadge.classList.add('hidden');
+    return;
+  }
+
+  // State 3: Logged-in with resume — show the match % badge and leave the card intact
+  const matchBadge = container.closest('section')?.querySelector('span.bg-emerald-500\\/10');
+  if (matchBadge) matchBadge.classList.remove('hidden');
+}
