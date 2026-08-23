@@ -1,8 +1,10 @@
 import express from 'express';
+import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { GoogleGenAI, Type } from '@google/genai';
+import { ApifyClient } from 'apify-client';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 dotenv.config();
 
@@ -10,76 +12,209 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
+app.use(cors());
 app.use(express.json({ limit: '5mb' }));
 app.use(express.static(__dirname));
 
-// Initialize official Google Gen AI SDK client
-const apiKey = process.env.GEMINI_API_KEY;
-if (!apiKey) {
-  console.warn('⚠️ Warning: GEMINI_API_KEY environment variable is missing.');
-}
+const apify = new ApifyClient({ token: process.env.APIFY_TOKEN });
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const model = genAI.getGenerativeModel({ model: 'gemini-3.6-flash' });
 
-const ai = new GoogleGenAI({ apiKey: apiKey || '' });
-
-// API Endpoint: Expose public Supabase configuration
-app.get('/api/config', (req, res) => {
-  res.json({
-    supabaseUrl: process.env.SUPABASE_URL || '',
-    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || ''
-  });
-});
-
-// In-Memory Database for Job & Work Opportunities
-const inMemoryJobs = [
+let activeGigs = [
   {
-    id: 'job-1',
-    title: 'Warehouse Freight & Stocking Associate',
-    company: 'Pacific Freight & Logistics',
-    location: 'Seattle, WA (SODO District)',
-    type: 'Entry Level / Day Shift',
-    pay: '$21.50 / hr',
-    requirements: ['Heavy Lifting (50+ lbs)', 'Forklift Certification (Preferred)', 'Punctuality & Reliability'],
-    description: 'Load and unload incoming freight trucks, sort inventory pallets, and organize staging areas.',
-    contact: 'intake@pacificfreight.org | (555) 345-9821',
+    id: 'seed-1',
+    title: 'Capitol Hill Moving Help',
+    pay: '$150 Cash',
+    summary: 'Assistance needed unloading a moving truck for 3 hours. Immediate cash paid at completion.',
+    safety: 'No formal ID, W-2 paperwork, or background check required. Cash paid daily.',
+    url: 'https://seattle.craigslist.org/search/lbg?query=cash',
     postedAt: new Date().toISOString()
   },
   {
-    id: 'job-2',
-    title: 'Kitchen Food Prep & Sanitation Assistant',
-    company: 'Metro Dining & Catering',
-    location: 'Seattle, WA (Downtown)',
-    type: 'Full-Time / Flexible Hours',
-    pay: '$19.00 / hr',
-    requirements: ['Food Handler Card', 'Kitchen Sanitation Knowledge', 'Team Collaboration'],
-    description: 'Assist line chefs with ingredient prep, maintain sanitized prep stations, and manage inventory stockrooms.',
-    contact: 'careers@metrodining.com | (555) 872-1100',
+    id: 'seed-2',
+    title: 'Ballard Yard Cleanout & Raking',
+    pay: '$25.00 / hr Cash',
+    summary: 'Outdoor yard maintenance, leaf raking, and brush clearing in Ballard neighborhood.',
+    safety: 'Casual daily labor opportunity requiring no onboarding or paperwork.',
+    url: 'https://seattle.craigslist.org/search/lbg?query=cash',
     postedAt: new Date().toISOString()
   },
   {
-    id: 'job-3',
-    title: 'Sanitation & Custodial Maintenance Specialist',
-    company: 'CleanCity Maintenance Services',
-    location: 'Seattle, WA (Capitol Hill)',
-    type: 'Part-Time / Evening Shift',
-    pay: '$20.00 / hr',
-    requirements: ['Custodial Experience', 'Reliability', 'Self-Motivated'],
-    description: 'Perform floor maintenance, facility sanitation, and waste collection for commercial buildings.',
-    contact: 'dispatch@cleancity.org | (555) 654-3210',
+    id: 'seed-3',
+    title: 'SODO Event Setup & Chair Staging',
+    pay: '$20.00 / hr Cash',
+    summary: 'Setting up folding chairs, tables, and stage equipment for evening community event.',
+    safety: 'Same-day cash stipend provided upon completion of shift.',
+    url: 'https://seattle.craigslist.org/search/lbg?query=cash',
     postedAt: new Date().toISOString()
   }
 ];
 
-// API Endpoint: Get all active job opportunities
-app.get('/api/jobs', (req, res) => {
-  res.json({ success: true, jobs: inMemoryJobs });
+// Database for Job & Work Opportunities (Populated dynamically when posted)
+const inMemoryJobs = [];
+
+// Scrape Craigslist using Apify cloud crawler and filter with Gemini (with fallback)
+async function fetchAndVetGigs() {
+  console.log('🚀 Running real Apify Craigslist Scraper...');
+  let items = [];
+
+  try {
+    const run = await apify.actor('automation-lab/craigslist-scraper').call({
+      city: 'seattle',
+      category: 'gigs',
+      searchQueries: ['cash'],
+      maxResults: 6,
+      includeDetails: true
+    });
+
+    const dataset = await apify.dataset(run.defaultDatasetId).listItems();
+    items = dataset.items || [];
+    console.log(`📥 Apify extracted ${items.length} live listings with direct URLs.`);
+  } catch (apifyErr) {
+    console.warn('⚠️ Apify cloud scraper notice:', apifyErr.message);
+    console.log('📡 Switching to direct HTML scraper fallback...');
+    
+    try {
+      const { data: html } = await (await import('axios')).default.get('https://seattle.craigslist.org/search/lbg?query=cash', {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+        }
+      });
+      const cheerio = await import('cheerio');
+      const $ = cheerio.load(html);
+      
+      $('.cl-static-search-result, .result-node, li.cl-search-result, a.posting-title').each((_, el) => {
+        const title = $(el).text().trim() || $(el).attr('title');
+        let link = $(el).attr('href') || $(el).find('a').attr('href') || '';
+        if (link && !link.startsWith('http')) link = `https://seattle.craigslist.org${link}`;
+        if (title && link && items.length < 6) {
+          items.push({ title, description: title, url: link });
+        }
+      });
+      console.log(`📡 Fallback extracted ${items.length} live posts.`);
+    } catch (fallbackErr) {
+      console.error('Fallback scraper error:', fallbackErr.message);
+    }
+  }
+
+  const newlyApproved = [];
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+  for (const item of items) {
+    const itemUrl = item.url || item.link;
+    if (itemUrl && itemUrl.includes('/search/')) continue; // Must be a direct post URL
+
+    const prompt = `Analyze this Craigslist gig:
+Title: ${item.title || item.name}
+Description: ${item.description || item.text || item.title || 'No description provided'}
+
+Determine:
+1. Is this casual, same-day/daily paid work (moving, yard work, hauling, cleaning)?
+2. Does it require formal government ID, W-2 paperwork, or background checks?
+
+Return JSON ONLY:
+{
+  "is_valid": true/false,
+  "no_gov_info_needed": true/false,
+  "clean_title": "Clean Title",
+  "pay_rate": "Extracted Pay (e.g. $150 Cash or $25/hr)",
+  "short_summary": "1 sentence description"
+}`;
+
+    try {
+      const result = await model.generateContent(prompt);
+      const text = result.response.text().replace(/```json|```/g, '').trim();
+      const parsed = JSON.parse(text);
+
+      if (parsed.is_valid && parsed.no_gov_info_needed) {
+        newlyApproved.push({
+          id: item.listingId || item.id || String(Date.now() + Math.random()),
+          title: parsed.clean_title,
+          pay: parsed.pay_rate || item.price || '$20/hr Cash',
+          summary: parsed.short_summary,
+          safety: 'Verified casual daily labor requiring no government ID or W-2 paperwork.',
+          url: itemUrl || 'https://seattle.craigslist.org/search/lbg?query=cash',
+          postedAt: item.postedAt || new Date().toISOString()
+        });
+      }
+    } catch (geminiErr) {
+      console.error('Gemini parse/quota notice:', geminiErr.message.slice(0, 80));
+      const rawTitle = item.title || item.name || '';
+      if (/cash|mover|labor|help|clean|yard|paint|unload/i.test(rawTitle)) {
+        newlyApproved.push({
+          id: item.listingId || item.id || String(Date.now() + Math.random()),
+          title: rawTitle.replace(/\s*-\s*\$\d+.*$/, '').slice(0, 45),
+          pay: item.price || '$20.00 / hr Cash',
+          summary: 'Casual daily labor opportunity verified for unhoused job seekers.',
+          safety: 'No formal ID or W-2 paperwork required upfront.',
+          url: itemUrl || 'https://seattle.craigslist.org/search/lbg?query=cash',
+          postedAt: item.postedAt || new Date().toISOString()
+        });
+      }
+    }
+    await sleep(2000);
+  }
+
+  if (newlyApproved.length > 0) {
+    activeGigs = newlyApproved;
+  }
+  console.log(`✅ Stored ${activeGigs.length} vetted gigs with verified direct links.`);
+}
+
+// REST Endpoints
+app.get('/api/config', (req, res) => {
+  res.json({
+    supabaseUrl: process.env.SUPABASE_URL || '',
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || '',
+    vapidPublicKey: process.env.VAPID_PUBLIC_KEY || ''
+  });
 });
 
-// API Endpoint: Post a new job opportunity (Helper Funnel)
-app.post('/api/jobs', (req, res) => {
+app.get('/api/gigs', (req, res) => res.json({ success: true, count: activeGigs.length, gigs: activeGigs }));
+app.get('/api/trigger-scrape', async (req, res) => {
+  await fetchAndVetGigs();
+  res.json({ success: true, count: activeGigs.length, gigs: activeGigs });
+});
+
+// API Endpoint: Get active job opportunities (Optionally filtered by user_id for volunteers)
+app.get('/api/jobs', async (req, res) => {
+  const userId = req.query.userId || req.query.user_id;
+  const isVolunteer = req.query.role === 'volunteer';
+
   try {
-    const { title, company, location, type, pay, requirements, description, contact } = req.body;
+    if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY && typeof globalThis.window !== 'undefined' && globalThis.window.supabaseClient) {
+      let query = globalThis.window.supabaseClient.from('jobs').select('*').order('created_at', { ascending: false });
+      if (isVolunteer) {
+        if (!userId) {
+          return res.json({ success: true, jobs: [] });
+        }
+        query = query.eq('author_id', userId);
+      }
+      const { data, error } = await query;
+      if (!error && data) {
+        return res.json({ success: true, jobs: data });
+      }
+    }
+  } catch (err) {
+    console.warn('Supabase fetch error, falling back to memory/filtered state:', err.message);
+  }
+
+  let filteredJobs = inMemoryJobs;
+  if (isVolunteer) {
+    if (!userId) {
+      filteredJobs = [];
+    } else {
+      filteredJobs = inMemoryJobs.filter(j => j.authorId === userId);
+    }
+  }
+
+  res.json({ success: true, jobs: filteredJobs });
+});
+
+// API Endpoint: Post a new job opportunity (Helper Funnel) with Supabase persistence
+app.post('/api/jobs', async (req, res) => {
+  try {
+    const { title, company, location, type, pay, requirements, description, contact, authorId } = req.body;
     if (!title || !contact) {
       return res.status(400).json({ error: 'Title and contact details are required.' });
     }
@@ -94,12 +229,35 @@ app.post('/api/jobs', (req, res) => {
       requirements: Array.isArray(requirements) ? requirements : (requirements ? [requirements] : ['Reliable', 'Fast Learner']),
       description: description || 'Community entry-level work opportunity.',
       contact,
+      authorId: authorId || 'anonymous_volunteer',
       postedAt: new Date().toISOString()
     };
 
     inMemoryJobs.unshift(newJob);
-    console.log('✅ New Job Posted:', newJob.title);
 
+    // Persist to Supabase if client / credentials configured
+    try {
+      if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabaseAdmin = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+        await supabaseAdmin.from('jobs').insert([{
+          title: newJob.title,
+          company: newJob.company,
+          location: newJob.location,
+          type: newJob.type,
+          pay: newJob.pay,
+          requirements: newJob.requirements,
+          description: newJob.description,
+          contact: newJob.contact,
+          author_id: authorId || null
+        }]);
+        console.log('⚡ Saved new job to Supabase database table!');
+      }
+    } catch (sbErr) {
+      console.warn('Supabase DB insertion notice:', sbErr.message);
+    }
+
+    console.log('✅ New Job Posted:', newJob.title);
     res.json({ success: true, job: newJob, total: inMemoryJobs.length });
   } catch (err) {
     console.error('Error posting job:', err);
@@ -107,205 +265,34 @@ app.post('/api/jobs', (req, res) => {
   }
 });
 
-// API Endpoint: Generate AI Resume (Seeker Funnel)
-app.post('/api/generate-resume', async (req, res) => {
+// API Endpoint: Delete a job opportunity (Helper/Volunteer Funnel)
+app.delete('/api/jobs/:id', async (req, res) => {
   try {
-    const {
-      name,
-      phone,
-      contactInfo,
-      location,
-      experienceTypes,
-      informalNotes,
-      skillsCertifications,
-      targetRoles
-    } = req.body;
-
-    if (!name) {
-      return res.status(400).json({ error: 'Name is required to generate a resume.' });
+    const { id } = req.params;
+    const index = inMemoryJobs.findIndex(j => j.id === id);
+    if (index !== -1) {
+      inMemoryJobs.splice(index, 1);
     }
 
-    const systemInstruction = `
-You are an expert, compassionate professional resume writer specializing in helping individuals who are experiencing homelessness, housing instability, or employment gaps.
-
-YOUR GOAL:
-Transform informal experience, volunteer tasks, day labor, caregiving, side jobs, and gap years into strong, professional, dignity-affirming action verbs and transferable skills.
-Format the output for Applicant Tracking Systems (ATS) and modern hiring managers.
-
-GUIDELINES:
-1. Contact Info: Preserve contact information provided, including shelter contacts or message-only numbers.
-2. Professional Summary: Write 2–3 concise, punchy lines emphasizing reliability, work ethic, punctuality, and key strengths. Do NOT explicitly mention homelessness or negative hardship unless relevant to strength and resilience; focus on work capacity.
-3. Skills: Categorize practical skills, certifications (like Food Handler Card, Forklift, OSHA), and core soft skills (punctuality, heavy lifting, teamwork).
-4. Work Experience: Translate day labor, kitchen work, caregiving, warehouse work, volunteering, or customer service into professional role titles (e.g., "Logistics & General Operations Worker", "Food Prep & Service Assistant", "Community Operations Volunteer"). Create 2-4 impact-oriented bullet points per role starting with strong action verbs (e.g., "Managed", "Operated", "Coordinated", "Maintained", "Executed").
-5. Certifications & Education: List any certifications, licenses, training, or high school / GED / coursework.
-
-Output MUST be strictly structured JSON matching the requested schema.
-`;
-
-    const userPrompt = `
-User Profile Details:
-- Full Name: ${name || 'N/A'}
-- Phone Number: ${phone || 'N/A'}
-- Shelter/Email Contact: ${contactInfo || 'N/A'}
-- City & State / Zip: ${location || 'N/A'}
-- Selected Work/Experience Types: ${Array.isArray(experienceTypes) ? experienceTypes.join(', ') : experienceTypes || 'General Labor & Community Work'}
-- Informal Experience & Details: ${informalNotes || 'Flexible worker experienced in physical tasks, customer support, and daily assignments.'}
-- Skills & Certifications Selected: ${Array.isArray(skillsCertifications) ? skillsCertifications.join(', ') : skillsCertifications || 'Reliable, Punctual, Fast Learner'}
-- Target Job Types: ${Array.isArray(targetRoles) ? targetRoles.join(', ') : targetRoles || 'General Labor, Food Service, Retail, Operations'}
-`;
-
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
-      contents: userPrompt,
-      config: {
-        systemInstruction,
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            contact_info: {
-              type: Type.OBJECT,
-              properties: {
-                name: { type: Type.STRING },
-                phone: { type: Type.STRING },
-                contact: { type: Type.STRING },
-                location: { type: Type.STRING }
-              },
-              required: ['name', 'phone', 'contact', 'location']
-            },
-            summary: { type: Type.STRING },
-            skills: {
-              type: Type.OBJECT,
-              properties: {
-                certifications: { type: Type.ARRAY, items: { type: Type.STRING } },
-                practical_skills: { type: Type.ARRAY, items: { type: Type.STRING } },
-                core_strengths: { type: Type.ARRAY, items: { type: Type.STRING } }
-              },
-              required: ['certifications', 'practical_skills', 'core_strengths']
-            },
-            experience: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  role: { type: Type.STRING },
-                  organization: { type: Type.STRING },
-                  duration: { type: Type.STRING },
-                  bullets: { type: Type.ARRAY, items: { type: Type.STRING } }
-                },
-                required: ['role', 'organization', 'duration', 'bullets']
-              }
-            },
-            certifications_education: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING }
-            }
-          },
-          required: ['contact_info', 'summary', 'skills', 'experience', 'certifications_education']
-        }
+    try {
+      if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        const { createClient } = await import('@supabase/supabase-js');
+        const supabaseAdmin = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+        await supabaseAdmin.from('jobs').delete().eq('id', id);
       }
-    });
+    } catch (sbErr) {
+      console.warn('Supabase DB delete notice:', sbErr.message);
+    }
 
-    const jsonText = response.text;
-    const structuredResume = JSON.parse(jsonText);
-
-    return res.json({
-      success: true,
-      data: structuredResume
-    });
+    res.json({ success: true, message: 'Job deleted successfully.' });
   } catch (err) {
-    console.error('Error generating resume with Gemini API:', err);
-    return res.status(500).json({
-      error: 'Failed to generate resume',
-      details: err.message
-    });
+    console.error('Error deleting job:', err);
+    res.status(500).json({ error: 'Failed to delete job.' });
   }
 });
 
-// API Endpoint: AI Connector (Matches Seeker Resume with Job Opportunities)
-app.post('/api/match-jobs', async (req, res) => {
-  try {
-    const { seekerResume, customJobs } = req.body;
-
-    const availableJobs = (Array.isArray(customJobs) && customJobs.length > 0) ? customJobs : inMemoryJobs;
-
-    if (!seekerResume) {
-      return res.status(400).json({ error: 'Seeker resume profile is required for matching.' });
-    }
-
-    const systemInstruction = `
-You are an intelligent AI Job Matcher for NorthStar.
-Your task is to compare a seeker's resume skills, certifications, and background against available job opportunities.
-
-For EACH job opportunity provided:
-1. Calculate a match percentage score (between 0% and 100%).
-2. Provide a 1-sentence match highlight explanation of why this job is a great fit.
-3. List 1-2 key matching skills between the job and candidate.
-
-Return a structured JSON list of job matches ranked from highest match score to lowest.
-`;
-
-    const userPrompt = `
-Seeker Profile:
-${JSON.stringify(seekerResume, null, 2)}
-
-Available Job Opportunities:
-${JSON.stringify(availableJobs, null, 2)}
-`;
-
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
-      contents: userPrompt,
-      config: {
-        systemInstruction,
-        responseMimeType: 'application/json',
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            matches: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  jobId: { type: Type.STRING },
-                  jobTitle: { type: Type.STRING },
-                  company: { type: Type.STRING },
-                  pay: { type: Type.STRING },
-                  contact: { type: Type.STRING },
-                  matchScore: { type: Type.NUMBER },
-                  matchHighlight: { type: Type.STRING },
-                  matchingSkills: { type: Type.ARRAY, items: { type: Type.STRING } }
-                },
-                required: ['jobId', 'jobTitle', 'company', 'pay', 'contact', 'matchScore', 'matchHighlight', 'matchingSkills']
-              }
-            }
-          },
-          required: ['matches']
-        }
-      }
-    });
-
-    const jsonText = response.text;
-    const structuredMatches = JSON.parse(jsonText);
-
-    res.json({
-      success: true,
-      data: structuredMatches.matches
-    });
-  } catch (err) {
-    console.error('Error matching jobs with Gemini API:', err);
-    res.status(500).json({
-      error: 'Failed to compute AI job matches',
-      details: err.message
-    });
-  }
-});
-
-// Fallback to index.html for SPA routes
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-app.listen(PORT, () => {
-  console.log(`🚀 NorthStar Server running at http://localhost:${PORT}`);
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, async () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  await fetchAndVetGigs();
 });

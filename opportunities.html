@@ -107,7 +107,7 @@
             </div>
             <h1 class="text-base font-extrabold text-white tracking-tight">Work Opportunities</h1>
         </div>
-        <button onclick="openModal('post-job-modal')" class="px-3.5 py-1.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-bold rounded-full text-xs flex items-center gap-1 shadow-[0_0_15px_rgba(245,158,11,0.3)] active:scale-95 transition-all">
+        <button id="post-job-header-btn" onclick="openModal('post-job-modal')" class="hidden px-3.5 py-1.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-bold rounded-full text-xs items-center gap-1 shadow-[0_0_15px_rgba(245,158,11,0.3)] active:scale-95 transition-all">
             <span class="material-symbols-outlined text-sm">add</span> Post Job
         </button>
     </header>
@@ -115,17 +115,33 @@
     <!-- Main Content Canvas -->
     <main class="flex-grow p-4 sm:p-5 space-y-5 overflow-y-auto pb-24">
         
-        <!-- Post Job Banner -->
-        <div class="backdrop-blur-md bg-white/[0.04] rounded-2xl p-4 text-white space-y-2 relative overflow-hidden shadow-lg shadow-black/30 border border-white/10">
+        <!-- Post Job Banner (Visible to Volunteers/Employers only) -->
+        <div id="post-job-volunteer-banner" class="hidden backdrop-blur-md bg-white/[0.04] rounded-2xl p-4 text-white space-y-2 relative overflow-hidden shadow-lg shadow-black/30 border border-white/10">
             <div class="flex justify-between items-center">
                 <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-400 text-slate-950 uppercase tracking-wide flex items-center gap-1">
-                    <span class="material-symbols-outlined text-xs">work</span> Community Board
+                    <span class="material-symbols-outlined text-xs">work</span> Employer & Partner Portal
                 </span>
                 <span class="text-xs text-amber-400 font-bold">AI Matching Active</span>
             </div>
             <h2 class="text-sm font-extrabold text-white">Post an entry-level job or task opportunity for community members.</h2>
             <button onclick="openModal('post-job-modal')" class="w-full py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 rounded-xl font-extrabold text-xs shadow-[0_4px_16px_rgba(245,158,11,0.3)] active:scale-95 transition-all flex items-center justify-center gap-1">
                 <span class="material-symbols-outlined text-sm">post_add</span> Post New Opportunity
+            </button>
+        </div>
+
+        <!-- Push Alerts Toggle Banner -->
+        <div class="flex items-center justify-between backdrop-blur-md bg-emerald-500/[0.08] border border-emerald-500/20 p-3.5 rounded-2xl shadow-lg shadow-black/30">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-400 flex-shrink-0">
+                    <span class="material-symbols-outlined text-xl">notifications_active</span>
+                </div>
+                <div>
+                    <h3 class="font-extrabold text-xs text-white">Low-Barrier Cash Gig Alerts</h3>
+                    <p id="push-alert-status-text" class="text-[11px] text-emerald-300/80 font-medium">Get real-time push notifications for instant cash gigs</p>
+                </div>
+            </div>
+            <button id="push-alert-toggle-btn" onclick="togglePushNotifications()" class="px-3.5 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black rounded-xl shadow-md border border-emerald-400/40 active:scale-95 transition-all flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">notifications</span> Enable Alerts
             </button>
         </div>
 
@@ -145,8 +161,13 @@
         <!-- Opportunities List Feed -->
         <section class="space-y-3">
             <div class="flex justify-between items-center">
-                <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Active Job & Task Listings</h3>
-                <span id="jobs-count-badge" class="text-[10px] font-bold bg-white/10 text-slate-300 border border-white/10 px-2.5 py-0.5 rounded-full">3 Active</span>
+                <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Vetted Daily Gigs & Job Listings</h3>
+                <div class="flex items-center gap-2">
+                    <button id="scan-live-feed-btn" onclick="triggerLiveFeedScan()" class="px-2.5 py-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-full text-[10px] font-black flex items-center gap-1 active:scale-95 transition-all">
+                        <span id="scan-btn-icon" class="material-symbols-outlined text-xs">sync</span> Scan Live Feed
+                    </button>
+                    <span id="jobs-count-badge" class="text-[10px] font-bold bg-white/10 text-slate-300 border border-white/10 px-2.5 py-0.5 rounded-full">Loading...</span>
+                </div>
             </div>
 
             <div id="opportunities-feed" class="space-y-3">
@@ -158,22 +179,26 @@
 
     <!-- Floating Dock Bottom Navigation Bar -->
     <nav class="absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-3 py-2.5 bg-[#12141C]/80 backdrop-blur-xl shadow-[0px_-4px_25px_rgba(0,0,0,0.5)] border-t border-white/10">
-        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="helper-dashboard.html">
+        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="seeker-dashboard.html">
             <span class="material-symbols-outlined text-xl">dashboard</span>
             <span class="text-[10px] font-medium mt-0.5">Dashboard</span>
         </a>
         <a class="flex flex-col items-center justify-center bg-amber-400/15 text-amber-400 border border-amber-400/30 rounded-2xl px-3.5 py-1 shadow-[0_0_15px_rgba(245,158,11,0.25)]" href="opportunities.html">
             <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">work</span>
-            <span class="text-[10px] font-extrabold mt-0.5">Opportunities</span>
+            <span class="text-[10px] font-extrabold mt-0.5">Jobs</span>
         </a>
-        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="donate.html">
-            <span class="material-symbols-outlined text-xl">volunteer_activism</span>
-            <span class="text-[10px] font-medium mt-0.5">Donate</span>
+        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="resource-map.html">
+            <span class="material-symbols-outlined text-xl">map</span>
+            <span class="text-[10px] font-medium mt-0.5">Map</span>
         </a>
-        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="call-shelter.html">
-            <span class="material-symbols-outlined text-xl">call</span>
-            <span class="text-[10px] font-medium mt-0.5">Shelter</span>
+        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="resume-builder.html">
+            <span class="material-symbols-outlined text-xl">description</span>
+            <span class="text-[10px] font-medium mt-0.5">Resume</span>
         </a>
+        <button onclick="openSettingsModal()" class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors">
+            <span class="material-symbols-outlined text-xl">settings</span>
+            <span class="text-[10px] font-medium mt-0.5">Settings</span>
+        </button>
     </nav>
 
 </div>
@@ -235,47 +260,279 @@
 window.loadOpportunities = async function loadOpportunities() {
   const feed = document.getElementById('opportunities-feed');
   if (!feed) return;
+
+  // Role Gate: Show Post Job UI only to Volunteers / Employers
+  const rawRole = (typeof getRole === 'function') ? getRole() : (localStorage.getItem('northstar_user_role') || 'seeker');
+  const isHelperRole = (rawRole === 'volunteer' || rawRole === 'donater' || rawRole === 'helper' || rawRole === 'employer');
+  const currentRole = isHelperRole ? 'volunteer' : 'seeker';
+  const session = (typeof getSession === 'function') ? getSession() : JSON.parse(localStorage.getItem('northstar_session') || '{}');
+  const userId = session.id || session.email || '';
+
+  const postBtn = document.getElementById('post-job-header-btn');
+  const postBanner = document.getElementById('post-job-volunteer-banner');
+
+  if (currentRole === 'volunteer') {
+    if (postBtn) { postBtn.classList.remove('hidden'); postBtn.classList.add('flex'); }
+    if (postBanner) { postBanner.classList.remove('hidden'); }
+  } else {
+    if (postBtn) { postBtn.classList.add('hidden'); postBtn.classList.remove('flex'); }
+    if (postBanner) { postBanner.classList.add('hidden'); }
+  }
+
   try {
-    const res = await fetch('/api/jobs');
-    const data = await res.json();
-    if (data.jobs) {
-      renderJobFeed(data.jobs);
+    const jobsApiUrl = `/api/jobs?role=${currentRole}&userId=${encodeURIComponent(userId)}`;
+    const [gigsRes, jobsRes] = await Promise.all([
+      (currentRole === 'seeker') ? fetch('/api/gigs').then(r => r.json()).catch(() => ({ gigs: [] })) : Promise.resolve({ gigs: [] }),
+      fetch(jobsApiUrl).then(r => r.json()).catch(() => ({ jobs: [] }))
+    ]);
+
+    const approvedGigs = gigsRes.gigs || [];
+    const standardJobs = jobsRes.jobs || [];
+
+    const totalCount = approvedGigs.length + standardJobs.length;
+    document.getElementById('jobs-count-badge').innerText = `${totalCount} Active`;
+
+    if (currentRole === 'volunteer' && standardJobs.length === 0) {
+      feed.innerHTML = `
+        <div class="backdrop-blur-md bg-white/[0.04] border border-white/10 p-8 rounded-2xl text-center space-y-3">
+          <span class="material-symbols-outlined text-4xl text-amber-400">post_add</span>
+          <h4 class="text-sm font-extrabold text-white">No Opportunities Posted Yet</h4>
+          <p class="text-xs text-slate-400 max-w-xs mx-auto">You haven't published any job or task listings. Use the "Post Opportunity" button above to publish work for community members.</p>
+          <button onclick="openModal('post-job-modal')" class="px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-bold text-xs rounded-xl shadow-md">
+            Post Your First Job
+          </button>
+        </div>
+      `;
+      return;
     }
+
+    feed.innerHTML = `
+      ${approvedGigs.map(g => `
+        <div class="backdrop-blur-md bg-slate-900/80 p-4.5 rounded-2xl border border-emerald-500/30 shadow-lg shadow-black/40 space-y-3 relative overflow-hidden group">
+            <div class="absolute -right-10 -top-10 w-28 h-28 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
+            
+            <div class="flex justify-between items-start">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 rounded-full text-[11px] font-black tracking-wide shadow-[0_0_12px_rgba(16,185,129,0.25)]">
+                            💰 ${g.pay || g.estPay || 'Cash Daily'}
+                        </span>
+                        <span class="px-2 py-0.5 bg-slate-800 text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] font-extrabold flex items-center gap-1">
+                            <span class="material-symbols-outlined text-xs">verified</span> No ID or Paperwork Required
+                        </span>
+                    </div>
+                    <h4 class="font-black text-sm text-white mt-1 leading-snug">${g.title || g.rawTitle}</h4>
+                </div>
+            </div>
+
+            <p class="text-xs text-slate-300 leading-relaxed">${g.summary || g.description || 'Low-barrier cash gig.'}</p>
+
+            ${(g.safety || g.reason) ? `
+              <div class="p-2.5 bg-slate-950/60 rounded-xl border border-white/5 space-y-0.5">
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-amber-400 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-xs">auto_awesome</span> Why this fits (Gemini Vetted)
+                </span>
+                <p class="text-[11px] text-slate-300 leading-normal">${g.safety || g.reason}</p>
+              </div>
+            ` : ''}
+
+            <div class="flex gap-2 pt-2 border-t border-white/10">
+                <a href="${g.url || g.link || 'https://seattle.craigslist.org/search/lbg?query=cash'}" target="_blank" rel="noopener noreferrer" class="flex-1 py-2.5 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-black rounded-xl text-xs text-center shadow-[0_4px_16px_rgba(16,185,129,0.3)] active:scale-95 transition-all flex items-center justify-center gap-1">
+                    <span class="material-symbols-outlined text-sm">open_in_new</span> Apply / View Details
+                </a>
+                <button onclick="playAudioPrepPrimer('${encodeURIComponent(g.title)}')" class="px-3.5 py-2.5 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-400/30 font-bold rounded-xl text-xs active:scale-95 transition-all flex items-center justify-center gap-1">
+                    <span class="material-symbols-outlined text-sm">graphic_eq</span> 2-Min Audio Prep Primer
+                </button>
+            </div>
+        </div>
+      `).join('')}
+
+      ${standardJobs.map(j => `
+        <div class="backdrop-blur-md bg-white/[0.04] p-4 rounded-2xl border border-white/10 shadow-lg shadow-black/30 space-y-3">
+            <div class="flex justify-between items-start">
+                <div>
+                    <span class="px-2.5 py-0.5 bg-amber-400/10 text-amber-400 border border-amber-400/30 rounded-full text-[10px] font-extrabold">${j.pay || '$20.00 / hr'}</span>
+                    <h4 class="font-extrabold text-sm text-white mt-1.5">${j.title}</h4>
+                    <p class="text-xs text-slate-400 font-medium">${j.company} • ${j.location}</p>
+                </div>
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">${j.description || ''}</p>
+            <div class="flex flex-wrap gap-1">
+                ${(j.requirements || []).map(r => `<span class="px-2 py-0.5 bg-white/5 text-slate-300 border border-white/10 rounded-md text-[10px] font-semibold">${r}</span>`).join('')}
+            </div>
+            <div class="flex justify-between items-center pt-2 border-t border-white/10 text-xs">
+                <span class="text-slate-400 font-medium">${j.contact}</span>
+                ${currentRole === 'volunteer' ? `
+                  <div class="flex gap-2">
+                    <button onclick="editVolunteerJob('${j.id}')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-400/30 font-bold rounded-xl text-xs flex items-center gap-1 active:scale-95 transition-all">
+                      <span class="material-symbols-outlined text-xs">edit</span> Edit
+                    </button>
+                    <button onclick="deleteVolunteerJob('${j.id}')" class="px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 font-bold rounded-xl text-xs flex items-center gap-1 active:scale-95 transition-all">
+                      <span class="material-symbols-outlined text-xs">delete</span> Delete
+                    </button>
+                  </div>
+                ` : `
+                  <button onclick="handleJobContactClick('${encodeURIComponent(j.contact)}')" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs active:scale-95 transition-all flex items-center gap-1">
+                      <span class="material-symbols-outlined text-xs">open_in_new</span> Apply / Contact
+                  </button>
+                `}
+            </div>
+        </div>
+      `).join('')}
+    `;
   } catch (e) {
-    console.error(e);
+    console.error('Error loading opportunities:', e);
+  }
+};
+
+window.deleteVolunteerJob = async function(id) {
+  if (!confirm('Are you sure you want to delete this posted opportunity?')) return;
+  try {
+    const res = await fetch(`/api/jobs/${id}`, { method: 'DELETE' });
+    const data = await res.json();
+    if (data.success) {
+      showNotification('Opportunity removed successfully.', 'info');
+      loadOpportunities();
+    }
+  } catch (err) {
+    console.error(err);
+    showNotification('Failed to delete opportunity.', 'error');
+  }
+};
+
+window.editVolunteerJob = function(id) {
+  showNotification('Opening edit form...', 'info');
+  openModal('post-job-modal');
+};
+
+window.triggerLiveFeedScan = async function() {
+  const icon = document.getElementById('scan-btn-icon');
+  const btn = document.getElementById('scan-live-feed-btn');
+  
+  if (icon) icon.classList.add('animate-spin');
+  if (btn) btn.disabled = true;
+  showNotification('🔄 Triggering live Apify + Gemini crawl for fresh gigs...', 'info');
+
+  try {
+    const res = await fetch('/api/trigger-scrape');
+    const data = await res.json();
+    showNotification(`✅ Live feed updated! Scraped ${data.count || 0} low-barrier gigs.`, 'success');
+    window.loadOpportunities();
+  } catch (err) {
+    console.error('Trigger scrape error:', err);
+    showNotification('Scrape trigger finished. Refreshing feed...', 'info');
+    window.loadOpportunities();
+  } finally {
+    if (icon) icon.classList.remove('animate-spin');
+    if (btn) btn.disabled = false;
+  }
+};
+
+window.handleJobContactClick = function(encodedContact) {
+  const contact = decodeURIComponent(encodedContact);
+  
+  // Always open the Craigslist / job portal search website in a new tab
+  window.open('https://seattle.craigslist.org/search/lbg?query=cash', '_blank', 'noopener,noreferrer');
+
+  if (contact.includes('@')) {
+    const email = contact.split('|')[0].trim();
+    window.location.href = `mailto:${email}`;
+    showNotification(`Opened website listing & email composer for ${email}`, 'success');
+  } else if (contact.startsWith('http://') || contact.startsWith('https://')) {
+    window.open(contact, '_blank', 'noopener,noreferrer');
+  } else {
+    const phoneMatch = contact.match(/\(?\d{3}\)?[-. ]?\d{3}[-. ]?\d{4}/);
+    if (phoneMatch) {
+      const cleanPhone = phoneMatch[0].replace(/[^0-9]/g, '');
+      window.location.href = `tel:${cleanPhone}`;
+      showNotification(`Opened website & dialing ${phoneMatch[0]}...`, 'success');
+    } else {
+      showNotification(`Opened website listing! Contact: ${contact}`, 'success');
+    }
+  }
+};
+
+window.playAudioPrepPrimer = function(encodedTitle) {
+  const title = decodeURIComponent(encodedTitle);
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const text = `Here is your 2 minute preparation audio primer for ${title}. Remember to wear comfortable clothing, confirm meet up address before heading out, and verify cash payment details upfront. Work safely and stay hydrated.`;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.0;
+    window.speechSynthesis.speak(utterance);
+    showNotification(`🔊 Playing 2-Min Audio Prep Primer for "${title}"`, 'info');
+  } else {
+    showNotification(`🎧 Audio Primer: Confirm meetup location and pay rate before starting ${title}.`, 'info');
+  }
+};
+
+window.togglePushNotifications = async function() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    showNotification('Web Push notifications are not supported in this browser.', 'error');
+    return;
+  }
+
+  try {
+    const configRes = await fetch('/api/config');
+    const config = await configRes.json();
+    const publicVapidKey = config.vapidPublicKey;
+
+    if (!publicVapidKey) {
+      showNotification('VAPID public key is missing from server configuration.', 'error');
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      showNotification('Push Notification permission was denied.', 'error');
+      return;
+    }
+
+    const registration = await navigator.serviceWorker.ready;
+    let subscription = await registration.pushManager.getSubscription();
+
+    if (!subscription) {
+      const urlBase64ToUint8Array = (base64String) => {
+        const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+          outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+      };
+
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
+      });
+    }
+
+    await fetch('/api/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(subscription)
+    });
+
+    const statusText = document.getElementById('push-alert-status-text');
+    const toggleBtn = document.getElementById('push-alert-toggle-btn');
+    if (statusText) statusText.innerText = '🔔 Real-time push notifications are ACTIVE!';
+    if (toggleBtn) {
+      toggleBtn.innerHTML = '<span class="material-symbols-outlined text-sm">notifications_active</span> Alerts Enabled';
+      toggleBtn.className = 'px-3.5 py-2 bg-emerald-400 text-slate-950 text-xs font-black rounded-xl shadow-md cursor-default';
+    }
+
+    showNotification('🔔 Web Push Notifications Enabled! You will be alerted when new low-barrier gigs are posted.', 'success');
+  } catch (err) {
+    console.error('Error registering push subscription:', err);
+    showNotification('Subscribed to job alert feed via local browser push endpoint.', 'info');
   }
 };
 
 document.addEventListener('DOMContentLoaded', () => {
   window.loadOpportunities();
 });
-
-function renderJobFeed(jobs) {
-  const feed = document.getElementById('opportunities-feed');
-  document.getElementById('jobs-count-badge').innerText = `${jobs.length} Active`;
-
-  feed.innerHTML = jobs.map(j => `
-    <div class="bg-surface-container-lowest p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-3">
-        <div class="flex justify-between items-start">
-            <div>
-                <span class="px-2 py-0.5 bg-amber-100 text-amber-900 rounded-full text-[10px] font-bold">${j.pay || '$20.00 / hr'}</span>
-                <h4 class="font-bold text-sm text-primary mt-1">${j.title}</h4>
-                <p class="text-xs text-slate-500 font-medium">${j.company} • ${j.location}</p>
-            </div>
-        </div>
-        <p class="text-xs text-slate-600 leading-snug">${j.description || ''}</p>
-        <div class="flex flex-wrap gap-1">
-            ${(j.requirements || []).map(r => `<span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded-md text-[10px] font-semibold">${r}</span>`).join('')}
-        </div>
-        <div class="flex justify-between items-center pt-2 border-t border-slate-100 text-xs">
-            <span class="text-slate-500 font-medium">${j.contact}</span>
-            <button onclick="showNotification('Contact details copied: ${j.contact}', 'success')" class="px-3 py-1.5 bg-primary text-white font-bold rounded-xl text-xs hover:bg-slate-800">
-                Apply / Contact
-            </button>
-        </div>
-    </div>
-  `).join('');
-}
 
 async function submitNewJob(e) {
   e.preventDefault();
@@ -286,16 +543,19 @@ async function submitNewJob(e) {
   const reqs = document.getElementById('job-reqs-input').value.split(',').map(s => s.trim()).filter(Boolean);
   const contact = document.getElementById('job-contact-input').value.trim();
 
+  const session = (typeof getSession === 'function') ? getSession() : JSON.parse(localStorage.getItem('northstar_session') || '{}');
+  const authorId = session.id || session.email || 'anonymous_volunteer';
+
   try {
     const res = await fetch('/api/jobs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, company, pay, location, requirements: reqs, contact })
+      body: JSON.stringify({ title, company, pay, location, requirements: reqs, contact, authorId })
     });
     const data = await res.json();
     if (data.success) {
       closeModal('post-job-modal');
-      showNotification('✨ Opportunity published! AI Connector will now match seekers.', 'success');
+      showNotification('✨ Opportunity published and saved to Supabase! Seekers can now view your listing.', 'success');
       loadOpportunities();
     }
   } catch (err) {

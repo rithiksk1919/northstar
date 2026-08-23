@@ -529,9 +529,10 @@ function enforceFeatureGate() {
   const currentPath = window.location.pathname.split('/').pop() || 'index.html';
 
   // Seeker-only routes: resume-builder.html, progress.html
-  // Volunteer-only routes: helper-dashboard.html, opportunities.html, donate.html
+  // Volunteer-only routes: helper-dashboard.html, donate.html
+  // Shared / accessible routes: opportunities.html, resource-map.html, call-shelter.html
   const seekerOnlyRoutes = ['resume-builder.html', 'progress.html'];
-  const volunteerOnlyRoutes = ['helper-dashboard.html', 'opportunities.html', 'donate.html'];
+  const volunteerOnlyRoutes = ['helper-dashboard.html', 'donate.html'];
 
   if (role === 'seeker' && volunteerOnlyRoutes.includes(currentPath)) {
     showNotification('Restricted area. Redirecting to Seeker Dashboard...', 'warning');
@@ -570,7 +571,7 @@ function switchUserRole(role) {
   showNotification(`Switched mode to: ${role === 'seeker' ? 'Seeker (I Need Help)' : 'Volunteer (I Want to Help)'}`, 'info');
 
   const currentPath = window.location.pathname.split('/').pop() || 'index.html';
-  if (role === 'seeker' && (currentPath === 'helper-dashboard.html' || currentPath === 'opportunities.html' || currentPath === 'donate.html')) {
+  if (role === 'seeker' && (currentPath === 'helper-dashboard.html' || currentPath === 'donate.html')) {
     if (typeof navigateToPageInstant === 'function') {
       navigateToPageInstant('seeker-dashboard.html');
     } else {
@@ -598,19 +599,19 @@ function renderDynamicNav() {
   let navItems = [];
 
   if (role === 'seeker') {
-    // Seeker Funnel Tabs: [Dashboard, Resources/Map, Resume, Progress, Settings]
+    // Seeker Funnel Tabs: [Dashboard, Jobs, Map, Resume, Settings]
     navItems = [
       { href: 'seeker-dashboard.html', label: 'Dashboard', icon: 'dashboard' },
+      { href: 'opportunities.html', label: 'Jobs', icon: 'work' },
       { href: 'resource-map.html', label: 'Map', icon: 'map' },
       { href: 'resume-builder.html', label: 'Resume', icon: 'description' },
-      { href: 'progress.html', label: 'Progress', icon: 'military_tech' },
       { href: '#', label: 'Settings', icon: 'settings', action: 'openSettingsModal()' }
     ];
   } else {
     // Volunteer Funnel Tabs: [Dashboard, Opportunities, Donate, Shelter Info, Settings]
     navItems = [
       { href: 'helper-dashboard.html', label: 'Dashboard', icon: 'dashboard' },
-      { href: 'opportunities.html', label: 'Opportunities', icon: 'work' },
+      { href: 'opportunities.html', label: 'Jobs', icon: 'work' },
       { href: 'donate.html', label: 'Donate', icon: 'volunteer_activism' },
       { href: 'call-shelter.html', label: 'Shelter', icon: 'call' },
       { href: '#', label: 'Settings', icon: 'settings', action: 'openSettingsModal()' }
