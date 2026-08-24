@@ -361,7 +361,7 @@ window.loadOpportunities = async function loadOpportunities() {
                 <a href="${g.url || g.link || 'https://seattle.craigslist.org/search/lbg?query=cash'}" target="_blank" rel="noopener noreferrer" class="flex-1 py-1.5 bg-[#10B981] hover:bg-[#059669] text-black font-bold rounded-lg text-xs text-center shadow-sm active:scale-95 transition-all flex items-center justify-center gap-1">
                     <span class="material-symbols-outlined text-xs">open_in_new</span> Apply / View Details
                 </a>
-                <button onclick="playAudioPrepPrimer('${encodeURIComponent(g.title)}')" class="px-2.5 py-1.5 bg-slate-100 dark:bg-[#1A2130] text-amber-600 dark:text-amber-400 hover:text-amber-500 font-semibold text-[10px] rounded-lg border border-slate-200 dark:border-[#232C3F] flex items-center gap-1 active:scale-95 transition-all flex-shrink-0">
+                <button onclick="playAudioPrepPrimer('${encodeURIComponent(JSON.stringify({ title: g.title || g.rawTitle || 'Low-Barrier Cash Gig', company: 'Verified Cash Host', location: 'Seattle Metro', pay: 'Daily Cash Pay', description: g.summary || g.description || '' }))}')" class="px-2.5 py-1.5 bg-slate-100 dark:bg-[#1A2130] text-amber-600 dark:text-amber-400 hover:text-amber-500 font-semibold text-[10px] rounded-lg border border-slate-200 dark:border-[#232C3F] flex items-center gap-1 active:scale-95 transition-all flex-shrink-0">
                     <span class="material-symbols-outlined text-xs">graphic_eq</span> Audio Primer
                 </button>
             </div>
@@ -381,10 +381,9 @@ window.loadOpportunities = async function loadOpportunities() {
             <div class="flex flex-wrap gap-1">
                 ${(j.requirements || []).map(r => `<span class="px-1.5 py-0.5 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10 rounded-md text-[9px] font-semibold">${r}</span>`).join('')}
             </div>
-            <div class="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-[#232C3F] text-xs">
-                <span class="text-slate-500 text-[11px] truncate max-w-[140px]">${j.contact}</span>
+            <div class="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-[#232C3F] text-xs gap-2">
                 ${currentRole === 'volunteer' ? `
-                  <div class="flex gap-1.5">
+                  <div class="flex gap-1.5 ml-auto">
                     <button onclick="editVolunteerJob('${j.id}')" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-amber-600 dark:text-amber-400 font-bold rounded-lg text-[11px] flex items-center gap-1 active:scale-95 transition-all">
                       <span class="material-symbols-outlined text-xs">edit</span> Edit
                     </button>
@@ -393,8 +392,11 @@ window.loadOpportunities = async function loadOpportunities() {
                     </button>
                   </div>
                 ` : `
-                  <button onclick="handleJobContactClick('${encodeURIComponent(j.contact)}')" class="px-3 py-1.5 bg-[#10B981] hover:bg-[#059669] text-black font-bold rounded-lg text-xs active:scale-95 transition-all flex items-center gap-1">
+                  <button onclick="handleJobContactClick('${encodeURIComponent(j.contact)}')" class="flex-1 py-1.5 bg-[#10B981] hover:bg-[#059669] text-black font-bold rounded-lg text-xs active:scale-95 transition-all flex items-center justify-center gap-1">
                       <span class="material-symbols-outlined text-xs">open_in_new</span> Apply / Contact
+                  </button>
+                  <button onclick="playAudioPrepPrimer('${encodeURIComponent(JSON.stringify({ title: j.title, company: j.company, location: j.location, pay: j.pay, requirements: j.requirements || [], description: j.description || '' }))}')" class="px-2.5 py-1.5 bg-slate-100 dark:bg-[#1A2130] text-amber-600 dark:text-amber-400 hover:text-amber-500 font-semibold text-[10px] rounded-lg border border-slate-200 dark:border-[#232C3F] flex items-center gap-1 active:scale-95 transition-all flex-shrink-0">
+                      <span class="material-symbols-outlined text-xs">graphic_eq</span> Audio Primer
                   </button>
                 `}
             </div>
@@ -473,19 +475,136 @@ window.handleJobContactClick = function(encodedContact) {
   }
 };
 
-window.playAudioPrepPrimer = function(encodedTitle) {
-  const title = decodeURIComponent(encodedTitle);
+let currentUtterance = null;
+
+window.playAudioPrepPrimer = function(encodedJobData) {
+  let jobData = {};
+  try {
+    jobData = JSON.parse(decodeURIComponent(encodedJobData));
+  } catch (e) {
+    jobData = { title: decodeURIComponent(encodedJobData) };
+  }
+
+  const title = jobData.title || 'Work Opportunity';
+  const company = jobData.company || 'Verified Host';
+  const location = jobData.location || 'Seattle';
+  const pay = jobData.pay || 'Daily Cash';
+  const description = jobData.description || '';
+  const reqs = Array.isArray(jobData.requirements) ? jobData.requirements.join(', ') : '';
+
+  // Generate tailored job-specific tips
+  let tailoredTips = [];
+  const textBlob = (title + ' ' + description + ' ' + reqs).toLowerCase();
+
+  if (textBlob.includes('kitchen') || textBlob.includes('food') || textBlob.includes('dish') || textBlob.includes('cook') || textBlob.includes('prep')) {
+    tailoredTips = [
+      "Bring or have your Food Handler Card ready if required.",
+      "Wear non-slip closed-toe shoes and hair restraints.",
+      "Practice strict hand hygiene and follow kitchen leads."
+    ];
+  } else if (textBlob.includes('warehouse') || textBlob.includes('freight') || textBlob.includes('lifting') || textBlob.includes('stocker') || textBlob.includes('labor')) {
+    tailoredTips = [
+      "Wear sturdy closed-toe work boots and grip gloves.",
+      "Use leg-lifting techniques for heavy items over 25 lbs.",
+      "Stay hydrated and locate the site safety supervisor."
+    ];
+  } else if (textBlob.includes('janitor') || textBlob.includes('clean') || textBlob.includes('sanitation') || textBlob.includes('custodial')) {
+    tailoredTips = [
+      "Wear comfortable water-resistant shoes and flexible clothes.",
+      "Use provided protective gloves when using chemicals.",
+      "Request shift task checklist from supervisor upon arrival."
+    ];
+  } else if (textBlob.includes('landscape') || textBlob.includes('yard') || textBlob.includes('outdoor') || textBlob.includes('grounds')) {
+    tailoredTips = [
+      "Dress for weather conditions, bring water and sun gear.",
+      "Wear thick work gloves and eye protection for outdoor tools.",
+      "Confirm work boundary areas with your project coordinator."
+    ];
+  } else {
+    tailoredTips = [
+      "Confirm meetup address, contact person, and arrival time.",
+      "Verify pay rate (" + pay + ") and cash payment details upfront.",
+      "Keep phone charged and stay aware of surroundings."
+    ];
+  }
+
+  // Populate Audio Modal UI
+  const modalTitle = document.getElementById('audio-modal-job-title');
+  const modalCompany = document.getElementById('audio-modal-company');
+  const tipsListEl = document.getElementById('audio-modal-tips-list');
+
+  if (modalTitle) modalTitle.innerText = title;
+  if (modalCompany) modalCompany.innerText = `${company} • ${location} • ${pay}`;
+  
+  if (tipsListEl) {
+    tipsListEl.innerHTML = tailoredTips.map((tip, idx) => `
+      <li class="flex items-start gap-2 bg-slate-100 dark:bg-white/5 p-2 rounded-lg border border-slate-200 dark:border-white/10">
+        <span class="w-4 h-4 rounded-full bg-amber-400 text-slate-950 font-black text-[10px] flex items-center justify-center flex-shrink-0 mt-0.5">${idx + 1}</span>
+        <span>${tip}</span>
+      </li>
+    `).join('');
+  }
+
+  // Display Modal
+  const modal = document.getElementById('audio-primer-modal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+
+  // Voice speech synthesis
+  const speechText = `Audio Preparation Primer for ${title} at ${company}. Location: ${location}. Estimated Pay: ${pay}. Key preparation tips: First, ${tailoredTips[0]}. Second, ${tailoredTips[1]}. Third, ${tailoredTips[2]}. Work safely and good luck!`;
+
   if ('speechSynthesis' in window) {
     window.speechSynthesis.cancel();
-    const text = `Here is your 2 minute preparation audio primer for ${title}. Remember to wear comfortable clothing, confirm meet up address before heading out, and verify cash payment details upfront. Work safely and stay hydrated.`;
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 1.0;
-    window.speechSynthesis.speak(utterance);
-    showNotification(`🔊 Playing 2-Min Audio Prep Primer for "${title}"`, 'info');
+    currentUtterance = new SpeechSynthesisUtterance(speechText);
+    currentUtterance.rate = 1.0;
+    currentUtterance.onend = () => updateAudioPlayState(false);
+    window.speechSynthesis.speak(currentUtterance);
+    updateAudioPlayState(true);
   } else {
-    showNotification(`🎧 Audio Primer: Confirm meetup location and pay rate before starting ${title}.`, 'info');
+    showNotification(`🎧 Audio Primer: ${tailoredTips.join(' | ')}`, 'info');
   }
 };
+
+window.toggleAudioPrimerSpeech = function() {
+  if (!('speechSynthesis' in window)) return;
+  if (window.speechSynthesis.speaking) {
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+      updateAudioPlayState(true);
+    } else {
+      window.speechSynthesis.pause();
+      updateAudioPlayState(false);
+    }
+  } else if (currentUtterance) {
+    window.speechSynthesis.speak(currentUtterance);
+    updateAudioPlayState(true);
+  }
+};
+
+window.stopAudioPrimerSpeech = function() {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
+  updateAudioPlayState(false);
+};
+
+window.closeAudioPrimerModal = function() {
+  stopAudioPrimerSpeech();
+  const modal = document.getElementById('audio-primer-modal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+};
+
+function updateAudioPlayState(isPlaying) {
+  const icon = document.getElementById('audio-play-icon');
+  const label = document.getElementById('audio-play-label');
+  if (icon) icon.innerText = isPlaying ? 'pause' : 'play_arrow';
+  if (label) label.innerText = isPlaying ? 'Pause' : 'Play';
+}
 
 window.togglePushNotifications = async function() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
@@ -589,5 +708,61 @@ async function runAIMatchingEngine() {
   showNotification('🤖 Running Gemini AI Job Matcher against active seeker resumes...', 'info');
 }
 </script>
+<!-- Tailored Audio Primer Player Modal -->
+<div id="audio-primer-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#121722] border border-slate-200 dark:border-[#232C3F] rounded-3xl max-w-sm w-full p-5 shadow-2xl space-y-4 relative overflow-hidden">
+        <!-- Close Button -->
+        <button onclick="closeAudioPrimerModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-900 dark:hover:text-white flex items-center justify-center text-sm font-bold transition-all">
+            ✕
+        </button>
+
+        <!-- Header Title -->
+        <div class="flex items-center gap-3 pr-8">
+            <div class="w-10 h-10 rounded-2xl bg-amber-400/20 text-amber-500 flex items-center justify-center flex-shrink-0">
+                <span class="material-symbols-outlined text-2xl">graphic_eq</span>
+            </div>
+            <div>
+                <span class="px-2 py-0.5 bg-[#FFE855] text-slate-950 font-black text-[9px] rounded-full uppercase">Tailored Audio Primer</span>
+                <h3 id="audio-modal-job-title" class="font-extrabold text-sm text-slate-900 dark:text-white leading-tight mt-0.5 line-clamp-1">Job Title</h3>
+                <p id="audio-modal-company" class="text-[11px] text-slate-500 font-medium line-clamp-1">Company • Location</p>
+            </div>
+        </div>
+
+        <!-- Animated Waveform Box -->
+        <div class="bg-slate-900 text-white rounded-2xl p-4 flex flex-col items-center justify-center space-y-3 relative overflow-hidden border border-slate-800">
+            <!-- Waveform bars -->
+            <div class="flex items-center gap-1.5 h-8">
+                <div class="w-1.5 bg-[#FFE855] rounded-full h-3 animate-pulse"></div>
+                <div class="w-1.5 bg-[#FFE855] rounded-full h-6 animate-pulse" style="animation-delay: 0.1s"></div>
+                <div class="w-1.5 bg-[#FFE855] rounded-full h-8 animate-pulse" style="animation-delay: 0.2s"></div>
+                <div class="w-1.5 bg-[#10B981] rounded-full h-5 animate-pulse" style="animation-delay: 0.3s"></div>
+                <div class="w-1.5 bg-[#10B981] rounded-full h-7 animate-pulse" style="animation-delay: 0.15s"></div>
+                <div class="w-1.5 bg-[#FFE855] rounded-full h-4 animate-pulse" style="animation-delay: 0.25s"></div>
+            </div>
+
+            <!-- Play Controls -->
+            <div class="flex items-center gap-3">
+                <button id="audio-play-toggle-btn" onclick="toggleAudioPrimerSpeech()" class="px-4 py-2 bg-[#FFE855] hover:bg-amber-300 text-slate-950 font-extrabold rounded-xl text-xs flex items-center gap-1.5 shadow-md active:scale-95 transition-all">
+                    <span id="audio-play-icon" class="material-symbols-outlined text-sm">pause</span>
+                    <span id="audio-play-label">Pause</span>
+                </button>
+                <button onclick="stopAudioPrimerSpeech()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs flex items-center gap-1 active:scale-95 transition-all">
+                    <span class="material-symbols-outlined text-sm">stop</span> Stop
+                </button>
+            </div>
+        </div>
+
+        <!-- Tailored Preparation Checklist -->
+        <div class="space-y-2">
+            <h4 class="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1">
+                <span class="material-symbols-outlined text-amber-500 text-sm">checklist</span> Tailored Prep Checklist
+            </h4>
+            <ul id="audio-modal-tips-list" class="space-y-1.5 text-xs text-slate-600 dark:text-slate-300 font-medium">
+                <!-- Injected via JS -->
+            </ul>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>
