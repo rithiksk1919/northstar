@@ -196,13 +196,9 @@ Return JSON ONLY:
   }
 
   if (newlyApproved.length > 0) {
-    activeGigs = newlyApproved;
-  }
-  console.log(`✅ Stored ${activeGigs.length} vetted gigs with verified direct links.`);
-}
-
-  if (newlyApproved.length > 0) {
-    activeGigs = newlyApproved;
+    const existingIds = new Set(activeGigs.map(g => g.id || g.title));
+    const uniqueNew = newlyApproved.filter(g => !existingIds.has(g.id || g.title));
+    activeGigs = [...uniqueNew, ...activeGigs];
   }
   console.log(`✅ Stored ${activeGigs.length} vetted gigs with verified direct links.`);
 }
