@@ -23,29 +23,62 @@ const model = genAI.getGenerativeModel({ model: 'gemini-3.6-flash' });
 let activeGigs = [
   {
     id: 'seed-1',
-    title: 'Capitol Hill Moving Help',
+    title: 'Capitol Hill Same-Day Pay Moving & Hauling',
+    category: 'Core Keywords',
     pay: '$150 Cash',
-    summary: 'Assistance needed unloading a moving truck for 3 hours. Immediate cash paid at completion.',
-    safety: 'No formal ID, W-2 paperwork, or background check required. Cash paid daily.',
-    url: 'https://seattle.craigslist.org/search/lbg?query=cash',
+    summary: 'Assistance needed unloading a moving truck for 3 hours. Immediate cash in hand paid at completion.',
+    safety: 'No ID required casual labor. Cash paid daily.',
+    url: 'https://seattle.craigslist.org/search/lbg?query=same+day+pay',
     postedAt: new Date().toISOString()
   },
   {
     id: 'seed-2',
-    title: 'Ballard Yard Cleanout & Raking',
+    title: 'Ballard Under-The-Table Cash Yard Helper',
+    category: 'Core Keywords',
     pay: '$25.00 / hr Cash',
     summary: 'Outdoor yard maintenance, leaf raking, and brush clearing in Ballard neighborhood.',
-    safety: 'Casual daily labor opportunity requiring no onboarding or paperwork.',
+    safety: 'Under the table cash gig requiring no onboarding paperwork.',
     url: 'https://seattle.craigslist.org/search/lbg?query=cash',
     postedAt: new Date().toISOString()
   },
   {
     id: 'seed-3',
-    title: 'SODO Event Setup & Chair Staging',
+    title: 'SODO No-ID Casual Labor Freight Unloader',
+    category: 'Core Keywords',
+    pay: '$22.00 / hr Cash',
+    summary: 'Unloading commercial pallet boxes and organizing warehouse staging area.',
+    safety: 'Entry level immediate hire. Cash paid at end of shift.',
+    url: 'https://seattle.craigslist.org/search/lbg?query=casual+labor',
+    postedAt: new Date().toISOString()
+  },
+  {
+    id: 'seed-4',
+    title: 'Rainier Valley Local Daily Gig Work',
+    category: 'Local & Immediate',
+    pay: '$24.00 / hr Cash',
+    summary: 'Local daily gig work assisting with community center event equipment setup.',
+    safety: 'Cash in hand jobs near me. Drop-in daily labor.',
+    url: 'https://seattle.craigslist.org/search/lbg?query=daily+gig',
+    postedAt: new Date().toISOString()
+  },
+  {
+    id: 'seed-5',
+    title: 'Pioneer Square Day Labor Drop-In Center Helper',
+    category: 'Local & Immediate',
     pay: '$20.00 / hr Cash',
-    summary: 'Setting up folding chairs, tables, and stage equipment for evening community event.',
-    safety: 'Same-day cash stipend provided upon completion of shift.',
-    url: 'https://seattle.craigslist.org/search/lbg?query=cash',
+    summary: 'Assisting with food prep and inventory staging at local drop-in site.',
+    safety: 'Immediate walk-in entry level daily stipend.',
+    url: 'https://seattle.craigslist.org/search/lbg?query=day+labor',
+    postedAt: new Date().toISOString()
+  },
+  {
+    id: 'seed-6',
+    title: 'Instant Payout Microtasks & Image Labeling',
+    category: 'Low-Barrier Digital',
+    pay: '$18.00 / hr Instant Cash',
+    summary: 'Digital microtasking and tagging data. Instant payout to digital wallet without ID verification.',
+    safety: 'Low-barrier digital work with instant payout microtasks.',
+    url: 'https://seattle.craigslist.org/search/lbg?query=microtask',
     postedAt: new Date().toISOString()
   }
 ];
@@ -55,15 +88,15 @@ const inMemoryJobs = [];
 
 // Scrape Craigslist using Apify cloud crawler and filter with Gemini (with fallback)
 async function fetchAndVetGigs() {
-  console.log('🚀 Running real Apify Craigslist Scraper...');
+  console.log('🚀 Running real Apify Craigslist Scraper for low-barrier cash gigs...');
   let items = [];
 
   try {
     const run = await apify.actor('automation-lab/craigslist-scraper').call({
       city: 'seattle',
       category: 'gigs',
-      searchQueries: ['cash'],
-      maxResults: 6,
+      searchQueries: ['same day pay', 'cash in hand', 'casual labor', 'immediate hire', 'day labor', 'microtasks'],
+      maxResults: 8,
       includeDetails: true
     });
 
@@ -75,7 +108,7 @@ async function fetchAndVetGigs() {
     console.log('📡 Switching to direct HTML scraper fallback...');
 
     try {
-      const { data: html } = await (await import('axios')).default.get('https://seattle.craigslist.org/search/lbg?query=cash', {
+      const { data: html } = await (await import('axios')).default.get('https://seattle.craigslist.org/search/lbg?query=same+day+pay', {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
         }
@@ -87,8 +120,10 @@ async function fetchAndVetGigs() {
         const title = $(el).text().trim() || $(el).attr('title');
         let link = $(el).attr('href') || $(el).find('a').attr('href') || '';
         if (link && !link.startsWith('http')) link = `https://seattle.craigslist.org${link}`;
-        if (title && link && items.length < 6) {
-          items.push({ title, description: title, url: link });
+        if (title && link && items.length < 8) {
+          if (!/survey|study|panel|questionnaire/i.test(title)) {
+            items.push({ title, description: title, url: link });
+          }
         }
       });
       console.log(`📡 Fallback extracted ${items.length} live posts.`);
@@ -102,19 +137,25 @@ async function fetchAndVetGigs() {
 
   for (const item of items) {
     const itemUrl = item.url || item.link;
+    const itemTitle = item.title || item.name || '';
+    
+    // STRICT FILTER: Exclude Cash Surveys
+    if (/survey|study|panel|questionnaire/i.test(itemTitle)) continue;
     if (itemUrl && itemUrl.includes('/search/')) continue; // Must be a direct post URL
 
     const prompt = `Analyze this Craigslist gig:
-Title: ${item.title || item.name}
-Description: ${item.description || item.text || item.title || 'No description provided'}
+Title: ${itemTitle}
+Description: ${item.description || item.text || itemTitle}
 
-Determine:
-1. Is this casual, same-day/daily paid work (moving, yard work, hauling, cleaning)?
+CRITICAL RULES:
+1. Is this casual, same-day/daily paid physical or digital microtask work?
 2. Does it require formal government ID, W-2 paperwork, or background checks?
+3. ABSOLUTELY EXCLUDE any paid online surveys, cash surveys, scams, or study panels!
 
 Return JSON ONLY:
 {
   "is_valid": true/false,
+  "is_survey": true/false,
   "no_gov_info_needed": true/false,
   "clean_title": "Clean Title",
   "pay_rate": "Extracted Pay (e.g. $150 Cash or $25/hr)",
@@ -126,34 +167,39 @@ Return JSON ONLY:
       const text = result.response.text().replace(/```json|```/g, '').trim();
       const parsed = JSON.parse(text);
 
-      if (parsed.is_valid && parsed.no_gov_info_needed) {
+      if (parsed.is_valid && !parsed.is_survey && parsed.no_gov_info_needed) {
         newlyApproved.push({
           id: item.listingId || item.id || String(Date.now() + Math.random()),
           title: parsed.clean_title,
           pay: parsed.pay_rate || item.price || '$20/hr Cash',
           summary: parsed.short_summary,
-          safety: 'Verified casual daily labor requiring no government ID or W-2 paperwork.',
-          url: itemUrl || 'https://seattle.craigslist.org/search/lbg?query=cash',
+          safety: 'Verified casual labor requiring no government ID or W-2 paperwork.',
+          url: itemUrl || 'https://seattle.craigslist.org/search/lbg?query=same+day+pay',
           postedAt: item.postedAt || new Date().toISOString()
         });
       }
     } catch (geminiErr) {
       console.error('Gemini parse/quota notice:', geminiErr.message.slice(0, 80));
-      const rawTitle = item.title || item.name || '';
-      if (/cash|mover|labor|help|clean|yard|paint|unload/i.test(rawTitle)) {
+      if (!/survey|study|panel/i.test(itemTitle) && /cash|mover|labor|help|clean|yard|paint|unload|microtask/i.test(itemTitle)) {
         newlyApproved.push({
           id: item.listingId || item.id || String(Date.now() + Math.random()),
-          title: rawTitle.replace(/\s*-\s*\$\d+.*$/, '').slice(0, 45),
+          title: itemTitle.replace(/\s*-\s*\$\d+.*$/, '').slice(0, 45),
           pay: item.price || '$20.00 / hr Cash',
           summary: 'Casual daily labor opportunity verified for unhoused job seekers.',
           safety: 'No formal ID or W-2 paperwork required upfront.',
-          url: itemUrl || 'https://seattle.craigslist.org/search/lbg?query=cash',
+          url: itemUrl || 'https://seattle.craigslist.org/search/lbg?query=same+day+pay',
           postedAt: item.postedAt || new Date().toISOString()
         });
       }
     }
     await sleep(2000);
   }
+
+  if (newlyApproved.length > 0) {
+    activeGigs = newlyApproved;
+  }
+  console.log(`✅ Stored ${activeGigs.length} vetted gigs with verified direct links.`);
+}
 
   if (newlyApproved.length > 0) {
     activeGigs = newlyApproved;
