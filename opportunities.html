@@ -294,8 +294,15 @@ window.loadOpportunities = async function loadOpportunities() {
       });
     };
 
-    const approvedGigs = deduplicate(gigsRes.gigs || []);
-    const standardJobs = deduplicate(jobsRes.jobs || []);
+    const filterOutSurveys = (items) => {
+      return items.filter(item => {
+        const text = `${item.title || ''} ${item.rawTitle || ''} ${item.summary || ''} ${item.description || ''}`.toLowerCase();
+        return !/survey|study|panel|questionnaire/i.test(text);
+      });
+    };
+
+    const approvedGigs = filterOutSurveys(deduplicate(gigsRes.gigs || []));
+    const standardJobs = filterOutSurveys(deduplicate(jobsRes.jobs || []));
 
     const totalCount = approvedGigs.length + standardJobs.length;
     document.getElementById('jobs-count-badge').innerText = `${totalCount} Active`;
@@ -322,11 +329,8 @@ window.loadOpportunities = async function loadOpportunities() {
 
     const cleanJobTitle = (title) => {
       if (!title) return '';
-      let cleaned = title.replace(/(Earn Daily Cash|Earn Cash|Get Paid to|as a|Immediate Hire|Need|Needed|Wanted)\b/ig, '').trim();
-      cleaned = cleaned.replace(/^-+|-+$/g, '').trim(); // Remove leading/trailing dashes
-      if (!cleaned) return title; // Fallback if everything was stripped
-      // Capitalize first letter of each word
-      return cleaned.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+      let cleaned = title.replace(/^-+|-+$/g, '').trim();
+      return cleaned;
     };
 
     const formatPay = (pay, title, desc) => {
