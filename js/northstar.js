@@ -102,15 +102,23 @@ function renderAccountHeaderAvatar() {
 
 // Theme Mode Storage & Management Engine
 function initThemeToggle() {
-  const savedTheme = localStorage.getItem('northstar_theme') || 'dark';
-  document.documentElement.className = savedTheme;
+  const savedTheme = localStorage.getItem('northstar_theme') || 'light';
+  document.documentElement.classList.remove('light', 'dark');
+  document.documentElement.classList.add(savedTheme);
 }
 initThemeToggle();
 
 window.setThemeMode = function(mode) {
-  document.documentElement.className = mode;
+  document.documentElement.classList.remove('light', 'dark');
+  document.documentElement.classList.add(mode);
   localStorage.setItem('northstar_theme', mode);
   updateSettingsThemeUI(mode);
+};
+
+window.toggleTheme = function() {
+  const current = localStorage.getItem('northstar_theme') || 'light';
+  const newTheme = current === 'dark' ? 'light' : 'dark';
+  window.setThemeMode(newTheme);
 };
 
 function updateSettingsThemeUI(mode) {
@@ -119,11 +127,11 @@ function updateSettingsThemeUI(mode) {
   if (!lightBtn || !darkBtn) return;
 
   if (mode === 'light') {
-    lightBtn.className = 'py-3 px-3 text-xs font-extrabold rounded-xl border-amber-400 bg-amber-400/20 text-amber-900 dark:text-amber-300 transition-all flex items-center justify-center gap-2 shadow-sm border';
-    darkBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 transition-all flex items-center justify-center gap-2 border';
+    lightBtn.className = 'py-3 px-3 text-xs font-extrabold rounded-xl border-amber-400 bg-amber-400/20 text-amber-900 transition-all flex items-center justify-center gap-2 shadow-sm border';
+    darkBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all flex items-center justify-center gap-2 border';
   } else {
-    darkBtn.className = 'py-3 px-3 text-xs font-extrabold rounded-xl border-amber-400 bg-amber-400/20 text-amber-900 dark:text-amber-300 transition-all flex items-center justify-center gap-2 shadow-sm border';
-    lightBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-slate-200 dark:border-white/10 bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-200 transition-all flex items-center justify-center gap-2 border';
+    darkBtn.className = 'py-3 px-3 text-xs font-extrabold rounded-xl border-amber-400 bg-amber-400/20 text-amber-300 transition-all flex items-center justify-center gap-2 shadow-sm border';
+    lightBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-slate-700 bg-slate-900 text-slate-400 hover:bg-slate-800 transition-all flex items-center justify-center gap-2 border';
   }
 }
 

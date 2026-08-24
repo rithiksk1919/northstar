@@ -428,47 +428,66 @@ html, body, div, header, nav, section, main, button, input, textarea, h1, h2, h3
 
 /* DARK MODE CONTRAST RULES */
 html.dark, html.dark body {
-  background-color: #0f1117;
-  color: #f8fafc;
+  background-color: #05070B !important;
+  color: #F8FAFC !important;
 }
 
 html.dark .app-frame {
-  background-color: #0f1117 !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: #0A0E1A !important;
+  border-color: #1E293B !important;
 }
 
-html.dark h1, html.dark h2, html.dark h3, html.dark h4, html.dark h5, html.dark h6 {
-  color: #ffffff !important;
+html.dark main,
+html.dark .bg-\[\#F4F5F7\],
+html.dark .bg-\[\#FFFDF0\] {
+  background-color: #0A0E1A !important;
 }
 
-html.dark p, html.dark label, html.dark li {
-  color: #e2e8f0;
+html.dark header {
+  background-color: #0F172A !important;
+  border-color: #1E293B !important;
+  color: #F8FAFC !important;
 }
 
-html.dark .text-slate-400, html.dark .text-slate-500 {
-  color: #94a3b8 !important;
-}
-
-html.dark .text-primary {
-  color: #ffffff !important;
-}
-
-html.dark .status-bar-wrapper, html.dark header {
-  background-color: rgba(15, 17, 23, 0.85) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+html.dark header h1, 
+html.dark header span, 
+html.dark header div {
+  color: #F8FAFC !important;
 }
 
 html.dark nav {
-  background-color: rgba(18, 20, 28, 0.85) !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
+  background-color: #0F172A !important;
+  border-color: #1E293B !important;
 }
 
-html.dark nav a {
-  color: #94a3b8;
+html.dark .bg-white {
+  background-color: #121722 !important;
+  color: #F8FAFC !important;
+  border-color: #232C3F !important;
 }
 
-html.dark nav a:hover {
-  color: #ffffff;
+html.dark .bg-slate-50,
+html.dark .bg-slate-100 {
+  background-color: #1A2130 !important;
+  color: #F8FAFC !important;
+}
+
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-slate-700 {
+  color: #F8FAFC !important;
+}
+
+html.dark .text-slate-600,
+html.dark .text-slate-500,
+html.dark .text-slate-400 {
+  color: #94A3B8 !important;
+}
+
+html.dark .border-slate-200,
+html.dark .border-slate-300,
+html.dark .border-amber-100 {
+  border-color: #232C3F !important;
 }
 
 html.dark input, html.dark textarea, html.dark select {
