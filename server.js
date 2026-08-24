@@ -73,7 +73,7 @@ async function fetchAndVetGigs() {
   } catch (apifyErr) {
     console.warn('⚠️ Apify cloud scraper notice:', apifyErr.message);
     console.log('📡 Switching to direct HTML scraper fallback...');
-    
+
     try {
       const { data: html } = await (await import('axios')).default.get('https://seattle.craigslist.org/search/lbg?query=cash', {
         headers: {
@@ -82,7 +82,7 @@ async function fetchAndVetGigs() {
       });
       const cheerio = await import('cheerio');
       const $ = cheerio.load(html);
-      
+
       $('.cl-static-search-result, .result-node, li.cl-search-result, a.posting-title').each((_, el) => {
         const title = $(el).text().trim() || $(el).attr('title');
         let link = $(el).attr('href') || $(el).find('a').attr('href') || '';
@@ -292,7 +292,17 @@ app.delete('/api/jobs/:id', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, async () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+const server = app.listen(PORT, async () => {
+  console.log(`🚀 Server running on port ${server.address().port}`);
   await fetchAndVetGigs();
+});
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.log(`⚠️ Port ${PORT} is in use. Trying another available port...`);
+    server.close();
+    server.listen(0);
+  } else {
+    console.error('Server error:', err);
+  }
 });

@@ -542,7 +542,7 @@ function enforceFeatureGate() {
       window.location.href = 'seeker-dashboard.html';
     }
   } else if (role === 'volunteer' && seekerOnlyRoutes.includes(currentPath)) {
-    showNotification('Restricted area. Redirecting to Helper Dashboard...', 'warning');
+    showNotification('Restricted area. Redirecting to Volunteer Dashboard...', 'warning');
     if (typeof navigateToPageInstant === 'function') {
       navigateToPageInstant('helper-dashboard.html');
     } else {
@@ -609,12 +609,12 @@ function renderDynamicNav() {
       { href: '#', label: 'Settings', icon: 'settings', action: 'openSettingsModal()' }
     ];
   } else {
-    // Volunteer Funnel Tabs: [Dashboard, Opportunities, Donate, Shelter Info, Settings]
+    // Volunteer Funnel Tabs: [Dashboard, Jobs, Donate Food, Delivery, Settings]
     navItems = [
       { href: 'helper-dashboard.html', label: 'Dashboard', icon: 'dashboard' },
       { href: 'opportunities.html', label: 'Jobs', icon: 'work' },
-      { href: 'donate.html', label: 'Donate', icon: 'volunteer_activism' },
-      { href: 'call-shelter.html', label: 'Shelter', icon: 'call' },
+      { href: 'donate.html', label: 'Donate Food', icon: 'restaurant' },
+      { href: '#', label: 'Delivery', icon: 'local_shipping', action: "showNotification('\uD83D\uDE9A Delivery queue coming soon!', 'info')" },
       { href: '#', label: 'Settings', icon: 'settings', action: 'openSettingsModal()' }
     ];
   }
@@ -846,7 +846,7 @@ window.openSettingsModal = function () {
               <button onclick="switchUserRole('volunteer'); setTimeout(() => openSettingsModal(), 10);" id="settings-role-volunteer" class="py-3 px-3 text-xs font-bold rounded-xl border transition-all flex flex-col items-center justify-center gap-1">
                 <span class="material-symbols-outlined text-xl">volunteer_activism</span>
                 <span>I want to help</span>
-                <span class="text-[10px] opacity-75 font-normal">(Helper)</span>
+                <span class="text-[10px] opacity-75 font-normal">(Volunteer)</span>
               </button>
             </div>
           </div>
