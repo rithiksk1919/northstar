@@ -218,6 +218,28 @@
                         <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">City, State / Zip Code</label>
                         <input type="text" id="input-location" placeholder="e.g. Seattle, WA 98101" class="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-xs text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-400 font-medium" value="Seattle, WA 98101">
                     </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Profile Photo <span class="text-slate-400 font-normal">(Optional)</span></label>
+                        <div class="flex items-center gap-3 bg-slate-50 dark:bg-slate-900/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                            <div id="photo-preview-container" class="w-12 h-12 rounded-xl bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-slate-400 overflow-hidden flex-shrink-0">
+                                <span id="photo-placeholder-icon" class="material-symbols-outlined text-xl text-slate-400">add_a_photo</span>
+                                <img id="photo-preview-img" src="" alt="Profile Photo" class="w-full h-full object-cover hidden" />
+                            </div>
+                            <div class="space-y-1">
+                                <input type="file" id="input-photo" accept="image/*" onchange="handleResumePhotoUpload(event)" class="hidden">
+                                <div class="flex items-center gap-2">
+                                    <button type="button" onclick="document.getElementById('input-photo').click()" class="px-3 py-1.5 bg-[#FFE855] text-slate-950 font-bold text-xs rounded-xl shadow-sm hover:bg-amber-300 flex items-center gap-1 active:scale-95 transition-all">
+                                        <span class="material-symbols-outlined text-xs">upload</span> Choose Photo
+                                    </button>
+                                    <button type="button" id="remove-photo-btn" onclick="removeResumePhoto()" class="hidden text-rose-500 hover:text-rose-600 font-bold text-xs flex items-center gap-0.5 px-2 py-1 bg-rose-50 dark:bg-rose-950/40 rounded-lg border border-rose-200 dark:border-rose-900">
+                                        <span class="material-symbols-outlined text-xs">delete</span> Remove
+                                    </button>
+                                </div>
+                                <p class="text-[10px] text-slate-500">Formats: JPG, PNG, WEBP</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -361,16 +383,21 @@
             <div id="printable-resume" class="bg-white border border-slate-300 rounded-2xl p-5 shadow-lg space-y-5 text-slate-900 font-sans">
                 
                 <!-- Resume Header -->
-                <div class="border-b-2 border-slate-900 pb-3 text-center sm:text-left">
-                    <h1 id="res-name" contenteditable="true" class="text-xl font-extrabold text-slate-900 tracking-tight outline-none focus:bg-amber-50 rounded px-1">
-                        Alex Johnson
-                    </h1>
-                    <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold text-slate-600 mt-1 justify-center sm:justify-start">
-                        <span id="res-phone" contenteditable="true" class="outline-none focus:bg-amber-50 rounded px-1">(555) 234-5678</span>
-                        <span>•</span>
-                        <span id="res-location" contenteditable="true" class="outline-none focus:bg-amber-50 rounded px-1">Seattle, WA 98101</span>
-                        <span>•</span>
-                        <span id="res-contact" contenteditable="true" class="outline-none focus:bg-amber-50 rounded px-1">Shelter Contact: St. Jude Hope Center / alex.j@email.com</span>
+                <div class="border-b-2 border-slate-900 pb-3 flex items-center justify-between gap-4">
+                    <div class="text-center sm:text-left flex-1 min-w-0">
+                        <h1 id="res-name" contenteditable="true" class="text-xl font-extrabold text-slate-900 tracking-tight outline-none focus:bg-amber-50 rounded px-1">
+                            Alex Johnson
+                        </h1>
+                        <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold text-slate-600 mt-1 justify-center sm:justify-start">
+                            <span id="res-phone" contenteditable="true" class="outline-none focus:bg-amber-50 rounded px-1">(555) 234-5678</span>
+                            <span>•</span>
+                            <span id="res-location" contenteditable="true" class="outline-none focus:bg-amber-50 rounded px-1">Seattle, WA 98101</span>
+                            <span>•</span>
+                            <span id="res-contact" contenteditable="true" class="outline-none focus:bg-amber-50 rounded px-1">Shelter Contact: St. Jude Hope Center / alex.j@email.com</span>
+                        </div>
+                    </div>
+                    <div id="res-photo-header-wrapper" class="hidden flex-shrink-0">
+                        <img id="res-photo-header-img" src="" alt="Profile Photo" class="w-16 h-16 rounded-xl object-cover border-2 border-slate-900 shadow-sm" />
                     </div>
                 </div>
 
@@ -508,6 +535,68 @@
 <script src="js/northstar.js"></script>
 <script>
 // Resume Builder Specific JavaScript Logic
+
+let uploadedResumePhotoBase64 = '';
+
+function handleResumePhotoUpload(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    uploadedResumePhotoBase64 = e.target.result;
+    
+    const previewImg = document.getElementById('photo-preview-img');
+    const placeholderIcon = document.getElementById('photo-placeholder-icon');
+    const removeBtn = document.getElementById('remove-photo-btn');
+    
+    if (previewImg) {
+      previewImg.src = uploadedResumePhotoBase64;
+      previewImg.classList.remove('hidden');
+    }
+    if (placeholderIcon) placeholderIcon.classList.add('hidden');
+    if (removeBtn) removeBtn.classList.remove('hidden');
+
+    const headerImg = document.getElementById('res-photo-header-img');
+    const headerWrapper = document.getElementById('res-photo-header-wrapper');
+    if (headerImg && headerWrapper) {
+      headerImg.src = uploadedResumePhotoBase64;
+      headerWrapper.classList.remove('hidden');
+    }
+
+    if (window.showNotification) {
+      showNotification('Profile photo attached to resume!', 'success');
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeResumePhoto() {
+  uploadedResumePhotoBase64 = '';
+  const previewImg = document.getElementById('photo-preview-img');
+  const placeholderIcon = document.getElementById('photo-placeholder-icon');
+  const removeBtn = document.getElementById('remove-photo-btn');
+  const fileInput = document.getElementById('input-photo');
+
+  if (fileInput) fileInput.value = '';
+  if (previewImg) {
+    previewImg.src = '';
+    previewImg.classList.add('hidden');
+  }
+  if (placeholderIcon) placeholderIcon.classList.remove('hidden');
+  if (removeBtn) removeBtn.classList.add('hidden');
+
+  const headerImg = document.getElementById('res-photo-header-img');
+  const headerWrapper = document.getElementById('res-photo-header-wrapper');
+  if (headerImg && headerWrapper) {
+    headerImg.src = '';
+    headerWrapper.classList.add('hidden');
+  }
+
+  if (window.showNotification) {
+    showNotification('Profile photo removed.', 'info');
+  }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   initChipToggles();
