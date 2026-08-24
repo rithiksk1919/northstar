@@ -599,9 +599,10 @@ function renderDynamicNav() {
   let navItems = [];
 
   if (role === 'seeker') {
-    // Seeker Funnel Tabs: [Dashboard, Jobs, Map, Resume, Settings]
+    // Seeker Funnel Tabs: [Dashboard, Progress, Jobs, Map, Resume, Settings]
     navItems = [
       { href: 'seeker-dashboard.html', label: 'Dashboard', icon: 'dashboard' },
+      { href: 'progress.html', label: 'Progress', icon: 'timeline' },
       { href: 'opportunities.html', label: 'Jobs', icon: 'work' },
       { href: 'resource-map.html', label: 'Map', icon: 'map' },
       { href: 'resume-builder.html', label: 'Resume', icon: 'description' },
@@ -623,8 +624,8 @@ function renderDynamicNav() {
   nav.innerHTML = navItems.map(item => {
     const isActive = currentPath === item.href || (currentPath === '' && item.href === 'index.html');
     const activeClass = isActive && !item.action
-      ? 'bg-secondary-container text-on-secondary-container rounded-2xl px-3 py-1.5 shadow-md starlight-glow font-bold animate-switch-pop'
-      : 'text-on-surface-variant hover:text-primary px-3 py-1.5 font-medium';
+      ? 'bg-secondary-container text-on-secondary-container rounded-2xl px-2 py-1 shadow-md starlight-glow font-bold animate-switch-pop'
+      : 'text-on-surface-variant hover:text-primary px-1.5 py-1 font-medium';
 
     const fillStyle = isActive && !item.action ? "style=\"font-variation-settings: 'FILL' 1;\"" : "";
 
@@ -632,7 +633,7 @@ function renderDynamicNav() {
       return `
         <button onclick="${item.action}" class="flex flex-col items-center justify-center transition-all ${activeClass}">
           <span class="material-symbols-outlined text-xl" ${fillStyle}>${item.icon}</span>
-          <span class="text-[11px]">${item.label}</span>
+          <span class="text-[10px] sm:text-[11px] leading-tight">${item.label}</span>
         </button>
       `;
     }
@@ -640,7 +641,7 @@ function renderDynamicNav() {
     return `
       <a class="flex flex-col items-center justify-center transition-all ${activeClass}" href="${item.href}">
         <span class="material-symbols-outlined text-xl" ${fillStyle}>${item.icon}</span>
-        <span class="text-[11px]">${item.label}</span>
+        <span class="text-[10px] sm:text-[11px] leading-tight">${item.label}</span>
       </a>
     `;
   }).join('');
