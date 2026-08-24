@@ -6,7 +6,7 @@
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>Northstar | Your Path to Support</title>
     <link
-        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet">
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link rel="stylesheet" href="css/northstar.css">
@@ -15,54 +15,32 @@
             darkMode: "class",
             theme: {
                 extend: {
+                    "fontFamily": {
+                        "sans": ["Inter", "sans-serif"],
+                        "heading": ["Plus Jakarta Sans", "sans-serif"]
+                    },
                     "colors": {
+                        "obsidian": "#0B0E14",
+                        "surface-navy": "#121722",
+                        "stroke-slate": "#232C3F",
+                        "text-primary": "#F0F4F8",
+                        "text-secondary": "#8896AB",
+                        "accent-emerald": "#10B981",
                         "error": "#ba1a1a",
-                        "surface": "#0f1117",
-                        "tertiary-container": "#0d1c2f",
-                        "surface-variant": "#1a1d27",
-                        "on-primary-container": "#7c839b",
-                        "surface-container-lowest": "#12141c",
+                        "surface": "#121722",
+                        "tertiary-container": "#121722",
+                        "surface-variant": "#121722",
+                        "on-primary-container": "#8896AB",
+                        "surface-container-lowest": "#0B0E14",
                         "primary-fixed-dim": "#bec6e0",
-                        "on-surface": "#f8fafc",
+                        "on-surface": "#F0F4F8",
                         "surface-tint": "#565e74",
-                        "on-background": "#f8fafc",
-                        "tertiary": "#000000",
-                        "secondary": "#f59e0b",
-                        "primary-fixed": "#dae2fd",
-                        "on-primary": "#ffffff",
-                        "surface-container-low": "#161922",
-                        "tertiary-fixed": "#d5e3fd",
-                        "on-error-container": "#93000a",
-                        "on-primary-fixed": "#131b2e",
-                        "secondary-fixed-dim": "#e2c62d",
-                        "background": "#0f1117",
-                        "on-tertiary-fixed-variant": "#3a485c",
-                        "primary-container": "#131b2e",
-                        "tertiary-fixed-dim": "#b9c7e0",
-                        "outline": "#475569",
-                        "surface-container": "#1e2230",
-                        "on-tertiary-container": "#76859b",
-                        "on-surface-variant": "#94a3b8",
-                        "on-secondary": "#ffffff",
-                        "on-secondary-fixed": "#211b00",
-                        "outline-variant": "#334155",
-                        "surface-container-highest": "#282d3f",
-                        "on-error": "#ffffff",
-                        "surface-container-high": "#222737",
-                        "on-tertiary-fixed": "#0d1c2f",
-                        "primary": "#0d1c2f",
-                        "surface-dim": "#0b0c10",
-                        "surface-bright": "#161922",
-                        "secondary-fixed": "#ffe24c",
-                        "on-tertiary": "#ffffff",
-                        "on-secondary-fixed-variant": "#524600",
-                        "inverse-on-surface": "#eff1f3",
-                        "secondary-container": "#fcdf46",
-                        "inverse-surface": "#2d3133",
-                        "error-container": "#ffdad6",
-                        "on-secondary-container": "#726200",
-                        "inverse-primary": "#bec6e0",
-                        "on-primary-fixed-variant": "#3f465c"
+                        "on-background": "#F0F4F8",
+                        "background": "#0B0E14",
+                        "outline": "#232C3F",
+                        "surface-container": "#121722",
+                        "on-surface-variant": "#8896AB",
+                        "outline-variant": "#232C3F"
                     },
                     "borderRadius": {
                         "DEFAULT": "0.25rem",
@@ -78,30 +56,23 @@
     </script>
 </head>
 
-<body class="bg-[#0F1117] min-h-screen flex items-center justify-center p-0 sm:py-6 text-slate-100 selection:bg-amber-500/30 selection:text-amber-300">
-
-    <!-- Atmospheric Background Glows -->
-    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl"></div>
-        <div class="absolute top-1/3 -right-40 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
-        <div class="absolute -bottom-40 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
-    </div>
+<body class="bg-[#0B0E14] min-h-screen flex items-center justify-center p-0 sm:py-6 text-[#F0F4F8] font-sans selection:bg-emerald-500/30 selection:text-emerald-300">
 
     <!-- Mobile Frame Shell -->
     <div
-        class="app-frame phone-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-[#0F1117] sm:rounded-[44px] shadow-[0_0_70px_rgba(0,0,0,0.85)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800/80 z-10">
+        class="app-frame phone-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-[#0B0E14] sm:rounded-[44px] shadow-2xl relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-[#232C3F] z-10">
 
         <!-- Top Mobile Status Bar (always visible) -->
         <div
-            class="bg-[#0F1117]/80 backdrop-blur-md px-6 pt-3 pb-1 flex justify-between items-center text-xs font-semibold text-slate-400 z-50 select-none border-b border-white/5">
+            class="bg-[#0B0E14] px-6 pt-3 pb-1 flex justify-between items-center text-xs font-semibold text-[#8896AB] z-50 select-none border-b border-[#232C3F]">
             <span class="status-clock">9:41</span>
-            <div class="w-16 h-4 bg-slate-900/90 rounded-full flex items-center justify-center border border-white/10">
-                <div class="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
+            <div class="w-16 h-4 bg-[#121722] rounded-full flex items-center justify-center border border-[#232C3F]">
+                <div class="w-2.5 h-2.5 rounded-full bg-[#232C3F]"></div>
             </div>
             <div class="flex items-center gap-1.5">
                 <span class="material-symbols-outlined text-xs">signal_cellular_4_bar</span>
                 <span class="material-symbols-outlined text-xs">wifi</span>
-                <span class="material-symbols-outlined text-xs text-amber-400">battery_50</span>
+                <span class="material-symbols-outlined text-xs text-emerald-400">battery_50</span>
             </div>
         </div>
 
@@ -202,104 +173,59 @@
 
             <!-- App Header -->
             <header
-                class="bg-surface/90 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center w-full px-6 py-3 border-b border-slate-200/60">
+                class="bg-white sticky top-0 z-40 flex justify-between items-center w-full px-5 py-3 border-b border-slate-200">
                 <div class="flex items-center gap-2">
-                    <div
-                        class="w-9 h-9 rounded-xl bg-white flex items-center justify-center p-0.5 shadow-sm border border-slate-200 overflow-hidden">
-                        <img src="northstar-logo.png" alt="Northstar Logo" class="w-full h-full object-contain" />
-                    </div>
-                    <h1 class="text-xl font-extrabold text-primary tracking-tight flex items-center gap-1">
-                        Northstar
-                    </h1>
+                    <span class="material-symbols-outlined text-slate-800 text-xl font-bold cursor-pointer">menu</span>
+                    <h1 class="text-lg font-bold text-slate-900 font-heading tracking-tight">Northstar</h1>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="triggerEmergencyCall()"
-                        class="px-2.5 py-1.5 bg-rose-500/10 text-rose-600 hover:bg-rose-500 hover:text-white rounded-full text-xs font-bold transition-all duration-200 flex items-center gap-1 border border-rose-200">
-                        <span class="material-symbols-outlined text-sm">call</span> SOS 24/7
-                    </button>
+                <div class="header-actions-right flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 text-xs font-bold">
+                        👤
+                    </div>
                 </div>
             </header>
 
             <!-- Main Scrollable Canvas -->
-            <main class="flex-grow px-5 pt-4 pb-28 flex flex-col justify-between overflow-y-auto space-y-6">
+            <main class="flex-grow px-5 pt-4 pb-28 flex flex-col justify-between overflow-y-auto space-y-5 bg-[#F4F5F7]">
 
-                <!-- Hero Section (Bespoke Left-Aligned Mobile App Layout) -->
-                <div class="flex flex-col text-left space-y-6 pt-2">
-
-                    <!-- Badge & Emblem Header Row -->
-                    <div class="flex items-center justify-between">
-                        <div
-                            class="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-amber-900 text-[11px] font-bold tracking-wide">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> 42 BEDS AVAILABLE
-                        </div>
-                        <div class="w-10 h-10 rounded-2xl bg-white flex items-center justify-center border border-slate-200/80 p-1 shadow-sm">
-                            <img src="northstar-logo.png" alt="Northstar Emblem" class="w-full h-full object-contain" />
-                        </div>
+                <!-- Hero Illustration Card -->
+                <div class="bg-gradient-to-b from-[#1C2538] to-[#0D1424] text-white rounded-3xl p-6 flex flex-col items-center text-center shadow-md border border-slate-800 relative overflow-hidden space-y-4">
+                    <div class="w-20 h-20 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center p-3 shadow-inner my-2">
+                        <span class="material-symbols-outlined text-4xl text-white">auto_awesome</span>
                     </div>
-
-                    <!-- Left-Aligned Headline & Subtitle -->
-                    <div class="space-y-1.5">
-                        <h2 class="text-3xl font-black text-primary tracking-tight leading-tight">Your path to support.</h2>
-                        <p class="text-xs text-slate-500 leading-relaxed font-medium">
-                            Constellation of real-time shelter, warm meals, and direct community assistance.
+                    <div class="space-y-2">
+                        <h2 class="text-2xl font-bold text-white font-heading tracking-tight">Your path to support.</h2>
+                        <p class="text-xs text-slate-300 leading-relaxed max-w-xs font-normal">
+                            Northstar connects community volunteers with those seeking help, creating a constellation of support when it's needed most.
                         </p>
                     </div>
-
-                    <!-- Action Triggers (Solid Accent vs Clean Card) -->
-                    <div class="w-full space-y-3 pt-1">
-                        <!-- High Impact Solid Accent Button -->
-                        <a id="card-seeker" href="seeker-dashboard.html"
-                            class="w-full h-14 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-2xl flex items-center justify-between px-5 transition-all duration-200 border border-amber-300 active:scale-[0.98]">
-                            <div class="flex items-center gap-3">
-                                <span id="card-seeker-icon" class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">search</span>
-                                <span class="text-sm tracking-tight">I need help (Seeker)</span>
-                            </div>
-                            <span id="card-seeker-arrow" class="material-symbols-outlined text-base">arrow_forward</span>
-                        </a>
-
-                        <!-- Clean Secondary Card Layout -->
-                        <a id="card-volunteer" href="helper-dashboard.html"
-                            class="w-full h-14 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl flex items-center justify-between px-5 transition-all duration-200 border border-slate-800 active:scale-[0.98]">
-                            <div class="flex items-center gap-3">
-                                <span id="card-volunteer-icon" class="material-symbols-outlined text-xl text-amber-400" style="font-variation-settings: 'FILL' 1;">volunteer_activism</span>
-                                <span class="text-sm tracking-tight text-slate-100">I want to help (Volunteer)</span>
-                            </div>
-                            <span id="card-volunteer-arrow" class="material-symbols-outlined text-base text-slate-400">arrow_forward</span>
-                        </a>
-                    </div>
                 </div>
 
-                <!-- Integrated Metric Stat Bar (Flush Modern Card Layout) -->
-                <div class="w-full bg-slate-900/95 text-white rounded-2xl p-4 border border-slate-800/90 shadow-xl space-y-3">
-                    <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
-                        <span class="text-[10px] font-extrabold uppercase tracking-wider text-amber-400">Live Network Metrics</span>
-                        <span class="text-[10px] font-semibold text-slate-400">Updated just now</span>
-                    </div>
+                <!-- Action Triggers (Black Pill vs White Pill) -->
+                <div class="w-full space-y-2.5">
+                    <!-- Black Pill Primary Button -->
+                    <a id="card-volunteer" href="helper-dashboard.html"
+                        class="w-full py-3.5 bg-slate-950 hover:bg-slate-900 text-white font-bold rounded-full flex items-center justify-center gap-2 shadow-md active:scale-[0.98] transition-all text-xs">
+                        <span class="material-symbols-outlined text-sm text-white">volunteer_activism</span>
+                        <span>I want to help</span>
+                    </a>
 
-                    <div class="grid grid-cols-3 gap-2 text-center divide-x divide-slate-800">
-                        <div class="px-1">
-                            <p class="text-xl font-black text-amber-400 tracking-tight">42</p>
-                            <p class="text-[10px] text-slate-400 font-semibold uppercase mt-0.5">Open Beds</p>
-                        </div>
-                        <div class="px-1">
-                            <p class="text-xl font-black text-blue-400 tracking-tight">180+</p>
-                            <p class="text-[10px] text-slate-400 font-semibold uppercase mt-0.5">Meals Served</p>
-                        </div>
-                        <div class="px-1">
-                            <p class="text-xl font-black text-emerald-400 tracking-tight">24/7</p>
-                            <p class="text-[10px] text-slate-400 font-semibold uppercase mt-0.5">Verified</p>
-                        </div>
-                    </div>
+                    <!-- White Pill Secondary Button -->
+                    <a id="card-seeker" href="seeker-dashboard.html"
+                        class="w-full py-3.5 bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 font-bold rounded-full flex items-center justify-center gap-2 shadow-sm active:scale-[0.98] transition-all text-xs">
+                        <span class="material-symbols-outlined text-sm text-slate-700">search</span>
+                        <span>I need help</span>
+                    </a>
                 </div>
 
-                <!-- Trust & Safety Banner -->
-                <div class="bg-surface-container-lowest rounded-2xl p-4 w-full text-left border border-slate-200/80 shadow-sm flex items-start gap-3">
-                    <div class="p-2 bg-slate-900 text-amber-400 rounded-xl">
-                        <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">shield_with_heart</span>
+                <!-- Capacity Progress Bar Card -->
+                <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm space-y-2">
+                    <div class="flex justify-between items-center text-xs font-semibold">
+                        <span class="text-slate-600">Active Community</span>
+                        <span class="text-slate-900 font-bold">84% Capacity</span>
                     </div>
-                    <div>
-                        <p class="text-[11px] font-black text-primary tracking-wider uppercase">SAFE & ANONYMOUS ACCESS</p>
-                        <p class="text-xs text-slate-500 mt-0.5 leading-snug font-medium">Instant shelter booking, meal locations, and dispatch support.</p>
+                    <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200/80">
+                        <div class="bg-[#FFE855] h-full rounded-full w-[84%]"></div>
                     </div>
                 </div>
 
@@ -307,7 +233,7 @@
 
             <!-- Bottom Navigation Bar -->
             <nav id="main-nav"
-                class="bottom-nav absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-1.5 py-2 bg-surface/95 backdrop-blur-xl shadow-[0px_-4px_25px_rgba(15,23,42,0.1)] border-t border-slate-200/80">
+                class="bottom-nav absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-1.5 py-2 bg-[#121722] border-t border-[#232C3F]">
                 <a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-2xl px-2 py-1 shadow-md starlight-glow active:scale-95 duration-150"
                     href="index.html">
                     <span class="material-symbols-outlined text-xl"

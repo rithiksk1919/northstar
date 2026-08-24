@@ -100,128 +100,91 @@
     </div>
 
     <!-- App Header -->
-    <header class="bg-[#0F1117]/80 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center w-full px-6 py-3 border-b border-white/10">
+    <header class="bg-white sticky top-0 z-40 flex justify-between items-center w-full px-5 py-3 border-b border-slate-200">
         <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-full bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">
-                <span class="material-symbols-outlined text-amber-400 text-lg">restaurant</span>
-            </div>
-            <h1 class="text-base font-extrabold text-white tracking-tight">Donate Food</h1>
+            <span class="material-symbols-outlined text-slate-800 text-xl font-bold cursor-pointer">menu</span>
+            <h1 class="text-lg font-bold text-slate-900 font-heading tracking-tight">Northstar</h1>
         </div>
-        <div class="flex items-center gap-1 text-xs font-extrabold text-emerald-300 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-400/20">
-            <span class="material-symbols-outlined text-xs text-emerald-400" style="font-variation-settings: 'FILL' 1;">eco</span> Zero Waste Drive
+        <div class="header-actions-right flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 text-xs font-bold">
+                👤
+            </div>
         </div>
     </header>
 
     <!-- Main Scrollable Canvas -->
-    <main class="flex-grow px-5 pt-4 pb-28 flex flex-col gap-5 overflow-y-auto">
+    <main class="flex-grow px-5 pt-4 pb-28 flex flex-col gap-4 overflow-y-auto bg-[#F4F5F7]">
 
-        <!-- Welcome Banner -->
-        <section class="backdrop-blur-md bg-white/[0.04] border border-white/10 rounded-2xl p-4 shadow-lg shadow-black/30 space-y-2 relative overflow-hidden">
-            <h2 class="text-xl font-extrabold text-white tracking-tight">Every meal closes a gap.</h2>
-            <p class="text-xs text-slate-300 font-medium leading-relaxed">Drop off canned goods, meal kits, or hot prepared food at any partner location. 100% goes directly to families in need — no processing fees.</p>
+        <!-- Page Header Text -->
+        <section class="space-y-1.5 pt-1">
+            <h2 class="text-2xl font-bold text-slate-900 font-heading tracking-tight">Your guidance matters.</h2>
+            <p class="text-xs text-slate-500 font-normal leading-relaxed">
+                Every contribution creates a path forward for someone in need. Choose how you'd like to help today.
+            </p>
         </section>
 
-        <!-- Food Drive Goal Progress -->
-        <div class="backdrop-blur-md bg-gradient-to-br from-slate-900/90 via-[#131722] to-slate-900/90 text-white rounded-2xl p-4 shadow-lg shadow-black/40 border border-white/10 space-y-3">
-            <div class="flex justify-between items-center text-xs">
-                <span class="font-extrabold text-amber-400 uppercase tracking-wider flex items-center gap-1">
-                    <span class="material-symbols-outlined text-sm">local_fire_department</span> Monthly Food Drive Goal
-                </span>
-                <span class="font-mono text-amber-300 font-bold">1,340 / 2,000 meals</span>
-            </div>
-            
-            <div class="w-full bg-slate-950 rounded-full h-3 overflow-hidden p-0.5 border border-white/10">
-                <div class="bg-gradient-to-r from-emerald-400 to-emerald-300 h-full rounded-full w-[67%] shadow-[0_0_12px_rgba(52,211,153,0.4)]"></div>
-            </div>
-            
-            <p class="text-[11px] text-slate-300 font-medium">67% of goal • 1,340 meals served this month across 8 Seattle drop sites.</p>
-        </div>
+        <!-- 3 White Option Cards -->
+        <div class="space-y-3 pt-1">
 
-        <!-- Food Donation Type Selector -->
-        <div class="backdrop-blur-md bg-white/[0.04] p-5 rounded-2xl border border-white/10 shadow-lg shadow-black/30 space-y-4">
-            <label class="block text-xs font-extrabold text-slate-400 uppercase tracking-wider">What are you donating?</label>
-            <div class="grid grid-cols-2 gap-2" id="food-type-grid">
-                <button id="food-btn-canned" onclick="selectFoodType('canned')" class="food-type-card py-3.5 px-3 rounded-xl border border-white/10 bg-white/[0.04] active:scale-95 transition-all flex flex-col items-center gap-1.5 text-white">
-                    <span class="material-symbols-outlined text-2xl text-emerald-400">inventory_2</span>
-                    <span class="text-xs font-extrabold">Canned Goods</span>
-                    <span class="text-[10px] text-slate-400">Non-perishable</span>
-                </button>
-                <button id="food-btn-meal" onclick="selectFoodType('meal')" class="food-type-card py-3.5 px-3 rounded-xl border border-white/10 bg-white/[0.04] active:scale-95 transition-all flex flex-col items-center gap-1.5 text-white">
-                    <span class="material-symbols-outlined text-2xl text-amber-400">dining</span>
-                    <span class="text-xs font-extrabold">Meal Kits</span>
-                    <span class="text-[10px] text-slate-400">Packaged meals</span>
-                </button>
-                <button id="food-btn-hot" onclick="selectFoodType('hot')" class="food-type-card py-3.5 px-3 rounded-xl border border-white/10 bg-white/[0.04] active:scale-95 transition-all flex flex-col items-center gap-1.5 text-white">
-                    <span class="material-symbols-outlined text-2xl text-orange-400">ramen_dining</span>
-                    <span class="text-xs font-extrabold">Hot Food</span>
-                    <span class="text-[10px] text-slate-400">Drop-off daily</span>
-                </button>
-                <button id="food-btn-drive" onclick="selectFoodType('drive')" class="food-type-card py-3.5 px-3 rounded-xl border border-white/10 bg-white/[0.04] active:scale-95 transition-all flex flex-col items-center gap-1.5 text-white">
-                    <span class="material-symbols-outlined text-2xl text-indigo-400">groups</span>
-                    <span class="text-xs font-extrabold">Food Drive</span>
-                    <span class="text-[10px] text-slate-400">Organize one</span>
-                </button>
-            </div>
-
-            <!-- CTA Button -->
-            <button onclick="navigateToFoodMap()" class="w-full py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-extrabold rounded-2xl text-base shadow-[0_4px_20px_rgba(52,211,153,0.35)] hover:from-emerald-400 hover:to-emerald-500 active:scale-95 transition-all flex items-center justify-center gap-2">
-                <span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">map</span> Find Drop-Off Locations Near Me
+            <!-- Card 1: Donate Money -->
+            <button onclick="showNotification('Opening secure donation portal...', 'info')" class="w-full bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-center justify-between text-left group hover:border-slate-300 transition-all">
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-full bg-[#FFE855] text-slate-950 flex items-center justify-center font-bold flex-shrink-0">
+                        <span class="material-symbols-outlined text-xl">payments</span>
+                    </div>
+                    <div class="space-y-1">
+                        <h3 class="font-bold text-sm text-slate-900 font-heading">Donate Money ($)</h3>
+                        <p class="text-xs text-slate-500 font-normal leading-normal max-w-[240px]">
+                            Immediate financial support for local shelters and community initiatives. Tax deductible and fully transparent.
+                        </p>
+                    </div>
+                </div>
+                <span class="material-symbols-outlined text-base text-slate-400 group-hover:text-slate-700 transition-colors">arrow_forward</span>
             </button>
+
+            <!-- Card 2: Donate Food -->
+            <button onclick="navigateToFoodMap()" class="w-full bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-center justify-between text-left group hover:border-slate-300 transition-all">
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-full bg-[#FFE855] text-slate-950 flex items-center justify-center font-bold flex-shrink-0">
+                        <span class="material-symbols-outlined text-xl">restaurant</span>
+                    </div>
+                    <div class="space-y-1">
+                        <h3 class="font-bold text-sm text-slate-900 font-heading">Donate Food</h3>
+                        <p class="text-xs text-slate-500 font-normal leading-normal max-w-[240px]">
+                            Drop off non-perishable items at our local hubs for distribution to families in need.
+                        </p>
+                    </div>
+                </div>
+                <span class="material-symbols-outlined text-base text-slate-400 group-hover:text-slate-700 transition-colors">arrow_forward</span>
+            </button>
+
+            <!-- Card 3: Deliver Food Directly -->
+            <button onclick="showNotification('Volunteer delivery route sign-up activated!', 'success')" class="w-full bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-center justify-between text-left group hover:border-slate-300 transition-all">
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-full bg-[#FFE855] text-slate-950 flex items-center justify-center font-bold flex-shrink-0">
+                        <span class="material-symbols-outlined text-xl">volunteer_activism</span>
+                    </div>
+                    <div class="space-y-1">
+                        <h3 class="font-bold text-sm text-slate-900 font-heading">Deliver Food Directly</h3>
+                        <p class="text-xs text-slate-500 font-normal leading-normal max-w-[240px]">
+                            Active volunteering. Pick up prepared meals and deliver them to designated homes.
+                        </p>
+                    </div>
+                </div>
+                <span class="material-symbols-outlined text-base text-slate-400 group-hover:text-slate-700 transition-colors">arrow_forward</span>
+            </button>
+
         </div>
 
-        <!-- High-Need Food Items -->
-        <section class="space-y-3">
-            <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider">Most Needed Right Now</h3>
-            
-            <div class="space-y-2.5">
-                
-                <div class="backdrop-blur-md bg-white/[0.04] p-3.5 rounded-2xl border border-white/10 shadow-lg shadow-black/30 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-orange-500/20 text-orange-300 border border-orange-500/30 flex items-center justify-center">
-                            <span class="material-symbols-outlined text-xl">soup_kitchen</span>
-                        </div>
-                        <div>
-                            <h4 class="font-extrabold text-sm text-white">Canned Soup & Stew</h4>
-                            <p class="text-[11px] text-slate-400">Needed: 200+ cans • High urgency</p>
-                        </div>
-                    </div>
-                    <button onclick="openDonateItemModal('Canned Soup & Stew')" class="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 rounded-xl text-xs font-bold border border-emerald-500/30 active:scale-95 transition-all">
-                        Donate
-                    </button>
-                </div>
-
-                <div class="backdrop-blur-md bg-white/[0.04] p-3.5 rounded-2xl border border-white/10 shadow-lg shadow-black/30 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center justify-center">
-                            <span class="material-symbols-outlined text-xl">bakery_dining</span>
-                        </div>
-                        <div>
-                            <h4 class="font-extrabold text-sm text-white">Bread & Grain Products</h4>
-                            <p class="text-[11px] text-slate-400">Rice, oats, pasta, bread — all accepted</p>
-                        </div>
-                    </div>
-                    <button onclick="openDonateItemModal('Bread & Grain Products')" class="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 rounded-xl text-xs font-bold border border-emerald-500/30 active:scale-95 transition-all">
-                        Donate
-                    </button>
-                </div>
-
-                <div class="backdrop-blur-md bg-white/[0.04] p-3.5 rounded-2xl border border-white/10 shadow-lg shadow-black/30 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center justify-center">
-                            <span class="material-symbols-outlined text-xl">nutrition</span>
-                        </div>
-                        <div>
-                            <h4 class="font-extrabold text-sm text-white">Protein & Nut Butters</h4>
-                            <p class="text-[11px] text-slate-400">Peanut butter, canned beans & tuna</p>
-                        </div>
-                    </div>
-                    <button onclick="openDonateItemModal('Protein & Nut Butters')" class="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 rounded-xl text-xs font-bold border border-emerald-500/30 active:scale-95 transition-all">
-                        Donate
-                    </button>
-                </div>
-
+        <!-- Dark Bottom Card -->
+        <div class="bg-gradient-to-b from-[#1C2538] to-[#0D1424] text-white rounded-2xl p-4 shadow-md border border-slate-800 space-y-1.5 mt-2">
+            <div class="flex items-center gap-1.5 text-[10px] font-bold text-[#FFE855] uppercase tracking-wider">
+                <span class="material-symbols-outlined text-xs">verified_user</span> SECURE & TRANSPARENT
             </div>
-        </section>
+            <p class="text-xs text-slate-200 font-medium leading-relaxed">
+                100% of your contributions go directly to community impact. Track your impact in the "Guide" tab.
+            </p>
+        </div>
 
     </main>
 

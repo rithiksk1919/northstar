@@ -128,58 +128,54 @@
     </div>
 
     <!-- App Header -->
-    <header class="bg-[#0F1117]/80 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center w-full px-6 py-3 border-b border-white/10">
+    <header class="bg-white sticky top-0 z-40 flex justify-between items-center w-full px-5 py-3 border-b border-slate-200">
         <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-full bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">
-                <span class="material-symbols-outlined text-amber-400 text-lg">map</span>
-            </div>
-            <h1 class="text-base font-extrabold text-white tracking-tight">Live Resource Map</h1>
+            <span class="material-symbols-outlined text-slate-800 text-xl font-bold cursor-pointer">menu</span>
+            <h1 class="text-lg font-bold text-slate-900 font-heading tracking-tight">Northstar</h1>
         </div>
-        <button id="offline-save-btn" onclick="saveOfflineTiles()" class="flex items-center gap-1 text-[11px] font-extrabold bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 px-3 py-1 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.3)] hover:from-amber-300 hover:to-amber-400 active:scale-95 transition-all">
-            <span class="material-symbols-outlined text-sm">download_for_offline</span> Offline Save
-        </button>
+        <div class="header-actions-right flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 text-xs font-bold">
+                👤
+            </div>
+        </div>
     </header>
 
-    <!-- Filter & Search Bar Floating Top Section -->
-    <div class="bg-[#12141C]/90 backdrop-blur-md text-white px-4 py-3 border-b border-white/10 space-y-2 z-30 shadow-md">
+    <!-- Filter & Search Bar Top Section -->
+    <div class="bg-white text-slate-900 px-4 py-3 border-b border-slate-200 space-y-2.5 z-30 shadow-sm">
         
-        <!-- Live Walkable Search Box -->
+        <!-- Search Box -->
         <div class="relative w-full">
             <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
             <input 
                 id="walkable-search-input" 
                 type="text" 
-                placeholder="Search food, restroom, shelters, work..." 
+                placeholder="Search for help..." 
                 oninput="handleSearchFilterInput()"
-                class="w-full bg-slate-900/90 text-white placeholder-slate-500 text-xs rounded-xl pl-9 pr-8 py-2 border border-white/10 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                class="w-full bg-slate-50 text-slate-900 placeholder-slate-400 text-xs rounded-full pl-9 pr-8 py-2.5 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-900"
             />
-            <button onclick="clearSearchInput()" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white">
+            <button onclick="clearSearchInput()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700">
                 <span class="material-symbols-outlined text-sm">cancel</span>
             </button>
         </div>
 
-        <!-- Filter Category Pills -->
-        <div class="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
-            <button data-cat="all" onclick="selectCategoryFilter('all')" class="cat-filter-btn px-3 py-1 rounded-full text-[11px] font-extrabold bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-[0_0_12px_rgba(245,158,11,0.35)]">
-                All Walkable
+        <!-- Filter Category Chips -->
+        <div class="flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
+            <button data-cat="all" onclick="selectCategoryFilter('all')" class="cat-filter-btn px-4 py-1.5 rounded-full text-xs font-bold bg-slate-950 text-white flex items-center gap-1 flex-shrink-0 shadow-sm">
+                <span class="material-symbols-outlined text-xs">navigation</span> Nearby
             </button>
-            <button data-cat="wifi" onclick="selectCategoryFilter('wifi')" class="cat-filter-btn px-3 py-1 rounded-full text-[11px] font-bold bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10">
-                📶 Wi-Fi & Outlets
+            <button data-cat="shelter" onclick="selectCategoryFilter('shelter')" class="cat-filter-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 flex-shrink-0">
+                Shelters
             </button>
-            <button data-cat="restroom" onclick="selectCategoryFilter('restroom')" class="cat-filter-btn px-3 py-1 rounded-full text-[11px] font-bold bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10">
-                🚿 Restroom/Hygiene
+            <button data-cat="food" onclick="selectCategoryFilter('food')" class="cat-filter-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 flex-shrink-0">
+                Food
             </button>
-            <button data-cat="food" onclick="selectCategoryFilter('food')" class="cat-filter-btn px-3 py-1 rounded-full text-[11px] font-bold bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10">
-                🍲 Food & Drinks
+            <button data-cat="wifi" onclick="selectCategoryFilter('wifi')" class="cat-filter-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 flex-shrink-0">
+                Wi-Fi
             </button>
-            <button data-cat="shelter" onclick="selectCategoryFilter('shelter')" class="cat-filter-btn px-3 py-1 rounded-full text-[11px] font-bold bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10">
-                🛏️ Shelters
-            </button>
-            <button data-cat="work" onclick="selectCategoryFilter('work')" class="cat-filter-btn px-3 py-1 rounded-full text-[11px] font-bold bg-white/5 text-slate-300 border border-white/10 hover:bg-white/10">
-                💼 Work & Jobs
+            <button data-cat="work" onclick="selectCategoryFilter('work')" class="cat-filter-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 flex-shrink-0">
+                Jobs
             </button>
         </div>
-
     </div>
 
     <!-- Leaflet Map Container -->
