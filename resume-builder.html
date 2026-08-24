@@ -137,31 +137,34 @@
     </div>
 
     <!-- App Header -->
-    <header class="bg-[#0F1117]/80 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center w-full px-6 py-3 border-b border-white/10 no-print">
+    <header class="bg-white dark:bg-[#0F1117] sticky top-0 z-40 flex justify-between items-center w-full px-5 py-3 border-b border-slate-200 dark:border-white/10 no-print">
         <div class="flex items-center gap-3">
             <div>
-                <h1 class="text-base font-extrabold text-primary flex items-center gap-1">
+                <h1 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-1">
                     <span class="material-symbols-outlined text-amber-500 text-lg">auto_awesome</span> AI Resume Builder
                 </h1>
-                <p class="text-[11px] text-slate-500 font-medium">Empowering your career step-by-step</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Empowering your career step-by-step</p>
             </div>
         </div>
-        <div class="flex items-center gap-1">
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
+        <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#FFE855] text-slate-950">
                 Gemini 2.5 AI
             </span>
+            <button onclick="toggleTheme()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-amber-400 text-xs font-bold transition-all active:scale-95 cursor-pointer" title="Toggle Light / Dark Mode">
+                <span class="material-symbols-outlined text-sm">brightness_4</span>
+            </button>
         </div>
     </header>
 
     <!-- View Mode Selector Tabs -->
-    <div class="bg-[#12141C]/90 backdrop-blur-md px-4 py-2 border-b border-white/10 flex justify-between gap-1 select-none no-print view-mode-tabs">
-        <button id="tab-wizard" onclick="switchView('wizard')" class="flex-1 py-1.5 text-xs font-extrabold rounded-xl text-center bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-md transition-all flex items-center justify-center gap-1">
+    <div class="bg-white dark:bg-[#12141C] px-4 py-2 border-b border-slate-200 dark:border-white/10 flex justify-between gap-1 select-none no-print view-mode-tabs">
+        <button id="tab-wizard" onclick="switchView('wizard')" class="flex-1 py-1.5 text-xs font-extrabold rounded-xl text-center bg-[#FFE855] text-slate-950 shadow-sm transition-all flex items-center justify-center gap-1">
             <span class="material-symbols-outlined text-sm">edit_note</span> Guided Wizard
         </button>
-        <button id="tab-preview" onclick="switchView('preview')" class="flex-1 py-1.5 text-xs font-bold rounded-xl text-center text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1">
+        <button id="tab-preview" onclick="switchView('preview')" class="flex-1 py-1.5 text-xs font-bold rounded-xl text-center text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all flex items-center justify-center gap-1">
             <span class="material-symbols-outlined text-sm">badge</span> Resume Preview
         </button>
-        <button id="tab-text" onclick="switchView('text')" class="flex-1 py-1.5 text-xs font-bold rounded-xl text-center text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1">
+        <button id="tab-text" onclick="switchView('text')" class="flex-1 py-1.5 text-xs font-bold rounded-xl text-center text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all flex items-center justify-center gap-1">
             <span class="material-symbols-outlined text-sm">description</span> Clean ATS Text
         </button>
     </div>
@@ -172,157 +175,156 @@
         <!-- VIEW 1: GUIDED WIZARD FORM -->
         <div id="view-wizard-container" class="space-y-5">
             <!-- Low-Barrier Welcome Banner -->
-            <div class="backdrop-blur-md bg-white/[0.04] rounded-2xl p-4 text-white space-y-2 relative overflow-hidden shadow-lg shadow-black/30 border border-white/10">
-                <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-amber-400/20 rounded-full blur-xl pointer-events-none"></div>
-                <div class="flex items-center gap-2 text-amber-400 font-extrabold text-xs">
+            <div class="bg-white dark:bg-[#121722] rounded-2xl p-4 space-y-2 relative overflow-hidden shadow-sm border border-slate-200 dark:border-[#232C3F]">
+                <div class="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-extrabold text-xs">
                     <span class="material-symbols-outlined text-sm">star</span> NO FANCY RESUME NEEDED
                 </div>
-                <h2 class="text-sm font-extrabold leading-tight text-white">Turn your everyday skills & informal work into a powerful job resume.</h2>
-                <p class="text-xs text-slate-300 font-medium">Tap your experience, licenses, or volunteer tasks. Our AI handles the professional formatting.</p>
+                <h2 class="text-sm font-extrabold leading-tight text-slate-900 dark:text-white">Turn your everyday skills & informal work into a powerful job resume.</h2>
+                <p class="text-xs text-slate-600 dark:text-slate-300 font-medium">Tap your experience, licenses, or volunteer tasks. Our AI handles the professional formatting.</p>
             </div>
 
             <!-- Step Indicator Progress -->
-            <div class="flex justify-between items-center text-xs font-bold text-slate-400 px-1">
+            <div class="flex justify-between items-center text-xs font-bold text-slate-600 dark:text-slate-400 px-1">
                 <span id="wizard-step-label">Step 1 of 4: Contact Information</span>
-                <span id="wizard-progress-percent" class="text-amber-400 font-black">25%</span>
+                <span id="wizard-progress-percent" class="text-amber-500 dark:text-amber-400 font-black">25%</span>
             </div>
-            <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden border border-white/10">
-                <div id="wizard-progress-bar" class="bg-gradient-to-r from-amber-400 to-amber-500 h-full w-1/4 transition-all duration-300 shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div>
+            <div class="w-full bg-slate-200 dark:bg-slate-900 h-2 rounded-full overflow-hidden border border-slate-300 dark:border-white/10">
+                <div id="wizard-progress-bar" class="bg-amber-400 h-full w-1/4 transition-all duration-300"></div>
             </div>
 
             <!-- WIZARD STEP 1: CONTACT INFO -->
-            <section id="step-1" class="backdrop-blur-md bg-white/[0.04] border border-white/10 rounded-2xl p-4 shadow-lg shadow-black/30 space-y-4">
-                <h3 class="text-xs font-extrabold tracking-wider uppercase text-white flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-amber-400 text-sm">person</span> 1. Basic Contact Details
+            <section id="step-1" class="bg-white dark:bg-[#121722] border border-slate-200 dark:border-[#232C3F] rounded-2xl p-4 shadow-sm space-y-4">
+                <h3 class="text-xs font-extrabold tracking-wider uppercase text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-amber-500 text-sm">person</span> 1. Basic Contact Details
                 </h3>
 
                 <div class="space-y-3 text-xs">
                     <div>
-                        <label class="block text-xs font-bold text-slate-300 mb-1">Your Name <span class="text-rose-400">*</span></label>
-                        <input type="text" id="input-name" placeholder="e.g. Alex Johnson" class="w-full rounded-xl bg-slate-900 border border-white/10 p-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 font-semibold" required value="Alex Johnson">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Your Name <span class="text-rose-500">*</span></label>
+                        <input type="text" id="input-name" placeholder="e.g. Alex Johnson" class="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-xs text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-400 font-semibold" required value="Alex Johnson">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-300 mb-1">Phone Number (or Message Phone)</label>
-                        <input type="text" id="input-phone" placeholder="e.g. (555) 234-5678" class="w-full rounded-xl bg-slate-900 border border-white/10 p-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 font-medium" value="(555) 234-5678">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Phone Number (or Message Phone)</label>
+                        <input type="text" id="input-phone" placeholder="e.g. (555) 234-5678" class="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-xs text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-400 font-medium" value="(555) 234-5678">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-300 mb-1">Shelter / Case Worker / Email Contact</label>
-                        <input type="text" id="input-contact" placeholder="e.g. St. Jude Shelter Contact / alex.j@email.com" class="w-full rounded-xl bg-slate-900 border border-white/10 p-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 font-medium" value="Shelter Contact: St. Jude Hope Center / alex.j@email.com">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Shelter / Case Worker / Email Contact</label>
+                        <input type="text" id="input-contact" placeholder="e.g. St. Jude Shelter Contact / alex.j@email.com" class="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-xs text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-400 font-medium" value="Shelter Contact: St. Jude Hope Center / alex.j@email.com">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-300 mb-1">City, State / Zip Code</label>
-                        <input type="text" id="input-location" placeholder="e.g. Seattle, WA 98101" class="w-full rounded-xl bg-slate-900 border border-white/10 p-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 font-medium" value="Seattle, WA 98101">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">City, State / Zip Code</label>
+                        <input type="text" id="input-location" placeholder="e.g. Seattle, WA 98101" class="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-xs text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-400 font-medium" value="Seattle, WA 98101">
                     </div>
                 </div>
             </section>
 
             <!-- WIZARD STEP 2: WORK & INFORMAL EXPERIENCE -->
-            <section id="step-2" class="backdrop-blur-md bg-white/[0.04] border border-white/10 rounded-2xl p-4 shadow-lg shadow-black/30 space-y-4">
-                <h3 class="text-xs font-extrabold tracking-wider uppercase text-white flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-amber-400 text-sm">work</span> 2. Experience & Informal Tasks
+            <section id="step-2" class="bg-white dark:bg-[#121722] border border-slate-200 dark:border-[#232C3F] rounded-2xl p-4 shadow-sm space-y-4">
+                <h3 class="text-xs font-extrabold tracking-wider uppercase text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-amber-500 text-sm">work</span> 2. Experience & Informal Tasks
                 </h3>
-                <p class="text-xs text-slate-300 font-medium">Tap all jobs, volunteer work, day labor, or informal tasks you have done:</p>
+                <p class="text-xs text-slate-600 dark:text-slate-300 font-medium">Tap all jobs, volunteer work, day labor, or informal tasks you have done:</p>
 
                 <div class="flex flex-wrap gap-2" id="experience-chips-container">
-                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-bold bg-amber-400/20 border-amber-400/50 text-amber-300 active-chip shadow-sm" data-val="Day Labor">
+                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-bold bg-[#FFE855] border-[#FFE855] text-slate-950 active-chip shadow-sm" data-val="Day Labor">
                         🛠️ Day Labor
                     </button>
-                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-bold bg-amber-400/20 border-amber-400/50 text-amber-300 active-chip shadow-sm" data-val="Kitchen & Food Prep">
+                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-bold bg-[#FFE855] border-[#FFE855] text-slate-950 active-chip shadow-sm" data-val="Kitchen & Food Prep">
                         🍳 Kitchen & Food Prep
                     </button>
-                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-bold bg-amber-400/20 border-amber-400/50 text-amber-300 active-chip shadow-sm" data-val="Shelter & Pantry Volunteering">
+                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-bold bg-[#FFE855] border-[#FFE855] text-slate-950 active-chip shadow-sm" data-val="Shelter & Pantry Volunteering">
                         🤝 Shelter & Pantry Volunteering
                     </button>
-                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-white/5 border-white/10 text-slate-300 hover:bg-white/10" data-val="Warehouse & Freight">
+                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-200" data-val="Warehouse & Freight">
                         📦 Warehouse & Freight
                     </button>
-                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-white/5 border-white/10 text-slate-300 hover:bg-white/10" data-val="Caregiving & Family Support">
+                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-200" data-val="Caregiving & Family Support">
                         ❤️ Caregiving & Support
                     </button>
-                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-white/5 border-white/10 text-slate-300 hover:bg-white/10" data-val="Janitorial & Cleaning">
+                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-200" data-val="Janitorial & Cleaning">
                         🧹 Janitorial & Cleaning
                     </button>
-                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-white/5 border-white/10 text-slate-300 hover:bg-white/10" data-val="Landscaping & Grounds Keeping">
+                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-200" data-val="Landscaping & Grounds Keeping">
                         🌱 Landscaping & Yardwork
                     </button>
-                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-white/5 border-white/10 text-slate-300 hover:bg-white/10" data-val="Retail & Customer Service">
+                    <button type="button" class="chip-btn px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-200" data-val="Retail & Customer Service">
                         🛒 Customer Service
                     </button>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-300 mb-1">Optional Details / Brief Description</label>
-                    <textarea id="input-informal-notes" rows="2" placeholder="e.g. Prepped food for 100+ daily meals, unloaded delivery trucks, organized food pantry inventory..." class="w-full rounded-xl bg-slate-900 border border-white/10 p-2.5 text-xs text-white placeholder-slate-500 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 font-medium">Prepped daily meals, sanitized workstations, unloaded supply trucks, and organized community pantry storage.</textarea>
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Optional Details / Brief Description</label>
+                    <textarea id="input-informal-notes" rows="2" placeholder="e.g. Prepped food for 100+ daily meals, unloaded delivery trucks, organized food pantry inventory..." class="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-xs text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-400 font-medium">Prepped daily meals, sanitized workstations, unloaded supply trucks, and organized community pantry storage.</textarea>
                 </div>
             </section>
 
             <!-- WIZARD STEP 3: SKILLS & CERTIFICATIONS -->
-            <section id="step-3" class="backdrop-blur-md bg-white/[0.04] border border-white/10 rounded-2xl p-4 shadow-lg shadow-black/30 space-y-4">
-                <h3 class="text-xs font-extrabold tracking-wider uppercase text-white flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-amber-400 text-sm">verified</span> 3. Practical Skills & Badges
+            <section id="step-3" class="bg-white dark:bg-[#121722] border border-slate-200 dark:border-[#232C3F] rounded-2xl p-4 shadow-sm space-y-4">
+                <h3 class="text-xs font-extrabold tracking-wider uppercase text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-amber-500 text-sm">verified</span> 3. Practical Skills & Badges
                 </h3>
-                <p class="text-xs text-slate-300 font-medium">Select any certifications, strengths, or practical skills you have:</p>
+                <p class="text-xs text-slate-600 dark:text-slate-300 font-medium">Select any certifications, strengths, or practical skills you have:</p>
 
                 <div class="flex flex-wrap gap-2" id="skills-chips-container">
-                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-bold bg-amber-400/20 border-amber-400/50 text-amber-300 active-chip shadow-sm" data-val="Food Handler Card">
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-bold bg-[#FFE855] border-[#FFE855] text-slate-950 active-chip shadow-sm" data-val="Food Handler Card">
                         📜 Food Handler Card
                     </button>
-                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-bold bg-amber-400/20 border-amber-400/50 text-amber-300 active-chip shadow-sm" data-val="Forklift Certified">
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-bold bg-[#FFE855] border-[#FFE855] text-slate-950 active-chip shadow-sm" data-val="Forklift Certified">
                         🚜 Forklift Certified
                     </button>
-                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-bold bg-amber-400/20 border-amber-400/50 text-amber-300 active-chip shadow-sm" data-val="Heavy Lifting 50+ lbs">
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-bold bg-[#FFE855] border-[#FFE855] text-slate-950 active-chip shadow-sm" data-val="Heavy Lifting 50+ lbs">
                         💪 Heavy Lifting 50+ lbs
                     </button>
-                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-bold bg-amber-400/20 border-amber-400/50 text-amber-300 active-chip shadow-sm" data-val="Reliable & Punctual">
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-bold bg-[#FFE855] border-[#FFE855] text-slate-950 active-chip shadow-sm" data-val="Reliable & Punctual">
                         ⏰ Reliable & Punctual
                     </button>
-                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-white/5 border-white/10 text-slate-300 hover:bg-white/10" data-val="Bilingual / Multilingual">
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-200" data-val="Bilingual / Multilingual">
                         🗣️ Bilingual
                     </button>
-                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-white/5 border-white/10 text-slate-300 hover:bg-white/10" data-val="OSHA 10 Safety">
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-200" data-val="OSHA 10 Safety">
                         🪖 OSHA 10 Safety
                     </button>
-                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-white/5 border-white/10 text-slate-300 hover:bg-white/10" data-val="Pallet Jack Operator">
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-200" data-val="Pallet Jack Operator">
                         📦 Pallet Jack
                     </button>
-                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-white/5 border-white/10 text-slate-300 hover:bg-white/10" data-val="First Aid & CPR">
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-200" data-val="First Aid & CPR">
                         🩹 First Aid / CPR
                     </button>
                 </div>
             </section>
 
             <!-- WIZARD STEP 4: TARGET JOB TYPES -->
-            <section id="step-4" class="backdrop-blur-md bg-white/[0.04] border border-white/10 rounded-2xl p-4 shadow-lg shadow-black/30 space-y-4">
-                <h3 class="text-xs font-extrabold tracking-wider uppercase text-white flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-amber-400 text-sm">target</span> 4. Target Job Types
+            <section id="step-4" class="bg-white dark:bg-[#121722] border border-slate-200 dark:border-[#232C3F] rounded-2xl p-4 shadow-sm space-y-4">
+                <h3 class="text-xs font-extrabold tracking-wider uppercase text-slate-900 dark:text-white flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-amber-500 text-sm">target</span> 4. Target Job Types
                 </h3>
-                <p class="text-xs text-slate-300 font-medium">What kind of job are you looking for right now?</p>
+                <p class="text-xs text-slate-600 dark:text-slate-300 font-medium">What kind of job are you looking for right now?</p>
 
                 <div class="flex flex-wrap gap-2" id="roles-chips-container">
-                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-bold bg-amber-400/20 border-amber-400/50 text-amber-300 active-chip shadow-sm" data-val="Kitchen Prep & Dishwasher">
+                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-bold bg-[#FFE855] border-[#FFE855] text-slate-950 active-chip shadow-sm" data-val="Kitchen Prep & Dishwasher">
                         🍽️ Kitchen Staff & Prep
                     </button>
-                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-bold bg-amber-400/20 border-amber-400/50 text-amber-300 active-chip shadow-sm" data-val="Warehouse & Logistics Associate">
+                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-bold bg-[#FFE855] border-[#FFE855] text-slate-950 active-chip shadow-sm" data-val="Warehouse & Logistics Associate">
                         🏢 Warehouse Associate
                     </button>
-                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-bold bg-amber-400/20 border-amber-400/50 text-amber-300 active-chip shadow-sm" data-val="General Laborer">
+                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-bold bg-[#FFE855] border-[#FFE855] text-slate-950 active-chip shadow-sm" data-val="General Laborer">
                         🏗️ General Laborer
                     </button>
-                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-white/5 border-white/10 text-slate-300 hover:bg-white/10" data-val="Sanitation & Janitorial">
+                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-200" data-val="Sanitation & Janitorial">
                         🧼 Sanitation & Custodial
                     </button>
-                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-white/5 border-white/10 text-slate-300 hover:bg-white/10" data-val="Retail Stocker & Cashier">
+                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-200" data-val="Retail Stocker & Cashier">
                         🛒 Retail Stocker
                     </button>
                 </div>
             </section>
 
             <!-- Sticky Action Container for Generate Button -->
-            <div class="sticky bottom-0 z-30 pt-3 pb-8 bg-gradient-to-t from-[#0F1117] via-[#0F1117]/95 to-transparent">
-                <button id="btn-generate-resume" onclick="generateResume()" class="w-full py-4 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-extrabold text-sm rounded-2xl shadow-[0_4px_25px_rgba(245,158,11,0.4)] hover:from-amber-300 hover:to-amber-400 active:scale-95 transition-all flex items-center justify-center gap-2">
+            <div class="sticky bottom-0 z-30 pt-3 pb-8 bg-gradient-to-t from-[#F4F5F7] dark:from-[#0F1117] via-[#F4F5F7]/95 dark:via-[#0F1117]/95 to-transparent">
+                <button id="btn-generate-resume" onclick="generateResume()" class="w-full py-4 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-extrabold text-sm rounded-2xl shadow-md hover:from-amber-300 hover:to-amber-400 active:scale-95 transition-all flex items-center justify-center gap-2">
                     <span class="material-symbols-outlined text-lg">auto_awesome</span> Generate AI Resume with Gemini
                 </button>
             </div>
