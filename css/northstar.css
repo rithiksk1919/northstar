@@ -1,45 +1,44 @@
-/* UI/UX Pro Max Design Tokens & Interactions */
+/* NorthStar Intentional Dark Design System Tokens */
 :root {
-  --primary-navy: #0d1c2f;
-  --secondary-navy: #131b2e;
-  --starlight-gold: #ffe24c;
-  --starlight-amber: #fcdf46;
-  --starlight-dark-amber: #6d5e00;
-  --bg-slate: #0f172a;
-  --surface-light: #f7f9fb;
-  --surface-card: #ffffff;
-  --surface-hover: #f1f5f9;
-  --border-light: rgba(226, 232, 240, 0.8);
-  --border-glow: rgba(252, 223, 70, 0.4);
-  --text-dark: #0f172a;
-  --text-muted: #475569;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.25rem;
+  --bg-obsidian: #0B0E14;
+  --surface-card: #121722;
+  --surface-sub: #1A2130;
+  --border-stroke: #232C3F;
+  --text-primary: #F0F4F8;
+  --text-secondary: #8896AB;
+  --accent-emerald: #10B981;
+  --pay-pill-bg: #064E3B;
+  --pay-pill-text: #34D399;
+  --btn-primary-bg: #1E293B;
+
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
   --radius-full: 9999px;
   --touch-target-min: 44px;
-  --shadow-sm: 0 2px 4px rgba(15, 23, 42, 0.05);
-  --shadow-md: 0 8px 16px -4px rgba(15, 23, 42, 0.1), 0 4px 6px -2px rgba(15, 23, 42, 0.05);
-  --shadow-lg: 0 20px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
-  --shadow-starlight: 0 0 25px rgba(252, 223, 70, 0.4);
 }
 
 body {
-  background-color: var(--bg-slate);
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--bg-obsidian);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* UI/UX Pro Max Touch & Interaction Targets */
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Touch & Interaction Targets */
 button, a, input, select, textarea {
   touch-action: manipulation;
 }
 
 /* Accessible High-Contrast Focus Rings */
 :focus-visible {
-  outline: 2px solid var(--starlight-amber) !important;
+  outline: 2px solid var(--accent-emerald) !important;
   outline-offset: 2px !important;
-  box-shadow: 0 0 0 4px rgba(252, 223, 70, 0.25) !important;
 }
 
 nav a {
@@ -52,10 +51,9 @@ nav a {
   position: relative;
 }
 
-/* Button & Card Micro-Interactions (150-250ms spring timing) */
+/* Button & Card Micro-Interactions */
 button, .interactive-card, nav a, .chip-btn {
   transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), 
-              box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
               background-color 0.2s ease, 
               color 0.15s ease,
               border-color 0.2s ease;
@@ -66,34 +64,18 @@ button:hover, nav a:hover {
 }
 
 button:active, .interactive-card:active, nav a:active {
-  transform: scale(0.96) translateY(0);
+  transform: scale(0.98);
   opacity: 0.94;
 }
 
-/* Glassmorphism & Elevation */
-.glass-card {
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  box-shadow: var(--shadow-md);
+/* Crisp Clean Dark Surface Cards */
+.glass-card, .glass-card-dark {
+  background: var(--surface-card);
+  border: 1px solid var(--border-stroke);
 }
 
-.glass-card-dark {
-  background: rgba(19, 27, 46, 0.95);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
-}
-
-/* Starlight Glow Effects */
-.starlight-glow {
-  box-shadow: var(--shadow-starlight);
-}
-
-.starlight-glow-lg {
-  box-shadow: 0 0 40px rgba(252, 223, 70, 0.55), 0 0 80px rgba(252, 223, 70, 0.2);
+.starlight-glow, .starlight-glow-lg {
+  box-shadow: none;
 }
 
 /* Nav Item Indicator Badge */

@@ -619,13 +619,13 @@ function renderDynamicNav() {
     ];
   }
 
-  // Smooth item swap animation
+  nav.className = "absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-1.5 py-2 bg-[#121722] border-t border-[#232C3F]";
   nav.classList.add('transition-opacity', 'duration-150');
   nav.innerHTML = navItems.map(item => {
     const isActive = currentPath === item.href || (currentPath === '' && item.href === 'index.html');
     const activeClass = isActive && !item.action
-      ? 'bg-secondary-container text-on-secondary-container rounded-2xl px-2 py-1 shadow-md starlight-glow font-bold animate-switch-pop'
-      : 'text-on-surface-variant hover:text-primary px-1.5 py-1 font-medium';
+      ? 'bg-[#1A2130] text-[#10B981] rounded-xl px-2.5 py-1 font-bold border border-[#232C3F]'
+      : 'text-[#8896AB] hover:text-[#F0F4F8] px-1.5 py-1 font-medium';
 
     const fillStyle = isActive && !item.action ? "style=\"font-variation-settings: 'FILL' 1;\"" : "";
 
@@ -633,7 +633,7 @@ function renderDynamicNav() {
       return `
         <button onclick="${item.action}" class="flex flex-col items-center justify-center transition-all ${activeClass}">
           <span class="material-symbols-outlined text-xl" ${fillStyle}>${item.icon}</span>
-          <span class="text-[10px] sm:text-[11px] leading-tight">${item.label}</span>
+          <span class="text-[10px] sm:text-[11px] leading-tight font-body">${item.label}</span>
         </button>
       `;
     }
@@ -641,7 +641,7 @@ function renderDynamicNav() {
     return `
       <a class="flex flex-col items-center justify-center transition-all ${activeClass}" href="${item.href}">
         <span class="material-symbols-outlined text-xl" ${fillStyle}>${item.icon}</span>
-        <span class="text-[10px] sm:text-[11px] leading-tight">${item.label}</span>
+        <span class="text-[10px] sm:text-[11px] leading-tight font-body">${item.label}</span>
       </a>
     `;
   }).join('');
