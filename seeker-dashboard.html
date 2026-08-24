@@ -5,6 +5,8 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
 <title>Northstar | Seeker Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link rel="stylesheet" href="css/northstar.css">
 <script id="tailwind-config">
@@ -135,12 +137,32 @@
             <p class="text-xs text-slate-500 font-normal">Find what you need today.</p>
         </section>
 
-        <!-- Live Map of Resources Card -->
-        <a href="resource-map.html" class="block bg-gradient-to-tr from-slate-900 to-slate-800 text-white rounded-3xl p-5 shadow-md border border-slate-800 relative overflow-hidden group">
-            <div class="h-32 flex flex-col justify-end relative z-10">
-                <div class="flex items-center gap-2 text-white font-bold text-lg font-heading">
-                    <span class="material-symbols-outlined text-2xl text-[#FFE855]">map</span>
-                    <span>Live Map of Resources</span>
+        <!-- Live Map of Resources Card with Mini Map Preview -->
+        <a href="resource-map.html" class="block bg-slate-900 text-white rounded-3xl p-4 shadow-md border border-slate-800 relative overflow-hidden group hover:border-[#FFE855]/60 transition-all">
+            <!-- Background Mini Map Preview -->
+            <div id="seeker-mini-map" class="absolute inset-0 w-full h-full opacity-65 z-0 pointer-events-none rounded-3xl"></div>
+            
+            <!-- Gradient Overlay for Readable Text -->
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-slate-950/20 z-10"></div>
+            
+            <div class="h-32 flex flex-col justify-between relative z-20">
+                <!-- Top Status Badge -->
+                <div class="flex justify-between items-center">
+                    <span class="px-2.5 py-0.5 bg-[#FFE855] text-slate-950 font-bold text-[10px] rounded-full shadow-sm">
+                        LIVE PREVIEW
+                    </span>
+                    <span class="text-[10px] font-bold text-white bg-slate-950/80 px-2 py-0.5 rounded-full border border-white/20 flex items-center gap-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> 42 Resources Near You
+                    </span>
+                </div>
+                
+                <!-- Bottom Title Bar -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2 text-white font-bold text-base font-heading">
+                        <span class="material-symbols-outlined text-xl text-[#FFE855]">map</span>
+                        <span>Live Map of Resources</span>
+                    </div>
+                    <span class="material-symbols-outlined text-sm text-slate-300 group-hover:translate-x-1 transition-transform">arrow_forward</span>
                 </div>
             </div>
         </a>
@@ -280,13 +302,62 @@
       }
       el.textContent = greeting;
     }
+
+    function initSeekerMiniMap() {
+      const el = document.getElementById('seeker-mini-map');
+      if (!el || !window.L || el.getAttribute('data-map-initialized')) return;
+      el.setAttribute('data-map-initialized', 'true');
+      
+      try {
+        const map = L.map('seeker-mini-map', {
+          center: [47.6062, -122.3321],
+          zoom: 13,
+          zoomControl: false,
+          attributionControl: false,
+          dragging: false,
+          touchZoom: false,
+          scrollWheelZoom: false,
+          doubleClickZoom: false
+        });
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+          maxZoom: 19
+        }).addTo(map);
+
+        const pins = [
+          [47.6062, -122.3321],
+          [47.6101, -122.3355],
+          [47.6020, -122.3280],
+          [47.6085, -122.3400]
+        ];
+
+        pins.forEach(coords => {
+          L.circleMarker(coords, {
+            radius: 6,
+            fillColor: '#FFE855',
+            color: '#0A0E1A',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.95
+          }).addTo(map);
+        });
+      } catch (err) {
+        console.warn('Mini map init error:', err);
+      }
+    }
+
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', setDashboardGreeting);
+      document.addEventListener('DOMContentLoaded', () => {
+        setDashboardGreeting();
+        initSeekerMiniMap();
+      });
     } else {
       setDashboardGreeting();
+      initSeekerMiniMap();
     }
-    // Expose so SPA router can re-run after page inject
+
     window.setDashboardGreeting = setDashboardGreeting;
+    window.initSeekerMiniMap = initSeekerMiniMap;
   })();
 </script>
 <script src="js/northstar.js"></script>
