@@ -640,14 +640,6 @@ html.light [class*="border-rose-500\/20"] p {
   color: #9f1239 !important;
 }
 
-/* Feature Hero Banners & Glass Cards in Light Mode */
-html.light .backdrop-blur-md.bg-white\/\[0\.04\],
-html.light .glass-card-dark {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
-  border-color: #cbd5e1 !important;
-  color: #0f172a !important;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06) !important;
-}
 
 /* Resource Map Filter & Drawer in Light Mode */
 html.light .bg-\[\#12141C\]\/90,
@@ -685,35 +677,55 @@ html.light .active-chip {
   box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3) !important;
 }
 
-/* Text Hierarchy in Light Mode */
-html.light h1, html.light h2, html.light h3, html.light h4, html.light h5, html.light h6,
-html.light .text-white,
-html.light .text-primary {
-  color: #0f172a !important;
+/* Dark Card & Box Protection Engine (Ensures text on dark cards remains white in Light Mode) */
+[class*="from-\[\#1C2538\]"],
+[class*="from-slate-900"],
+.bg-slate-950,
+.bg-slate-900,
+.bg-\[\#0D1424\],
+.bg-\[\#1C2538\],
+.bg-\[\#121722\] {
+  color: #FFFFFF !important;
 }
 
-html.light p, 
-html.light label, 
-html.light li,
-html.light .text-slate-300,
-html.light .text-slate-400 {
-  color: #475569 !important;
+[class*="from-\[\#1C2538\]"] h1, [class*="from-\[\#1C2538\]"] h2, [class*="from-\[\#1C2538\]"] h3, [class*="from-\[\#1C2538\]"] h4,
+[class*="from-slate-900"] h1, [class*="from-slate-900"] h2, [class*="from-slate-900"] h3, [class*="from-slate-900"] h4,
+.bg-slate-950 h1, .bg-slate-950 h2, .bg-slate-950 h3, .bg-slate-950 h4,
+.bg-slate-900 h1, .bg-slate-900 h2, .bg-slate-900 h3, .bg-slate-900 h4,
+.bg-\[\#0D1424\] h1, .bg-\[\#0D1424\] h2, .bg-\[\#0D1424\] h3, .bg-\[\#0D1424\] h4,
+.bg-\[\#1C2538\] h1, .bg-\[\#1C2538\] h2, .bg-\[\#1C2538\] h3, .bg-\[\#1C2538\] h4 {
+  color: #FFFFFF !important;
 }
 
-html.light .text-slate-500,
-html.light .text-slate-600 {
-  color: #64748b !important;
+[class*="from-\[\#1C2538\]"] p,
+[class*="from-slate-900"] p,
+.bg-slate-950 p,
+.bg-slate-900 p,
+.bg-\[\#0D1424\] p,
+.bg-\[\#1C2538\] p,
+.bg-\[\#121722\] p,
+[class*="from-\[\#1C2538\]"] .text-slate-300,
+[class*="from-slate-900"] .text-slate-300 {
+  color: #CBD5E1 !important;
 }
 
-/* Form Inputs in Light Mode */
-html.light input, html.light textarea, html.light select {
-  background-color: #ffffff !important;
-  color: #0f172a !important;
-  border-color: #cbd5e1 !important;
+[class*="from-\[\#1C2538\]"] span:not(.text-\[\#FFE855\]):not(.text-amber-400),
+[class*="from-slate-900"] span:not(.text-\[\#FFE855\]):not(.text-amber-400),
+.bg-slate-950 span:not(.text-\[\#FFE855\]):not(.text-amber-400),
+.bg-slate-900 span:not(.text-\[\#FFE855\]):not(.text-amber-400),
+.bg-\[\#0D1424\] span:not(.text-\[\#FFE855\]):not(.text-amber-400),
+.bg-\[\#1C2538\] span:not(.text-\[\#FFE855\]):not(.text-amber-400) {
+  color: #FFFFFF !important;
 }
 
-html.light input::placeholder, html.light textarea::placeholder {
-  color: #94a3b8 !important;
+[class*="from-\[\#1C2538\]"] .text-\[\#FFE855\],
+[class*="from-slate-900"] .text-\[\#FFE855\],
+.bg-slate-950 .text-\[\#FFE855\],
+.bg-slate-900 .text-\[\#FFE855\],
+.bg-\[\#0D1424\] .text-\[\#FFE855\],
+.bg-\[\#1C2538\] .text-\[\#FFE855\],
+.bg-\[\#121722\] .text-\[\#FFE855\] {
+  color: #FFE855 !important;
 }
 
 /* Floating Dock Bottom Navigation in Light Mode */
