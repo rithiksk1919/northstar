@@ -192,17 +192,43 @@ window.handleAuthFormSubmit = async function (e) {
   if (e) e.preventDefault();
   const emailInput = document.getElementById('auth-email');
   const passwordInput = document.getElementById('auth-password');
+  const errorContainer = document.getElementById('auth-error-message');
   const email = emailInput ? emailInput.value.trim() : '';
   const password = passwordInput ? passwordInput.value : '';
 
+  const clearError = () => {
+    if (errorContainer) {
+      errorContainer.classList.add('hidden');
+      errorContainer.textContent = '';
+    }
+  };
+
+  if (emailInput && !emailInput.dataset.hasErrorListener) {
+    emailInput.addEventListener('input', clearError);
+    emailInput.dataset.hasErrorListener = 'true';
+  }
+  if (passwordInput && !passwordInput.dataset.hasErrorListener) {
+    passwordInput.addEventListener('input', clearError);
+    passwordInput.dataset.hasErrorListener = 'true';
+  }
+
+  const showError = (msg) => {
+    if (errorContainer) {
+      errorContainer.textContent = msg;
+      errorContainer.classList.remove('hidden');
+    } else {
+      showNotification(msg, 'error');
+    }
+  };
+
   if (!email || !password) {
-    showNotification('Please enter both email and password.', 'error');
+    showError('Please enter both email and password.');
     return;
   }
 
   // Password Policy Protocol: Minimum 6 characters required
   if (authMode === 'signup' && password.length < 6) {
-    showNotification('Password protocol: Must be at least 6 characters long.', 'error');
+    showError('Password protocol: Must be at least 6 characters long.');
     return;
   }
 
@@ -220,13 +246,13 @@ window.handleAuthFormSubmit = async function (e) {
         });
 
         if (error) {
-          showNotification(`Registration Failed: ${error.message}`, 'error');
+          showError(`Registration Failed: ${error.message}`);
           return;
         }
 
         // Supabase returns an empty identities array if email is already registered
         if (data?.user && data?.user?.identities && data.user.identities.length === 0) {
-          showNotification('This email address is already in use. Please sign in instead.', 'error');
+          showError('This email address is already in use. Please sign in instead.');
           return;
         }
 
@@ -238,7 +264,7 @@ window.handleAuthFormSubmit = async function (e) {
       } else {
         const { data, error } = await window.supabaseClient.auth.signInWithPassword({ email, password });
         if (error) {
-          showNotification(`Login Failed: ${error.message}`, 'error');
+          showError('Incorrect email or password.');
           return;
         }
         if (data?.user) {
@@ -618,12 +644,11 @@ function renderDynamicNav() {
       { href: '#', label: 'Settings', icon: 'settings', action: 'openSettingsModal()' }
     ];
   } else {
-    // Volunteer Funnel Tabs: [Dashboard, Jobs, Donate Food, Delivery, Settings]
+    // Volunteer Funnel Tabs: [Dashboard, Jobs, Donate Food, Settings]
     navItems = [
       { href: 'helper-dashboard.html', label: 'Dashboard', icon: 'dashboard' },
       { href: 'opportunities.html', label: 'Jobs', icon: 'work' },
       { href: 'donate.html', label: 'Donate Food', icon: 'restaurant' },
-      { href: '#', label: 'Delivery', icon: 'local_shipping', action: "showNotification('\uD83D\uDE9A Delivery queue coming soon!', 'info')" },
       { href: '#', label: 'Settings', icon: 'settings', action: 'openSettingsModal()' }
     ];
   }
