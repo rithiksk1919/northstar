@@ -5,7 +5,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { ApifyClient } from 'apify-client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { spawn } from 'child_process';
 
 dotenv.config();
 
@@ -255,96 +254,6 @@ app.get('/api/jobs', async (req, res) => {
 });
 
 // API Endpoint: Post a new job opportunity (Helper Funnel) with Supabase persistence
-
-app.post('/api/generate-resume', async (req, res) => {
-  console.log('✅ /api/generate-resume called');
-  console.log('Resume request:', req.body);
-
-  try {
-    const confirmed = req.body;
-
-    const pythonPath = '/Users/sidharth/northstar-ai/.venv/bin/python';
-    const pipelinePath = '/Users/sidharth/northstar-ai/scripts/resume_pipeline_api.py';
-
-    const child = spawn(pythonPath, [pipelinePath], {
-      cwd: '/Users/sidharth/northstar-ai',
-    });
-
-    let stdout = '';
-    let stderr = '';
-
-    child.stdout.on('data', (data) => {
-      stdout += data.toString();
-    });
-
-    child.stderr.on('data', (data) => {
-      stderr += data.toString();
-    });
-
-    child.on('error', (err) => {
-      console.error('Resume AI process error:', err);
-
-      if (!res.headersSent) {
-        res.status(500).json({
-          success: false,
-          error: 'Could not start NorthStar AI.',
-        });
-      }
-    });
-
-    child.on('close', (code) => {
-      if (code !== 0) {
-        console.error('Resume AI stderr:', stderr);
-
-        return res.status(500).json({
-          success: false,
-          error: 'NorthStar AI resume generation failed.',
-        });
-      }
-
-      try {
-        const result = JSON.parse(stdout);
-
-        if (!result.success) {
-          return res.status(422).json({
-            success: false,
-            error: 'The generated resume did not pass factuality validation.',
-            validation: result.validation,
-          });
-        }
-
-        return res.json({
-          success: true,
-          resume: result.resume,
-          repairs: result.repairs,
-          validation: result.validation,
-        });
-      } catch (parseError) {
-        console.error('Resume AI JSON parse error:', parseError);
-        console.error('Raw output:', stdout);
-
-        return res.status(500).json({
-          success: false,
-          error: 'NorthStar AI returned an invalid response.',
-        });
-      }
-    });
-
-    child.stdin.write(JSON.stringify(confirmed));
-    child.stdin.end();
-
-  } catch (error) {
-    console.error('Resume endpoint error:', error);
-
-    res.status(500).json({
-      success: false,
-      error: 'Resume generation failed.',
-    });
-  }
-});
-
-
-
 app.post('/api/jobs', async (req, res) => {
   try {
     const { title, company, location, type, pay, requirements, description, contact, authorId } = req.body;
