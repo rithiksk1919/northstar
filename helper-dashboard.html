@@ -195,6 +195,20 @@
             </div>
         </section>
 
+        <!-- Volunteer Food Pickups Queue Section -->
+        <section class="space-y-2 pt-1">
+            <div class="flex justify-between items-center">
+                <h3 class="text-sm font-bold text-slate-900 font-heading flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-amber-500 text-base">local_shipping</span> Food Pickups Needing Drivers
+                </h3>
+                <a href="opportunities.html" class="text-[11px] text-amber-600 font-semibold hover:underline">View All</a>
+            </div>
+
+            <div id="dashboard-deliveries-queue" class="space-y-2.5">
+                <!-- Dynamically populated via JS -->
+            </div>
+        </section>
+
         <!-- Active Job Postings List -->
         <section class="space-y-2 pt-1">
             <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between">
@@ -253,6 +267,40 @@
 </div>
 
 <script src="js/northstar.js"></script>
-</body>
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  const container = document.getElementById('dashboard-deliveries-queue');
+  if (!container) return;
+
+  try {
+    const res = await fetch('/api/deliveries');
+    const data = await res.json();
+    const deliveries = (data.deliveries || []).filter(d => d.status !== 'claimed');
+
+    if (deliveries.length === 0) {
+      container.innerHTML = `<div class="bg-white border border-slate-200 rounded-xl p-3 text-center text-xs text-slate-500">All food pickup requests claimed!</div>`;
+      return;
+    }
+
+    container.innerHTML = deliveries.slice(0, 3).map(d => `
+      <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm space-y-2">
+        <div class="flex justify-between items-start">
+          <div>
+            <h4 class="text-xs font-bold text-slate-900 font-heading">${Array.isArray(d.items) ? d.items.join(', ') : d.items}</h4>
+            <p class="text-[11px] text-slate-500">Pickup: <strong>${d.donorArea}</strong> → ${d.destination}</p>
+          </div>
+          <span class="bg-amber-100 text-amber-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-amber-200">Needs Driver</span>
+        </div>
+        <button onclick="window.location.href='opportunities.html'" class="w-full py-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl text-xs font-bold transition-all shadow-sm">
+          Claim Route in Opportunities
+        </button>
+      </div>
+    `).join('');
+  } catch (err) {
+    console.error('Error fetching dashboard deliveries:', err);
+  }
+});
+</script>
+
 </html>
 

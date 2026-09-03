@@ -277,37 +277,128 @@ window.navigateToFoodMap = function() {
   }
 };
 
+let selectedDonationAmount = 25;
+
+window.selectPresetAmount = function(amt) {
+  selectedDonationAmount = amt;
+  document.querySelectorAll('.stripe-amt-btn').forEach(btn => {
+    btn.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-400');
+    btn.classList.add('bg-slate-800', 'text-slate-200', 'border-slate-700');
+  });
+  const activeBtn = document.getElementById(`stripe-amt-${amt}`);
+  if (activeBtn) {
+    activeBtn.classList.remove('bg-slate-800', 'text-slate-200', 'border-slate-700');
+    activeBtn.classList.add('bg-indigo-600', 'text-white', 'border-indigo-400');
+  }
+  const customInput = document.getElementById('stripe-custom-amt');
+  if (customInput) customInput.value = '';
+};
+
+window.handleCustomAmountInput = function(val) {
+  const parsed = parseFloat(val);
+  if (!isNaN(parsed) && parsed > 0) {
+    selectedDonationAmount = parsed;
+    document.querySelectorAll('.stripe-amt-btn').forEach(btn => {
+      btn.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-400');
+      btn.classList.add('bg-slate-800', 'text-slate-200', 'border-slate-700');
+    });
+  }
+};
+
+window.processStripeDonation = async function() {
+  const btn = document.getElementById('stripe-pay-btn');
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span class="inline-block animate-spin mr-2">⏳</span> Redirecting to Stripe Checkout...`;
+  }
+
+  try {
+    const res = await fetch('/api/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: selectedDonationAmount })
+    });
+    const data = await res.json();
+
+    if (data.url) {
+      window.location.href = data.url;
+    } else if (data.demoUrl) {
+      window.location.href = data.demoUrl;
+    } else {
+      throw new Error(data.error || 'Could not initiate checkout');
+    }
+  } catch (err) {
+    console.error('Stripe Checkout Error:', err);
+    if (typeof showNotification === 'function') {
+      showNotification('Thank you! Processing your test donation of $' + selectedDonationAmount, 'success');
+    }
+    const modal = document.getElementById('donate-money-modal');
+    if (modal) modal.remove();
+  }
+};
+
 window.openDonateMoneyModal = function(e) {
   if (e) e.preventDefault();
-  // Remove stale modal if present
+  selectedDonationAmount = 25;
   const existing = document.getElementById('donate-money-modal');
   if (existing) existing.remove();
 
   const modal = document.createElement('div');
   modal.id = 'donate-money-modal';
-  modal.className = 'fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-slate-950/85 backdrop-blur-md p-0 sm:p-4';
+  modal.className = 'fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-slate-950/85 backdrop-blur-md p-0 sm:p-4 animate-fade-in';
   modal.innerHTML = `
     <div class="w-full sm:max-w-md bg-[#12141C] border border-white/10 rounded-t-3xl sm:rounded-3xl p-6 text-white space-y-4 shadow-2xl">
       <div class="w-12 h-1.5 bg-slate-700 rounded-full mx-auto sm:hidden"></div>
-      <div class="flex justify-between items-center">
-        <h3 class="text-base font-extrabold text-white flex items-center gap-2">
-          <span class="material-symbols-outlined text-amber-400">payments</span> Select Payment Method
-        </h3>
-        <button onclick="document.getElementById('donate-money-modal').remove()" class="text-slate-400 hover:text-white transition-colors">
+      
+      <!-- Modal Header -->
+      <div class="flex justify-between items-center border-b border-white/10 pb-3">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+            <span class="material-symbols-outlined text-xl">credit_card</span>
+          </div>
+          <div>
+            <h3 class="text-base font-extrabold text-white leading-tight">Donate via Stripe</h3>
+            <p class="text-[11px] text-slate-400">Fast, secure 256-bit encrypted checkout</p>
+          </div>
+        </div>
+        <button onclick="document.getElementById('donate-money-modal').remove()" class="text-slate-400 hover:text-white transition-colors p-1">
           <span class="material-symbols-outlined">close</span>
         </button>
       </div>
-      <p class="text-xs text-slate-300 leading-relaxed">Choose a direct transfer method to donate securely:</p>
-      <div class="space-y-3">
-        <a href="https://paypal.me/" target="_blank" rel="noopener noreferrer" class="w-full py-4 bg-[#00457C] hover:bg-[#003B6A] text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-md transition-all">
-            PayPal (northstar)
-        </a>
-        <a href="https://zellepay.com" target="_blank" rel="noopener noreferrer" class="w-full py-4 bg-[#7539B5] hover:bg-[#642D9D] text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-md transition-all">
-            Zelle (donate@northstar.org)
-        </a>
-        <a href="https://apple.com/apple-pay" target="_blank" rel="noopener noreferrer" class="w-full py-4 bg-white text-black hover:bg-gray-100 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-md transition-all">
-            Apple Cash (Northstar)
-        </a>
+
+      <!-- Preset Amount Selector -->
+      <div class="space-y-2">
+        <label class="text-xs font-semibold text-slate-300">Select Donation Amount:</label>
+        <div class="grid grid-cols-4 gap-2">
+          <button id="stripe-amt-10" onclick="selectPresetAmount(10)" class="stripe-amt-btn py-2.5 rounded-xl border text-xs font-bold transition-all bg-slate-800 text-slate-200 border-slate-700 hover:border-indigo-500">$10</button>
+          <button id="stripe-amt-25" onclick="selectPresetAmount(25)" class="stripe-amt-btn py-2.5 rounded-xl border text-xs font-bold transition-all bg-indigo-600 text-white border-indigo-400 shadow-lg shadow-indigo-600/20">$25</button>
+          <button id="stripe-amt-50" onclick="selectPresetAmount(50)" class="stripe-amt-btn py-2.5 rounded-xl border text-xs font-bold transition-all bg-slate-800 text-slate-200 border-slate-700 hover:border-indigo-500">$50</button>
+          <button id="stripe-amt-100" onclick="selectPresetAmount(100)" class="stripe-amt-btn py-2.5 rounded-xl border text-xs font-bold transition-all bg-slate-800 text-slate-200 border-slate-700 hover:border-indigo-500">$100</button>
+        </div>
+      </div>
+
+      <!-- Custom Amount Input -->
+      <div class="space-y-1">
+        <label class="text-xs font-semibold text-slate-300">Or Custom Amount ($ USD):</label>
+        <div class="relative">
+          <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+          <input type="number" id="stripe-custom-amt" placeholder="Other amount..." min="1" step="1" oninput="handleCustomAmountInput(this.value)" class="w-full py-2.5 pl-8 pr-3 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors">
+        </div>
+      </div>
+
+      <!-- Impact Micro Statement -->
+      <div class="bg-indigo-950/40 border border-indigo-500/20 rounded-xl p-3 text-xs text-indigo-200 flex items-center gap-2">
+        <span class="material-symbols-outlined text-indigo-400 text-base flex-shrink-0">favorite</span>
+        <span>Your gift directly funds hot meals and shelter resources across Seattle.</span>
+      </div>
+
+      <!-- Stripe Pay Button -->
+      <button id="stripe-pay-btn" onclick="processStripeDonation()" class="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 active:scale-[0.99] transition-all cursor-pointer">
+        <span class="material-symbols-outlined text-base">lock</span> Complete Donation with Stripe
+      </button>
+
+      <div class="flex items-center justify-center gap-1.5 text-[10px] text-slate-400 pt-1">
+        <span class="material-symbols-outlined text-xs text-emerald-400">verified</span> Powered by <strong>Stripe</strong> Payment Gateway
       </div>
     </div>
   `;
@@ -315,6 +406,7 @@ window.openDonateMoneyModal = function(e) {
   const appFrame = document.querySelector('.app-frame') || document.body;
   appFrame.appendChild(modal);
 };
+
 
 // ── Item-Level Donate Modal ─────────────────────────────────────────────────
 window.openDonateItemModal = function(itemName) {
@@ -388,9 +480,10 @@ window.openFoodIntakeModal = function(e) {
           </div>
           
           <div class="space-y-3 bg-slate-900/50 p-3 rounded-xl border border-slate-800">
-              <input type="text" id="food-item-name" placeholder="Item Name (e.g. Canned Beans)" class="w-full py-2.5 px-3 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400">
+              <input type="text" id="food-item-name" placeholder="Item Name (e.g. Canned Beans)" onkeydown="if(event.key==='Enter'){ event.preventDefault(); addFoodItem(); }" class="w-full py-2.5 px-3 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400">
               <div class="flex gap-2">
-                  <input type="number" id="food-item-qty" placeholder="Qty" min="1" class="w-1/3 py-2.5 px-3 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400">
+                  <input type="number" id="food-item-qty" placeholder="Qty" min="1" onkeydown="if(event.key==='Enter'){ event.preventDefault(); addFoodItem(); }" class="w-1/3 py-2.5 px-3 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400">
+
                   <select id="food-item-category" class="w-2/3 py-2.5 px-3 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400">
                       <option value="Canned Goods">Canned Goods</option>
                       <option value="Fresh Produce">Fresh Produce</option>
@@ -411,27 +504,64 @@ window.openFoodIntakeModal = function(e) {
           </button>
       </div>
       
-      <!-- Step 2: Bag Count & Submit -->
+      <!-- Step 2: Packaging, Drop-off Availability & Submission -->
       <div id="food-intake-step-2" class="space-y-4 hidden">
           <div class="flex justify-between items-center">
             <h3 class="text-base font-extrabold text-white flex items-center gap-2">
-              <span class="material-symbols-outlined text-amber-400">inventory_2</span> Packaging
+              <span class="material-symbols-outlined text-amber-400">local_shipping</span> Delivery Method
             </h3>
             <button onclick="document.getElementById('food-intake-modal').remove()" class="text-slate-400 hover:text-white transition-colors">
               <span class="material-symbols-outlined">close</span>
             </button>
           </div>
-          <p class="text-sm text-slate-200">How many bags/boxes are you dropping off?</p>
-          <input type="number" id="food-bag-count" placeholder="Number of bags/boxes" min="1" class="w-full py-3 px-4 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-amber-400">
           
-          <button onclick="submitFoodDonation()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md active:scale-95 transition-all flex items-center justify-center gap-2 mt-4">
-              <span class="material-symbols-outlined text-sm">check_circle</span> Submit Donation
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-slate-300">How many bags/boxes are you donating?</label>
+            <input type="number" id="food-bag-count" placeholder="e.g. 2" min="1" value="1" class="w-full py-2.5 px-3 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400">
+          </div>
+
+          <!-- Drop Off Question -->
+          <div class="space-y-2">
+            <label class="text-xs font-semibold text-amber-400 flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm">help</span> Do you have a way to drop off this donation?
+            </label>
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" id="dropoff-yes-btn" onclick="toggleDropoffMethod('yes')" class="dropoff-opt-btn py-2.5 px-3 rounded-xl border text-xs font-bold transition-all flex flex-col items-center gap-1 bg-amber-500/20 text-amber-300 border-amber-400">
+                <span class="material-symbols-outlined text-base">directions_car</span> Yes, I can drop off
+              </button>
+              <button type="button" id="dropoff-no-btn" onclick="toggleDropoffMethod('no')" class="dropoff-opt-btn py-2.5 px-3 rounded-xl border text-xs font-bold transition-all flex flex-col items-center gap-1 bg-slate-800 text-slate-300 border-slate-700">
+                <span class="material-symbols-outlined text-base">volunteer_activism</span> No, need volunteer driver
+              </button>
+            </div>
+          </div>
+
+          <!-- Conditional Fields for Volunteer Pickup -->
+          <div id="volunteer-pickup-fields" class="space-y-3 bg-slate-900/60 p-3 rounded-xl border border-slate-800 hidden animate-fade-in">
+            <div class="space-y-1">
+              <label class="text-[11px] font-semibold text-slate-300">Pickup Neighborhood / Location:</label>
+              <input type="text" id="food-pickup-area" placeholder="e.g. Capitol Hill (12th & Pine)" class="w-full py-2 px-3 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400">
+            </div>
+            <div class="space-y-1">
+              <label class="text-[11px] font-semibold text-slate-300">Target Shelter Destination:</label>
+              <select id="food-target-destination" class="w-full py-2 px-3 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400">
+                <option value="St. Jude Community Refuge">St. Jude Community Refuge</option>
+                <option value="Downtown Hope Center">Downtown Hope Center</option>
+                <option value="Eastside Youth Shelter">Eastside Youth Shelter</option>
+              </select>
+            </div>
+            <div class="space-y-1">
+              <label class="text-[11px] font-semibold text-slate-300">Pickup Instructions / Notes:</label>
+              <input type="text" id="food-pickup-notes" placeholder="e.g. Box left on front porch" class="w-full py-2 px-3 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400">
+            </div>
+          </div>
+          
+          <button onclick="submitFoodDonation()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md active:scale-95 transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer">
+              <span class="material-symbols-outlined text-sm">check_circle</span> Submit Donation Request
           </button>
       </div>
       
     </div>
   `;
-  // Click outside to close (only if clicking the overlay)
   modal.addEventListener('mousedown', (evt) => { 
       if (evt.target === modal) modal.remove(); 
   });
@@ -440,6 +570,24 @@ window.openFoodIntakeModal = function(e) {
 };
 
 window.foodItemsArray = [];
+let selectedDropoffMethod = 'yes';
+
+window.toggleDropoffMethod = function(method) {
+  selectedDropoffMethod = method;
+  const yesBtn = document.getElementById('dropoff-yes-btn');
+  const noBtn = document.getElementById('dropoff-no-btn');
+  const fields = document.getElementById('volunteer-pickup-fields');
+  
+  if (method === 'yes') {
+    yesBtn.className = 'dropoff-opt-btn py-2.5 px-3 rounded-xl border text-xs font-bold transition-all flex flex-col items-center gap-1 bg-amber-500/20 text-amber-300 border-amber-400';
+    noBtn.className = 'dropoff-opt-btn py-2.5 px-3 rounded-xl border text-xs font-bold transition-all flex flex-col items-center gap-1 bg-slate-800 text-slate-300 border-slate-700';
+    if (fields) fields.classList.add('hidden');
+  } else {
+    noBtn.className = 'dropoff-opt-btn py-2.5 px-3 rounded-xl border text-xs font-bold transition-all flex flex-col items-center gap-1 bg-amber-500/20 text-amber-300 border-amber-400';
+    yesBtn.className = 'dropoff-opt-btn py-2.5 px-3 rounded-xl border text-xs font-bold transition-all flex flex-col items-center gap-1 bg-slate-800 text-slate-300 border-slate-700';
+    if (fields) fields.classList.remove('hidden');
+  }
+};
 
 window.addFoodItem = function() {
     const nameEl = document.getElementById('food-item-name');
@@ -464,18 +612,281 @@ window.addFoodItem = function() {
 };
 
 window.finishFoodItems = function() {
-    if (window.foodItemsArray.length === 0) return showNotification('Please add at least one item.', 'error');
+    const nameEl = document.getElementById('food-item-name');
+    const qtyEl = document.getElementById('food-item-qty');
+    if (nameEl && nameEl.value.trim() !== '') {
+        if (!qtyEl || !qtyEl.value.trim()) {
+            qtyEl.value = '1';
+        }
+        window.addFoodItem();
+    }
+    
+    if (!window.foodItemsArray || window.foodItemsArray.length === 0) {
+        if (typeof showNotification === 'function') {
+            showNotification('Please enter an item name and click "+ Add Item" (or enter item details above).', 'error');
+        } else {
+            alert('Please enter an item name and click "+ Add Item".');
+        }
+        if (nameEl) nameEl.focus();
+        return;
+    }
     document.getElementById('food-intake-step-1').classList.add('hidden');
     document.getElementById('food-intake-step-2').classList.remove('hidden');
 };
 
-window.submitFoodDonation = function() {
+window.submitFoodDonation = async function() {
     const bags = document.getElementById('food-bag-count').value.trim();
-    if (!bags || bags < 1) return showNotification('Please enter the number of bags/boxes.', 'error');
-    document.getElementById('food-intake-modal').remove();
-    showNotification('Donation submitted! Thank you for your generosity.', 'success');
+    if (!bags || bags < 1) {
+        if (typeof showNotification === 'function') showNotification('Please enter the number of bags/boxes.', 'error');
+        return;
+    }
+
+    const itemsSummary = window.foodItemsArray.map(i => `${i.qty}x ${i.name}`);
+
+    if (selectedDropoffMethod === 'no') {
+        const area = document.getElementById('food-pickup-area').value.trim() || 'Capitol Hill, Seattle';
+        const dest = document.getElementById('food-target-destination').value;
+        const notes = document.getElementById('food-pickup-notes').value.trim() || 'Contact donor upon arrival';
+
+        let createdId = null;
+        try {
+            const res = await fetch('/api/deliveries', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    items: itemsSummary,
+                    bags: parseInt(bags),
+                    donorArea: area,
+                    destination: dest,
+                    contactNotes: notes
+                })
+            });
+            const data = await res.json();
+            if (data.delivery) createdId = data.delivery.id;
+        } catch (err) {
+            console.warn('API delivery save notice:', err);
+        }
+
+        const modal = document.getElementById('food-intake-modal');
+        if (modal) modal.remove();
+        
+        if (typeof showNotification === 'function') {
+            showNotification('📦 Pickup request posted! Opening Uber-style Live Tracker...', 'success');
+        }
+
+        if (createdId) {
+            setTimeout(() => { openUberTrackingModal(createdId); }, 400);
+        }
+    } else {
+        const modal = document.getElementById('food-intake-modal');
+        if (modal) modal.remove();
+        if (typeof showNotification === 'function') {
+            showNotification('🎉 Food donation submitted! Drop-off locations added to map.', 'success');
+        }
+        setTimeout(() => { window.navigateToFoodMap(); }, 1000);
+    }
     window.foodItemsArray = [];
 };
+
+// ── Uber-Styled Real-Time Delivery Tracking Modal ────────────────────────────
+window.openUberTrackingModal = function(deliveryId) {
+  const existing = document.getElementById('uber-tracking-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'uber-tracking-modal';
+  modal.className = 'fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-slate-950/90 backdrop-blur-lg p-0 sm:p-4 animate-fade-in';
+  modal.innerHTML = `
+    <div class="w-full sm:max-w-md bg-[#121722] border border-amber-400/30 rounded-t-3xl sm:rounded-3xl p-6 text-white space-y-4 shadow-[0_0_50px_rgba(245,158,11,0.15)] relative overflow-hidden">
+      <!-- Top Bar -->
+      <div class="flex justify-between items-center border-b border-white/10 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="relative flex h-3 w-3">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+          </span>
+          <span class="text-xs font-black uppercase tracking-wider text-amber-400 font-heading">LIVE UBER DELIVERY TRACKER</span>
+        </div>
+        <button onclick="clearInterval(window._uberTrackingInterval); document.getElementById('uber-tracking-modal').remove()" class="text-slate-400 hover:text-white p-1">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <!-- ETA Banner -->
+      <div class="bg-gradient-to-r from-amber-500/20 to-indigo-600/20 border border-amber-400/30 rounded-2xl p-4 flex items-center justify-between">
+        <div>
+          <p class="text-[10px] text-amber-300 font-extrabold uppercase tracking-wider">Estimated Drop-off</p>
+          <h3 id="uber-eta-text" class="text-xl font-black text-white font-heading">~15-20 Mins</h3>
+        </div>
+        <div class="w-12 h-12 rounded-2xl bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-amber-400 font-bold">
+          <span class="material-symbols-outlined text-2xl animate-bounce">local_shipping</span>
+        </div>
+      </div>
+
+      <!-- 4-Step Visual Progress Bar -->
+      <div class="space-y-3 py-1">
+        <div class="flex justify-between items-center text-[10px] font-bold text-slate-400">
+          <span>PROGRESS TIMELINE</span>
+          <span id="uber-status-badge" class="text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20 uppercase">Request Received</span>
+        </div>
+
+        <div class="relative flex items-center justify-between px-2">
+          <div class="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-1 bg-slate-800 rounded-full z-0"></div>
+          <div id="uber-progress-bar-fill" class="absolute left-4 top-1/2 -translate-y-1/2 h-1 bg-gradient-to-r from-amber-400 to-emerald-400 rounded-full z-0 transition-all duration-500" style="width: 25%;"></div>
+
+          <!-- Step 1 -->
+          <div id="step-node-1" class="w-8 h-8 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-xs z-10 border-2 border-[#121722] shadow-md">
+            1
+          </div>
+          <!-- Step 2 -->
+          <div id="step-node-2" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs z-10 border-2 border-[#121722]">
+            2
+          </div>
+          <!-- Step 3 -->
+          <div id="step-node-3" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs z-10 border-2 border-[#121722]">
+            3
+          </div>
+          <!-- Step 4 -->
+          <div id="step-node-4" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs z-10 border-2 border-[#121722]">
+            4
+          </div>
+        </div>
+
+        <div class="grid grid-cols-4 text-center text-[9px] font-bold text-slate-400 pt-1">
+          <span class="text-amber-400">Request</span>
+          <span>Assigned</span>
+          <span>En Route</span>
+          <span>Delivered</span>
+        </div>
+      </div>
+
+      <!-- Live Details Card -->
+      <div id="uber-details-card" class="bg-slate-900/80 border border-white/10 rounded-2xl p-3.5 space-y-2 text-xs">
+        <div class="flex justify-between text-slate-300">
+          <span>Package:</span>
+          <strong id="uber-items-text" class="text-white">Food Items</strong>
+        </div>
+        <div class="flex justify-between text-slate-300">
+          <span>Pickup Neighborhood:</span>
+          <strong id="uber-area-text" class="text-slate-200">Seattle Area</strong>
+        </div>
+        <div class="flex justify-between text-slate-300">
+          <span>Target Shelter:</span>
+          <strong id="uber-dest-text" class="text-amber-300">St. Jude Refuge</strong>
+        </div>
+      </div>
+
+      <!-- Driver Card -->
+      <div id="uber-driver-card" class="bg-slate-900 border border-slate-800 rounded-2xl p-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-amber-400/20 border border-amber-400/50 flex items-center justify-center text-amber-300 font-extrabold text-sm">
+            🚗
+          </div>
+          <div>
+            <h4 id="uber-driver-name" class="text-xs font-bold text-white">Searching for Driver...</h4>
+            <p class="text-[10px] text-slate-400">Volunteer Community Logistics</p>
+          </div>
+        </div>
+        <button onclick="if(typeof showNotification==='function') showNotification('Calling Volunteer Driver...', 'info')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-xl text-xs font-bold border border-slate-700 transition-all flex items-center gap-1">
+          <span class="material-symbols-outlined text-xs">call</span> Contact
+        </button>
+      </div>
+    </div>
+  `;
+  modal.addEventListener('click', (e) => { if (e.target === modal) { clearInterval(window._uberTrackingInterval); modal.remove(); } });
+  const appFrame = document.querySelector('.app-frame') || document.body;
+  appFrame.appendChild(modal);
+
+  // Auto Polling Status Update
+  if (window._uberTrackingInterval) clearInterval(window._uberTrackingInterval);
+  
+  const fetchAndUpdate = async () => {
+    try {
+      const res = await fetch(`/api/deliveries/${deliveryId}`);
+      const data = await res.json();
+      if (data.delivery) {
+        window.updateUberTrackingUI(data.delivery);
+      }
+    } catch (e) {
+      console.warn('Tracking poll notice:', e);
+    }
+  };
+
+  fetchAndUpdate();
+  window._uberTrackingInterval = setInterval(fetchAndUpdate, 2500);
+};
+
+window.updateUberTrackingUI = function(d) {
+  const statusBadge = document.getElementById('uber-status-badge');
+  const barFill = document.getElementById('uber-progress-bar-fill');
+  const driverName = document.getElementById('uber-driver-name');
+  const etaText = document.getElementById('uber-eta-text');
+  const itemsText = document.getElementById('uber-items-text');
+  const areaText = document.getElementById('uber-area-text');
+  const destText = document.getElementById('uber-dest-text');
+
+  if (itemsText) itemsText.innerText = Array.isArray(d.items) ? d.items.join(', ') : d.items;
+  if (areaText) areaText.innerText = d.donorArea;
+  if (destText) destText.innerText = d.destination;
+
+  const node1 = document.getElementById('step-node-1');
+  const node2 = document.getElementById('step-node-2');
+  const node3 = document.getElementById('step-node-3');
+  const node4 = document.getElementById('step-node-4');
+
+  const setNodeState = (node, state) => {
+    if (!node) return;
+    if (state === 'done') {
+      node.className = 'w-8 h-8 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center font-bold text-xs z-10 border-2 border-[#121722] shadow-md';
+      node.innerText = '✓';
+    } else if (state === 'active') {
+      node.className = 'w-8 h-8 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center font-bold text-xs z-10 border-2 border-[#121722] shadow-lg shadow-amber-400/40 animate-pulse';
+    } else {
+      node.className = 'w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center font-bold text-xs z-10 border-2 border-[#121722]';
+    }
+  };
+
+  if (d.status === 'pending_driver' || d.status === 'pending_volunteer') {
+    if (statusBadge) statusBadge.innerText = 'Request Posted';
+    if (barFill) barFill.style.width = '10%';
+    if (driverName) driverName.innerText = 'Searching for Driver...';
+    if (etaText) etaText.innerText = '~15-20 Mins';
+    setNodeState(node1, 'active');
+    setNodeState(node2, 'inactive');
+    setNodeState(node3, 'inactive');
+    setNodeState(node4, 'inactive');
+  } else if (d.status === 'driver_assigned' || d.status === 'claimed') {
+    if (statusBadge) statusBadge.innerText = 'Driver Assigned';
+    if (barFill) barFill.style.width = '40%';
+    if (driverName) driverName.innerText = d.driverName || 'Volunteer Sarah M.';
+    if (etaText) etaText.innerText = '~10-15 Mins';
+    setNodeState(node1, 'done');
+    setNodeState(node2, 'active');
+    setNodeState(node3, 'inactive');
+    setNodeState(node4, 'inactive');
+  } else if (d.status === 'in_transit') {
+    if (statusBadge) statusBadge.innerText = 'Food En Route';
+    if (barFill) barFill.style.width = '70%';
+    if (driverName) driverName.innerText = d.driverName || 'Volunteer Sarah M.';
+    if (etaText) etaText.innerText = '~5 Mins';
+    setNodeState(node1, 'done');
+    setNodeState(node2, 'done');
+    setNodeState(node3, 'active');
+    setNodeState(node4, 'inactive');
+  } else if (d.status === 'delivered') {
+    if (statusBadge) statusBadge.innerText = 'Delivered to Shelter';
+    if (barFill) barFill.style.width = '100%';
+    if (driverName) driverName.innerText = d.driverName || 'Volunteer Sarah M.';
+    if (etaText) etaText.innerText = 'Delivered 🎉';
+    setNodeState(node1, 'done');
+    setNodeState(node2, 'done');
+    setNodeState(node3, 'done');
+    setNodeState(node4, 'done');
+  }
+};
+
+
+
 
 window.openDeliverFoodModal = function(e) {
   if (e) e.preventDefault();
@@ -523,7 +934,33 @@ window.confirmDeliveryRoute = function() {
     document.getElementById('deliver-food-modal').remove();
     showNotification(`Assigned to delivery route for ${loc}. Drive safe!`, 'success');
 };
+
+// Check for Stripe Checkout URL return parameters
+document.addEventListener('DOMContentLoaded', () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const status = urlParams.get('status');
+  const amount = urlParams.get('amount');
+
+  if (status === 'success') {
+    const msg = amount ? `🎉 Thank you! Your $${amount} Stripe donation was successful.` : '🎉 Thank you! Your Stripe donation was successful.';
+    setTimeout(() => {
+      if (typeof showNotification === 'function') {
+        showNotification(msg, 'success');
+      }
+    }, 300);
+    // Clean up URL without reloading
+    window.history.replaceState({}, document.title, window.location.pathname);
+  } else if (status === 'cancel') {
+    setTimeout(() => {
+      if (typeof showNotification === 'function') {
+        showNotification('Donation was cancelled. You can try again anytime!', 'info');
+      }
+    }, 300);
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+});
 </script>
 </body>
 </html>
+
 

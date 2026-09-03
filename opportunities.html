@@ -162,6 +162,20 @@
             </button>
         </div>
 
+        <!-- Volunteer Food Delivery Pickups Queue Section -->
+        <section class="space-y-2 pt-1">
+            <div class="flex justify-between items-center px-1">
+                <h3 class="text-[11px] font-bold text-amber-400 uppercase tracking-wider font-heading flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-sm">local_shipping</span> Volunteer Food Delivery Pickups
+                </h3>
+                <span id="deliveries-count-badge" class="bg-amber-400/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-full text-[10px] font-bold">Queue</span>
+            </div>
+
+            <div id="food-deliveries-queue" class="space-y-2.5">
+                <!-- Dynamically populated via loadFoodDeliveriesQueue() -->
+            </div>
+        </section>
+
         <!-- Opportunities List Feed -->
         <section class="space-y-2 pt-0.5">
             <div class="flex justify-between items-center px-1">
@@ -172,6 +186,7 @@
                 <!-- Loaded dynamically via JS -->
             </div>
         </section>
+
 
     </main>
 
@@ -709,9 +724,146 @@ window.togglePushNotifications = async function() {
   }
 };
 
+window.loadFoodDeliveriesQueue = async function() {
+  const container = document.getElementById('food-deliveries-queue');
+  if (!container) return;
+
+  try {
+    const res = await fetch('/api/deliveries');
+    const data = await res.json();
+    const deliveries = data.deliveries || [];
+
+    const badge = document.getElementById('deliveries-count-badge');
+    if (badge) badge.innerText = `${deliveries.length} Active`;
+
+    if (deliveries.length === 0) {
+      container.innerHTML = `
+        <div class="bg-[#121722] border border-[#232C3F] rounded-xl p-4 text-center text-xs text-slate-400 space-y-1">
+          <span class="material-symbols-outlined text-amber-400 text-lg">inbox</span>
+          <p class="font-semibold text-slate-300">No active food pickup requests right now.</p>
+          <p class="text-[11px] text-slate-500">Real donor requests submitted under <strong>Donate Food</strong> will appear here instantly for volunteer drivers.</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = deliveries.map(d => {
+      const itemsList = Array.isArray(d.items) ? d.items.join(', ') : d.items;
+      const status = d.status || 'pending_driver';
+      
+      let statusBadgeHtml = '';
+      let actionBtnHtml = '';
+
+      if (status === 'pending_driver' || status === 'pending_volunteer') {
+        statusBadgeHtml = `<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-400/30">Needs Driver</span>`;
+        actionBtnHtml = `
+          <button onclick="claimDeliveryRoute('${d.id}')" class="py-1.5 px-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 rounded-lg text-xs font-bold active:scale-95 transition-all shadow-sm flex items-center gap-1 cursor-pointer">
+            <span class="material-symbols-outlined text-xs">volunteer_activism</span> Claim Delivery Route
+          </button>
+        `;
+      } else if (status === 'driver_assigned' || status === 'claimed') {
+        statusBadgeHtml = `<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">Driver Assigned</span>`;
+        actionBtnHtml = `
+          <button onclick="updateDeliveryStatus('${d.id}', 'in_transit')" class="py-1.5 px-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold active:scale-95 transition-all shadow-sm flex items-center gap-1 cursor-pointer">
+            <span class="material-symbols-outlined text-xs">directions_car</span> Start Route (In Transit)
+          </button>
+        `;
+      } else if (status === 'in_transit') {
+        statusBadgeHtml = `<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-amber-400 text-slate-950 font-black animate-pulse">En Route</span>`;
+        actionBtnHtml = `
+          <button onclick="updateDeliveryStatus('${d.id}', 'delivered')" class="py-1.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold active:scale-95 transition-all shadow-sm flex items-center gap-1 cursor-pointer">
+            <span class="material-symbols-outlined text-xs">check_circle</span> Mark as Delivered
+          </button>
+        `;
+      } else if (status === 'delivered') {
+        statusBadgeHtml = `<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">Delivered 🎉</span>`;
+        actionBtnHtml = `
+          <span class="text-xs font-bold text-emerald-400 flex items-center gap-1">
+            <span class="material-symbols-outlined text-sm">verified</span> Drop-off Completed
+          </span>
+        `;
+      }
+
+      return `
+        <div class="bg-[#121722] border ${status === 'delivered' ? 'border-emerald-500/30 bg-emerald-950/10' : 'border-[#232C3F]'} rounded-xl p-3.5 space-y-2.5 shadow-sm transition-all hover:border-amber-400/50">
+          <div class="flex justify-between items-start gap-2">
+            <div class="flex items-center gap-2 min-w-0">
+              <div class="w-8 h-8 rounded-lg ${status === 'delivered' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'} flex items-center justify-center font-bold text-sm flex-shrink-0">
+                <span class="material-symbols-outlined text-base">${status === 'delivered' ? 'check_circle' : 'local_shipping'}</span>
+              </div>
+              <div class="min-w-0">
+                <h4 class="text-xs font-bold text-[#F0F4F8] leading-tight flex items-center gap-1.5 truncate">
+                  <span class="truncate">${itemsList}</span>
+                  <span class="text-[10px] text-amber-300 bg-amber-400/15 border border-amber-400/30 px-1.5 py-0.2 rounded font-extrabold flex-shrink-0">${d.bags || 1} Bag(s)</span>
+                </h4>
+                <p class="text-[11px] text-slate-400 font-medium truncate">Pickup: <strong class="text-slate-200">${d.donorArea}</strong> → Target: <strong class="text-amber-300">${d.destination}</strong></p>
+              </div>
+            </div>
+            <div class="flex-shrink-0">${statusBadgeHtml}</div>
+          </div>
+
+          <p class="text-[11px] text-slate-400 bg-slate-900/60 p-2 rounded-lg border border-white/5">
+            📝 <em>${d.contactNotes || 'Contact donor upon arrival'}</em>
+            ${d.driverName ? `<span class="block text-[10px] text-indigo-300 pt-0.5">👤 Driver: <strong>${d.driverName}</strong></span>` : ''}
+          </p>
+
+          <div class="flex justify-between items-center pt-0.5">
+            <span class="text-[10px] text-slate-500 font-medium">Real Donor Request</span>
+            <div>${actionBtnHtml}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    console.error('Error loading food deliveries queue:', err);
+  }
+};
+
+window.claimDeliveryRoute = async function(id) {
+  try {
+    const res = await fetch(`/api/deliveries/${id}/claim`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ driverName: 'Volunteer Driver Sarah M.' })
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (typeof showNotification === 'function') {
+        showNotification('🚚 Route claimed! Uber-style status updated to: Driver Assigned.', 'success');
+      }
+      window.loadFoodDeliveriesQueue();
+    }
+  } catch (err) {
+    console.error('Error claiming delivery:', err);
+  }
+};
+
+window.updateDeliveryStatus = async function(id, newStatus) {
+  try {
+    const res = await fetch(`/api/deliveries/${id}/status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    });
+    const data = await res.json();
+    if (data.success) {
+      const msg = newStatus === 'in_transit' ? '🚗 Route started! Delivery marked as In Transit.' : '🎉 Delivery completed & dropped off at shelter!';
+      if (typeof showNotification === 'function') {
+        showNotification(msg, 'success');
+      }
+      window.loadFoodDeliveriesQueue();
+    }
+  } catch (err) {
+    console.error('Error updating delivery status:', err);
+  }
+};
+
+
 document.addEventListener('DOMContentLoaded', () => {
   window.loadOpportunities();
+  window.loadFoodDeliveriesQueue();
 });
+
 
 async function submitNewJob(e) {
   e.preventDefault();

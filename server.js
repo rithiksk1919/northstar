@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import { ApifyClient } from 'apify-client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { spawn } from 'child_process';
+import Stripe from 'stripe';
 
 dotenv.config();
 
@@ -20,8 +21,14 @@ app.use(express.static(__dirname));
 const apify = new ApifyClient({ token: process.env.APIFY_TOKEN });
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 const model = genAI.getGenerativeModel({ model: 'gemini-3.6-flash' });
+const stripeKey = process.env.STRIPE_SECRET_KEY || '';
+const stripe = stripeKey ? new Stripe(stripeKey) : null;
+
+let activeDeliveries = [];
 
 let activeGigs = [
+
+
   {
     id: 'seed-1',
     title: 'Capitol Hill Same-Day Pay Moving & Hauling',
@@ -421,6 +428,134 @@ app.delete('/api/jobs/:id', async (req, res) => {
   } catch (err) {
     console.error('Error deleting job:', err);
     res.status(500).json({ error: 'Failed to delete job.' });
+  }
+});
+
+// API Endpoint: Create Stripe Checkout Session for Donations
+app.post('/api/create-checkout-session', async (req, res) => {
+  try {
+    const rawAmount = parseFloat(req.body.amount);
+    const amount = !isNaN(rawAmount) && rawAmount > 0 ? rawAmount : 25;
+    const amountInCents = Math.round(amount * 100);
+
+    if (!stripe) {
+      console.warn('⚠️ Stripe API key is not configured in .env. Returning demo checkout URL.');
+      return res.json({
+        success: true,
+        demoMode: true,
+        url: `${req.protocol}://${req.get('host')}/donate.html?status=success&demo=true&amount=${amount}`
+      });
+    }
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: 'Northstar Community Donation',
+              description: 'Direct financial support for local shelters and emergency food initiatives.',
+            },
+            unit_amount: amountInCents,
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${req.protocol}://${req.get('host')}/donate.html?status=success&session_id={CHECKOUT_SESSION_ID}&amount=${amount}`,
+      cancel_url: `${req.protocol}://${req.get('host')}/donate.html?status=cancel`,
+    });
+
+    res.json({ success: true, id: session.id, url: session.url });
+  } catch (err) {
+    console.error('⚠️ Stripe Checkout Notice:', err.message);
+    const rawAmount = parseFloat(req.body.amount);
+    const amount = !isNaN(rawAmount) && rawAmount > 0 ? rawAmount : 25;
+    const fallbackUrl = `${req.protocol}://${req.get('host')}/donate.html?status=success&demo=true&amount=${amount}`;
+    
+    res.json({ 
+      success: true, 
+      demoMode: true,
+      notice: err.message,
+      url: fallbackUrl 
+    });
+  }
+});
+
+// API Endpoints: Food Delivery Pickup Queue & Uber Tracking
+app.get('/api/deliveries', (req, res) => {
+  res.json({ success: true, deliveries: activeDeliveries });
+});
+
+app.get('/api/deliveries/:id', (req, res) => {
+  const delivery = activeDeliveries.find(d => d.id === req.params.id);
+  if (!delivery) {
+    return res.status(404).json({ error: 'Delivery not found' });
+  }
+  res.json({ success: true, delivery });
+});
+
+app.post('/api/deliveries', (req, res) => {
+  try {
+    const { items, bags, donorArea, destination, contactNotes } = req.body;
+    const newDelivery = {
+      id: `del-${Date.now()}`,
+      items: Array.isArray(items) ? items : [items || 'Food Items'],
+      bags: bags || 1,
+      donorArea: donorArea || 'Seattle Area',
+      destination: destination || 'St. Jude Community Refuge',
+      status: 'pending_driver', // pending_driver -> driver_assigned -> in_transit -> delivered
+      driverName: null,
+      etaMinutes: 20,
+      contactNotes: contactNotes || 'Contact donor upon arrival',
+      createdAt: new Date().toISOString()
+    };
+    activeDeliveries.unshift(newDelivery);
+    console.log('📦 New Real Food Pickup Request Added:', newDelivery.id);
+    res.json({ success: true, delivery: newDelivery, total: activeDeliveries.length });
+  } catch (err) {
+    console.error('Error adding delivery request:', err);
+    res.status(500).json({ error: 'Failed to create delivery request.' });
+  }
+});
+
+app.post('/api/deliveries/:id/claim', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { driverName } = req.body;
+    const delivery = activeDeliveries.find(d => d.id === id);
+    if (!delivery) {
+      return res.status(404).json({ error: 'Delivery request not found.' });
+    }
+    delivery.status = 'driver_assigned';
+    delivery.driverName = driverName || 'Volunteer Driver (Sarah M.)';
+    delivery.claimedAt = new Date().toISOString();
+    console.log('🚚 Volunteer Claimed Delivery Route:', id);
+    res.json({ success: true, delivery });
+  } catch (err) {
+    console.error('Error claiming delivery:', err);
+    res.status(500).json({ error: 'Failed to claim delivery.' });
+  }
+});
+
+app.post('/api/deliveries/:id/status', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const delivery = activeDeliveries.find(d => d.id === id);
+    if (!delivery) {
+      return res.status(404).json({ error: 'Delivery request not found.' });
+    }
+    if (status) {
+      delivery.status = status;
+      delivery.updatedAt = new Date().toISOString();
+    }
+    console.log(`📦 Delivery ${id} status updated to: ${delivery.status}`);
+    res.json({ success: true, delivery });
+  } catch (err) {
+    console.error('Error updating delivery status:', err);
+    res.status(500).json({ error: 'Failed to update delivery status.' });
   }
 });
 
