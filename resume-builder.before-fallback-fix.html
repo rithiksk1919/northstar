@@ -344,23 +344,6 @@
                 </div>
             </section>
 
-            <!-- WIZARD STEP 5: EDUCATION & CERTIFICATIONS -->
-            <section id="step-5" class="bg-white dark:bg-[#121722] border border-slate-200 dark:border-[#232C3F] rounded-2xl p-4 shadow-sm space-y-4">
-                <h3 class="text-xs font-extrabold tracking-wider uppercase text-slate-900 dark:text-white flex items-center gap-1.5">
-                    <span class="material-symbols-outlined text-amber-500 text-sm">school</span> 5. Education & Certifications
-                </h3>
-                <p class="text-xs text-slate-600 dark:text-slate-300 font-medium">Add any education, training, licenses, or certifications you want included on your resume.</p>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">1. Education</label>
-                    <textarea id="input-education" rows="2" placeholder="e.g. Eastlake High School — Sammamish, WA&#10;High School Diploma&#10;GED" class="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-xs text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-400 font-medium"></textarea>
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">2. Custom Certifications / Training</label>
-                    <textarea id="input-custom-certifications" rows="2" placeholder="e.g. OSHA 10 Safety&#10;First Aid / CPR" class="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-xs text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-400 font-medium"></textarea>
-                </div>
-            </section>
-
             <!-- Sticky Action Container for Generate Button -->
             <div class="sticky bottom-0 z-30 pt-3 pb-8 bg-gradient-to-t from-[#F4F5F7] dark:from-[#0F1117] via-[#F4F5F7]/95 dark:via-[#0F1117]/95 to-transparent">
                 <button type="button" id="btn-generate-resume" onclick="generateResume()" class="w-full py-4 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-extrabold text-sm rounded-2xl shadow-md hover:from-amber-300 hover:to-amber-400 active:scale-95 transition-all flex items-center justify-center gap-2">
@@ -685,7 +668,6 @@ function parseValidatedResume(resumeText, fallbackData = {}) {
     HEADER: [],
     SUMMARY: [],
     CERTIFICATIONS: [],
-    EDUCATION: [],
     EXPERIENCE: [],
     SKILLS: []
   };
@@ -727,15 +709,6 @@ function parseValidatedResume(resumeText, fallbackData = {}) {
       heading === 'CERTIFICATIONS AND LICENSES'
     ) {
       section = 'CERTIFICATIONS';
-      continue;
-    }
-
-    if (
-      heading === 'EDUCATION' ||
-      heading === 'CERTIFICATIONS & EDUCATION' ||
-      heading === 'EDUCATION & CERTIFICATIONS'
-    ) {
-      section = 'EDUCATION';
       continue;
     }
 
@@ -797,65 +770,79 @@ function parseValidatedResume(resumeText, fallbackData = {}) {
           parsedPhone = part;
         } else if (!looksLikePhone && !parsedLocation) {
           parsedLocation = part;
-        } else if (/\d{3}/.test(part) && !parsedPhone) {
-          parsedPhone = part;
-        } else if (!parsedLocation) {
-          parsedLocation = part;
         }
       }
     }
   }
 
+  // ----------------------------------------------------------
+  // SUMMARY
+  // ----------------------------------------------------------
+
   const summary = sections.SUMMARY.join(' ').trim();
-  
+
+  // ----------------------------------------------------------
+  // CERTIFICATIONS
+  // ----------------------------------------------------------
+
+  const certifications = [];
+
+  for (const line of sections.CERTIFICATIONS) {
+    const items = line
+      .replace(/^[-•*]\s*/, '')
+      .split('|')
+      .map(item => item.trim())
+      .filter(Boolean);
+
+    certifications.push(...items);
+  }
+
+  // ----------------------------------------------------------
+  // SKILLS
+  // ----------------------------------------------------------
+
   const practicalSkills = [];
+
   for (const line of sections.SKILLS) {
-    const items = line.replace(/^[-•*]\s*/, '').split('|').map(item => item.trim()).filter(Boolean);
+    const items = line
+      .replace(/^[-•*]\s*/, '')
+      .split('|')
+      .map(item => item.trim())
+      .filter(Boolean);
+
     practicalSkills.push(...items);
   }
 
-  const certifications = [];
-  for (const line of sections.CERTIFICATIONS) {
-    const items = line.replace(/^[-•*]\s*/, '').split('|').map(item => item.trim()).filter(Boolean);
-    certifications.push(...items);
-  }
-  
-  const certifications_education = [];
-  for (const line of sections.EDUCATION) {
-    const items = line.replace(/^[-•*]\s*/, '').split('|').map(item => item.trim()).filter(Boolean);
-    certifications_education.push(...items);
-  }
+  // ----------------------------------------------------------
+  // EXPERIENCE
+  // ----------------------------------------------------------
 
   const experience = [];
   let currentExperience = null;
 
-  for (const line of sections.EXPERIENCE) {
-    const isBullet = /^[-•*]\s*/.test(line);
+  for (const originalLine of sections.EXPERIENCE) {
+    const line = originalLine.trim();
+
+    const isBullet =
+      /^[-•*]\s*/.test(line);
 
     if (isBullet) {
-      const bulletText = line.replace(/^[-•*]\s*/, '').trim();
-      if (!currentExperience) {
-        currentExperience = { role: 'Relevant Experience', duration: '', organization: '', bullets: [] };
-        experience.push(currentExperience);
+      if (currentExperience) {
+        currentExperience.bullets.push(
+          line.replace(/^[-•*]\s*/, '').trim()
+        );
       }
-      currentExperience.bullets.push(bulletText);
       continue;
     }
 
-    currentExperience = { role: line, duration: '', organization: '', bullets: [] };
+    currentExperience = {
+      role: line,
+      duration: '',
+      organization: '',
+      bullets: []
+    };
+
     experience.push(currentExperience);
-  }
-
-  if (certifications.length === 0 && Array.isArray(fallbackData.certifications)) {
-    certifications.push(...fallbackData.certifications);
-  }
-
-  if (practicalSkills.length === 0 && Array.isArray(fallbackData.skills)) {
-    practicalSkills.push(...fallbackData.skills);
-  }
-  
-  if (certifications_education.length === 0 && Array.isArray(fallbackData.education)) {
-    certifications_education.push(...fallbackData.education);
   }
 
   const parsed = {
@@ -863,16 +850,22 @@ function parseValidatedResume(resumeText, fallbackData = {}) {
       name: parsedName,
       phone: parsedPhone,
       location: parsedLocation,
+
+      // Never automatically expose shelter/case-worker contact.
       contact: ''
     },
+
     summary,
+
     skills: {
       certifications,
       practical_skills: practicalSkills,
       core_strengths: []
     },
+
     experience,
-    certifications_education
+
+    certifications_education: []
   };
 
   console.log(
@@ -1027,8 +1020,6 @@ async function generateResume() {
   const contactInput = document.getElementById('input-contact');
   const locationInput = document.getElementById('input-location');
   const notesInput = document.getElementById('input-informal-notes');
-  const eduInput = document.getElementById('input-education');
-  const customCertsInput = document.getElementById('input-custom-certifications');
   const generateBtn = document.getElementById('btn-generate-resume');
 
   const name = (nameInput && nameInput.value) ? nameInput.value.trim() : '';
@@ -1036,12 +1027,6 @@ async function generateResume() {
   const contactInfo = (contactInput && contactInput.value) ? contactInput.value.trim() : '';
   const location = (locationInput && locationInput.value) ? locationInput.value.trim() : '';
   const informalNotes = (notesInput && notesInput.value) ? notesInput.value.trim() : '';
-  
-  const rawEdu = (eduInput && eduInput.value) ? eduInput.value.trim() : '';
-  const eduArr = rawEdu ? rawEdu.split('\n').map(s => s.trim()).filter(Boolean) : [];
-
-  const rawCerts = (customCertsInput && customCertsInput.value) ? customCertsInput.value.trim() : '';
-  const customCertsArr = rawCerts ? rawCerts.split('\n').map(s => s.trim()).filter(Boolean) : [];
 
   if (!name) {
     if (window.showNotification) showNotification('Please enter your name.', 'error');
@@ -1053,7 +1038,7 @@ async function generateResume() {
   const targetRoles = getSelectedChips('.role-chip');
 
   const certificationNames = ['Food Handler Card', 'Forklift Certified', 'OSHA 10 Safety', 'First Aid & CPR'];
-  const certifications = [...skillsCertifications.filter(i => certificationNames.includes(i)), ...customCertsArr];
+  const certifications = skillsCertifications.filter(i => certificationNames.includes(i));
   const practicalSkills = skillsCertifications.filter(i => !certificationNames.includes(i));
 
   const confirmedNumbers = [];
@@ -1071,9 +1056,7 @@ async function generateResume() {
     dates: [], durations: [],
     confirmed_numbers: confirmedNumbers,
     contact_numbers: contactNumbers,
-    certifications, 
-    education: eduArr,
-    languages: [],
+    certifications, languages: [],
     skills: practicalSkills,
     target_jobs: targetRoles
   };

@@ -280,6 +280,18 @@ app.post('/api/generate-resume', async (req, res) => {
     let stdout = '';
     let stderr = '';
 
+    // Timeout to prevent hanging forever
+    const timeout = setTimeout(() => {
+      console.error('Resume AI process timed out. Killing child process.');
+      child.kill('SIGKILL');
+      if (!res.headersSent) {
+        res.status(504).json({
+          success: false,
+          error: 'NorthStar AI took too long to respond. Please try again.',
+        });
+      }
+    }, 115000); // 115 seconds (just before frontend 120s timeout)
+
     child.stdout.on('data', (data) => {
       stdout += data.toString();
     });
@@ -289,6 +301,7 @@ app.post('/api/generate-resume', async (req, res) => {
     });
 
     child.on('error', (err) => {
+      clearTimeout(timeout);
       console.error('Resume AI process error:', err);
 
       if (!res.headersSent) {
@@ -300,6 +313,10 @@ app.post('/api/generate-resume', async (req, res) => {
     });
 
     child.on('close', (code) => {
+      clearTimeout(timeout);
+      
+      if (res.headersSent) return;
+
       if (code !== 0) {
         console.error('Resume AI stderr:', stderr);
 
@@ -343,10 +360,12 @@ app.post('/api/generate-resume', async (req, res) => {
   } catch (error) {
     console.error('Resume endpoint error:', error);
 
-    res.status(500).json({
-      success: false,
-      error: 'Resume generation failed.',
-    });
+    if (!res.headersSent) {
+      res.status(500).json({
+        success: false,
+        error: 'Resume generation failed.',
+      });
+    }
   }
 });
 
@@ -498,13 +517,14 @@ app.get('/api/deliveries/:id', (req, res) => {
 
 app.post('/api/deliveries', (req, res) => {
   try {
-    const { items, bags, donorArea, destination, contactNotes } = req.body;
+    const { items, bags, donorArea, destination, timeWindow, contactNotes } = req.body;
     const newDelivery = {
       id: `del-${Date.now()}`,
       items: Array.isArray(items) ? items : [items || 'Food Items'],
       bags: bags || 1,
       donorArea: donorArea || 'Seattle Area',
       destination: destination || 'St. Jude Community Refuge',
+      timeWindow: timeWindow || 'Morning (9am - 12pm)',
       status: 'pending_driver', // pending_driver -> driver_assigned -> in_transit -> delivered
       driverName: null,
       etaMinutes: 20,

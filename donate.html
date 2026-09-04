@@ -535,6 +535,19 @@ window.openFoodIntakeModal = function(e) {
             </div>
           </div>
 
+          <!-- Conditional Fields for Self Drop-off -->
+          <div id="self-dropoff-fields" class="space-y-3 bg-slate-900/60 p-3 rounded-xl border border-slate-800 animate-fade-in">
+            <div class="space-y-1">
+              <label class="text-[11px] font-semibold text-slate-300">Select Nearest Drop-off Location:</label>
+              <select id="food-dropoff-location" class="w-full py-2 px-3 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400">
+                <option value="St. Jude Community Refuge">St. Jude Community Refuge — 1.2 miles away</option>
+                <option value="Downtown Hope Center">Downtown Hope Center — 2.4 miles away</option>
+                <option value="Eastside Youth Shelter">Eastside Youth Shelter — 3.1 miles away</option>
+                <option value="Pioneer Square Food Bank">Pioneer Square Food Bank — 4.5 miles away</option>
+              </select>
+            </div>
+          </div>
+
           <!-- Conditional Fields for Volunteer Pickup -->
           <div id="volunteer-pickup-fields" class="space-y-3 bg-slate-900/60 p-3 rounded-xl border border-slate-800 hidden animate-fade-in">
             <div class="space-y-1">
@@ -547,6 +560,14 @@ window.openFoodIntakeModal = function(e) {
                 <option value="St. Jude Community Refuge">St. Jude Community Refuge</option>
                 <option value="Downtown Hope Center">Downtown Hope Center</option>
                 <option value="Eastside Youth Shelter">Eastside Youth Shelter</option>
+              </select>
+            </div>
+            <div class="space-y-1">
+              <label class="text-[11px] font-semibold text-slate-300">Preferred Pickup Time Window:</label>
+              <select id="food-pickup-time" class="w-full py-2 px-3 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white focus:outline-none focus:border-amber-400">
+                <option value="Morning (9am - 12pm)">Morning (9am - 12pm)</option>
+                <option value="Afternoon (12pm - 4pm)">Afternoon (12pm - 4pm)</option>
+                <option value="Evening (4pm - 8pm)">Evening (4pm - 8pm)</option>
               </select>
             </div>
             <div class="space-y-1">
@@ -576,16 +597,19 @@ window.toggleDropoffMethod = function(method) {
   selectedDropoffMethod = method;
   const yesBtn = document.getElementById('dropoff-yes-btn');
   const noBtn = document.getElementById('dropoff-no-btn');
-  const fields = document.getElementById('volunteer-pickup-fields');
+  const volunteerFields = document.getElementById('volunteer-pickup-fields');
+  const dropoffFields = document.getElementById('self-dropoff-fields');
   
   if (method === 'yes') {
     yesBtn.className = 'dropoff-opt-btn py-2.5 px-3 rounded-xl border text-xs font-bold transition-all flex flex-col items-center gap-1 bg-amber-500/20 text-amber-300 border-amber-400';
     noBtn.className = 'dropoff-opt-btn py-2.5 px-3 rounded-xl border text-xs font-bold transition-all flex flex-col items-center gap-1 bg-slate-800 text-slate-300 border-slate-700';
-    if (fields) fields.classList.add('hidden');
+    if (volunteerFields) volunteerFields.classList.add('hidden');
+    if (dropoffFields) dropoffFields.classList.remove('hidden');
   } else {
     noBtn.className = 'dropoff-opt-btn py-2.5 px-3 rounded-xl border text-xs font-bold transition-all flex flex-col items-center gap-1 bg-amber-500/20 text-amber-300 border-amber-400';
     yesBtn.className = 'dropoff-opt-btn py-2.5 px-3 rounded-xl border text-xs font-bold transition-all flex flex-col items-center gap-1 bg-slate-800 text-slate-300 border-slate-700';
-    if (fields) fields.classList.remove('hidden');
+    if (dropoffFields) dropoffFields.classList.add('hidden');
+    if (volunteerFields) volunteerFields.classList.remove('hidden');
   }
 };
 
@@ -646,6 +670,7 @@ window.submitFoodDonation = async function() {
     if (selectedDropoffMethod === 'no') {
         const area = document.getElementById('food-pickup-area').value.trim() || 'Capitol Hill, Seattle';
         const dest = document.getElementById('food-target-destination').value;
+        const timeWindow = document.getElementById('food-pickup-time').value;
         const notes = document.getElementById('food-pickup-notes').value.trim() || 'Contact donor upon arrival';
 
         let createdId = null;
@@ -658,6 +683,7 @@ window.submitFoodDonation = async function() {
                     bags: parseInt(bags),
                     donorArea: area,
                     destination: dest,
+                    timeWindow: timeWindow,
                     contactNotes: notes
                 })
             });
@@ -678,10 +704,16 @@ window.submitFoodDonation = async function() {
             setTimeout(() => { openUberTrackingModal(createdId); }, 400);
         }
     } else {
+        const dropoffLoc = document.getElementById('food-dropoff-location').value;
+        // Optionally save this location locally so the map knows where to go
+        try {
+            localStorage.setItem('northstar_planned_dropoff', dropoffLoc);
+        } catch(e) {}
+        
         const modal = document.getElementById('food-intake-modal');
         if (modal) modal.remove();
         if (typeof showNotification === 'function') {
-            showNotification('🎉 Food donation submitted! Drop-off locations added to map.', 'success');
+            showNotification(`🎉 Food donation submitted! Drop-off for ${dropoffLoc} added to map.`, 'success');
         }
         setTimeout(() => { window.navigateToFoodMap(); }, 1000);
     }
@@ -888,7 +920,7 @@ window.updateUberTrackingUI = function(d) {
 
 
 
-window.openDeliverFoodModal = function(e) {
+window.openDeliverFoodModal = async function(e) {
   if (e) e.preventDefault();
   const existing = document.getElementById('deliver-food-modal');
   if (existing) existing.remove();
@@ -896,43 +928,133 @@ window.openDeliverFoodModal = function(e) {
   const modal = document.createElement('div');
   modal.id = 'deliver-food-modal';
   modal.className = 'fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-slate-950/85 backdrop-blur-md p-0 sm:p-4';
+  
+  // Initial Loading State
   modal.innerHTML = `
     <div class="w-full sm:max-w-md bg-[#12141C] border border-white/10 rounded-t-3xl sm:rounded-3xl p-6 text-white space-y-4 shadow-2xl transition-all duration-300">
-      <div class="w-12 h-1.5 bg-slate-700 rounded-full mx-auto sm:hidden"></div>
       <div class="flex justify-between items-center">
         <h3 class="text-base font-extrabold text-white flex items-center gap-2">
-          <span class="material-symbols-outlined text-amber-400">volunteer_activism</span> Select Delivery Route
+          <span class="material-symbols-outlined text-amber-400">volunteer_activism</span> Available Deliveries
         </h3>
         <button onclick="document.getElementById('deliver-food-modal').remove()" class="text-slate-400 hover:text-white transition-colors">
           <span class="material-symbols-outlined">close</span>
         </button>
       </div>
-      <p class="text-xs text-slate-300 leading-relaxed">Where are you delivering the food?</p>
-      
-      <div class="space-y-4">
-          <select id="delivery-location" class="w-full py-3 px-4 bg-slate-800 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-amber-400">
-              <option value="St. Jude Community Refuge">St. Jude Community Refuge</option>
-              <option value="Downtown Hope Center">Downtown Hope Center</option>
-              <option value="Eastside Youth Shelter">Eastside Youth Shelter</option>
-          </select>
-          
-          <button onclick="confirmDeliveryRoute()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md active:scale-95 transition-all flex items-center justify-center gap-2">
-              <span class="material-symbols-outlined text-sm">check_circle</span> Assign Route
-          </button>
+      <div class="py-8 text-center text-slate-400">
+        <span class="inline-block animate-spin material-symbols-outlined text-2xl text-amber-400 mb-2">refresh</span>
+        <p class="text-xs">Fetching nearby requests...</p>
       </div>
     </div>
   `;
+
   modal.addEventListener('mousedown', (evt) => { 
       if (evt.target === modal) modal.remove(); 
   });
+  
   const appFrame = document.querySelector('.app-frame') || document.body;
   appFrame.appendChild(modal);
+
+  try {
+    const res = await fetch('/api/deliveries');
+    const data = await res.json();
+    let jobs = (data.deliveries || []).filter(d => d.status === 'pending_driver');
+
+    let jobsHTML = '';
+    if (jobs.length === 0) {
+      jobsHTML = `
+        <div class="py-6 text-center text-slate-400 bg-slate-900/50 rounded-xl border border-slate-800">
+          <span class="material-symbols-outlined text-3xl text-slate-500 mb-2">inbox</span>
+          <p class="text-xs">No pending delivery requests right now.</p>
+        </div>
+      `;
+    } else {
+      jobsHTML = '<div class="space-y-3 max-h-80 overflow-y-auto pr-1">';
+      jobs.forEach(job => {
+        jobsHTML += `
+          <div class="bg-slate-900/80 border border-slate-700 rounded-xl p-4 space-y-3">
+            <div class="flex justify-between items-start">
+              <div class="space-y-1">
+                <div class="text-xs text-amber-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[14px]">map</span> ${job.donorArea}
+                </div>
+                <div class="text-[11px] text-slate-400">Target: <span class="text-white font-medium">${job.destination}</span></div>
+              </div>
+              <div class="bg-slate-800 px-2 py-1 rounded text-[10px] text-slate-300 font-medium">
+                ${job.bags} Bag(s)
+              </div>
+            </div>
+            
+            <div class="text-[11px] text-slate-300 flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[13px] text-slate-500">schedule</span>
+              Time: ${job.timeWindow || 'ASAP'}
+            </div>
+            <div class="text-[11px] text-slate-300 flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[13px] text-slate-500">inventory_2</span>
+              Items: ${job.items.join(', ')}
+            </div>
+
+            <button onclick="acceptDeliveryJob('${job.id}')" class="w-full mt-2 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow-md active:scale-95 transition-all flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined text-sm">local_shipping</span> Accept Delivery
+            </button>
+          </div>
+        `;
+      });
+      jobsHTML += '</div>';
+    }
+
+    modal.innerHTML = `
+      <div class="w-full sm:max-w-md bg-[#12141C] border border-white/10 rounded-t-3xl sm:rounded-3xl p-6 text-white space-y-4 shadow-2xl transition-all duration-300">
+        <div class="w-12 h-1.5 bg-slate-700 rounded-full mx-auto sm:hidden"></div>
+        <div class="flex justify-between items-center">
+          <h3 class="text-base font-extrabold text-white flex items-center gap-2">
+            <span class="material-symbols-outlined text-amber-400">volunteer_activism</span> Available Deliveries
+          </h3>
+          <button onclick="document.getElementById('deliver-food-modal').remove()" class="text-slate-400 hover:text-white transition-colors">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <p class="text-xs text-slate-300 leading-relaxed">Select a request below to claim and start driving.</p>
+        
+        ${jobsHTML}
+      </div>
+    `;
+
+  } catch (err) {
+    modal.innerHTML = `
+      <div class="w-full sm:max-w-md bg-[#12141C] border border-white/10 rounded-t-3xl sm:rounded-3xl p-6 text-white space-y-4 shadow-2xl transition-all duration-300">
+        <div class="flex justify-between items-center">
+          <h3 class="text-base font-extrabold text-white">Error</h3>
+          <button onclick="document.getElementById('deliver-food-modal').remove()" class="text-slate-400">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <p class="text-xs text-red-400">Could not fetch delivery requests.</p>
+      </div>
+    `;
+  }
 };
 
-window.confirmDeliveryRoute = function() {
-    const loc = document.getElementById('delivery-location').value;
+window.acceptDeliveryJob = async function(id) {
+  try {
+    await fetch(`/api/deliveries/${id}/claim`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ driverName: 'Volunteer (You)' })
+    });
+    
     document.getElementById('deliver-food-modal').remove();
-    showNotification(`Assigned to delivery route for ${loc}. Drive safe!`, 'success');
+    
+    if (typeof showNotification === 'function') {
+      showNotification('Delivery claimed successfully! Opening live tracker...', 'success');
+    }
+    
+    setTimeout(() => { openUberTrackingModal(id); }, 400);
+
+  } catch (err) {
+    if (typeof showNotification === 'function') {
+      showNotification('Failed to claim delivery. It may have already been taken.', 'error');
+    }
+  }
 };
 
 // Check for Stripe Checkout URL return parameters
