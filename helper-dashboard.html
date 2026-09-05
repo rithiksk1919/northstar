@@ -175,6 +175,30 @@
             </a>
         </div>
 
+        <!-- Active Delivery Status Card (Injected dynamically) -->
+        <div id="volunteer-active-delivery-container" class="hidden pt-1 space-y-2">
+            <h3 class="text-sm font-bold text-slate-900 font-heading">Active Job Status</h3>
+            <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 shadow-sm relative overflow-hidden">
+                <div class="absolute right-0 top-0 w-32 h-32 bg-emerald-100 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+                <div class="relative z-10 space-y-3">
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-center gap-2">
+                            <span class="material-symbols-outlined text-emerald-600 bg-white p-1 rounded shadow-sm text-lg">local_shipping</span>
+                            <span class="text-xs font-bold text-emerald-900 uppercase tracking-wider">In Progress</span>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-sm text-emerald-950 mb-0.5">Route to <span id="vad-destination">Shelter</span></h4>
+                        <p id="vad-details" class="text-[11px] text-emerald-800 font-medium">Picking up 2 bags from Capitol Hill</p>
+                    </div>
+                    <button onclick="if(window._openLastDeliveryTracker) window._openLastDeliveryTracker()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow-md active:scale-95 transition-all flex items-center justify-center gap-2">
+                        View Live Route tracker
+                    </button>
+                </div>
+            </div>
+        </div>
+
+
         <!-- Smart Insights / AI Match Suggestions Card -->
         <section class="space-y-2 pt-1">
             <div class="flex justify-between items-center">
@@ -266,6 +290,41 @@
 
 </div>
 
+<script>
+window.initVolunteerActiveDelivery = async function() {
+    const role = localStorage.getItem('northstar_user_role') || 'seeker';
+    const sessionRaw = localStorage.getItem('northstar_session');
+    const session = sessionRaw ? JSON.parse(sessionRaw) : null;
+    const container = document.getElementById('volunteer-active-delivery-container');
+    if (!container || role !== 'volunteer' || !session) return;
+
+    try {
+        const res = await fetch(`/api/deliveries`);
+        const data = await res.json();
+        
+        // Find a delivery belonging to this driver that is still active
+        const activeJob = (data.deliveries || []).find(d => 
+            d.driver_id === session.id && 
+            ['in_transit', 'driver_assigned'].includes(d.status)
+        );
+        
+        if (activeJob) {
+            container.classList.remove('hidden');
+            document.getElementById('vad-destination').innerText = activeJob.destination;
+            document.getElementById('vad-details').innerText = `Picking up ${activeJob.bags} bags from ${activeJob.donorArea}`;
+
+            window._openLastDeliveryTracker = () => {
+                if (typeof openUberTrackingModal === 'function') {
+                    openUberTrackingModal(deliveryId);
+                }
+            };
+        }
+    } catch (err) {
+        console.warn('Could not fetch active delivery status:', err);
+    }
+};
+document.addEventListener('DOMContentLoaded', () => { setTimeout(initVolunteerActiveDelivery, 600); });
+</script>
 <script src="js/northstar.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', async () => {

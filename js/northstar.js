@@ -27,6 +27,29 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
+  // Fetch persisted role and theme from Supabase on page load for authenticated users
+  if (!session.isGuest && session.id && window.supabaseClient) {
+    window.supabaseClient
+      .from('profiles')
+      .select('role, theme')
+      .eq('id', session.id)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          if (data.role) {
+            localStorage.setItem('northstar_user_role', data.role);
+            cachedSupabaseRole = data.role;
+          }
+          if (data.theme && (data.theme === 'light' || data.theme === 'dark')) {
+            localStorage.setItem('northstar_theme', data.theme);
+            document.documentElement.classList.remove('light', 'dark');
+            document.documentElement.classList.add(data.theme);
+          }
+        }
+      })
+      .catch(err => console.warn('Supabase init fetch failed:', err));
+  }
+
   // Automatic Trigger: Viewing Shelter Info
   if (currentPath === 'call-shelter.html') {
     setTimeout(() => updateMilestone('safePlace', true), 500);
@@ -113,6 +136,20 @@ window.setThemeMode = function(mode) {
   document.documentElement.classList.add(mode);
   localStorage.setItem('northstar_theme', mode);
   updateSettingsThemeUI(mode);
+  // Sync theme to Supabase (best-effort, non-blocking)
+  if (window.supabaseClient) {
+    try {
+      const raw = localStorage.getItem('northstar_session');
+      const session = raw ? JSON.parse(raw) : null;
+      if (session?.id && !session.id.startsWith('user-')) {
+        window.supabaseClient
+          .from('profiles')
+          .upsert({ id: session.id, theme: mode }, { onConflict: 'id' })
+          .then(() => {})
+          .catch(() => {});
+      }
+    } catch (_) {}
+  }
 };
 
 window.toggleTheme = function() {
@@ -269,8 +306,18 @@ window.handleAuthFormSubmit = async function (e) {
         }
         if (data?.user) {
           supabaseUser = data.user;
-          const { data: profile } = await window.supabaseClient.from('profiles').select('role').eq('id', data.user.id).single();
+          const { data: profile } = await window.supabaseClient
+            .from('profiles')
+            .select('role, theme')
+            .eq('id', data.user.id)
+            .single();
           if (profile?.role) role = profile.role;
+          // Restore persisted theme preference across devices
+          if (profile?.theme && (profile.theme === 'light' || profile.theme === 'dark')) {
+            localStorage.setItem('northstar_theme', profile.theme);
+            document.documentElement.classList.remove('light', 'dark');
+            document.documentElement.classList.add(profile.theme);
+          }
           showNotification('Signed in successfully!', 'success');
         }
       }
@@ -549,6 +596,21 @@ function setRole(role) {
   if (role !== 'seeker' && role !== 'volunteer') role = 'seeker';
   cachedSupabaseRole = role;
   localStorage.setItem('northstar_user_role', role);
+  
+  if (window.supabaseClient) {
+    try {
+      const raw = localStorage.getItem('northstar_session');
+      const session = raw ? JSON.parse(raw) : null;
+      if (session?.id && !session.id.startsWith('user-')) {
+        window.supabaseClient
+          .from('profiles')
+          .upsert({ id: session.id, role: role }, { onConflict: 'id' })
+          .then(() => {})
+          .catch(() => {});
+      }
+    } catch (_) {}
+  }
+  
   renderDynamicNav();
   renderRoleHeaderToggle();
   enforceFeatureGate();

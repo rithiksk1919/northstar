@@ -7,8 +7,14 @@ import { ApifyClient } from 'apify-client';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { spawn } from 'child_process';
 import Stripe from 'stripe';
+import { createClient } from '@supabase/supabase-js';
 
 dotenv.config();
+
+const supabaseUrl = process.env.SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabase = (supabaseUrl && supabaseServiceKey) ? createClient(supabaseUrl, supabaseServiceKey) : null;
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -503,11 +509,31 @@ app.post('/api/create-checkout-session', async (req, res) => {
 });
 
 // API Endpoints: Food Delivery Pickup Queue & Uber Tracking
-app.get('/api/deliveries', (req, res) => {
+app.get('/api/deliveries', async (req, res) => {
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from('deliveries').select('*').order('created_at', { ascending: false });
+      if (!error && data) {
+        return res.json({ success: true, deliveries: data });
+      }
+    } catch (err) {
+      console.warn('Supabase fetch deliveries failed, falling back to memory', err);
+    }
+  }
   res.json({ success: true, deliveries: activeDeliveries });
 });
 
-app.get('/api/deliveries/:id', (req, res) => {
+app.get('/api/deliveries/:id', async (req, res) => {
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from('deliveries').select('*').eq('id', req.params.id).single();
+      if (!error && data) {
+        return res.json({ success: true, delivery: data });
+      }
+    } catch (err) {
+      console.warn('Supabase fetch delivery failed, falling back to memory', err);
+    }
+  }
   const delivery = activeDeliveries.find(d => d.id === req.params.id);
   if (!delivery) {
     return res.status(404).json({ error: 'Delivery not found' });
@@ -515,9 +541,9 @@ app.get('/api/deliveries/:id', (req, res) => {
   res.json({ success: true, delivery });
 });
 
-app.post('/api/deliveries', (req, res) => {
+app.post('/api/deliveries', async (req, res) => {
   try {
-    const { items, bags, donorArea, destination, timeWindow, contactNotes } = req.body;
+    const { items, bags, donorArea, destination, timeWindow, contactNotes, donor_id } = req.body;
     const newDelivery = {
       id: `del-${Date.now()}`,
       items: Array.isArray(items) ? items : [items || 'Food Items'],
@@ -529,10 +555,24 @@ app.post('/api/deliveries', (req, res) => {
       driverName: null,
       etaMinutes: 20,
       contactNotes: contactNotes || 'Contact donor upon arrival',
-      createdAt: new Date().toISOString()
+      created_at: new Date().toISOString()
     };
+    
+    // For Supabase, map items array to a JSON-compatible format or comma-separated string if arrays aren't supported.
+    // Assuming JSON is supported or we just store as string.
+    const supabaseDelivery = { ...newDelivery, donor_id: donor_id || null, items: JSON.stringify(newDelivery.items) };
+
+    if (supabase) {
+      const { error } = await supabase.from('deliveries').insert(supabaseDelivery);
+      if (!error) {
+        console.log('📦 New Real Food Pickup Request Added to Supabase:', newDelivery.id);
+        return res.json({ success: true, delivery: newDelivery });
+      }
+      console.warn('Supabase insert delivery failed, falling back to memory', error);
+    }
+    
     activeDeliveries.unshift(newDelivery);
-    console.log('📦 New Real Food Pickup Request Added:', newDelivery.id);
+    console.log('📦 New Real Food Pickup Request Added to memory:', newDelivery.id);
     res.json({ success: true, delivery: newDelivery, total: activeDeliveries.length });
   } catch (err) {
     console.error('Error adding delivery request:', err);
@@ -540,10 +580,28 @@ app.post('/api/deliveries', (req, res) => {
   }
 });
 
-app.post('/api/deliveries/:id/claim', (req, res) => {
+app.post('/api/deliveries/:id/claim', async (req, res) => {
   try {
     const { id } = req.params;
-    const { driverName } = req.body;
+    const { driverName, driver_id } = req.body;
+    
+    if (supabase) {
+      const { data: existing, error: getErr } = await supabase.from('deliveries').select('*').eq('id', id).single();
+      if (!getErr && existing) {
+        const updates = { 
+          status: 'driver_assigned', 
+          driverName: driverName || 'Volunteer Driver (Sarah M.)', 
+          driver_id: driver_id || null,
+          claimed_at: new Date().toISOString()
+        };
+        const { error: updErr } = await supabase.from('deliveries').update(updates).eq('id', id);
+        if (!updErr) {
+          console.log('🚚 Volunteer Claimed Delivery Route in Supabase:', id);
+          return res.json({ success: true, delivery: { ...existing, ...updates, items: JSON.parse(existing.items || '[]') } });
+        }
+      }
+    }
+    
     const delivery = activeDeliveries.find(d => d.id === id);
     if (!delivery) {
       return res.status(404).json({ error: 'Delivery request not found.' });
@@ -551,7 +609,7 @@ app.post('/api/deliveries/:id/claim', (req, res) => {
     delivery.status = 'driver_assigned';
     delivery.driverName = driverName || 'Volunteer Driver (Sarah M.)';
     delivery.claimedAt = new Date().toISOString();
-    console.log('🚚 Volunteer Claimed Delivery Route:', id);
+    console.log('🚚 Volunteer Claimed Delivery Route in memory:', id);
     res.json({ success: true, delivery });
   } catch (err) {
     console.error('Error claiming delivery:', err);
@@ -559,10 +617,19 @@ app.post('/api/deliveries/:id/claim', (req, res) => {
   }
 });
 
-app.post('/api/deliveries/:id/status', (req, res) => {
+app.post('/api/deliveries/:id/status', async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
+    
+    if (supabase && status) {
+      const { error } = await supabase.from('deliveries').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
+      if (!error) {
+        console.log(`📦 Delivery ${id} status updated to: ${status} in Supabase`);
+        return res.json({ success: true, delivery: { id, status } });
+      }
+    }
+
     const delivery = activeDeliveries.find(d => d.id === id);
     if (!delivery) {
       return res.status(404).json({ error: 'Delivery request not found.' });
@@ -571,7 +638,7 @@ app.post('/api/deliveries/:id/status', (req, res) => {
       delivery.status = status;
       delivery.updatedAt = new Date().toISOString();
     }
-    console.log(`📦 Delivery ${id} status updated to: ${delivery.status}`);
+    console.log(`📦 Delivery ${id} status updated to: ${delivery.status} in memory`);
     res.json({ success: true, delivery });
   } catch (err) {
     console.error('Error updating delivery status:', err);

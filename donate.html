@@ -191,6 +191,20 @@
 
     </main>
 
+    <!-- ── Donation Status Bar (appears when user has an active delivery) ── -->
+    <div id="donation-status-bar" class="hidden absolute bottom-[72px] left-0 w-full px-4 z-30 pointer-events-none">
+      <button id="donation-status-chip"
+        class="w-full flex items-center gap-3 bg-[#12141C]/95 backdrop-blur-md border border-amber-400/40 rounded-2xl px-4 py-3 shadow-[0_4px_24px_rgba(245,158,11,0.18)] pointer-events-auto active:scale-[0.98] transition-all"
+        onclick="window._openLastDeliveryTracker && window._openLastDeliveryTracker()">
+        <span id="dsb-icon" class="material-symbols-outlined text-amber-400 text-xl flex-shrink-0">local_shipping</span>
+        <div class="flex-1 min-w-0 text-left">
+          <p id="dsb-label" class="text-xs font-bold text-white truncate">Food Donation — Pending Pickup</p>
+          <p id="dsb-sub" class="text-[10px] text-slate-400 truncate">Tap to view live tracker</p>
+        </div>
+        <span class="material-symbols-outlined text-slate-500 text-base flex-shrink-0">chevron_right</span>
+      </button>
+    </div>
+
     <!-- Floating Dock Bottom Navigation Bar -->
     <nav class="absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-3 py-2.5 bg-[#12141C]/80 backdrop-blur-xl shadow-[0px_-4px_25px_rgba(0,0,0,0.5)] border-t border-white/10">
         <a class="flex-1 flex flex-col items-center justify-center text-slate-400 hover:text-white px-2 py-1 transition-colors" href="helper-dashboard.html">
@@ -672,6 +686,8 @@ window.submitFoodDonation = async function() {
         const dest = document.getElementById('food-target-destination').value;
         const timeWindow = document.getElementById('food-pickup-time').value;
         const notes = document.getElementById('food-pickup-notes').value.trim() || 'Contact donor upon arrival';
+        const sessionRaw = localStorage.getItem('northstar_session');
+        const sessionObj = sessionRaw ? JSON.parse(sessionRaw) : {};
 
         let createdId = null;
         try {
@@ -684,11 +700,16 @@ window.submitFoodDonation = async function() {
                     donorArea: area,
                     destination: dest,
                     timeWindow: timeWindow,
-                    contactNotes: notes
+                    contactNotes: notes,
+                    donor_id: sessionObj.id || null
                 })
             });
             const data = await res.json();
-            if (data.delivery) createdId = data.delivery.id;
+            if (data.delivery) {
+                createdId = data.delivery.id;
+                // Persist so Status Bar & Dashboard card can track this donation
+                try { localStorage.setItem('northstar_last_delivery_id', createdId); } catch(_) {}
+            }
         } catch (err) {
             console.warn('API delivery save notice:', err);
         }
@@ -1036,11 +1057,18 @@ window.openDeliverFoodModal = async function(e) {
 
 window.acceptDeliveryJob = async function(id) {
   try {
+    const sessionRaw = localStorage.getItem('northstar_session');
+    const sessionObj = sessionRaw ? JSON.parse(sessionRaw) : {};
+    const driverId = sessionObj.id || null;
+    
     await fetch(`/api/deliveries/${id}/claim`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ driverName: 'Volunteer (You)' })
+      body: JSON.stringify({ driverName: sessionObj.username || 'Volunteer (You)', driver_id: driverId })
     });
+    
+    // Persist so Status Bar & Dashboard card can track this donation/pickup
+    try { localStorage.setItem('northstar_last_delivery_id', id); } catch(_) {}
     
     document.getElementById('deliver-food-modal').remove();
     
@@ -1081,6 +1109,73 @@ document.addEventListener('DOMContentLoaded', () => {
     window.history.replaceState({}, document.title, window.location.pathname);
   }
 });
+// Donation / Volunteer Active Status Bar Logic
+window.initDonationStatusBar = async function() {
+    const role = localStorage.getItem('northstar_user_role') || 'seeker';
+    const sessionRaw = localStorage.getItem('northstar_session');
+    const session = sessionRaw ? JSON.parse(sessionRaw) : null;
+    const bar = document.getElementById('donation-status-bar');
+    if (!bar || !session) return;
+
+    try {
+        const res = await fetch('/api/deliveries');
+        const data = await res.json();
+        
+        let activeJob = null;
+        if (role === 'volunteer') {
+            activeJob = (data.deliveries || []).find(d => 
+                d.driver_id === session.id && 
+                ['pending_driver', 'driver_assigned', 'in_transit', 'delivered'].includes(d.status)
+            );
+        } else {
+            activeJob = (data.deliveries || []).find(d => 
+                d.donor_id === session.id && 
+                ['pending_driver', 'driver_assigned', 'in_transit', 'delivered'].includes(d.status)
+            );
+        }
+        
+        if (activeJob) {
+            bar.classList.remove('hidden');
+            const label = document.getElementById('dsb-label');
+            const sub = document.getElementById('dsb-sub');
+            const icon = document.getElementById('dsb-icon');
+
+            if (role === 'volunteer') {
+                if (activeJob.status === 'delivered') {
+                    label.innerText = 'Delivery Complete';
+                    sub.innerText = `Dropped off at ${activeJob.destination}`;
+                    icon.innerText = 'check_circle';
+                    icon.className = 'material-symbols-outlined text-emerald-400 text-xl flex-shrink-0';
+                } else {
+                    label.innerText = 'Active Delivery Route';
+                    sub.innerText = `En route to ${activeJob.destination}`;
+                    icon.innerText = 'directions_car';
+                    icon.className = 'material-symbols-outlined text-amber-400 text-xl flex-shrink-0';
+                }
+            } else {
+                if (activeJob.status === 'pending_driver') {
+                    label.innerText = 'Food Donation Pending';
+                    sub.innerText = 'Waiting for a volunteer driver';
+                } else if (activeJob.status === 'driver_assigned' || activeJob.status === 'in_transit') {
+                    label.innerText = 'Driver En Route';
+                    sub.innerText = 'Your food is on the way to the shelter';
+                } else if (activeJob.status === 'delivered') {
+                    label.innerText = 'Donation Delivered 🎉';
+                    sub.innerText = `Arrived at ${activeJob.destination}`;
+                }
+            }
+
+            window._openLastDeliveryTracker = () => {
+                if (typeof openUberTrackingModal === 'function') {
+                    openUberTrackingModal(activeJob.id);
+                }
+            };
+        }
+    } catch (err) {
+        console.warn('Could not fetch active donation status:', err);
+    }
+};
+document.addEventListener('DOMContentLoaded', () => { setTimeout(initDonationStatusBar, 500); });
 </script>
 </body>
 </html>
