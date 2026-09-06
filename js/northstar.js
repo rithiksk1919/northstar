@@ -920,11 +920,11 @@ window.openSettingsModal = function () {
       <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('settings-modal')"></div>
       <div class="modal-drawer bg-surface w-full rounded-t-3xl p-6 transform translate-y-full transition-transform duration-300 ease-in-out relative flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.2)]">
         <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-5"></div>
-        <h2 class="text-xl font-bold text-primary mb-6 flex items-center justify-between">
+        <h2 class="text-xl font-extrabold text-primary mb-6 flex items-center justify-between font-heading tracking-tight">
           <span class="flex items-center gap-2">
-            <span class="material-symbols-outlined">settings</span> Settings
+            <span class="material-symbols-outlined text-xl text-amber-500">settings</span> Settings
           </span>
-          <span id="settings-guest-badge" class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-amber-400/20 text-amber-500 border border-amber-400/30">
+          <span id="settings-guest-badge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-500 border border-amber-400/30">
             ${session.isGuest ? 'Guest Mode' : 'Account Active'}
           </span>
         </h2>

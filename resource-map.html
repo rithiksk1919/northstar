@@ -125,14 +125,10 @@
                         <span id="location-name-label">Seattle Area</span>
                     </div>
 
-                    <!-- Tightly Grouped Integrated Circle Buttons -->
-                    <div class="flex items-center gap-1.5">
+                    <!-- Recenter / Share Location Button -->
+                    <div class="flex items-center">
                         <button onclick="locateAndCenterUser()" title="Share / Recenter Location" class="w-9 h-9 rounded-full bg-white text-slate-900 shadow-md flex items-center justify-center hover:bg-slate-100 active:scale-95 transition-all">
                             <span class="material-symbols-outlined text-base">near_me</span>
-                        </button>
-                        <button onclick="toggleAlertsModal()" title="Alerts" class="w-9 h-9 rounded-full bg-white text-slate-900 shadow-md flex items-center justify-center hover:bg-slate-100 active:scale-95 transition-all relative">
-                            <span class="material-symbols-outlined text-base">notifications</span>
-                            <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white"></span>
                         </button>
                     </div>
                 </div>
@@ -150,9 +146,9 @@
                         </button>
                     </div>
 
-                    <!-- Real Open Now Toggle Pill -->
-                    <button id="open-now-btn" onclick="toggleOpenNowFilter()" class="py-1.5 px-3 rounded-[18px] bg-slate-100 text-slate-700 text-[11px] font-bold border border-slate-200 flex items-center gap-1.5 hover:bg-white transition-all shadow-sm flex-shrink-0">
-                        <span id="open-now-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+                    <!-- Real Open Now Toggle Pill (Active by default) -->
+                    <button id="open-now-btn" onclick="toggleOpenNowFilter()" class="py-1.5 px-3 rounded-[18px] bg-[#0F141C] text-white text-[11px] font-bold border border-white/20 flex items-center gap-1.5 transition-all shadow-md flex-shrink-0">
+                        <span id="open-now-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                         <span id="open-now-text">Open now</span>
                     </button>
                 </div>
@@ -331,28 +327,439 @@
   
   // REAL FILTERING STATE CONTROLLERS
   let activeSelectedCategories = ['all']; // Multi-select array
-  let isOpenNowFilterActive = false;
+  let isOpenNowFilterActive = true;       // Set Open Now active by default on page load
   let activeScopeFilter = 'everyone';   // 'everyone' or 'verified'
   let activeRadiusMiles = 5;            // Radius modifier (5, 10, 25 miles)
+  let activeMapMode = 'nearby';         // 'nearby' or 'saved'
   let isDrawerExpanded = false;
 
+  // USER BOOKMARKED / SAVED PLACES STATE & PERSISTENCE
+  const USER_SAVED_STORAGE_KEY = 'northstar_user_saved_places';
+
+  function getSavedPlaceIds() {
+    try {
+      const stored = localStorage.getItem(USER_SAVED_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (e) {
+      console.warn('Error reading saved places:', e);
+    }
+    return [];
+  }
+
+  function isPlaceSaved(placeId) {
+    const list = getSavedPlaceIds();
+    return list.includes(placeId);
+  }
+
+  async function toggleSavePlace(placeId, event) {
+    if (event && event.stopPropagation) {
+      event.stopPropagation();
+    }
+
+    const currentList = getSavedPlaceIds();
+    const idx = currentList.indexOf(placeId);
+    let isNowSaved = false;
+
+    if (idx >= 0) {
+      currentList.splice(idx, 1);
+      isNowSaved = false;
+    } else {
+      currentList.push(placeId);
+      isNowSaved = true;
+    }
+
+    localStorage.setItem(USER_SAVED_STORAGE_KEY, JSON.stringify(currentList));
+
+    // Optional Supabase persistence if user is authenticated
+    if (window.supabaseClient) {
+      try {
+        const session = JSON.parse(localStorage.getItem('northstar_session') || '{}');
+        const userId = session.id || session.userId;
+        if (userId) {
+          if (isNowSaved) {
+            await window.supabaseClient.from('user_saved_places').upsert({
+              user_id: userId,
+              place_id: placeId,
+              created_at: new Date().toISOString()
+            });
+          } else {
+            await window.supabaseClient.from('user_saved_places').delete()
+              .match({ user_id: userId, place_id: placeId });
+          }
+        }
+      } catch (err) {
+        console.warn('Supabase user_saved_places sync warning:', err);
+      }
+    }
+
+    if (typeof showNotification === 'function') {
+      showNotification(isNowSaved ? '🔖 Place added to your Saved places' : 'Removed from Saved places', isNowSaved ? 'success' : 'info');
+    }
+
+    applyCombinedFilters();
+  }
+  window.toggleSavePlace = toggleSavePlace;
+
   const defaultResources = [
-    { id: 'res-real-1', name: "Together Center - Human Services", category: "shelter", lat: 47.6805, lng: -122.1225, status: "Open Now • Housing Navigators", address: "16305 NE 87th St, Redmond", icon: "🏢", details: "Hub for emergency housing navigation.", verifiedOnly: true, hoursOpen: "08:00", hoursClose: "20:00", is24Seven: false },
-    { id: 'res-real-2', name: "Hopelink Redmond Center & Food Bank", category: "food", lat: 47.6822, lng: -122.1345, status: "Open Now • Fresh Groceries", address: "8990 154th Ave NE, Redmond", icon: "🍲", details: "Community food market offering fresh produce.", verifiedOnly: true, hoursOpen: "09:00", hoursClose: "17:00", is24Seven: false },
-    { id: 'res-real-3', name: "Helen's Place Emergency Shelter", category: "shelter", lat: 47.6755, lng: -122.1795, status: "Open 24/7 • Women's Shelter", address: "8045 120th Ave NE, Kirkland", icon: "🛏️", details: "Low-barrier emergency shelter.", verifiedOnly: true, hoursOpen: "00:00", hoursClose: "23:59", is24Seven: true },
-    { id: 'res-real-4', name: "Redmond Regional Library", category: "wifi", lat: 47.6765, lng: -122.1240, status: "Open Now • Free Guest Wi-Fi", address: "15990 NE 85th St, Redmond", icon: "📶", details: "High-speed guest Wi-Fi and charging desks.", verifiedOnly: false, hoursOpen: "10:00", hoursClose: "21:00", is24Seven: false },
-    { id: 'res-real-5', name: "Urban Rest Stop Hygiene Center", category: "restroom", lat: 47.6148, lng: -122.3340, status: "Open Now • Showers & Laundry", address: "1924 9th Ave, Seattle", icon: "🚿", details: "Clean private showers and restrooms.", verifiedOnly: true, hoursOpen: "07:00", hoursClose: "19:00", is24Seven: false },
-    { id: 'res-real-6', name: "Downtown Emergency Service Center", category: "shelter", lat: 47.6025, lng: -122.3308, status: "Open 24/7 • Shelter", address: "515 3rd Ave, Seattle", icon: "🛏️", details: "Overnight emergency shelter & outreach.", verifiedOnly: true, hoursOpen: "00:00", hoursClose: "23:59", is24Seven: true },
-    { id: 'res-real-7', name: "Mary's Place Family Shelter Hub", category: "shelter", lat: 47.6140, lng: -122.3362, status: "Open Now • Family Intake", address: "700 Virginia St, Seattle", icon: "🏠", details: "Emergency family beds and hot meals.", verifiedOnly: true, hoursOpen: "08:00", hoursClose: "20:00", is24Seven: false },
-    { id: 'res-real-8', name: "Ballard Food Bank & Community Hub", category: "food", lat: 47.6635, lng: -122.3740, status: "Open Now • Grocery Market", address: "1400 Leary Way NW, Seattle", icon: "🍲", details: "Food market and hygiene supplies.", verifiedOnly: true, hoursOpen: "09:00", hoursClose: "16:00", is24Seven: false },
-    { id: 'res-real-9', name: "YouthCare Orion Center", category: "food", lat: 47.6178, lng: -122.3315, status: "Open Now • Youth Drop-in", address: "1828 Yale Ave, Seattle", icon: "🍲", details: "Hot meals and showers for youth.", verifiedOnly: false, hoursOpen: "09:00", hoursClose: "18:00", is24Seven: false },
-    { id: 'res-real-10', name: "Compass Center Hygiene Station", category: "charging", lat: 47.6015, lng: -122.3348, status: "Open Now • Power Charging", address: "210 Alaskan Way S, Seattle", icon: "⚡", details: "Charging stations & resting area.", verifiedOnly: true, hoursOpen: "08:00", hoursClose: "18:00", is24Seven: false },
-    { id: 'res-real-11', name: "Seattle Day Labor & Work Center", category: "work", lat: 47.5990, lng: -122.3250, status: "Open Now • Immediate Gigs", address: "150 S Washington St, Seattle", icon: "💼", details: "Daily paid tasks, maintenance gigs, and cash payouts.", verifiedOnly: true, hoursOpen: "06:00", hoursClose: "14:00", is24Seven: false }
+    {
+      id: 'res-real-4',
+      name: "Redmond Library",
+      category: "wifi",
+      lat: 47.6765,
+      lng: -122.1240,
+      rating: 4.6,
+      open_status: "OPEN_NOW",
+      status: "Open · Closes 6:00 PM",
+      statusDetail: "Open · Closes 6:00 PM",
+      address: "15990 NE 85th St, Redmond",
+      icon: "📚",
+      details: "Local community hub that offers open public Wi-Fi, computer workstations, and resources during standard library hours.",
+      verifiedOnly: true,
+      hoursOpen: "11:00",
+      hoursClose: "18:00",
+      daysClosed: [],
+      is24Seven: false,
+      opening_hours: {
+        open_now: true,
+        periods: [
+          { open: { day: 0, time: "1100" }, close: { day: 0, time: "1800" } }, // Sun 11am-6pm
+          { open: { day: 1, time: "1000" }, close: { day: 1, time: "2000" } }, // Mon 10am-8pm
+          { open: { day: 2, time: "1000" }, close: { day: 2, time: "2000" } }, // Tue 10am-8pm
+          { open: { day: 3, time: "1000" }, close: { day: 3, time: "2000" } }, // Wed 10am-8pm
+          { open: { day: 4, time: "1000" }, close: { day: 4, time: "2000" } }, // Thu 10am-8pm
+          { open: { day: 5, time: "1000" }, close: { day: 5, time: "1800" } }, // Fri 10am-6pm
+          { open: { day: 6, time: "1000" }, close: { day: 6, time: "1700" } }  // Sat 10am-5pm
+        ],
+        weekday_text: [
+          "Monday: 10:00 AM – 8:00 PM",
+          "Tuesday: 10:00 AM – 8:00 PM",
+          "Wednesday: 10:00 AM – 8:00 PM",
+          "Thursday: 10:00 AM – 8:00 PM",
+          "Friday: 10:00 AM – 6:00 PM",
+          "Saturday: 10:00 AM – 5:00 PM",
+          "Sunday: 11:00 AM – 6:00 PM"
+        ]
+      }
+    },
+    {
+      id: 'res-real-3',
+      name: "The Sophia Way - Helen's Place (Shelter)",
+      category: "shelter",
+      lat: 47.6755,
+      lng: -122.1795,
+      rating: 2.7,
+      open_status: "OPEN_NOW",
+      status: "Open · 24/7 Emergency Shelter",
+      statusDetail: "Open 24 hours",
+      address: "8045 120th Ave NE, Kirkland",
+      icon: "📍",
+      details: "The Sophia Way - Helen's Place (Shelter) operates a 24/7 emergency shelter and day center for women.",
+      verifiedOnly: true,
+      hoursOpen: "00:00",
+      hoursClose: "23:59",
+      daysClosed: [],
+      is24Seven: true,
+      opening_hours: {
+        open_now: true,
+        periods: [
+          { open: { day: 0, time: "0000" } } // 24/7
+        ],
+        weekday_text: ["Open 24 hours daily"]
+      }
+    },
+    {
+      id: 'res-real-1',
+      name: "Together Center",
+      category: "shelter",
+      lat: 47.6805,
+      lng: -122.1225,
+      rating: 4.5,
+      open_status: "CLOSED_FOR_REST_OF_TODAY",
+      status: "Closed · Opens 9:00 AM Mon",
+      statusDetail: "Closed · Opens 9:00 AM Mon",
+      address: "16305 NE 87th St, Redmond",
+      icon: "📍",
+      details: "Together Center provides housing navigators and comprehensive social services in Redmond.",
+      verifiedOnly: true,
+      hoursOpen: "09:00",
+      hoursClose: "17:00",
+      daysClosed: [0, 6], // Closed on Sun & Sat
+      is24Seven: false,
+      opening_hours: {
+        open_now: false,
+        periods: [
+          { open: { day: 1, time: "0900" }, close: { day: 1, time: "1700" } },
+          { open: { day: 2, time: "0900" }, close: { day: 2, time: "1700" } },
+          { open: { day: 3, time: "0900" }, close: { day: 3, time: "1700" } },
+          { open: { day: 4, time: "0900" }, close: { day: 4, time: "1700" } },
+          { open: { day: 5, time: "0900" }, close: { day: 5, time: "1700" } }
+        ],
+        weekday_text: [
+          "Monday: 9:00 AM – 5:00 PM",
+          "Tuesday: 9:00 AM – 5:00 PM",
+          "Wednesday: 9:00 AM – 5:00 PM",
+          "Thursday: 9:00 AM – 5:00 PM",
+          "Friday: 9:00 AM – 5:00 PM",
+          "Saturday: Closed",
+          "Sunday: Closed"
+        ]
+      }
+    },
+    {
+      id: 'res-real-2',
+      name: "Hopelink Redmond - Food Distribution Center",
+      category: "food",
+      lat: 47.6822,
+      lng: -122.1345,
+      rating: 4.4,
+      open_status: "CLOSED_FOR_REST_OF_TODAY",
+      status: "Closed · Opens 1:00 PM Mon",
+      statusDetail: "Closed · Opens 1:00 PM Mon",
+      address: "8990 154th Ave NE, Redmond",
+      icon: "📍",
+      details: "Hopelink Redmond - Food Distribution Center provides fresh groceries and emergency food distributions during set weekday hours.",
+      verifiedOnly: true,
+      hoursOpen: "13:00",
+      hoursClose: "17:00",
+      daysClosed: [0, 6], // Closed Sun & Sat
+      is24Seven: false,
+      opening_hours: {
+        open_now: false,
+        periods: [
+          { open: { day: 1, time: "1300" }, close: { day: 1, time: "1700" } },
+          { open: { day: 2, time: "1300" }, close: { day: 2, time: "1700" } },
+          { open: { day: 3, time: "1300" }, close: { day: 3, time: "1700" } },
+          { open: { day: 4, time: "1300" }, close: { day: 4, time: "1700" } },
+          { open: { day: 5, time: "1000" }, close: { day: 5, time: "1400" } }
+        ],
+        weekday_text: [
+          "Monday: 1:00 PM – 5:00 PM",
+          "Tuesday: 1:00 PM – 5:00 PM",
+          "Wednesday: 1:00 PM – 5:00 PM",
+          "Thursday: 1:00 PM – 5:00 PM",
+          "Friday: 10:00 AM – 2:00 PM",
+          "Saturday: Closed",
+          "Sunday: Closed"
+        ]
+      }
+    },
+    {
+      id: 'res-real-5',
+      name: "Urban Rest Stop Hygiene Center",
+      category: "restroom",
+      lat: 47.6148,
+      lng: -122.3340,
+      rating: 4.5,
+      open_status: "OPEN_NOW",
+      status: "Open · Closes 7:00 PM",
+      statusDetail: "Open · Closes 7:00 PM",
+      address: "1924 9th Ave, Seattle",
+      icon: "🚿",
+      details: "Clean private showers, laundry facilities, and accessible restrooms.",
+      verifiedOnly: true,
+      hoursOpen: "07:00",
+      hoursClose: "19:00",
+      daysClosed: [],
+      is24Seven: false,
+      opening_hours: {
+        open_now: true,
+        periods: [
+          { open: { day: 0, time: "0700" }, close: { day: 0, time: "1900" } },
+          { open: { day: 1, time: "0700" }, close: { day: 1, time: "1900" } },
+          { open: { day: 2, time: "0700" }, close: { day: 2, time: "1900" } },
+          { open: { day: 3, time: "0700" }, close: { day: 3, time: "1900" } },
+          { open: { day: 4, time: "0700" }, close: { day: 4, time: "1900" } },
+          { open: { day: 5, time: "0700" }, close: { day: 5, time: "1900" } },
+          { open: { day: 6, time: "0700" }, close: { day: 6, time: "1900" } }
+        ]
+      }
+    },
+    {
+      id: 'res-real-6',
+      name: "Downtown Emergency Service Center",
+      category: "shelter",
+      lat: 47.6025,
+      lng: -122.3308,
+      rating: 4.1,
+      open_status: "OPEN_NOW",
+      status: "Open · 24/7 Shelter",
+      statusDetail: "Open 24 hours",
+      address: "515 3rd Ave, Seattle",
+      icon: "🛏️",
+      details: "Overnight emergency shelter, navigation, and crisis outreach.",
+      verifiedOnly: true,
+      hoursOpen: "00:00",
+      hoursClose: "23:59",
+      daysClosed: [],
+      is24Seven: true,
+      opening_hours: {
+        open_now: true,
+        periods: [{ open: { day: 0, time: "0000" } }],
+        weekday_text: ["Open 24 hours daily"]
+      }
+    },
+    {
+      id: 'res-real-7',
+      name: "Mary's Place Family Shelter Hub",
+      category: "shelter",
+      lat: 47.6140,
+      lng: -122.3362,
+      rating: 4.7,
+      open_status: "OPEN_NOW",
+      status: "Open · Closes 8:00 PM",
+      statusDetail: "Open · Closes 8:00 PM",
+      address: "700 Virginia St, Seattle",
+      icon: "🏠",
+      details: "Emergency family shelter beds, hygiene items, and hot meals.",
+      verifiedOnly: true,
+      hoursOpen: "08:00",
+      hoursClose: "20:00",
+      daysClosed: [],
+      is24Seven: false,
+      opening_hours: {
+        open_now: true,
+        periods: [
+          { open: { day: 0, time: "0800" }, close: { day: 0, time: "2000" } },
+          { open: { day: 1, time: "0800" }, close: { day: 1, time: "2000" } },
+          { open: { day: 2, time: "0800" }, close: { day: 2, time: "2000" } },
+          { open: { day: 3, time: "0800" }, close: { day: 3, time: "2000" } },
+          { open: { day: 4, time: "0800" }, close: { day: 4, time: "2000" } },
+          { open: { day: 5, time: "0800" }, close: { day: 5, time: "2000" } },
+          { open: { day: 6, time: "0800" }, close: { day: 6, time: "2000" } }
+        ]
+      }
+    },
+    {
+      id: 'res-real-8',
+      name: "Ballard Food Bank & Community Hub",
+      category: "food",
+      lat: 47.6635,
+      lng: -122.3740,
+      rating: 4.8,
+      open_status: "CLOSED_FOR_REST_OF_TODAY",
+      status: "Closed · Opens 11:00 AM Mon",
+      statusDetail: "Closed · Opens 11:00 AM Mon",
+      address: "1400 Leary Way NW, Seattle",
+      icon: "🍲",
+      details: "Grocery market offering fresh produce and community hygiene supplies.",
+      verifiedOnly: true,
+      hoursOpen: "11:00",
+      hoursClose: "16:00",
+      daysClosed: [0, 6], // Closed Sun & Sat
+      is24Seven: false,
+      opening_hours: {
+        open_now: false,
+        periods: [
+          { open: { day: 1, time: "1100" }, close: { day: 1, time: "1600" } },
+          { open: { day: 2, time: "1100" }, close: { day: 2, time: "1600" } },
+          { open: { day: 3, time: "1100" }, close: { day: 3, time: "1600" } },
+          { open: { day: 4, time: "1100" }, close: { day: 4, time: "1600" } }
+        ]
+      }
+    },
+    {
+      id: 'res-real-9',
+      name: "YouthCare Orion Center",
+      category: "food",
+      lat: 47.6178,
+      lng: -122.3315,
+      rating: 4.6,
+      open_status: "OPEN_NOW",
+      status: "Open · Closes 6:00 PM",
+      statusDetail: "Open · Closes 6:00 PM",
+      address: "1828 Yale Ave, Seattle",
+      icon: "🍲",
+      details: "Hot nutritious meals, case management, and drop-in services for youth.",
+      verifiedOnly: false,
+      hoursOpen: "09:00",
+      hoursClose: "18:00",
+      daysClosed: [],
+      is24Seven: false,
+      opening_hours: {
+        open_now: true,
+        periods: [
+          { open: { day: 0, time: "0900" }, close: { day: 0, time: "1800" } },
+          { open: { day: 1, time: "0900" }, close: { day: 1, time: "1800" } },
+          { open: { day: 2, time: "0900" }, close: { day: 2, time: "1800" } },
+          { open: { day: 3, time: "0900" }, close: { day: 3, time: "1800" } },
+          { open: { day: 4, time: "0900" }, close: { day: 4, time: "1800" } },
+          { open: { day: 5, time: "0900" }, close: { day: 5, time: "1800" } },
+          { open: { day: 6, time: "0900" }, close: { day: 6, time: "1800" } }
+        ]
+      }
+    },
+    {
+      id: 'res-real-10',
+      name: "Compass Center Hygiene & Charging Station",
+      category: "charging",
+      lat: 47.6015,
+      lng: -122.3348,
+      rating: 4.3,
+      open_status: "OPEN_NOW",
+      status: "Open · Closes 6:00 PM",
+      statusDetail: "Open · Closes 6:00 PM",
+      address: "210 Alaskan Way S, Seattle",
+      icon: "⚡",
+      details: "High-speed charging lockers, indoor rest area, and hygiene support.",
+      verifiedOnly: true,
+      hoursOpen: "08:00",
+      hoursClose: "18:00",
+      daysClosed: [],
+      is24Seven: false,
+      opening_hours: {
+        open_now: true,
+        periods: [
+          { open: { day: 0, time: "0800" }, close: { day: 0, time: "1800" } },
+          { open: { day: 1, time: "0800" }, close: { day: 1, time: "1800" } },
+          { open: { day: 2, time: "0800" }, close: { day: 2, time: "1800" } },
+          { open: { day: 3, time: "0800" }, close: { day: 3, time: "1800" } },
+          { open: { day: 4, time: "0800" }, close: { day: 4, time: "1800" } },
+          { open: { day: 5, time: "0800" }, close: { day: 5, time: "1800" } },
+          { open: { day: 6, time: "0800" }, close: { day: 6, time: "1800" } }
+        ]
+      }
+    },
+    {
+      id: 'res-real-11',
+      name: "Seattle Day Labor & Work Center",
+      category: "work",
+      lat: 47.5990,
+      lng: -122.3250,
+      rating: 4.2,
+      open_status: "OPEN_NOW",
+      status: "Open · Closes 2:00 PM",
+      statusDetail: "Open · Closes 2:00 PM",
+      address: "150 S Washington St, Seattle",
+      icon: "💼",
+      details: "Daily paid tasks, staging for maintenance gigs, and direct cash payouts.",
+      verifiedOnly: true,
+      hoursOpen: "06:00",
+      hoursClose: "14:00",
+      daysClosed: [],
+      is24Seven: false,
+      opening_hours: {
+        open_now: true,
+        periods: [
+          { open: { day: 0, time: "0600" }, close: { day: 0, time: "1400" } },
+          { open: { day: 1, time: "0600" }, close: { day: 1, time: "1400" } },
+          { open: { day: 2, time: "0600" }, close: { day: 2, time: "1400" } },
+          { open: { day: 3, time: "0600" }, close: { day: 3, time: "1400" } },
+          { open: { day: 4, time: "0600" }, close: { day: 4, time: "1400" } },
+          { open: { day: 5, time: "0600" }, close: { day: 5, time: "1400" } },
+          { open: { day: 6, time: "0600" }, close: { day: 6, time: "1400" } }
+        ]
+      }
+    }
   ];
+
+  const RESOURCE_STORAGE_KEY = 'cached_resources_v2_live_hours';
 
   function getResourcesData() {
     try {
-      const stored = localStorage.getItem('cached_resources');
+      const stored = localStorage.getItem(RESOURCE_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -360,9 +767,9 @@
         }
       }
     } catch (e) {
-      console.warn('Error reading cached_resources:', e);
+      console.warn('Error reading cached resources:', e);
     }
-    localStorage.setItem('cached_resources', JSON.stringify(defaultResources));
+    localStorage.setItem(RESOURCE_STORAGE_KEY, JSON.stringify(defaultResources));
     return defaultResources;
   }
 
@@ -409,7 +816,14 @@
   }
 
   function getActiveReferenceCoords() {
-    // 1. If userLocationCoords is set, valid, and within 60 miles of the Seattle mock cluster
+    // 1. If userRadiusCircle exists, its center is the exact center of the active search perimeter
+    if (userRadiusCircle && typeof userRadiusCircle.getLatLng === 'function') {
+      const circleCenter = userRadiusCircle.getLatLng();
+      if (circleCenter && circleCenter.lat && circleCenter.lng) {
+        return { lat: circleCenter.lat, lng: circleCenter.lng };
+      }
+    }
+    // 2. If userLocationCoords is set, valid, and within 60 miles of the Seattle mock cluster
     if (userLocationCoords && typeof userLocationCoords.lat === 'number' && typeof userLocationCoords.lng === 'number') {
       if (userLocationCoords.lat !== 0 && userLocationCoords.lng !== 0) {
         const distFromCluster = calculateDistanceMiles(userLocationCoords.lat, userLocationCoords.lng, 47.6062, -122.3321);
@@ -418,14 +832,14 @@
         }
       }
     }
-    // 2. Otherwise use map center if valid
+    // 3. Otherwise use map center if valid
     if (map && typeof map.getCenter === 'function') {
       const c = map.getCenter();
       if (c && c.lat && c.lng && (c.lat !== 0 || c.lng !== 0)) {
         return { lat: c.lat, lng: c.lng };
       }
     }
-    // 3. Fallback to Downtown Seattle anchor
+    // 4. Fallback to Downtown Seattle anchor
     return { lat: 47.6062, lng: -122.3321 };
   }
 
@@ -462,6 +876,11 @@
     userLocationMarker = L.marker([latitude, longitude], { icon: blueDotIcon, zIndexOffset: 1000 }).addTo(map);
     userLocationMarker.bindPopup('<b style="color:#ffffff;">📍 Your Location</b>');
 
+    // Auto-fit bounds around the initial circle perimeter
+    if (map && typeof map.fitBounds === 'function' && userRadiusCircle) {
+      map.fitBounds(userRadiusCircle.getBounds(), { padding: [20, 20], animate: true });
+    }
+
     updateVisiblePlaces();
   }
 
@@ -491,6 +910,7 @@
   }
 
   function switchMapMode(mode) {
+    activeMapMode = mode;
     const nearbyBtn = document.getElementById('mode-btn-nearby');
     const savedBtn = document.getElementById('mode-btn-saved');
 
@@ -501,6 +921,8 @@
       savedBtn.className = 'px-3.5 py-1.5 rounded-[16px] text-xs font-bold bg-white text-slate-950 shadow-sm transition-all';
       nearbyBtn.className = 'px-3.5 py-1.5 rounded-[16px] text-xs font-bold text-slate-600 hover:text-slate-950 transition-all';
     }
+
+    applyCombinedFilters();
   }
 
   function setScopeFilter(scope) {
@@ -525,10 +947,10 @@
     const dot = document.getElementById('open-now-dot');
 
     if (isOpenNowFilterActive) {
-      btn.className = 'py-1.5 px-3 rounded-[18px] bg-[#0F141C] text-white text-[11px] font-bold border border-white/20 flex items-center gap-1.5 transition-all shadow-md';
+      btn.className = 'py-1.5 px-3 rounded-[18px] bg-[#0F141C] text-white text-[11px] font-bold border border-white/20 flex items-center gap-1.5 transition-all shadow-md flex-shrink-0';
       dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
     } else {
-      btn.className = 'py-1.5 px-3 rounded-[18px] bg-slate-100 text-slate-700 text-[11px] font-bold border border-slate-200 flex items-center gap-1.5 hover:bg-white transition-all shadow-sm';
+      btn.className = 'py-1.5 px-3 rounded-[18px] bg-slate-100 text-slate-700 text-[11px] font-bold border border-slate-200 flex items-center gap-1.5 hover:bg-white transition-all shadow-sm flex-shrink-0';
       dot.className = 'w-2 h-2 rounded-full bg-slate-400';
     }
 
@@ -566,17 +988,102 @@
     applyCombinedFilters();
   }
 
+  function filterPlacesByRadius(places, selectedRadius) {
+    const refCoords = getActiveReferenceCoords();
+    const threshold = Number(selectedRadius) || activeRadiusMiles || 5;
+
+    return (places || [])
+      .map(place => {
+        const dist = calculateDistanceMiles(refCoords.lat, refCoords.lng, place.lat, place.lng);
+        return { ...place, distanceMiles: dist };
+      })
+      .filter(place => place.distanceMiles <= threshold);
+  }
+  window.filterPlacesByRadius = filterPlacesByRadius;
+
+  // Helper: Dynamic Google Maps / Places API compatible "Open Now" evaluator
+  function isPlaceOpenNow(place, targetDate = new Date()) {
+    if (!place) return false;
+
+    // 1. Explicit 24/7 locations (e.g. The Sophia Way - Helen's Place)
+    if (place.is24Seven === true) return true;
+
+    const currentDay = targetDate.getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
+    const currentHours = targetDate.getHours();
+    const currentMins = targetDate.getMinutes();
+    const currentTotalMin = currentHours * 60 + currentMins;
+    const currentTimeStr = `${String(currentHours).padStart(2, '0')}${String(currentMins).padStart(2, '0')}`;
+
+    // 2. Structured Google Places API opening_hours object (highest fidelity)
+    if (place.opening_hours && Array.isArray(place.opening_hours.periods) && place.opening_hours.periods.length > 0) {
+      const matchingPeriod = place.opening_hours.periods.find(p => {
+        if (!p.open) return false;
+        // 24/7 period: open on day 0 with time "0000" and no close
+        if (p.open.day === 0 && p.open.time === '0000' && !p.close) return true;
+        if (p.open.day !== currentDay) return false;
+        if (!p.close) return true;
+
+        const openTime = parseInt(p.open.time, 10);
+        const closeTime = parseInt(p.close.time, 10);
+        const currTimeNum = parseInt(currentTimeStr, 10);
+
+        if (closeTime >= openTime) {
+          return currTimeNum >= openTime && currTimeNum <= closeTime;
+        } else {
+          // Spans past midnight
+          return currTimeNum >= openTime || currTimeNum <= closeTime;
+        }
+      });
+
+      if (matchingPeriod) return true;
+      // If structured periods exist and none matched for the requested day/time, place is closed
+      return false;
+    }
+
+    // 3. Explicit closed days list (e.g. [0, 6] for weekends)
+    if (Array.isArray(place.daysClosed) && place.daysClosed.includes(currentDay)) {
+      return false;
+    }
+
+    // 4. Daily hours range (HH:mm - HH:mm)
+    if (place.hoursOpen && place.hoursClose) {
+      const [oH, oM] = place.hoursOpen.split(':').map(Number);
+      const [cH, cM] = place.hoursClose.split(':').map(Number);
+      const openMin = oH * 60 + oM;
+      const closeMin = cH * 60 + cM;
+      return currentTotalMin >= openMin && currentTotalMin <= closeMin;
+    }
+
+    // 5. Explicit Google Places / Supabase open_status flag
+    if (place.open_status === 'OPEN_NOW') return true;
+    if (place.open_status === 'CLOSED_FOR_REST_OF_TODAY') return false;
+
+    // 6. Fallback to status text
+    if (typeof place.status === 'string') {
+      const s = place.status.toLowerCase();
+      if (s.includes('open 24') || s.includes('24/7')) return true;
+      if (s.startsWith('closed') || s.includes('• closed') || s.includes('closed •')) return false;
+      if (s.startsWith('open') || s.includes('• open') || s.includes('open •')) return true;
+    }
+
+    return false;
+  }
+  window.isPlaceOpenNow = isPlaceOpenNow;
+
   // REAL COMBINED MULTI-FILTER FUNCTION (INTERSECTING AND LOGIC)
   function applyCombinedFilters() {
     const resources = getResourcesData();
-    const currentDeviceTime = new Date();
-    const currentMinutesFromMidnight = currentDeviceTime.getHours() * 60 + currentDeviceTime.getMinutes();
+    const savedIds = getSavedPlaceIds();
 
-    const bounds = map ? map.getBounds() : null;
-    const refCoords = getActiveReferenceCoords();
-
-    // 1. Filter by category, scope, and open-now time
+    // 1. Filter by category, scope, open-now time, and top Saved/Nearby mode
     const baseMatchingPins = resources.filter(pin => {
+      // Top Saved mode match
+      if (activeMapMode === 'saved') {
+        if (!savedIds.includes(pin.id)) {
+          return false;
+        }
+      }
+
       // Category Match
       const matchesCategory = activeSelectedCategories.includes('all') || activeSelectedCategories.includes(pin.category);
 
@@ -586,47 +1093,25 @@
         matchesScope = (pin.verifiedOnly === true);
       }
 
-      // Open Now Time Match
+      // Dynamic "Open Now" Real-Time Hours Status Check
       let matchesOpenNow = true;
       if (isOpenNowFilterActive) {
-        if (pin.is24Seven) {
-          matchesOpenNow = true;
-        } else if (pin.hoursOpen && pin.hoursClose) {
-          const [oH, oM] = pin.hoursOpen.split(':').map(Number);
-          const [cH, cM] = pin.hoursClose.split(':').map(Number);
-          const openMin = oH * 60 + oM;
-          const closeMin = cH * 60 + cM;
-          matchesOpenNow = (currentMinutesFromMidnight >= openMin && currentMinutesFromMidnight <= closeMin);
-        } else {
-          matchesOpenNow = pin.status && pin.status.toLowerCase().includes('open');
-        }
+        matchesOpenNow = isPlaceOpenNow(pin);
       }
 
       return matchesCategory && matchesScope && matchesOpenNow;
     });
 
-    // Score all candidate pins by distance in miles relative to active reference coordinates
-    const pool = baseMatchingPins.length > 0 ? baseMatchingPins : resources;
-    const scoredPins = pool.map(pin => {
-      const dist = calculateDistanceMiles(refCoords.lat, refCoords.lng, pin.lat, pin.lng);
-      const inBounds = bounds ? bounds.contains([pin.lat, pin.lng]) : true;
-      const inRadius = (dist <= activeRadiusMiles);
-      return {
-        ...pin,
-        distanceMiles: dist,
-        inBounds,
-        inRadius
-      };
-    });
-
-    // Strict boundary & radius match
-    let filteredPins = scoredPins.filter(p => p.inBounds && p.inRadius);
-
-    // If no markers fall within strict boundaries, automatically include the nearest 5 available resources regardless of tight radius limits so the UI always has content
-    if (filteredPins.length === 0) {
-      const sorted = [...scoredPins].sort((a, b) => a.distanceMiles - b.distanceMiles);
-      filteredPins = sorted.slice(0, 5);
-    }
+    // 2. Radius distance filtering:
+    // In 'nearby' mode, enforce strict radius distance threshold.
+    // In 'saved' mode, prioritize showing the user's bookmarked places while calculating their distance.
+    const filteredPins = (activeMapMode === 'saved')
+      ? baseMatchingPins.map(place => {
+          const refCoords = getActiveReferenceCoords();
+          const dist = calculateDistanceMiles(refCoords.lat, refCoords.lng, place.lat, place.lng);
+          return { ...place, distanceMiles: dist };
+        })
+      : filterPlacesByRadius(baseMatchingPins, activeRadiusMiles);
 
     renderLeafletMarkers(filteredPins);
     renderDrawerPlaces(filteredPins);
@@ -638,6 +1123,7 @@
   window.updateVisiblePlaces = updateVisiblePlaces;
 
   function renderLeafletMarkers(items) {
+    if (!map) return;
     mapMarkers.forEach(m => map.removeLayer(m.marker));
     mapMarkers = [];
 
@@ -656,19 +1142,29 @@
 
       const marker = L.marker([res.lat, res.lng], { icon: customIcon }).addTo(map);
 
+      const isOpen = isPlaceOpenNow(res);
+      const statusColor = isOpen ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold';
+      const statusDot = isOpen ? '<span class="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-1"></span>' : '<span class="inline-block w-2 h-2 rounded-full bg-rose-400 mr-1"></span>';
+
       const popupContent = `
         <div class="space-y-1.5 text-slate-100 font-sans p-1">
           <div class="flex justify-between items-center">
             <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 font-bold text-[10px] rounded-full uppercase">${res.category}</span>
-            ${res.verifiedOnly ? '<span class="text-[10px] text-amber-400 font-extrabold">✓ Verified</span>' : ''}
+            <div class="flex items-center gap-1.5">
+              ${res.rating ? `<span class="text-[10px] font-extrabold text-amber-300">★ ${res.rating}</span>` : ''}
+              ${res.verifiedOnly ? '<span class="text-[10px] text-amber-400 font-extrabold">✓ Verified</span>' : ''}
+            </div>
           </div>
           <h4 class="font-extrabold text-sm text-white">${res.name}</h4>
           <p class="text-xs text-slate-300">📍 ${res.address}</p>
-          <p class="text-xs font-bold text-emerald-400">${res.status}</p>
+          <p class="text-xs flex items-center ${statusColor}">${statusDot}${res.status}</p>
           ${res.hoursOpen ? `<p class="text-[10px] text-slate-400 font-mono">🕒 Hours: ${res.hoursOpen} - ${res.hoursClose}</p>` : ''}
           ${res.details ? `<p class="text-[11px] text-slate-300 bg-slate-900 p-2 rounded-xl border border-slate-800 mt-1">${res.details}</p>` : ''}
-          <div class="pt-2 border-t border-slate-800">
-            <a href="https://www.google.com/maps/dir/?api=1&destination=${res.lat},${res.lng}&travelmode=walking" target="_blank" class="block w-full text-center py-2 bg-emerald-500 text-slate-950 font-extrabold text-xs rounded-xl shadow hover:bg-emerald-400 transition-colors">
+          <div class="pt-2 border-t border-slate-800 flex items-center gap-1.5">
+            <button onclick="toggleSavePlace('${res.id}')" class="flex-1 text-center py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-extrabold text-xs rounded-xl shadow transition-colors flex items-center justify-center gap-1">
+              <span>${isPlaceSaved(res.id) ? '🔖 Saved' : '🔖 Save'}</span>
+            </button>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${res.lat},${res.lng}&travelmode=walking" target="_blank" class="flex-1 text-center py-2 bg-emerald-500 text-slate-950 font-extrabold text-xs rounded-xl shadow hover:bg-emerald-400 transition-colors">
               🚶 Directions
             </a>
           </div>
@@ -690,12 +1186,6 @@
     document.getElementById('add-resource-modal').classList.remove('flex');
   }
 
-  function toggleAlertsModal() {
-    if (typeof showNotification === 'function') {
-      showNotification('🔔 All shelter & food alerts in this area are active', 'info');
-    }
-  }
-
   function handleCreateResource(e) {
     e.preventDefault();
     const title = document.getElementById('res-title').value;
@@ -714,6 +1204,8 @@
       category: category,
       lat: center.lat + (Math.random() * 0.01 - 0.005),
       lng: center.lng + (Math.random() * 0.01 - 0.005),
+      rating: 5.0,
+      open_status: 'OPEN_NOW',
       status: 'Open Now • Community Submitted',
       address: address,
       icon: category === 'food' ? '🍲' : category === 'shelter' ? '🛏️' : category === 'work' ? '💼' : '📍',
@@ -721,12 +1213,17 @@
       verifiedOnly: true,
       hoursOpen: hOpen || "08:00",
       hoursClose: hClose || "20:00",
-      is24Seven: false
+      daysClosed: [],
+      is24Seven: false,
+      opening_hours: {
+        open_now: true,
+        periods: [{ open: { day: 0, time: "0800" }, close: { day: 0, time: "2000" } }]
+      }
     };
 
     const currentData = getResourcesData();
     currentData.unshift(newRes);
-    localStorage.setItem('cached_resources', JSON.stringify(currentData));
+    localStorage.setItem(RESOURCE_STORAGE_KEY, JSON.stringify(currentData));
 
     closeAddResourceModal();
     applyCombinedFilters();
@@ -753,6 +1250,9 @@
 
     if (userRadiusCircle) {
       userRadiusCircle.setRadius(miles * 1609.34);
+      if (map && typeof map.fitBounds === 'function') {
+        map.fitBounds(userRadiusCircle.getBounds(), { padding: [20, 20], animate: true });
+      }
     }
 
     updateVisiblePlaces();
@@ -832,13 +1332,27 @@
                      : res.category === 'restroom' ? 'text-teal-600 bg-teal-50'
                      : 'text-yellow-600 bg-yellow-50';
 
+      const isOpen = isPlaceOpenNow(res);
+      const statusBadge = isOpen 
+        ? `<span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>${res.status}</span>`
+        : `<span class="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>${res.status}</span>`;
+
+      const isSaved = isPlaceSaved(res.id);
+      const saveBtnClass = isSaved 
+        ? 'px-2.5 py-1 rounded-xl bg-amber-100 text-amber-900 border border-amber-300 font-extrabold text-[10px] flex items-center gap-1 shadow-sm transition-all hover:bg-amber-200' 
+        : 'px-2.5 py-1 rounded-xl bg-slate-100 text-slate-700 border border-slate-200 font-bold text-[10px] flex items-center gap-1 shadow-sm transition-all hover:bg-slate-200';
+      const saveIcon = isSaved ? 'bookmark' : 'bookmark_border';
+      const saveText = isSaved ? 'Saved' : 'Save';
+
       return `
         <div class="p-2.5 bg-slate-50 hover:bg-slate-100/90 rounded-2xl border border-slate-200/70 shadow-sm flex items-center justify-between gap-2.5 transition-all">
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-1.5 mb-0.5">
               <span class="text-sm flex-shrink-0">${res.icon || '📍'}</span>
               <h5 class="text-xs font-extrabold text-slate-900 truncate">${res.name}</h5>
+              ${res.rating ? `<span class="text-[10px] font-black text-amber-500 flex items-center gap-0.5">★${res.rating}</span>` : ''}
               ${res.verifiedOnly ? '<span class="text-[9px] text-amber-500 font-black flex-shrink-0" title="Verified">✓</span>' : ''}
+              ${isSaved ? '<span class="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 font-bold flex items-center gap-0.5">🔖 Saved</span>' : ''}
             </div>
             <div class="flex items-center gap-1.5 text-[11px] text-slate-500 mb-0.5">
               <span class="font-extrabold text-emerald-600 flex items-center gap-0.5">
@@ -848,14 +1362,20 @@
               <span>•</span>
               <span class="px-1.5 py-0.2 rounded text-[10px] font-bold ${catColor} capitalize">${res.category}</span>
             </div>
-            <p class="text-[10px] font-medium text-slate-600 truncate">${res.status}</p>
+            <div class="truncate">${statusBadge}</div>
           </div>
-          <div class="flex flex-col items-end gap-1 flex-shrink-0">
-            <button onclick="selectAndFocusPlace('${res.id}', ${res.lat}, ${res.lng})" class="px-3 py-1.5 bg-[#0F141C] text-white hover:bg-slate-800 text-[11px] font-extrabold rounded-xl shadow-sm transition-all active:scale-95 flex items-center gap-1">
-              <span>View</span>
-              <span class="material-symbols-outlined text-[12px] text-emerald-400">arrow_forward</span>
-            </button>
-            <a href="https://www.google.com/maps/dir/?api=1&destination=${res.lat},${res.lng}&travelmode=walking" target="_blank" class="text-[10px] font-bold text-slate-500 hover:text-slate-800">
+          <div class="flex flex-col items-end gap-1.5 flex-shrink-0">
+            <div class="flex items-center gap-1">
+              <button onclick="toggleSavePlace('${res.id}', event)" title="${isSaved ? 'Remove from Saved' : 'Save Place'}" class="${saveBtnClass}">
+                <span class="material-symbols-outlined text-[13px] ${isSaved ? 'text-amber-600' : 'text-slate-500'}">${saveIcon}</span>
+                <span>${saveText}</span>
+              </button>
+              <button onclick="selectAndFocusPlace('${res.id}', ${res.lat}, ${res.lng})" class="px-3 py-1 bg-[#0F141C] text-white hover:bg-slate-800 text-[11px] font-extrabold rounded-xl shadow-sm transition-all active:scale-95 flex items-center gap-1">
+                <span>View</span>
+                <span class="material-symbols-outlined text-[12px] text-emerald-400">arrow_forward</span>
+              </button>
+            </div>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${res.lat},${res.lng}&travelmode=walking" target="_blank" class="text-[10px] font-bold text-slate-500 hover:text-slate-800 pr-0.5">
               Directions ↗
             </a>
           </div>
