@@ -199,13 +199,13 @@ window.switchAuthTab = function (mode) {
   const submitBtn = document.getElementById('auth-submit-btn');
 
   if (mode === 'login') {
-    if (tabLogin) tabLogin.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-amber-400 text-slate-950 transition-all';
-    if (tabSignup) tabSignup.className = 'flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition-all';
+    if (tabLogin) tabLogin.className = 'flex-1 h-9 text-xs font-extrabold rounded-[11px] bg-slate-950 text-white shadow-sm transition-all duration-200';
+    if (tabSignup) tabSignup.className = 'flex-1 h-9 text-xs font-bold rounded-[11px] text-slate-600 hover:text-slate-950 transition-all duration-200';
     if (roleContainer) roleContainer.classList.add('hidden');
     if (submitBtn) submitBtn.textContent = 'Sign In';
   } else {
-    if (tabSignup) tabSignup.className = 'flex-1 py-2 text-xs font-bold rounded-lg bg-amber-400 text-slate-950 transition-all';
-    if (tabLogin) tabLogin.className = 'flex-1 py-2 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition-all';
+    if (tabSignup) tabSignup.className = 'flex-1 h-9 text-xs font-extrabold rounded-[11px] bg-slate-950 text-white shadow-sm transition-all duration-200';
+    if (tabLogin) tabLogin.className = 'flex-1 h-9 text-xs font-bold rounded-[11px] text-slate-600 hover:text-slate-950 transition-all duration-200';
     if (roleContainer) roleContainer.classList.remove('hidden');
     if (submitBtn) submitBtn.textContent = 'Create Account';
   }
@@ -1132,24 +1132,24 @@ function checkGuestLockAccess() {
 
     overlay = document.createElement('div');
     overlay.id = 'guest-lock-overlay';
-    overlay.className = 'absolute inset-0 z-[200] flex items-center justify-center p-5 bg-slate-950/80 backdrop-blur-md select-none';
+    overlay.className = 'absolute inset-0 z-[200] flex items-center justify-center p-5 bg-slate-950/60 backdrop-blur-sm select-none';
     overlay.innerHTML = `
-      <div class="glass-card-dark max-w-xs w-full p-6 rounded-3xl text-center space-y-4 shadow-2xl border border-amber-400/40 relative overflow-hidden animate-fade-in">
-        <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-400 to-amber-500 text-slate-950 flex items-center justify-center mx-auto shadow-lg shadow-amber-400/30">
+      <div class="bg-white max-w-xs w-full p-6 rounded-[24px] text-center space-y-4 shadow-2xl border border-slate-200/80 relative overflow-hidden animate-fade-in">
+        <div class="w-12 h-12 rounded-2xl bg-[#FFE855] text-slate-900 flex items-center justify-center mx-auto shadow-sm">
           <span class="material-symbols-outlined text-2xl font-bold">lock</span>
         </div>
         <div>
-          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-400/20 text-amber-300 border border-amber-400/40 inline-block mb-2">Guest Account</span>
-          <h3 class="text-base font-extrabold text-white">Unlock Feature with an Account</h3>
-          <p class="text-xs text-slate-300 mt-1.5 leading-relaxed font-medium">
+          <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-[#FFE855]/30 text-slate-800 inline-block mb-2.5">Guest Account</span>
+          <h3 class="text-lg font-bold text-slate-900 tracking-tight">Unlock Feature with an Account</h3>
+          <p class="text-xs text-slate-600 mt-1.5 leading-relaxed font-medium">
             You are browsing as a Guest. Create a free account or sign in to permanently unlock progress tracking, AI resume builder, job placements, and donations.
           </p>
         </div>
-        <div class="space-y-2.5 pt-2">
-          <button onclick="redirectToAuthGateway()" class="w-full py-3.5 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-extrabold text-xs rounded-xl shadow-lg hover:from-amber-300 hover:to-amber-400 transition-all flex items-center justify-center gap-2">
+        <div class="space-y-2 pt-1">
+          <button onclick="redirectToAuthGateway()" class="w-full py-3 bg-[#FFE855] hover:bg-amber-300 text-slate-950 font-extrabold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-2">
             <span class="material-symbols-outlined text-base">person_add</span> Sign In / Create Account
           </button>
-          <a href="seeker-dashboard.html" class="block w-full py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 font-bold text-xs rounded-xl border border-white/10 transition-colors">
+          <a href="seeker-dashboard.html" class="block w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition-colors">
             Back to Home
           </a>
         </div>

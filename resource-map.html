@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta content="width=device-width, initial-scale=1.0" name="viewport">
 <title>Northstar | Live Resource Map</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link rel="stylesheet" href="css/northstar.css">
 
@@ -21,62 +21,14 @@
         darkMode: "class",
         theme: {
           extend: {
-            "colors": {
-                    "error": "#ba1a1a",
-                    "surface": "#f7f9fb",
-                    "tertiary-container": "#0d1c2f",
-                    "surface-variant": "#e0e3e5",
-                    "on-primary-container": "#7c839b",
-                    "surface-container-lowest": "#ffffff",
-                    "primary-fixed-dim": "#bec6e0",
-                    "on-surface": "#191c1e",
-                    "surface-tint": "#565e74",
-                    "on-background": "#191c1e",
-                    "tertiary": "#000000",
-                    "secondary": "#6d5e00",
-                    "primary-fixed": "#dae2fd",
-                    "on-primary": "#ffffff",
-                    "surface-container-low": "#f2f4f6",
-                    "tertiary-fixed": "#d5e3fd",
-                    "on-error-container": "#93000a",
-                    "on-primary-fixed": "#131b2e",
-                    "secondary-fixed-dim": "#e2c62d",
-                    "background": "#f7f9fb",
-                    "on-tertiary-fixed-variant": "#3a485c",
-                    "primary-container": "#131b2e",
-                    "tertiary-fixed-dim": "#b9c7e0",
-                    "outline": "#76777d",
-                    "surface-container": "#eceef0",
-                    "on-tertiary-container": "#76859b",
-                    "on-surface-variant": "#45464d",
-                    "on-secondary": "#ffffff",
-                    "on-secondary-fixed": "#211b00",
-                    "outline-variant": "#c6c6cd",
-                    "surface-container-highest": "#e0e3e5",
-                    "on-error": "#ffffff",
-                    "surface-container-high": "#e6e8ea",
-                    "on-tertiary-fixed": "#0d1c2f",
-                    "primary": "#0d1c2f",
-                    "surface-dim": "#d8dadc",
-                    "surface-bright": "#f7f9fb",
-                    "secondary-fixed": "#ffe24c",
-                    "on-tertiary": "#ffffff",
-                    "on-secondary-fixed-variant": "#524600",
-                    "inverse-on-surface": "#eff1f3",
-                    "secondary-container": "#fcdf46",
-                    "inverse-surface": "#2d3133",
-                    "error-container": "#ffdad6",
-                    "on-secondary-container": "#726200",
-                    "inverse-primary": "#bec6e0",
-                    "on-primary-fixed-variant": "#3f465c"
+            "fontFamily": {
+              "sans": ["Inter", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+              "heading": ["Plus Jakarta Sans", "sans-serif"]
             },
-            "borderRadius": {
-                    "DEFAULT": "0.25rem",
-                    "lg": "0.5rem",
-                    "xl": "0.75rem",
-                    "2xl": "1rem",
-                    "3xl": "1.5rem",
-                    "full": "9999px"
+            "colors": {
+              "dark-pill": "#0F141C",
+              "brand-dark": "#0B0E14",
+              "brand-accent": "#10B981"
             }
           },
         },
@@ -84,150 +36,247 @@
 </script>
 <style>
   .leaflet-popup-content-wrapper {
-    background: #0f172a !important;
+    background: rgba(15, 20, 28, 0.92) !important;
+    backdrop-filter: blur(20px) saturate(180%) !important;
     color: #ffffff !important;
-    border-radius: 16px !important;
-    padding: 4px !important;
-    border: 1px solid #334155 !important;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5) !important;
+    border-radius: 24px !important;
+    padding: 6px !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
   }
   .leaflet-popup-tip {
-    background: #0f172a !important;
+    background: rgba(15, 20, 28, 0.92) !important;
   }
   .leaflet-container {
-    background: #0f172a !important;
-    font-family: inherit !important;
+    background: #EBF0F5 !important;
+    font-family: 'Inter', -apple-system, sans-serif !important;
+  }
+  /* Hide Leaflet default attribution & controls for clean full-bleed experience */
+  .leaflet-control-container .leaflet-bottom,
+  .leaflet-control-container .leaflet-top {
+    z-index: 20 !important;
+  }
+  /* Custom scrollbar for horizontal category shelf */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  /* Dynamic Station Spring Animations */
+  .spring-transition {
+    transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .ios-glass-station {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
   }
 </style>
 </head>
-</style>
-</head>
-<body class="bg-[#0F1117] min-h-screen flex items-center justify-center p-0 sm:py-6 text-slate-100 selection:bg-amber-500/30 selection:text-amber-300">
 
-<!-- Atmospheric Background Glows -->
-<div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
-    <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl"></div>
-    <div class="absolute top-1/3 -right-40 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
-    <div class="absolute -bottom-40 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
-</div>
+<body class="bg-[#0B0E14] min-h-screen flex items-center justify-center p-0 sm:py-6 text-slate-900 font-sans selection:bg-emerald-500/30 selection:text-emerald-300">
 
 <!-- Mobile Frame Shell -->
-<div class="app-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-[#0F1117] sm:rounded-[44px] shadow-[0_0_70px_rgba(0,0,0,0.85)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800/80 z-10">
+<div class="app-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-[#0B0E14] sm:rounded-[44px] shadow-[0_0_70px_rgba(0,0,0,0.85)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800/80 z-10">
 
-    <!-- Top Status Bar -->
-    <div class="bg-[#0F1117]/80 backdrop-blur-md px-6 pt-3 pb-1 flex justify-between items-center text-xs font-semibold text-slate-400 z-50 select-none border-b border-white/5">
-        <span class="status-clock">9:41</span>
-        <div class="w-16 h-4 bg-slate-900/90 rounded-full flex items-center justify-center border border-white/10">
-            <div class="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
-        </div>
-        <div class="flex items-center gap-1.5">
-            <span class="material-symbols-outlined text-xs">signal_cellular_4_bar</span>
-            <span class="material-symbols-outlined text-xs">wifi</span>
-            <span class="material-symbols-outlined text-xs text-amber-400">battery_50</span>
-        </div>
-    </div>
 
-    <!-- App Header -->
-    <header class="bg-white sticky top-0 z-40 flex justify-between items-center w-full px-5 py-3 border-b border-slate-200">
-        <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-slate-800 text-xl font-bold cursor-pointer">menu</span>
-            <h1 class="text-lg font-bold text-slate-900 font-heading tracking-tight">Northstar</h1>
-        </div>
-        <div class="header-actions-right flex items-center gap-2">
-            <button onclick="toggleTheme()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-amber-400 text-xs font-bold transition-all active:scale-95 cursor-pointer" title="Toggle Light / Dark Mode">
-                <span class="material-symbols-outlined text-sm">brightness_4</span>
-            </button>
-            <div onclick="openSettingsModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 text-xs font-bold cursor-pointer" title="Settings">
-                👤
+
+    <!-- MAIN FULL-BLEED MAP CONTAINER -->
+    <div class="relative w-full h-full flex-1 overflow-hidden flex flex-col">
+        
+        <!-- FULL-BLEED LEAFLET MAP -->
+        <div id="map" class="absolute inset-0 w-full h-full z-0 bg-[#EBF0F5]"></div>
+
+        <!-- OVERLAY LAYER: DYNAMIC FLOATING STATION LAYER (Z-INDEX 30) -->
+        <div class="relative z-30 w-full h-full flex flex-col justify-between pointer-events-none pt-11 pb-4 px-3.5">
+
+            <!-- SINGLE UNIFIED DYNAMIC FLOATING STATION (APPLE CONTROL CENTER / DYNAMIC ISLAND ARCHITECTURE) -->
+            <div id="dynamic-floating-station" class="pointer-events-auto w-full rounded-[28px] ios-glass-station p-2.5 space-y-2.5 spring-transition">
+                
+                <!-- TIER 1: COLLAPSED CAPSULE ROW (MODE TOGGLE + ACTION BUTTONS TIGHTLY GROUPED) -->
+                <div class="flex justify-between items-center w-full">
+                    <!-- Segmented Mode Controller (Nearby vs Saved) -->
+                    <div class="bg-slate-200/80 p-1 rounded-[20px] flex items-center gap-1 shadow-inner">
+                        <button id="mode-btn-nearby" onclick="switchMapMode('nearby')" class="px-3.5 py-1.5 rounded-[16px] text-xs font-bold bg-white text-slate-950 shadow-sm transition-all">
+                            Nearby
+                        </button>
+                        <button id="mode-btn-saved" onclick="switchMapMode('saved')" class="px-3.5 py-1.5 rounded-[16px] text-xs font-bold text-slate-600 hover:text-slate-950 transition-all">
+                            Saved
+                        </button>
+                    </div>
+
+                    <!-- Location Name Pill -->
+                    <div class="px-3 py-1 rounded-[16px] bg-slate-100 text-slate-800 text-[11px] font-bold border border-slate-200 flex items-center gap-1 shadow-sm">
+                        <span class="material-symbols-outlined text-xs text-emerald-600">location_on</span>
+                        <span id="location-name-label">Seattle Area</span>
+                    </div>
+
+                    <!-- Tightly Grouped Integrated Circle Buttons -->
+                    <div class="flex items-center gap-1.5">
+                        <button onclick="locateAndCenterUser()" title="Share / Recenter Location" class="w-9 h-9 rounded-full bg-white text-slate-900 shadow-md flex items-center justify-center hover:bg-slate-100 active:scale-95 transition-all">
+                            <span class="material-symbols-outlined text-base">near_me</span>
+                        </button>
+                        <button onclick="toggleAlertsModal()" title="Alerts" class="w-9 h-9 rounded-full bg-white text-slate-900 shadow-md flex items-center justify-center hover:bg-slate-100 active:scale-95 transition-all relative">
+                            <span class="material-symbols-outlined text-base">notifications</span>
+                            <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TIER 2: FILTER ROW (DYNAMIC INLINE EXPANSION FOR SCOPE & OPEN NOW) -->
+                <div class="flex items-center justify-between gap-2 pt-0.5">
+                    <!-- Scope Filter Segment (Everyone vs Verified Only) -->
+                    <div class="bg-slate-200/80 p-0.5 rounded-[18px] flex items-center gap-0.5 shadow-inner flex-grow">
+                        <button id="scope-btn-everyone" onclick="setScopeFilter('everyone')" class="flex-1 py-1.5 px-2.5 rounded-[14px] text-[11px] font-bold bg-white text-slate-950 shadow-sm transition-all text-center truncate">
+                            Everyone
+                        </button>
+                        <button id="scope-btn-verified" onclick="setScopeFilter('verified')" class="flex-1 py-1.5 px-2.5 rounded-[14px] text-[11px] font-bold text-slate-600 hover:text-slate-950 transition-all text-center truncate flex items-center justify-center gap-1">
+                            <span>Verified</span>
+                            <span class="text-[9px] text-amber-500 font-black">✓</span>
+                        </button>
+                    </div>
+
+                    <!-- Real Open Now Toggle Pill -->
+                    <button id="open-now-btn" onclick="toggleOpenNowFilter()" class="py-1.5 px-3 rounded-[18px] bg-slate-100 text-slate-700 text-[11px] font-bold border border-slate-200 flex items-center gap-1.5 hover:bg-white transition-all shadow-sm flex-shrink-0">
+                        <span id="open-now-dot" class="w-2 h-2 rounded-full bg-slate-400"></span>
+                        <span id="open-now-text">Open now</span>
+                    </button>
+                </div>
+
+                <!-- TIER 3: iOS SEGMENTED CATEGORY SHELF (MULTI-SELECT SUPPORTED) -->
+                <div class="pt-0.5">
+                    <div class="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                        <button data-cat="all" onclick="toggleCategoryFilter('all')" class="cat-pill-btn px-3.5 py-1.5 rounded-[16px] text-[11px] font-extrabold bg-[#0F141C] text-white flex items-center gap-1 flex-shrink-0 shadow-md transition-all">
+                            <span class="material-symbols-outlined text-xs text-emerald-400">auto_awesome</span>
+                            <span>All</span>
+                        </button>
+                        <button data-cat="work" onclick="toggleCategoryFilter('work')" class="cat-pill-btn px-3.5 py-1.5 rounded-[16px] text-[11px] font-bold bg-white text-slate-800 flex items-center gap-1 flex-shrink-0 border border-slate-200 shadow-sm hover:bg-slate-50 transition-all">
+                            <span class="material-symbols-outlined text-xs text-amber-500">work</span>
+                            <span>Gigs</span>
+                        </button>
+                        <button data-cat="food" onclick="toggleCategoryFilter('food')" class="cat-pill-btn px-3.5 py-1.5 rounded-[16px] text-[11px] font-bold bg-white text-slate-800 flex items-center gap-1 flex-shrink-0 border border-slate-200 shadow-sm hover:bg-slate-50 transition-all">
+                            <span class="material-symbols-outlined text-xs text-rose-500">restaurant</span>
+                            <span>Meals</span>
+                        </button>
+                        <button data-cat="shelter" onclick="toggleCategoryFilter('shelter')" class="cat-pill-btn px-3.5 py-1.5 rounded-[16px] text-[11px] font-bold bg-white text-slate-800 flex items-center gap-1 flex-shrink-0 border border-slate-200 shadow-sm hover:bg-slate-50 transition-all">
+                            <span class="material-symbols-outlined text-xs text-blue-500">single_bed</span>
+                            <span>Shelter</span>
+                        </button>
+                        <button data-cat="wifi" onclick="toggleCategoryFilter('wifi')" class="cat-pill-btn px-3.5 py-1.5 rounded-[16px] text-[11px] font-bold bg-white text-slate-800 flex items-center gap-1 flex-shrink-0 border border-slate-200 shadow-sm hover:bg-slate-50 transition-all">
+                            <span class="material-symbols-outlined text-xs text-indigo-500">wifi</span>
+                            <span>Wi-Fi</span>
+                        </button>
+                        <button data-cat="restroom" onclick="toggleCategoryFilter('restroom')" class="cat-pill-btn px-3.5 py-1.5 rounded-[16px] text-[11px] font-bold bg-white text-slate-800 flex items-center gap-1 flex-shrink-0 border border-slate-200 shadow-sm hover:bg-slate-50 transition-all">
+                            <span class="material-symbols-outlined text-xs text-teal-500">shower</span>
+                            <span>Showers</span>
+                        </button>
+                        <button data-cat="charging" onclick="toggleCategoryFilter('charging')" class="cat-pill-btn px-3.5 py-1.5 rounded-[16px] text-[11px] font-bold bg-white text-slate-800 flex items-center gap-1 flex-shrink-0 border border-slate-200 shadow-sm hover:bg-slate-50 transition-all">
+                            <span class="material-symbols-outlined text-xs text-yellow-500">power</span>
+                            <span>Charging</span>
+                        </button>
+                    </div>
+                </div>
+
             </div>
-        </div>
-    </header>
 
-    <!-- Filter & Search Bar Top Section -->
-    <div class="bg-white text-slate-900 px-4 py-3 border-b border-slate-200 space-y-2.5 z-30 shadow-sm">
-        
-        <!-- Search Box -->
-        <div class="relative w-full">
-            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
-            <input 
-                id="walkable-search-input" 
-                type="text" 
-                placeholder="Search for help..." 
-                oninput="handleSearchFilterInput()"
-                class="w-full bg-slate-50 text-slate-900 placeholder-slate-400 text-xs rounded-full pl-9 pr-8 py-2.5 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-900"
-            />
-            <button onclick="clearSearchInput()" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700">
-                <span class="material-symbols-outlined text-sm">cancel</span>
-            </button>
+            <!-- SPRING-ANIMATED DOCKING "SEARCH THIS AREA" BUTTON (DOCKS BENEATH STATION ON MAP PAN) -->
+            <div class="w-full flex justify-center pointer-events-auto my-auto pt-2">
+                <button id="search-area-btn" onclick="executeSearchThisArea()" class="hidden items-center gap-2 px-5 py-2.5 bg-[#0F141C] text-white font-extrabold text-xs rounded-full shadow-2xl border border-white/20 hover:bg-slate-900 transition-all active:scale-95 transform duration-300 spring-transition">
+                    <span class="material-symbols-outlined text-sm text-emerald-400 animate-pulse">radar</span>
+                    <span>Search this area</span>
+                </button>
+            </div>
+
         </div>
 
-        <!-- Filter Category Chips -->
-        <div class="flex gap-2 overflow-x-auto no-scrollbar pb-0.5">
-            <button data-cat="all" onclick="selectCategoryFilter('all')" class="cat-filter-btn px-4 py-1.5 rounded-full text-xs font-bold bg-slate-950 text-white flex items-center gap-1 flex-shrink-0 shadow-sm">
-                <span class="material-symbols-outlined text-xs">navigation</span> Nearby
-            </button>
-            <button data-cat="shelter" onclick="selectCategoryFilter('shelter')" class="cat-filter-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 flex-shrink-0">
-                Shelters
-            </button>
-            <button data-cat="food" onclick="selectCategoryFilter('food')" class="cat-filter-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 flex-shrink-0">
-                Food
-            </button>
-            <button data-cat="wifi" onclick="selectCategoryFilter('wifi')" class="cat-filter-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 flex-shrink-0">
-                Wi-Fi
-            </button>
-            <button data-cat="work" onclick="selectCategoryFilter('work')" class="cat-filter-btn px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 flex-shrink-0">
-                Jobs
-            </button>
-        </div>
     </div>
 
-    <!-- Leaflet Map Container -->
-    <div class="relative flex-grow w-full h-[380px] min-h-[320px] flex flex-col overflow-hidden">
-        <div id="map" class="w-full h-full min-h-[320px] bg-slate-900 z-10"></div>
-        
-        <!-- Floating My Location Re-center Button -->
-        <button onclick="locateAndCenterUser()" class="absolute bottom-4 right-4 z-20 w-11 h-11 rounded-full bg-[#12141C] text-amber-400 flex items-center justify-center shadow-xl border border-white/10 hover:bg-slate-900 transition-transform active:scale-95">
-            <span class="material-symbols-outlined text-xl">my_location</span>
-        </button>
+    <!-- FLOATING ROUNDED BOTTOM NAVIGATION BAR -->
+    <div class="absolute bottom-3 left-4 right-4 z-40">
+        <nav class="bg-white/95 backdrop-blur-xl rounded-full py-2.5 px-4 shadow-[0_10px_30px_rgba(0,0,0,0.3)] border border-slate-200/80 flex items-center justify-between">
+            
+            <a href="index.html" class="flex flex-col items-center text-slate-400 hover:text-slate-900 transition-colors p-1">
+                <span class="material-symbols-outlined text-xl">home</span>
+            </a>
+
+            <a href="resource-map.html" class="flex flex-col items-center text-slate-950 transition-colors p-1 relative">
+                <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">map</span>
+                <span class="w-1 h-1 rounded-full bg-slate-950 absolute -bottom-1"></span>
+            </a>
+
+            <a href="seeker-dashboard.html" class="flex flex-col items-center text-slate-400 hover:text-slate-900 transition-colors p-1">
+                <span class="material-symbols-outlined text-xl">search</span>
+            </a>
+
+            <a href="resume-builder.html" class="flex flex-col items-center text-slate-400 hover:text-slate-900 transition-colors p-1">
+                <span class="material-symbols-outlined text-xl">person</span>
+            </a>
+
+            <!-- Prominent Floating "+" Action Button for Volunteers / Posting Resources -->
+            <button onclick="openAddResourceModal()" class="w-10 h-10 rounded-full bg-[#0F141C] text-white flex items-center justify-center shadow-lg hover:bg-slate-800 transition-all active:scale-95 border border-white/10 ml-1">
+                <span class="material-symbols-outlined text-xl">add</span>
+            </button>
+        </nav>
     </div>
 
-    <!-- 5-Mile Radius Nearby Sheet Drawer -->
-    <div class="bg-[#0F1117] border-t border-white/10 p-4 space-y-2.5 flex-grow overflow-y-auto pb-20 z-20">
-        <div class="flex justify-between items-center text-xs font-bold text-slate-300">
-            <span class="flex items-center gap-1.5 text-amber-400 font-extrabold">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span> Resources in 5-Mile Radius
-            </span>
-            <span id="nearby-count-badge" class="px-2.5 py-0.5 bg-white/5 rounded-full text-[10px] text-slate-400 font-extrabold border border-white/10">0 Resources</span>
+</div><!-- /.app-frame -->
+
+<!-- MODAL: ADD RESOURCE / GIG -->
+<div id="add-resource-modal" class="fixed inset-0 z-[100] hidden items-end sm:items-center justify-center bg-slate-950/80 backdrop-blur-md p-0 sm:p-4">
+    <div class="w-full sm:max-w-md bg-[#0F141C] border border-slate-800 rounded-t-3xl sm:rounded-3xl p-6 text-white space-y-4 shadow-2xl">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+            <h3 class="font-extrabold text-base flex items-center gap-2">
+                <span class="material-symbols-outlined text-emerald-400">add_location_alt</span>
+                Post Resource / Gig
+            </h3>
+            <button onclick="closeAddResourceModal()" class="text-slate-400 hover:text-white">
+                <span class="material-symbols-outlined text-lg">close</span>
+            </button>
         </div>
-        <div id="nearby-resources-list" class="space-y-2">
-            <!-- Dynamic resource cards render here -->
-        </div>
+
+        <form id="new-resource-form" onsubmit="handleCreateResource(event)" class="space-y-3">
+            <div>
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Title / Location Name</label>
+                <input type="text" id="res-title" required placeholder="e.g. Community Meal Distribution" class="w-full mt-1 p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs font-medium text-white focus:outline-none focus:border-emerald-500">
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Category</label>
+                    <select id="res-category" class="w-full mt-1 p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs font-medium text-white focus:outline-none focus:border-emerald-500">
+                        <option value="food">Meal / Pantry</option>
+                        <option value="shelter">Shelter Bed</option>
+                        <option value="work">Gig Job</option>
+                        <option value="wifi">Wi-Fi Access</option>
+                        <option value="restroom">Showers / Restroom</option>
+                        <option value="charging">Power Charging</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Hours</label>
+                    <input type="text" id="res-hours" placeholder="e.g. 08:00 - 20:00" class="w-full mt-1 p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs font-medium text-white focus:outline-none focus:border-emerald-500">
+                </div>
+            </div>
+
+            <div>
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Address / Location</label>
+                <input type="text" id="res-address" required placeholder="e.g. 515 3rd Ave, Seattle" class="w-full mt-1 p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs font-medium text-white focus:outline-none focus:border-emerald-500">
+            </div>
+
+            <div>
+                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Details & Instructions</label>
+                <textarea id="res-details" rows="2" placeholder="Details for seekers..." class="w-full mt-1 p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs font-medium text-white focus:outline-none focus:border-emerald-500"></textarea>
+            </div>
+
+            <button type="submit" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold rounded-xl text-xs shadow-lg transition-all active:scale-[0.98]">
+                Publish Location to Map
+            </button>
+        </form>
     </div>
-
-    <!-- Floating Dock Bottom Navigation Bar -->
-    <nav class="absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-3 py-2.5 bg-[#12141C]/80 backdrop-blur-xl shadow-[0px_-4px_25px_rgba(0,0,0,0.5)] border-t border-white/10">
-        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="index.html">
-            <span class="material-symbols-outlined text-xl">home</span>
-            <span class="text-[10px] font-medium mt-0.5">Home</span>
-        </a>
-        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="seeker-dashboard.html">
-            <span class="material-symbols-outlined text-xl">dashboard</span>
-            <span class="text-[10px] font-medium mt-0.5">Dashboard</span>
-        </a>
-        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="resume-builder.html">
-            <span class="material-symbols-outlined text-xl">description</span>
-            <span class="text-[10px] font-medium mt-0.5">Resume</span>
-        </a>
-        <a class="flex flex-col items-center justify-center bg-amber-400/15 text-amber-400 border border-amber-400/30 rounded-2xl px-3.5 py-1 shadow-[0_0_15px_rgba(245,158,11,0.25)]" href="resource-map.html">
-            <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">map</span>
-            <span class="text-[10px] font-extrabold mt-0.5">Map</span>
-        </a>
-        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="call-shelter.html">
-            <span class="material-symbols-outlined text-xl">call</span>
-            <span class="text-[10px] font-medium mt-0.5">Shelter</span>
-        </a>
-    </nav>
-
 </div>
 
 <script src="js/northstar.js"></script>
@@ -238,84 +287,79 @@
   let userLocationMarker = null;
   let userRadiusCircle = null;
   let userLocationCoords = null;
-  let currentSelectedCategory = 'all';
-
-  function getDistanceMiles(lat1, lon1, lat2, lon2) {
-    const R = 3958.8; // Radius of Earth in miles
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  }
+  
+  // REAL FILTERING STATE CONTROLLERS
+  let activeSelectedCategories = ['all']; // Multi-select array
+  let isOpenNowFilterActive = false;
+  let activeScopeFilter = 'everyone';   // 'everyone' or 'verified'
+  let isMapBoundsFilteringActive = false;
 
   const defaultResources = [
-    { id: 'res-real-1', name: "Together Center - Human Services Campus", category: "shelter", lat: 47.6805, lng: -122.1225, status: "Housing Navigators & Social Services", address: "16305 NE 87th St, Redmond", icon: "🏢", details: "Hub for 20+ non-profit agencies providing emergency housing navigation, crisis support, and healthcare. Drop-in: Tue 1-3pm. Phone: (425) 869-6699" },
-    { id: 'res-real-2', name: "Hopelink Redmond Center & Food Bank", category: "food", lat: 47.6822, lng: -122.1345, status: "Fresh Groceries & Emergency Food", address: "8990 154th Ave NE, Redmond", icon: "🍲", details: "Community food market offering fresh produce, pantry staples, and emergency food packs. Phone: (425) 869-6000" },
-    { id: 'res-real-3', name: "Helen's Place Emergency Shelter (The Sophia Way)", category: "shelter", lat: 47.6755, lng: -122.1795, status: "24/7 Women's Emergency Shelter", address: "8045 120th Ave NE, Suite 200, Kirkland", icon: "🛏️", details: "Low-barrier 24/7 emergency shelter for women, offering warm beds, showers, laundry, and meals. Call (425) 572-2178 for intake." },
-    { id: 'res-real-4', name: "Redmond Regional Library (KCLS)", category: "wifi", lat: 47.6765, lng: -122.1240, status: "Free KCLS Guest Wi-Fi & Outlets", address: "15990 NE 85th St, Redmond", icon: "📶", details: "Public library featuring high-speed guest Wi-Fi, computer labs, climate control, and indoor charging desks. Phone: (425) 885-1861" },
-    { id: 'res-real-5', name: "Urban Rest Stop Hygiene Center", category: "restroom", lat: 47.6148, lng: -122.3340, status: "Free Private Showers & Laundry", address: "1924 9th Ave, Seattle", icon: "🚿", details: "Clean, private restroom and shower stalls, laundry facilities, and personal hygiene supplies. Phone: (206) 443-9935" },
-    { id: 'res-real-6', name: "Downtown Emergency Service Center (DESC)", category: "shelter", lat: 47.6025, lng: -122.3308, status: "Emergency Shelter & Crisis Support", address: "515 3rd Ave, Seattle", icon: "🛏️", details: "Overnight emergency shelter, crisis intervention, medical respite coordination, and mental health outreach. Phone: (206) 464-1570" },
-    { id: 'res-real-7', name: "Mary's Place Family Shelter Intake Hub", category: "shelter", lat: 47.6140, lng: -122.3362, status: "Family Shelter Intake & Support", address: "700 Virginia St, Seattle", icon: "🏠", details: "Central intake for families experiencing homelessness, offering emergency beds, hot meals, and medical care. Call (206) 245-1026." },
-    { id: 'res-real-8', name: "Ballard Food Bank & Community Hub", category: "food", lat: 47.6635, lng: -122.3740, status: "Free Grocery Market & Hot Meals", address: "1400 Leary Way NW, Seattle", icon: "🍲", details: "Community food market, hygiene supplies, mail pick-up service, and financial assistance navigation. Phone: (206) 789-7800" },
-    { id: 'res-real-9', name: "YouthCare Orion Center", category: "food", lat: 47.6178, lng: -122.3315, status: "Youth Meals, Showers & Housing (13-24)", address: "1828 Yale Ave, Seattle", icon: "🍲", details: "Drop-in center for youth and young adults providing hot meals, showers, laundry, and housing case management. Phone: (206) 622-5555" },
-    { id: 'res-real-10', name: "Compass Center Hygiene Center", category: "restroom", lat: 47.6015, lng: -122.3348, status: "Monitored Showers & Restrooms", address: "210 Alaskan Way S, Seattle", icon: "🚿", details: "Monitored hygiene facility offering private showers, restrooms, and personal care kits in Pioneer Square. Phone: (206) 474-1680" }
+    { id: 'res-real-1', name: "Together Center - Human Services", category: "shelter", lat: 47.6805, lng: -122.1225, status: "Open Now • Housing Navigators", address: "16305 NE 87th St, Redmond", icon: "🏢", details: "Hub for emergency housing navigation.", verifiedOnly: true, hoursOpen: "08:00", hoursClose: "20:00", is24Seven: false },
+    { id: 'res-real-2', name: "Hopelink Redmond Center & Food Bank", category: "food", lat: 47.6822, lng: -122.1345, status: "Open Now • Fresh Groceries", address: "8990 154th Ave NE, Redmond", icon: "🍲", details: "Community food market offering fresh produce.", verifiedOnly: true, hoursOpen: "09:00", hoursClose: "17:00", is24Seven: false },
+    { id: 'res-real-3', name: "Helen's Place Emergency Shelter", category: "shelter", lat: 47.6755, lng: -122.1795, status: "Open 24/7 • Women's Shelter", address: "8045 120th Ave NE, Kirkland", icon: "🛏️", details: "Low-barrier emergency shelter.", verifiedOnly: true, hoursOpen: "00:00", hoursClose: "23:59", is24Seven: true },
+    { id: 'res-real-4', name: "Redmond Regional Library", category: "wifi", lat: 47.6765, lng: -122.1240, status: "Open Now • Free Guest Wi-Fi", address: "15990 NE 85th St, Redmond", icon: "📶", details: "High-speed guest Wi-Fi and charging desks.", verifiedOnly: false, hoursOpen: "10:00", hoursClose: "21:00", is24Seven: false },
+    { id: 'res-real-5', name: "Urban Rest Stop Hygiene Center", category: "restroom", lat: 47.6148, lng: -122.3340, status: "Open Now • Showers & Laundry", address: "1924 9th Ave, Seattle", icon: "🚿", details: "Clean private showers and restrooms.", verifiedOnly: true, hoursOpen: "07:00", hoursClose: "19:00", is24Seven: false },
+    { id: 'res-real-6', name: "Downtown Emergency Service Center", category: "shelter", lat: 47.6025, lng: -122.3308, status: "Open 24/7 • Shelter", address: "515 3rd Ave, Seattle", icon: "🛏️", details: "Overnight emergency shelter & outreach.", verifiedOnly: true, hoursOpen: "00:00", hoursClose: "23:59", is24Seven: true },
+    { id: 'res-real-7', name: "Mary's Place Family Shelter Hub", category: "shelter", lat: 47.6140, lng: -122.3362, status: "Open Now • Family Intake", address: "700 Virginia St, Seattle", icon: "🏠", details: "Emergency family beds and hot meals.", verifiedOnly: true, hoursOpen: "08:00", hoursClose: "20:00", is24Seven: false },
+    { id: 'res-real-8', name: "Ballard Food Bank & Community Hub", category: "food", lat: 47.6635, lng: -122.3740, status: "Open Now • Grocery Market", address: "1400 Leary Way NW, Seattle", icon: "🍲", details: "Food market and hygiene supplies.", verifiedOnly: true, hoursOpen: "09:00", hoursClose: "16:00", is24Seven: false },
+    { id: 'res-real-9', name: "YouthCare Orion Center", category: "food", lat: 47.6178, lng: -122.3315, status: "Open Now • Youth Drop-in", address: "1828 Yale Ave, Seattle", icon: "🍲", details: "Hot meals and showers for youth.", verifiedOnly: false, hoursOpen: "09:00", hoursClose: "18:00", is24Seven: false },
+    { id: 'res-real-10', name: "Compass Center Hygiene Station", category: "charging", lat: 47.6015, lng: -122.3348, status: "Open Now • Power Charging", address: "210 Alaskan Way S, Seattle", icon: "⚡", details: "Charging stations & resting area.", verifiedOnly: true, hoursOpen: "08:00", hoursClose: "18:00", is24Seven: false },
+    { id: 'res-real-11', name: "Seattle Day Labor & Work Center", category: "work", lat: 47.5990, lng: -122.3250, status: "Open Now • Immediate Gigs", address: "150 S Washington St, Seattle", icon: "💼", details: "Daily paid tasks, maintenance gigs, and cash payouts.", verifiedOnly: true, hoursOpen: "06:00", hoursClose: "14:00", is24Seven: false }
   ];
 
   function getResourcesData() {
-    localStorage.setItem('cached_resources', JSON.stringify(defaultResources));
-    return defaultResources;
+    const stored = localStorage.getItem('cached_resources');
+    if (!stored) {
+      localStorage.setItem('cached_resources', JSON.stringify(defaultResources));
+      return defaultResources;
+    }
+    try {
+      return JSON.parse(stored);
+    } catch (e) {
+      return defaultResources;
+    }
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    initLeafletOfflineMap();
+    initLeafletCleanMap();
   });
 
-  function initLeafletOfflineMap() {
+  function initLeafletCleanMap() {
     const startCoords = [47.6062, -122.3321]; // Downtown Seattle
 
-    // 1. Initialize Leaflet Map
     map = L.map('map', {
-      zoomControl: false
+      zoomControl: false,
+      attributionControl: false
     }).setView(startCoords, 14);
 
-    L.control.zoom({ position: 'topright' }).addTo(map);
-
-    // 2. Add an Offline-Capable Tile Layer (CartoDB / OpenStreetMap)
     const tileUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
 
-    if (L.tileLayer && L.tileLayer.offline) {
-      offlineLayer = L.tileLayer.offline(tileUrl, {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
-        subdomains: 'abcd',
-        minZoom: 12,
-        maxZoom: 16
-      }).addTo(map);
+    offlineLayer = L.tileLayer(tileUrl, {
+      subdomains: 'abcd',
+      maxZoom: 18
+    }).addTo(map);
 
-      // Add Leaflet's built-in offline save control
-      if (L.control && L.control.offline) {
-        const control = L.control.offline(offlineLayer, {
-          saveWhatIntel: 'all',
-          confirm: (layer, successCallback) => {
-            if (window.confirm("Download this 5-mile area for offline use? (~15MB)")) {
-              successCallback();
-            }
-          }
-        });
-        control.addTo(map);
+    // Spring animation for "Search this area" button when user drags/pans map
+    map.on('dragend moveend', () => {
+      const searchBtn = document.getElementById('search-area-btn');
+      if (searchBtn && searchBtn.classList.contains('hidden')) {
+        searchBtn.classList.remove('hidden');
+        searchBtn.classList.add('flex');
       }
-    } else {
-      offlineLayer = L.tileLayer(tileUrl, {
-        attribution: '&copy; OpenStreetMap &copy; CARTO',
-        subdomains: 'abcd',
-        maxZoom: 16
-      }).addTo(map);
-    }
+    });
 
     locateAndCenterUser();
+  }
+
+  function executeSearchThisArea() {
+    const searchBtn = document.getElementById('search-area-btn');
+    if (searchBtn) {
+      searchBtn.classList.add('hidden');
+      searchBtn.classList.remove('flex');
+    }
+    isMapBoundsFilteringActive = true;
+    applyCombinedFilters();
   }
 
   function renderBlueDot(latitude, longitude) {
@@ -325,23 +369,21 @@
     if (userLocationMarker) map.removeLayer(userLocationMarker);
     if (userRadiusCircle) map.removeLayer(userRadiusCircle);
 
-    // Draw translucent 5-Mile Radius Circle (5 miles = 8046.72 meters)
     userRadiusCircle = L.circle([latitude, longitude], {
       radius: 8046.72,
-      color: '#3b82f6',
-      fillColor: '#60a5fa',
-      fillOpacity: 0.12,
-      weight: 2,
+      color: '#10B981',
+      fillColor: '#10B981',
+      fillOpacity: 0.08,
+      weight: 1.5,
       dashArray: '4, 6'
     }).addTo(map);
 
-    // Render Pulsing Blue Location Dot Icon
     const blueDotIcon = L.divIcon({
       className: 'user-blue-dot-marker',
       html: `
         <div class="relative w-7 h-7 flex items-center justify-center">
-          <div class="absolute w-7 h-7 rounded-full bg-blue-500/40 animate-ping"></div>
-          <div class="w-4 h-4 rounded-full bg-blue-600 border-2 border-white shadow-lg"></div>
+          <div class="absolute w-7 h-7 rounded-full bg-emerald-500/30 animate-ping"></div>
+          <div class="w-4 h-4 rounded-full bg-emerald-500 border-2 border-white shadow-lg"></div>
         </div>
       `,
       iconSize: [28, 28],
@@ -349,10 +391,9 @@
     });
 
     userLocationMarker = L.marker([latitude, longitude], { icon: blueDotIcon, zIndexOffset: 1000 }).addTo(map);
-    userLocationMarker.bindPopup('<b style="color:#0f172a;">📍 Your Current Location (5-Mile Radius)</b>');
+    userLocationMarker.bindPopup('<b style="color:#ffffff;">📍 Your Location</b>');
 
-    // Re-filter markers based on user 5-mile location
-    filterMapResources(currentSelectedCategory, document.getElementById('walkable-search-input').value);
+    applyCombinedFilters();
   }
 
   function locateAndCenterUser() {
@@ -366,39 +407,141 @@
         const { latitude, longitude } = pos.coords;
         renderBlueDot(latitude, longitude);
         map.flyTo([latitude, longitude], 14, { animate: true });
-        if (typeof showNotification === 'function') {
-          showNotification('📍 5-Mile location radius updated', 'success');
-        }
       },
       (err) => {
-        console.warn('Geolocation error:', err);
         renderBlueDot(47.6062, -122.3321);
       },
       { enableHighAccuracy: true }
     );
   }
 
-  function saveCurrentArea() {
-    if (!map || !offlineLayer) return;
-    const currentBounds = map.getBounds();
-    if (window.confirm("Download this 5-mile area for offline use? (~15MB)")) {
-      if (typeof offlineLayer.saveTiles === 'function') {
-        offlineLayer.saveTiles(currentBounds, 13, 16);
-      }
-      if (typeof showNotification === 'function') {
-        showNotification("📥 Downloading 5-mile area for offline use into Dexie IndexedDB!", "success");
-      }
+  function switchMapMode(mode) {
+    const nearbyBtn = document.getElementById('mode-btn-nearby');
+    const savedBtn = document.getElementById('mode-btn-saved');
+
+    if (mode === 'nearby') {
+      nearbyBtn.className = 'px-3.5 py-1.5 rounded-[16px] text-xs font-bold bg-white text-slate-950 shadow-sm transition-all';
+      savedBtn.className = 'px-3.5 py-1.5 rounded-[16px] text-xs font-bold text-slate-600 hover:text-slate-950 transition-all';
+    } else {
+      savedBtn.className = 'px-3.5 py-1.5 rounded-[16px] text-xs font-bold bg-white text-slate-950 shadow-sm transition-all';
+      nearbyBtn.className = 'px-3.5 py-1.5 rounded-[16px] text-xs font-bold text-slate-600 hover:text-slate-950 transition-all';
     }
   }
 
-  function saveOfflineTiles() {
-    if (showNotification) {
-      showNotification('📥 Saving map tiles locally in Dexie IndexedDB for offline use!', 'success');
+  function setScopeFilter(scope) {
+    activeScopeFilter = scope;
+    const everyoneBtn = document.getElementById('scope-btn-everyone');
+    const verifiedBtn = document.getElementById('scope-btn-verified');
+
+    if (scope === 'everyone') {
+      everyoneBtn.className = 'flex-1 py-1.5 px-2.5 rounded-[14px] text-[11px] font-bold bg-white text-slate-950 shadow-sm transition-all text-center truncate';
+      verifiedBtn.className = 'flex-1 py-1.5 px-2.5 rounded-[14px] text-[11px] font-bold text-slate-600 hover:text-slate-950 transition-all text-center truncate flex items-center justify-center gap-1';
+    } else {
+      verifiedBtn.className = 'flex-1 py-1.5 px-2.5 rounded-[14px] text-[11px] font-bold bg-white text-slate-950 shadow-sm transition-all text-center truncate flex items-center justify-center gap-1';
+      everyoneBtn.className = 'flex-1 py-1.5 px-2.5 rounded-[14px] text-[11px] font-bold text-slate-600 hover:text-slate-950 transition-all text-center truncate';
     }
+
+    applyCombinedFilters();
+  }
+
+  function toggleOpenNowFilter() {
+    isOpenNowFilterActive = !isOpenNowFilterActive;
+    const btn = document.getElementById('open-now-btn');
+    const dot = document.getElementById('open-now-dot');
+
+    if (isOpenNowFilterActive) {
+      btn.className = 'py-1.5 px-3 rounded-[18px] bg-[#0F141C] text-white text-[11px] font-bold border border-white/20 flex items-center gap-1.5 transition-all shadow-md';
+      dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+    } else {
+      btn.className = 'py-1.5 px-3 rounded-[18px] bg-slate-100 text-slate-700 text-[11px] font-bold border border-slate-200 flex items-center gap-1.5 hover:bg-white transition-all shadow-sm';
+      dot.className = 'w-2 h-2 rounded-full bg-slate-400';
+    }
+
+    applyCombinedFilters();
+  }
+
+  function toggleCategoryFilter(cat) {
+    if (cat === 'all') {
+      activeSelectedCategories = ['all'];
+    } else {
+      // Remove 'all' if specific category clicked
+      activeSelectedCategories = activeSelectedCategories.filter(c => c !== 'all');
+      
+      if (activeSelectedCategories.includes(cat)) {
+        activeSelectedCategories = activeSelectedCategories.filter(c => c !== cat);
+      } else {
+        activeSelectedCategories.push(cat);
+      }
+
+      if (activeSelectedCategories.length === 0) {
+        activeSelectedCategories = ['all'];
+      }
+    }
+
+    // Update UI chips
+    document.querySelectorAll('.cat-pill-btn').forEach(btn => {
+      const bCat = btn.dataset.cat;
+      if (activeSelectedCategories.includes(bCat)) {
+        btn.className = 'cat-pill-btn px-3.5 py-1.5 rounded-[16px] text-[11px] font-extrabold bg-[#0F141C] text-white flex items-center gap-1 flex-shrink-0 shadow-md border border-white/10 transition-all';
+      } else {
+        btn.className = 'cat-pill-btn px-3.5 py-1.5 rounded-[16px] text-[11px] font-bold bg-white text-slate-800 flex items-center gap-1 flex-shrink-0 border border-slate-200 shadow-sm hover:bg-slate-50 transition-all';
+      }
+    });
+
+    applyCombinedFilters();
+  }
+
+  // REAL COMBINED MULTI-FILTER FUNCTION (INTERSECTING AND LOGIC)
+  function applyCombinedFilters() {
+    const resources = getResourcesData();
+    const currentDeviceTime = new Date();
+    const currentMinutesFromMidnight = currentDeviceTime.getHours() * 60 + currentDeviceTime.getMinutes();
+
+    let bounds = null;
+    if (isMapBoundsFilteringActive && map) {
+      bounds = map.getBounds();
+    }
+
+    const filteredPins = resources.filter(pin => {
+      // 1. Multi-Select Category Match
+      const matchesCategory = activeSelectedCategories.includes('all') || activeSelectedCategories.includes(pin.category);
+
+      // 2. Verified Scope Match
+      let matchesScope = true;
+      if (activeScopeFilter === 'verified') {
+        matchesScope = (pin.verifiedOnly === true);
+      }
+
+      // 3. Open Now Time Match (Device clock vs hoursOpen/hoursClose)
+      let matchesOpenNow = true;
+      if (isOpenNowFilterActive) {
+        if (pin.is24Seven) {
+          matchesOpenNow = true;
+        } else if (pin.hoursOpen && pin.hoursClose) {
+          const [oH, oM] = pin.hoursOpen.split(':').map(Number);
+          const [cH, cM] = pin.hoursClose.split(':').map(Number);
+          const openMin = oH * 60 + oM;
+          const closeMin = cH * 60 + cM;
+          matchesOpenNow = (currentMinutesFromMidnight >= openMin && currentMinutesFromMidnight <= closeMin);
+        } else {
+          matchesOpenNow = pin.status && pin.status.toLowerCase().includes('open');
+        }
+      }
+
+      // 4. Viewport Map Bounds Check (if "Search this area" executed)
+      let matchesBounds = true;
+      if (bounds) {
+        matchesBounds = bounds.contains([pin.lat, pin.lng]);
+      }
+
+      // INTERSECTING AND LOGIC
+      return matchesCategory && matchesScope && matchesOpenNow && matchesBounds;
+    });
+
+    renderLeafletMarkers(filteredPins);
   }
 
   function renderLeafletMarkers(items) {
-    // Clear existing markers
     mapMarkers.forEach(m => map.removeLayer(m.marker));
     mapMarkers = [];
 
@@ -406,27 +549,31 @@
       const customIcon = L.divIcon({
         className: 'custom-leaflet-pin',
         html: `
-          <div class="px-2 py-1 bg-slate-900 text-white font-extrabold text-[11px] rounded-xl shadow-lg border-2 border-amber-400 flex items-center gap-1 transform hover:scale-110 transition-transform">
-            <span>${res.icon || '📍'}</span>
-            <span class="truncate max-w-[100px]">${res.name}</span>
+          <div class="px-2.5 py-1 bg-[#0F141C] text-white font-extrabold text-[11px] rounded-full shadow-xl border border-white/20 flex items-center gap-1.5 transform hover:scale-110 transition-transform">
+            <span class="text-xs">${res.icon || '📍'}</span>
+            <span class="truncate max-w-[90px] text-slate-100">${res.name}</span>
           </div>
         `,
-        iconSize: [120, 32],
-        iconAnchor: [60, 16]
+        iconSize: [120, 30],
+        iconAnchor: [60, 15]
       });
 
       const marker = L.marker([res.lat, res.lng], { icon: customIcon }).addTo(map);
 
       const popupContent = `
-        <div class="space-y-1 text-slate-100 font-sans p-1">
-          <span class="px-2 py-0.5 bg-amber-400/20 text-amber-300 font-bold text-[10px] rounded-full uppercase">${res.category}</span>
-          <h4 class="font-extrabold text-sm text-white mt-1">${res.name}</h4>
-          <p class="text-xs text-slate-300">📍 ${res.address} <span class="text-amber-400 font-bold">(${res.distance})</span></p>
+        <div class="space-y-1.5 text-slate-100 font-sans p-1">
+          <div class="flex justify-between items-center">
+            <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 font-bold text-[10px] rounded-full uppercase">${res.category}</span>
+            ${res.verifiedOnly ? '<span class="text-[10px] text-amber-400 font-extrabold">✓ Verified</span>' : ''}
+          </div>
+          <h4 class="font-extrabold text-sm text-white">${res.name}</h4>
+          <p class="text-xs text-slate-300">📍 ${res.address}</p>
           <p class="text-xs font-bold text-emerald-400">${res.status}</p>
-          ${res.details ? `<p class="text-[11px] text-slate-300 bg-slate-800 p-1.5 rounded-lg border border-slate-700 mt-1">${res.details}</p>` : ''}
-          <div class="pt-2 border-t border-slate-700">
-            <a href="https://www.google.com/maps/dir/?api=1&destination=${res.lat},${res.lng}&travelmode=walking" target="_blank" class="block w-full text-center py-1.5 bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow hover:bg-amber-300">
-              🚶 Get Walking Directions
+          ${res.hoursOpen ? `<p class="text-[10px] text-slate-400 font-mono">🕒 Hours: ${res.hoursOpen} - ${res.hoursClose}</p>` : ''}
+          ${res.details ? `<p class="text-[11px] text-slate-300 bg-slate-900 p-2 rounded-xl border border-slate-800 mt-1">${res.details}</p>` : ''}
+          <div class="pt-2 border-t border-slate-800">
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${res.lat},${res.lng}&travelmode=walking" target="_blank" class="block w-full text-center py-2 bg-emerald-500 text-slate-950 font-extrabold text-xs rounded-xl shadow hover:bg-emerald-400 transition-colors">
+              🚶 Directions
             </a>
           </div>
         </div>
@@ -435,119 +582,62 @@
       marker.bindPopup(popupContent);
       mapMarkers.push({ resId: res.id, marker: marker, data: res });
     });
-
-    renderResourceListCards(items);
   }
 
-  function renderResourceListCards(items) {
-    const container = document.getElementById('nearby-resources-list');
-    const badge = document.getElementById('nearby-count-badge');
-    if (!container) return;
-
-    if (badge) {
-      badge.textContent = `${items.length} Resource${items.length === 1 ? '' : 's'}`;
-    }
-
-    if (items.length === 0) {
-      container.innerHTML = `
-        <div class="text-center py-6 text-xs text-slate-500 dark:text-slate-400 font-medium bg-white dark:bg-slate-900/60 rounded-2xl border border-slate-200 dark:border-slate-800">
-          No resources found within your 5-mile radius.
-        </div>
-      `;
-      return;
-    }
-
-    const userPos = userLocationCoords || { lat: 47.6062, lng: -122.3321 };
-
-    container.innerHTML = items.map(res => {
-      const dist = getDistanceMiles(userPos.lat, userPos.lng, res.lat, res.lng).toFixed(1);
-
-      return `
-        <div onclick="focusResourceMarker('${res.id}')" class="p-3 bg-white dark:bg-slate-900/80 hover:bg-slate-50 dark:hover:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 rounded-2xl flex justify-between items-center cursor-pointer transition-all group shadow-sm">
-          <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-base shadow-sm">
-              ${res.icon || '📍'}
-            </div>
-            <div>
-              <h4 class="text-xs font-extrabold text-slate-900 dark:text-white group-hover:text-amber-500 transition-colors">${res.name}</h4>
-              <p class="text-[11px] text-slate-600 dark:text-slate-400">📍 ${res.address} • <span class="text-amber-600 dark:text-amber-400 font-bold">${dist} mi away</span></p>
-              <p class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">${res.status}</p>
-            </div>
-          </div>
-          <a href="https://www.google.com/maps/dir/?api=1&destination=${res.lat},${res.lng}&travelmode=walking" target="_blank" onclick="event.stopPropagation()" class="px-2.5 py-1 bg-amber-400 text-slate-950 rounded-xl text-[10px] font-extrabold shadow hover:bg-amber-300 transition-colors">
-            Go 🚶
-          </a>
-        </div>
-      `;
-    }).join('');
+  function openAddResourceModal() {
+    document.getElementById('add-resource-modal').classList.remove('hidden');
+    document.getElementById('add-resource-modal').classList.add('flex');
   }
 
-  function focusResourceMarker(id) {
-    const markerObj = mapMarkers.find(m => m.resId === id);
-    if (markerObj && map) {
-      map.flyTo(markerObj.marker.getLatLng(), 15, { animate: true });
-      markerObj.marker.openPopup();
+  function closeAddResourceModal() {
+    document.getElementById('add-resource-modal').classList.add('hidden');
+    document.getElementById('add-resource-modal').classList.remove('flex');
+  }
+
+  function toggleAlertsModal() {
+    if (typeof showNotification === 'function') {
+      showNotification('🔔 All shelter & food alerts in this area are active', 'info');
     }
   }
 
-  function selectCategoryFilter(cat) {
-    currentSelectedCategory = cat;
-    
-    document.querySelectorAll('.cat-filter-btn').forEach(btn => {
-      if (btn.dataset.cat === cat) {
-        btn.className = 'cat-filter-btn px-3 py-1 rounded-full text-[11px] font-extrabold bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-[0_0_12px_rgba(245,158,11,0.35)]';
-      } else {
-        btn.className = 'cat-filter-btn px-3 py-1 rounded-full text-[11px] font-bold bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10';
-      }
-    });
+  function handleCreateResource(e) {
+    e.preventDefault();
+    const title = document.getElementById('res-title').value;
+    const category = document.getElementById('res-category').value;
+    const hours = document.getElementById('res-hours').value || '08:00 - 20:00';
+    const address = document.getElementById('res-address').value;
+    const details = document.getElementById('res-details').value;
 
-    const query = document.getElementById('walkable-search-input').value;
-    filterMapResources(currentSelectedCategory, query);
-  }
+    const [hOpen, hClose] = hours.split('-').map(s => s.trim());
 
-  function handleSearchFilterInput() {
-    const query = document.getElementById('walkable-search-input').value;
-    filterMapResources(currentSelectedCategory, query);
-  }
+    const center = userLocationCoords || { lat: 47.6062, lng: -122.3321 };
 
-  function clearSearchInput() {
-    const input = document.getElementById('walkable-search-input');
-    input.value = '';
-    filterMapResources(currentSelectedCategory, '');
-  }
+    const newRes = {
+      id: 'res-custom-' + Date.now(),
+      name: title,
+      category: category,
+      lat: center.lat + (Math.random() * 0.01 - 0.005),
+      lng: center.lng + (Math.random() * 0.01 - 0.005),
+      status: 'Open Now • Community Submitted',
+      address: address,
+      icon: category === 'food' ? '🍲' : category === 'shelter' ? '🛏️' : category === 'work' ? '💼' : '📍',
+      details: details,
+      verifiedOnly: true,
+      hoursOpen: hOpen || "08:00",
+      hoursClose: hClose || "20:00",
+      is24Seven: false
+    };
 
-  function filterMapResources(category = 'all', searchQuery = '') {
-    const q = searchQuery.toLowerCase().trim();
-    const resources = getResourcesData();
-    const userPos = userLocationCoords || { lat: 47.6062, lng: -122.3321 };
+    const currentData = getResourcesData();
+    currentData.unshift(newRes);
+    localStorage.setItem('cached_resources', JSON.stringify(currentData));
 
-    // Primary 5-mile radius search
-    let searchRadius = 5.0;
-    let filtered = resources.filter(res => {
-      const distMiles = getDistanceMiles(userPos.lat, userPos.lng, res.lat, res.lng);
-      const withinRadius = distMiles <= searchRadius;
-      const matchCategory = category === 'all' || res.category === category;
-      const matchQuery = !q || 
-        res.name.toLowerCase().includes(q) || 
-        res.address.toLowerCase().includes(q) || 
-        res.status.toLowerCase().includes(q) ||
-        res.category.toLowerCase().includes(q) ||
-        (res.details && res.details.toLowerCase().includes(q));
+    closeAddResourceModal();
+    applyCombinedFilters();
 
-      return withinRadius && matchCategory && matchQuery;
-    });
-
-    // Smart Fallback: Expand to 25 miles if no resources within 5 miles
-    if (filtered.length === 0 && !q) {
-      searchRadius = 25.0;
-      filtered = resources.filter(res => {
-        const distMiles = getDistanceMiles(userPos.lat, userPos.lng, res.lat, res.lng);
-        const matchCategory = category === 'all' || res.category === category;
-        return distMiles <= searchRadius && matchCategory;
-      });
+    if (typeof showNotification === 'function') {
+      showNotification('✨ New resource published to live map!', 'success');
     }
-
-    renderLeafletMarkers(filtered);
   }
 </script>
 </body>
