@@ -478,6 +478,7 @@ async function navigateToPageInstant(url, pushState = true) {
           initRoleNavigation();
           initDonationForm();
           initResourceMapFilter();
+          if (typeof initGlobalAIChatbot === 'function') initGlobalAIChatbot();
           initHelpModal();
           initCallModal();
           initTaskClaiming();
@@ -1481,3 +1482,276 @@ function checkDashboardJobMatchLock() {
   const matchBadge = container.closest('section')?.querySelector('span.bg-emerald-500\\/10');
   if (matchBadge) matchBadge.classList.remove('hidden');
 }
+
+// ============================================================
+// GLOBAL AI CHATBOT WIDGET (SEEKER & HELPER / VOLUNTEER)
+// ============================================================
+function initGlobalAIChatbot() {
+  if (document.getElementById('northstar-chatbot-widget')) return;
+
+  const appFrame = document.querySelector('.app-frame') || document.body;
+
+  // Insert Backdrop Overlay
+  if (!document.getElementById('chatbot-backdrop-overlay')) {
+    const backdrop = document.createElement('div');
+    backdrop.id = 'chatbot-backdrop-overlay';
+    backdrop.className = 'fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-[98] chatbot-backdrop-hidden transition-opacity';
+    backdrop.onclick = () => toggleAIChatbotWindow();
+    appFrame.appendChild(backdrop);
+  }
+
+  const widget = document.createElement('div');
+  widget.id = 'northstar-chatbot-widget';
+  widget.className = 'absolute bottom-[72px] right-4 z-[99] no-print select-none';
+  widget.innerHTML = `
+    <!-- Launcher FAB Button -->
+    <button id="chatbot-fab-btn" onclick="toggleAIChatbotWindow()" class="w-13 h-13 rounded-full bg-[#FFE855] text-slate-950 shadow-xl border-2 border-white flex items-center justify-center font-bold transition-all active:scale-95 hover:bg-amber-300 relative group">
+      <span id="chatbot-fab-icon" class="material-symbols-outlined text-2xl">smart_toy</span>
+      <span class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full"></span>
+    </button>
+
+    <!-- Chatbot Window Drawer -->
+    <div id="chatbot-window-drawer" class="hidden absolute bottom-16 right-0 w-[330px] sm:w-[360px] bg-white rounded-[24px] shadow-2xl border border-slate-200/80 overflow-hidden flex-col z-50">
+      <!-- Header -->
+      <div class="bg-slate-900 text-white px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-[#FFE855] text-slate-950 flex items-center justify-center font-bold flex-shrink-0 shadow-sm">
+            <span class="material-symbols-outlined text-lg">smart_toy</span>
+          </div>
+          <div>
+            <h3 class="text-xs font-extrabold tracking-tight leading-none text-white">NorthStar AI Assistant</h3>
+            <span id="chatbot-role-tag" class="text-[10px] font-semibold text-amber-400">Ask anything • Instant help</span>
+          </div>
+        </div>
+        <button onclick="toggleAIChatbotWindow()" class="text-slate-400 hover:text-white transition-colors p-1">
+          <span class="material-symbols-outlined text-lg">close</span>
+        </button>
+      </div>
+
+      <!-- Quick Suggestion Chips -->
+      <div id="chatbot-suggestion-chips" class="px-3 py-2 bg-slate-50 border-b border-slate-200 flex gap-1.5 overflow-x-auto text-[10px] font-semibold text-slate-700">
+        <!-- Dynamically injected based on seeker vs helper role -->
+      </div>
+
+      <!-- Messages Body -->
+      <div id="chatbot-messages-list" class="p-3.5 h-[260px] overflow-y-auto space-y-3 bg-[#F4F5F7] text-xs">
+        <div class="flex gap-2">
+          <div class="w-7 h-7 rounded-lg bg-[#FFE855] text-slate-950 flex items-center justify-center flex-shrink-0 font-bold">
+            <span class="material-symbols-outlined text-sm">smart_toy</span>
+          </div>
+          <div class="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-200/80 text-slate-800 shadow-sm leading-relaxed">
+            Hi! I'm your <strong>NorthStar AI Assistant</strong>. Ask me about shelters, food drop-offs, daily $20/hr cash gigs, or resume building!
+          </div>
+        </div>
+      </div>
+
+      <!-- Input Form -->
+      <form onsubmit="handleAIChatSubmit(event)" class="p-2.5 bg-white border-t border-slate-200/80 flex items-center gap-2">
+        <input type="text" id="chatbot-input-field" placeholder="Ask NorthStar AI..." class="flex-1 rounded-[12px] bg-slate-50 border border-slate-200 px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 font-medium">
+        <button type="submit" id="chatbot-send-btn" class="w-9 h-9 rounded-[12px] bg-[#FFE855] text-slate-950 hover:bg-amber-300 font-bold flex items-center justify-center shadow-sm active:scale-95 transition-all flex-shrink-0">
+          <span class="material-symbols-outlined text-base">send</span>
+        </button>
+      </form>
+    </div>
+  `;
+
+  appFrame.appendChild(widget);
+  updateChatbotSuggestionChips();
+}
+
+function toggleAIChatbotWindow() {
+  const drawer = document.getElementById('chatbot-window-drawer');
+  const backdrop = document.getElementById('chatbot-backdrop-overlay');
+  const fabBtn = document.getElementById('chatbot-fab-btn');
+  const fabIcon = document.getElementById('chatbot-fab-icon');
+  if (!drawer) return;
+
+  const isHidden = drawer.classList.contains('hidden');
+
+  if (isHidden) {
+    // OPEN ANIMATION
+    drawer.classList.remove('hidden', 'chatbot-drawer-close');
+    drawer.classList.add('flex', 'chatbot-drawer-open');
+
+    if (fabBtn) fabBtn.classList.add('fab-active');
+    if (fabIcon) fabIcon.innerText = 'close';
+
+    if (backdrop) {
+      backdrop.classList.remove('chatbot-backdrop-hidden');
+      backdrop.classList.add('chatbot-backdrop-visible');
+    }
+
+    updateChatbotSuggestionChips();
+    const input = document.getElementById('chatbot-input-field');
+    if (input) setTimeout(() => input.focus(), 150);
+  } else {
+    // CLOSE ANIMATION
+    drawer.classList.remove('chatbot-drawer-open');
+    drawer.classList.add('chatbot-drawer-close');
+
+    if (fabBtn) fabBtn.classList.remove('fab-active');
+    if (fabIcon) fabIcon.innerText = 'smart_toy';
+
+    if (backdrop) {
+      backdrop.classList.remove('chatbot-backdrop-visible');
+      backdrop.classList.add('chatbot-backdrop-hidden');
+    }
+
+    // Hide display after collapse animation finishes (~200ms)
+    setTimeout(() => {
+      if (drawer.classList.contains('chatbot-drawer-close')) {
+        drawer.classList.add('hidden');
+        drawer.classList.remove('flex', 'chatbot-drawer-close');
+      }
+    }, 200);
+  }
+}
+
+function updateChatbotSuggestionChips() {
+  const container = document.getElementById('chatbot-suggestion-chips');
+  const roleTag = document.getElementById('chatbot-role-tag');
+  if (!container) return;
+
+  const rawRole = (typeof getRole === 'function') ? getRole() : (localStorage.getItem('northstar_user_role') || 'seeker');
+  const isHelperRole = (rawRole === 'volunteer' || rawRole === 'donater' || rawRole === 'helper' || rawRole === 'employer');
+
+  if (isHelperRole) {
+    if (roleTag) roleTag.innerText = 'Helper Assistant • Community Support';
+    container.innerHTML = `
+      <button type="button" onclick="sendQuickChatMessage('How do I post a new job opportunity?')" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">💼 Post Job</button>
+      <button type="button" onclick="sendQuickChatMessage('How do food pickup claims work?')" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">📦 Food Pickups</button>
+      <button type="button" onclick="sendQuickChatMessage('How can I volunteer today?')" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">🤝 Volunteer</button>
+    `;
+  } else {
+    if (roleTag) roleTag.innerText = 'Seeker Navigator • Daily Resources';
+    container.innerHTML = `
+      <button type="button" onclick="sendQuickChatMessage('Where can I find $20/hr cash gigs?')" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">💰 Cash Gigs</button>
+      <button type="button" onclick="sendQuickChatMessage('Where is the nearest shelter?')" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">🏠 Shelters</button>
+      <button type="button" onclick="sendQuickChatMessage('How do I make an AI resume?')" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">📄 AI Resume</button>
+    `;
+  }
+}
+
+function sendQuickChatMessage(msg) {
+  const input = document.getElementById('chatbot-input-field');
+  if (input) {
+    input.value = msg;
+    handleAIChatSubmit(new Event('submit'));
+  }
+}
+
+async function handleAIChatSubmit(e) {
+  if (e) e.preventDefault();
+  const input = document.getElementById('chatbot-input-field');
+  const messagesList = document.getElementById('chatbot-messages-list');
+  const sendBtn = document.getElementById('chatbot-send-btn');
+  if (!input || !messagesList) return;
+
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+
+  // Append user bubble (Slide in from right)
+  const userBubble = document.createElement('div');
+  userBubble.className = 'flex justify-end chat-msg-outgoing';
+  userBubble.innerHTML = `
+    <div class="bg-slate-900 text-white p-3 rounded-2xl rounded-tr-none max-w-[85%] font-medium leading-relaxed shadow-sm">
+      ${text}
+    </div>
+  `;
+  messagesList.appendChild(userBubble);
+  messagesList.scrollTop = messagesList.scrollHeight;
+
+  // Append typing bubble with staggered wave dots
+  const typingBubble = document.createElement('div');
+  typingBubble.id = 'chatbot-typing-bubble';
+  typingBubble.className = 'flex gap-2 chat-msg-incoming';
+  typingBubble.innerHTML = `
+    <div class="w-7 h-7 rounded-lg bg-[#FFE855] text-slate-950 flex items-center justify-center flex-shrink-0 font-bold">
+      <span class="material-symbols-outlined text-sm">smart_toy</span>
+    </div>
+    <div class="bg-white px-3.5 py-3 rounded-2xl rounded-tl-none border border-slate-200/80 text-slate-500 shadow-sm flex items-center gap-1.5 min-h-[36px]">
+      <span class="typing-dot"></span>
+      <span class="typing-dot"></span>
+      <span class="typing-dot"></span>
+    </div>
+  `;
+  messagesList.appendChild(typingBubble);
+  messagesList.scrollTop = messagesList.scrollHeight;
+
+  if (sendBtn) sendBtn.disabled = true;
+
+  const rawRole = (typeof getRole === 'function') ? getRole() : (localStorage.getItem('northstar_user_role') || 'seeker');
+  const isHelperRole = (rawRole === 'volunteer' || rawRole === 'donater' || rawRole === 'helper' || rawRole === 'employer');
+  const currentRole = isHelperRole ? 'volunteer' : 'seeker';
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, role: currentRole })
+    });
+    const data = await res.json();
+
+    const existingTyping = document.getElementById('chatbot-typing-bubble');
+    if (existingTyping) {
+      existingTyping.classList.add('typing-bubble-exit');
+      setTimeout(() => existingTyping.remove(), 160);
+    }
+
+    // Bot Response Bubble (Fade in + Slide up)
+    setTimeout(() => {
+      const botBubble = document.createElement('div');
+      botBubble.className = 'flex gap-2 chat-msg-incoming';
+      botBubble.innerHTML = `
+        <div class="w-7 h-7 rounded-lg bg-[#FFE855] text-slate-950 flex items-center justify-center flex-shrink-0 font-bold">
+          <span class="material-symbols-outlined text-sm">smart_toy</span>
+        </div>
+        <div class="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-200/80 text-slate-800 shadow-sm leading-relaxed">
+          ${data.reply || "I'm NorthStar AI Assistant. How can I help you today?"}
+        </div>
+      `;
+      messagesList.appendChild(botBubble);
+      messagesList.scrollTop = messagesList.scrollHeight;
+    }, 120);
+  } catch (err) {
+    console.error('Chat error:', err);
+    const existingTyping = document.getElementById('chatbot-typing-bubble');
+    if (existingTyping) {
+      existingTyping.classList.add('typing-bubble-exit');
+      setTimeout(() => existingTyping.remove(), 160);
+    }
+
+    setTimeout(() => {
+      const errBubble = document.createElement('div');
+      errBubble.className = 'flex gap-2 chat-msg-incoming';
+      errBubble.innerHTML = `
+        <div class="w-7 h-7 rounded-lg bg-[#FFE855] text-slate-950 flex items-center justify-center flex-shrink-0 font-bold">
+          <span class="material-symbols-outlined text-sm">smart_toy</span>
+        </div>
+        <div class="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-200/80 text-slate-800 shadow-sm leading-relaxed">
+          I can help you navigate shelters, daily $20/hr cash gigs, food pantries, and resume building!
+        </div>
+      `;
+      messagesList.appendChild(errBubble);
+      messagesList.scrollTop = messagesList.scrollHeight;
+    }, 120);
+  } finally {
+    if (sendBtn) sendBtn.disabled = false;
+  }
+}
+
+// Expose globally for inline/SPA callers
+window.initGlobalAIChatbot = initGlobalAIChatbot;
+window.toggleAIChatbotWindow = toggleAIChatbotWindow;
+window.sendQuickChatMessage = sendQuickChatMessage;
+window.handleAIChatSubmit = handleAIChatSubmit;
+
+// Auto-initialize Global Chatbot on DOM Ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => setTimeout(initGlobalAIChatbot, 100));
+} else {
+  setTimeout(initGlobalAIChatbot, 100);
+}
+

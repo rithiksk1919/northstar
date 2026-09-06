@@ -764,4 +764,195 @@ html.light nav a.bg-amber-400\/15 {
   box-shadow: 0 0 15px rgba(245, 158, 11, 0.2) !important;
 }
 
+/* ============================================================
+   CHATBOT MESSAGE ANIMATIONS (CSS-ANIMATIONS SKILL)
+   ============================================================ */
+
+/* Message List Container Smooth Scrolling */
+#chatbot-messages-list {
+  scroll-behavior: smooth;
+}
+
+/* Incoming Bot Message Animation: Fade in + Slide up (8px -> 0) */
+.chat-msg-incoming {
+  animation: chatMsgIncoming 280ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes chatMsgIncoming {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Outgoing User Message Animation: Fade in + Slide in from right (15px -> 0) */
+.chat-msg-outgoing {
+  animation: chatMsgOutgoing 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes chatMsgOutgoing {
+  0% {
+    opacity: 0;
+    transform: translateX(15px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Typing Indicator Staggered Wave Pulse (3 Dots) */
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: #64748b;
+  display: inline-block;
+  animation: typingDotPulse 1.2s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+
+.typing-dot:nth-child(1) {
+  animation-delay: 0ms;
+}
+.typing-dot:nth-child(2) {
+  animation-delay: 160ms;
+}
+.typing-dot:nth-child(3) {
+  animation-delay: 320ms;
+}
+
+@keyframes typingDotPulse {
+  0%, 60%, 100% {
+    transform: scale(0.75);
+    opacity: 0.35;
+  }
+  30% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
+/* Typing Bubble Exit Morph Animation */
+.typing-bubble-exit {
+  animation: typingBubbleFade 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes typingBubbleFade {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+
+/* Accessibility: Respect OS prefers-reduced-motion settings */
+@media (prefers-reduced-motion: reduce) {
+  .chat-msg-incoming,
+  .chat-msg-outgoing,
+  .typing-bubble-exit,
+  .chatbot-drawer-open,
+  .chatbot-drawer-close {
+    animation: simpleFadeIn 150ms ease-out forwards !important;
+  }
+  .typing-dot {
+    animation: simpleDotOpacity 1s ease-in-out infinite !important;
+  }
+  #chatbot-fab-btn,
+  #chatbot-fab-icon {
+    transition: none !important;
+  }
+  #chatbot-messages-list {
+    scroll-behavior: auto !important;
+  }
+  @keyframes simpleFadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  @keyframes simpleDotOpacity {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.9; }
+  }
+}
+
+/* ============================================================
+   CHATBOT DRAWER OPEN/CLOSE & FAB ROTATION (CSS-ANIMATIONS SKILL)
+   ============================================================ */
+
+/* Transform origin anchored to bottom-right (Launcher FAB button position) */
+#chatbot-window-drawer {
+  transform-origin: bottom right;
+}
+
+/* Open Animation: Grows from bottom-right (scale 0.88 -> 1, translateY 10px -> 0, opacity 0 -> 1) */
+.chatbot-drawer-open {
+  animation: chatbotDrawerOpen 280ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes chatbotDrawerOpen {
+  0% {
+    opacity: 0;
+    transform: scale(0.88) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Close Animation: Snappy collapse back to bottom-right (scale 1 -> 0.88, translateY 0 -> 10px, opacity 1 -> 0) */
+.chatbot-drawer-close {
+  animation: chatbotDrawerClose 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes chatbotDrawerClose {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.88) translateY(10px);
+  }
+}
+
+/* Backdrop Scrim Overlay Fade */
+#chatbot-backdrop-overlay {
+  transition: opacity 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.chatbot-backdrop-visible {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+.chatbot-backdrop-hidden {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* FAB Launcher Button Morph & Icon Rotation */
+#chatbot-fab-btn {
+  transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1), background-color 200ms ease;
+}
+
+#chatbot-fab-icon {
+  transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1), opacity 150ms ease;
+}
+
+.fab-active #chatbot-fab-icon {
+  transform: rotate(90deg);
+}
+
 

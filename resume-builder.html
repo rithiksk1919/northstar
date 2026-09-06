@@ -111,101 +111,97 @@
 }
 </style>
 </head>
-<body class="bg-[#0F1117] min-h-screen flex items-center justify-center p-0 sm:py-6 text-slate-100 selection:bg-amber-500/30 selection:text-amber-300">
-
-<!-- Atmospheric Background Glows -->
-<div class="fixed inset-0 pointer-events-none overflow-hidden z-0 no-print">
-    <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl"></div>
-    <div class="absolute top-1/3 -right-40 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
-    <div class="absolute -bottom-40 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
-</div>
+<body class="bg-[#F4F5F7] min-h-screen flex items-center justify-center p-0 sm:py-6 text-slate-900 selection:bg-amber-300 selection:text-slate-950">
 
 <!-- Mobile Frame Shell -->
-<div class="app-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-[#0F1117] sm:rounded-[44px] shadow-[0_0_70px_rgba(0,0,0,0.85)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800/80 z-10">
+<div class="app-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-[#F4F5F7] sm:rounded-[44px] shadow-2xl relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-300 z-10">
 
-
-
-    <!-- App Header -->
-    <header class="bg-white dark:bg-[#0F1117] sticky top-0 z-40 flex justify-between items-center w-full px-5 pt-5 pb-3 border-b border-slate-200 dark:border-white/10 no-print">
-        <div class="flex items-center gap-3">
+    <!-- App Header (Matching Dashboard Header Style) -->
+    <header class="bg-white sticky top-0 z-40 flex justify-between items-center w-full px-5 pt-5 pb-3 border-b border-slate-200 no-print">
+        <div class="flex items-center gap-2.5">
+            <a href="seeker-dashboard.html" class="w-9 h-9 rounded-[12px] bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 text-sm font-bold active:scale-95 transition-all">
+                <span class="material-symbols-outlined text-xl">arrow_back</span>
+            </a>
             <div>
-                <h1 class="text-2xl font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5 leading-tight tracking-tight">
-                    <span class="material-symbols-outlined text-amber-500 text-xl">auto_awesome</span> AI Resume Builder
+                <h1 class="text-xl font-extrabold text-slate-900 flex items-center gap-1.5 leading-tight tracking-tight">
+                    <span class="material-symbols-outlined text-amber-600 text-xl">auto_awesome</span> AI Resume Builder
                 </h1>
-                <p class="text-sm font-semibold text-slate-600 dark:text-slate-300">Empowering your career step-by-step</p>
+                <p class="text-xs font-semibold text-slate-500">Empowering your career step-by-step</p>
             </div>
         </div>
         <div class="flex items-center gap-2">
-            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-[#FFE855] text-slate-950 shadow-sm">
-                NorthStar AI
-            </span>
-            <button onclick="toggleTheme()" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-amber-400 text-sm font-bold transition-all active:scale-95 cursor-pointer" title="Toggle Light / Dark Mode">
+            <button onclick="toggleTheme()" class="w-9 h-9 rounded-[12px] bg-slate-100 border border-slate-200 flex items-center justify-center text-amber-600 text-sm font-bold transition-all active:scale-95 cursor-pointer" title="Toggle Light / Dark Mode">
                 <span class="material-symbols-outlined text-base">brightness_4</span>
+            </button>
+            <button onclick="openSettingsModal()" class="w-9 h-9 rounded-[12px] bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 text-sm font-bold cursor-pointer" title="Settings">
+                👤
             </button>
         </div>
     </header>
 
-    <!-- View Mode Selector Tabs -->
-    <div class="bg-white dark:bg-[#12141C] px-4 py-2.5 border-b border-slate-200 dark:border-white/10 flex justify-between gap-1 select-none no-print view-mode-tabs">
-        <button id="tab-wizard" onclick="switchView('wizard')" class="flex-1 py-2 text-xs font-extrabold rounded-xl text-center bg-[#FFE855] text-slate-950 shadow-sm transition-all flex items-center justify-center gap-1">
-            <span class="material-symbols-outlined text-sm">edit_note</span> Guided Wizard
-        </button>
-        <button id="tab-preview" onclick="switchView('preview')" class="flex-1 py-2 text-xs font-bold rounded-xl text-center text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all flex items-center justify-center gap-1">
-            <span class="material-symbols-outlined text-sm">badge</span> Resume Preview
-        </button>
-        <button id="tab-text" onclick="switchView('text')" class="flex-1 py-2 text-xs font-bold rounded-xl text-center text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all flex items-center justify-center gap-1">
-            <span class="material-symbols-outlined text-sm">description</span> Clean ATS Text
-        </button>
+    <!-- View Mode Selector Segmented Control (Auth Segmented Control Pattern) -->
+    <div class="bg-white px-4 py-2.5 border-b border-slate-200 sticky top-[61px] z-30 no-print">
+        <div class="bg-slate-200/80 p-1 rounded-[16px] flex justify-between gap-1 select-none view-mode-tabs">
+            <button id="tab-wizard" onclick="switchView('wizard')" class="flex-1 py-2 text-xs font-extrabold rounded-[12px] text-center bg-[#FFE855] text-slate-950 shadow-sm transition-all flex items-center justify-center gap-1">
+                <span class="material-symbols-outlined text-sm">edit_note</span> Guided Wizard
+            </button>
+            <button id="tab-preview" onclick="switchView('preview')" class="flex-1 py-2 text-xs font-bold rounded-[12px] text-center text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center gap-1">
+                <span class="material-symbols-outlined text-sm">badge</span> Preview
+            </button>
+            <button id="tab-text" onclick="switchView('text')" class="flex-1 py-2 text-xs font-bold rounded-[12px] text-center text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center gap-1">
+                <span class="material-symbols-outlined text-sm">description</span> ATS Text
+            </button>
+        </div>
     </div>
 
-    <!-- Main Scrollable Content Area -->
-    <main class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-5 pb-40">
+    <!-- Main Scrollable Content Area (Clear top padding to prevent sticky header clipping) -->
+    <main class="flex-1 overflow-y-auto p-4 space-y-4 pb-40 bg-[#F4F5F7]">
 
         <!-- VIEW 1: GUIDED WIZARD FORM -->
-        <div id="view-wizard-container" class="space-y-5">
-            <!-- Low-Barrier Welcome Banner -->
-            <div class="bg-white dark:bg-[#121722] rounded-2xl p-4 space-y-2 relative overflow-hidden shadow-sm border border-slate-200 dark:border-[#232C3F]">
-                <div class="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-extrabold text-xs">
-                    <span class="material-symbols-outlined text-sm">star</span> NO FANCY RESUME NEEDED
+        <div id="view-wizard-container" class="space-y-4">
+            <!-- Low-Barrier Welcome Banner (Unclipped Layout) -->
+            <div class="bg-white rounded-[20px] p-4 space-y-2 relative overflow-hidden shadow-sm border border-slate-200/80">
+                <div class="flex items-center gap-2 text-amber-700 font-extrabold text-[11px] tracking-wide uppercase">
+                    <span class="material-symbols-outlined text-xs">star</span> Low-Barrier AI Resume Creator
                 </div>
-                <h2 class="text-base font-extrabold leading-tight text-slate-900 dark:text-white">Turn your everyday skills & informal work into a powerful job resume.</h2>
-                <p class="text-xs text-slate-600 dark:text-slate-300 font-medium">Tap your experience, licenses, or volunteer tasks. Our AI handles the professional formatting.</p>
+                <h2 class="text-base font-extrabold leading-snug text-slate-900 tracking-tight">Turn your everyday skills & informal work into a powerful job resume.</h2>
+                <p class="text-xs text-slate-600 font-medium leading-relaxed">Tap your experience, licenses, or volunteer tasks. Our AI handles the professional formatting.</p>
             </div>
 
             <!-- Step Indicator Progress -->
-            <div class="flex justify-between items-center text-xs font-bold text-slate-600 dark:text-slate-400 px-1">
+            <div class="flex justify-between items-center text-xs font-bold text-slate-600 px-1">
                 <span id="wizard-step-label">Step 1 of 4: Contact Information</span>
-                <span id="wizard-progress-percent" class="text-amber-500 dark:text-amber-400 font-black">25%</span>
+                <span id="wizard-progress-percent" class="text-amber-700 font-black">25%</span>
             </div>
-            <div class="w-full bg-slate-200 dark:bg-slate-900 h-2 rounded-full overflow-hidden border border-slate-300 dark:border-white/10">
-                <div id="wizard-progress-bar" class="bg-amber-400 h-full w-1/4 transition-all duration-300"></div>
+            <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden border border-slate-300/60">
+                <div id="wizard-progress-bar" class="bg-[#FFE855] h-full w-1/4 transition-all duration-300"></div>
             </div>
 
             <!-- WIZARD STEP 1: CONTACT INFO -->
-            <section id="step-1" class="bg-white dark:bg-[#121722] border border-slate-200 dark:border-[#232C3F] rounded-2xl p-4 shadow-sm space-y-4">
-                <h3 class="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                    <span class="material-symbols-outlined text-amber-500 text-base">person</span> 1. Basic Contact Details
+            <section id="step-1" class="bg-white border border-slate-200/80 rounded-[20px] p-4 shadow-sm space-y-4">
+                <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2 tracking-tight">
+                    <span class="material-symbols-outlined text-amber-600 text-base">person</span> 1. Basic Contact Details
                 </h3>
 
                 <div class="space-y-3 text-xs">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Your Name <span class="text-rose-500">*</span></label>
-                        <input type="text" id="input-name" placeholder="e.g. Alex Johnson" class="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-xs text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-400 font-semibold" required value="Alex Johnson">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Your Name <span class="text-rose-500">*</span></label>
+                        <input type="text" id="input-name" placeholder="e.g. Alex Johnson" class="w-full rounded-[12px] bg-slate-50 border border-slate-200 p-2.5 text-xs text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-amber-400 font-semibold" required value="Alex Johnson">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Phone Number (or Message Phone)</label>
-                        <input type="text" id="input-phone" placeholder="e.g. (555) 234-5678" class="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-xs text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-400 font-medium" value="(555) 234-5678">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Phone Number (or Message Phone)</label>
+                        <input type="text" id="input-phone" placeholder="e.g. (555) 234-5678" class="w-full rounded-[12px] bg-slate-50 border border-slate-200 p-2.5 text-xs text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-amber-400 font-medium" value="(555) 234-5678">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Shelter / Case Worker / Email Contact</label>
-                        <input type="text" id="input-contact" placeholder="e.g. St. Jude Shelter Contact / alex.j@email.com" class="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-xs text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-400 font-medium" value="Shelter Contact: St. Jude Hope Center / alex.j@email.com">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Shelter / Case Worker / Email Contact</label>
+                        <input type="text" id="input-contact" placeholder="e.g. St. Jude Shelter Contact / alex.j@email.com" class="w-full rounded-[12px] bg-slate-50 border border-slate-200 p-2.5 text-xs text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-amber-400 font-medium" value="Shelter Contact: St. Jude Hope Center / alex.j@email.com">
                     </div>
 
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">City, State / Zip Code</label>
-                        <input type="text" id="input-location" placeholder="e.g. Seattle, WA 98101" class="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-xs text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-400 font-medium" value="Seattle, WA 98101">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">City, State / Zip Code</label>
+                        <input type="text" id="input-location" placeholder="e.g. Seattle, WA 98101" class="w-full rounded-[12px] bg-slate-50 border border-slate-200 p-2.5 text-xs text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-amber-400 font-medium" value="Seattle, WA 98101">
                     </div>
 
                     <div>
@@ -267,17 +263,17 @@
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Optional Details / Brief Description</label>
-                    <textarea id="input-informal-notes" rows="2" placeholder="e.g. Prepped food for 100+ daily meals, unloaded delivery trucks, organized food pantry inventory..." class="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-xs text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-400 font-medium">Prepped daily meals, sanitized workstations, unloaded supply trucks, and organized community pantry storage.</textarea>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Optional Details / Brief Description</label>
+                    <textarea id="input-informal-notes" rows="2" placeholder="e.g. Prepped food for 100+ daily meals, unloaded delivery trucks, organized food pantry inventory..." class="w-full rounded-[12px] bg-slate-50 border border-slate-200 p-2.5 text-xs text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-amber-400 font-medium">Prepped daily meals, sanitized workstations, unloaded supply trucks, and organized community pantry storage.</textarea>
                 </div>
             </section>
 
             <!-- WIZARD STEP 3: SKILLS & CERTIFICATIONS -->
-            <section id="step-3" class="bg-white dark:bg-[#121722] border border-slate-200 dark:border-[#232C3F] rounded-2xl p-4 shadow-sm space-y-4">
-                <h3 class="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                    <span class="material-symbols-outlined text-amber-500 text-base">verified</span> 3. Practical Skills & Badges
+            <section id="step-3" class="bg-white border border-slate-200/80 rounded-[20px] p-4 shadow-sm space-y-4">
+                <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2 tracking-tight">
+                    <span class="material-symbols-outlined text-amber-600 text-base">verified</span> 3. Practical Skills & Badges
                 </h3>
-                <p class="text-xs text-slate-600 dark:text-slate-300 font-medium">Select any certifications, strengths, or practical skills you have:</p>
+                <p class="text-xs text-slate-600 font-medium">Select any certifications, strengths, or practical skills you have:</p>
 
                 <div class="flex flex-wrap gap-2" id="skills-chips-container">
                     <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-bold bg-[#FFE855] border-[#FFE855] text-slate-950 active-chip shadow-sm" data-val="Food Handler Card">
@@ -292,27 +288,27 @@
                     <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-bold bg-[#FFE855] border-[#FFE855] text-slate-950 active-chip shadow-sm" data-val="Reliable & Punctual">
                         ⏰ Reliable & Punctual
                     </button>
-                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-200" data-val="Bilingual / Multilingual">
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200" data-val="Bilingual / Multilingual">
                         🗣️ Bilingual
                     </button>
-                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-200" data-val="OSHA 10 Safety">
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200" data-val="OSHA 10 Safety">
                         🪖 OSHA 10 Safety
                     </button>
-                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-200" data-val="Pallet Jack Operator">
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200" data-val="Pallet Jack Operator">
                         📦 Pallet Jack
                     </button>
-                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-200" data-val="First Aid & CPR">
+                    <button type="button" class="skill-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200" data-val="First Aid & CPR">
                         🩹 First Aid / CPR
                     </button>
                 </div>
             </section>
 
             <!-- WIZARD STEP 4: TARGET JOB TYPES -->
-            <section id="step-4" class="bg-white dark:bg-[#121722] border border-slate-200 dark:border-[#232C3F] rounded-2xl p-4 shadow-sm space-y-4">
-                <h3 class="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                    <span class="material-symbols-outlined text-amber-500 text-base">target</span> 4. Target Job Types
+            <section id="step-4" class="bg-white border border-slate-200/80 rounded-[20px] p-4 shadow-sm space-y-4">
+                <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2 tracking-tight">
+                    <span class="material-symbols-outlined text-amber-600 text-base">target</span> 4. Target Job Types
                 </h3>
-                <p class="text-xs text-slate-600 dark:text-slate-300 font-medium">What kind of job are you looking for right now?</p>
+                <p class="text-xs text-slate-600 font-medium">What kind of job are you looking for right now?</p>
 
                 <div class="flex flex-wrap gap-2" id="roles-chips-container">
                     <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-bold bg-[#FFE855] border-[#FFE855] text-slate-950 active-chip shadow-sm" data-val="Kitchen Prep & Dishwasher">
@@ -324,36 +320,36 @@
                     <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-bold bg-[#FFE855] border-[#FFE855] text-slate-950 active-chip shadow-sm" data-val="General Laborer">
                         🏗️ General Laborer
                     </button>
-                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-200" data-val="Sanitation & Janitorial">
+                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200" data-val="Sanitation & Janitorial">
                         🧼 Sanitation & Custodial
                     </button>
-                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:bg-slate-200" data-val="Retail Stocker & Cashier">
+                    <button type="button" class="role-chip px-3 py-1.5 rounded-full border text-xs font-medium bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200" data-val="Retail Stocker & Cashier">
                         🛒 Retail Stocker
                     </button>
                 </div>
             </section>
 
             <!-- WIZARD STEP 5: EDUCATION & CERTIFICATIONS -->
-            <section id="step-5" class="bg-white dark:bg-[#121722] border border-slate-200 dark:border-[#232C3F] rounded-2xl p-4 shadow-sm space-y-4">
-                <h3 class="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                    <span class="material-symbols-outlined text-amber-500 text-base">school</span> 5. Education & Certifications
+            <section id="step-5" class="bg-white border border-slate-200/80 rounded-[20px] p-4 shadow-sm space-y-4">
+                <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2 tracking-tight">
+                    <span class="material-symbols-outlined text-amber-600 text-base">school</span> 5. Education & Certifications
                 </h3>
-                <p class="text-xs text-slate-600 dark:text-slate-300 font-medium">Add any education, training, licenses, or certifications you want included on your resume.</p>
+                <p class="text-xs text-slate-600 font-medium">Add any education, training, licenses, or certifications you want included on your resume.</p>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">1. Education</label>
-                    <textarea id="input-education" rows="2" placeholder="e.g. Eastlake High School — Sammamish, WA&#10;High School Diploma&#10;GED" class="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-xs text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-400 font-medium"></textarea>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">1. Education</label>
+                    <textarea id="input-education" rows="2" placeholder="e.g. Eastlake High School — Sammamish, WA&#10;High School Diploma&#10;GED" class="w-full rounded-[12px] bg-slate-50 border border-slate-200 p-2.5 text-xs text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-amber-400 font-medium"></textarea>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">2. Custom Certifications / Training</label>
-                    <textarea id="input-custom-certifications" rows="2" placeholder="e.g. OSHA 10 Safety&#10;First Aid / CPR" class="w-full rounded-xl bg-slate-900 border border-slate-700 p-2.5 text-xs text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-400 font-medium"></textarea>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">2. Custom Certifications / Training</label>
+                    <textarea id="input-custom-certifications" rows="2" placeholder="e.g. OSHA 10 Safety&#10;First Aid / CPR" class="w-full rounded-[12px] bg-slate-50 border border-slate-200 p-2.5 text-xs text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-amber-400 font-medium"></textarea>
                 </div>
             </section>
 
-            <!-- Sticky Action Container for Generate Button -->
-            <div class="sticky bottom-0 z-30 pt-3 pb-8 bg-gradient-to-t from-[#F4F5F7] dark:from-[#0F1117] via-[#F4F5F7]/95 dark:via-[#0F1117]/95 to-transparent">
-                <button type="button" id="btn-generate-resume" onclick="generateResume()" class="w-full py-4 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-extrabold text-sm rounded-2xl shadow-md hover:from-amber-300 hover:to-amber-400 active:scale-95 transition-all flex items-center justify-center gap-2">
-                    <span class="material-symbols-outlined text-lg">auto_awesome</span> Generate Resume with NorthStar AI
+            <!-- Action Bar for Generate Button at Bottom -->
+            <div class="pt-4 pb-2">
+                <button type="button" id="btn-generate-resume" onclick="generateResume()" class="w-full py-3.5 bg-[#FFE855] text-slate-950 font-extrabold text-xs rounded-[16px] shadow-md hover:bg-amber-300 active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-base">auto_awesome</span> Generate Resume with NorthStar AI
                 </button>
             </div>
         </div>
@@ -490,6 +486,8 @@
 
     </main>
 
+
+
     <!-- Floating Dock Bottom Navigation Bar -->
     <nav class="absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-3 py-2.5 bg-[#12141C]/80 backdrop-blur-xl shadow-[0px_-4px_25px_rgba(0,0,0,0.5)] border-t border-white/10 no-print">
         <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="index.html">
@@ -625,8 +623,8 @@ function switchView(viewName) {
 
   if (!wizardContainer || !previewContainer || !textContainer) return;
 
-  const inactiveTab = 'flex-1 py-1.5 text-xs font-bold rounded-xl text-center text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1';
-  const activeTab   = 'flex-1 py-1.5 text-xs font-extrabold rounded-xl text-center bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-md transition-all flex items-center justify-center gap-1';
+  const inactiveTab = 'flex-1 py-2 text-xs font-bold rounded-[12px] text-center text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center gap-1';
+  const activeTab   = 'flex-1 py-2 text-xs font-extrabold rounded-[12px] text-center bg-[#FFE855] text-slate-950 shadow-sm transition-all flex items-center justify-center gap-1';
 
   [tabWizard, tabPreview, tabText].forEach(t => { if (t) t.className = inactiveTab; });
   wizardContainer.classList.add('hidden');

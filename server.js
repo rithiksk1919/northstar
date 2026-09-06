@@ -645,10 +645,75 @@ app.post('/api/deliveries/:id/status', async (req, res) => {
     res.status(500).json({ error: 'Failed to update delivery status.' });
   }
 });
+// --- AI Chatbot Assistant Endpoint ---
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { message, role, context } = req.body;
+    const userRole = role || 'seeker';
+
+    console.log(`🤖 [Chatbot] Received query (${userRole}): "${message}"`);
+
+    // Check if Gemini API key exists
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (apiKey && apiKey !== 'YOUR_GEMINI_API_KEY' && apiKey.length > 5) {
+      try {
+        const chatPrompt = `You are NorthStar AI Assistant for an unhoused support & volunteer portal in Seattle, WA.
+Role of user: ${userRole}.
+User question: "${message}"
+
+Keep answer concise (2-3 sentences), warm, practical, and helpful. Mention relevant resources (shelters, food prep, job opportunities, map features) when appropriate.`;
+
+        const result = await model.generateContent(chatPrompt);
+        const reply = result.response.text();
+        return res.json({ reply, mode: 'live_ai' });
+      } catch (geminiErr) {
+        console.warn('Gemini API call failed, falling back to local assistant responder:', geminiErr.message);
+      }
+    }
+
+    // Local Assistant Knowledge Engine (Runs when no API key is provided)
+    const lowerMsg = (message || '').toLowerCase();
+    let reply = '';
+
+    if (userRole === 'seeker') {
+      if (lowerMsg.includes('job') || lowerMsg.includes('work') || lowerMsg.includes('pay') || lowerMsg.includes('gig') || lowerMsg.includes('cash')) {
+        reply = `Looking for daily work? Head over to the Jobs tab to view vetted $20/hr cash gigs and no-ID daily labor opportunities in Seattle. You can also use the AI Resume Builder to create a professional resume in minutes!`;
+      } else if (lowerMsg.includes('shelter') || lowerMsg.includes('bed') || lowerMsg.includes('stay') || lowerMsg.includes('sleep') || lowerMsg.includes('housing')) {
+        reply = `Need a shelter or warm place to stay? Open the Map tab or Call Shelter section to view active emergency shelters, drop-in centers, and bed availability near downtown Seattle.`;
+      } else if (lowerMsg.includes('food') || lowerMsg.includes('meal') || lowerMsg.includes('pantry') || lowerMsg.includes('eat') || lowerMsg.includes('hungry')) {
+        reply = `For hot meals and food pantries, check out the Resource Map to locate nearby community kitchens and food bank distribution sites operating today.`;
+      } else if (lowerMsg.includes('resume') || lowerMsg.includes('apply') || lowerMsg.includes('hire')) {
+        reply = `You can create an instant ATS-formatted resume by opening the Resume tab. Just select your practical skills and past experience, and NorthStar AI will write your resume!`;
+      } else {
+        reply = `Hello! I'm your NorthStar AI Navigator. I can help you find shelter, hot meals, daily cash gigs, and build your resume. What do you need help with today?`;
+      }
+    } else {
+      // Helper / Volunteer Role
+      if (lowerMsg.includes('donate') || lowerMsg.includes('food') || lowerMsg.includes('dropoff') || lowerMsg.includes('pickup')) {
+        reply = `Thank you for supporting community members! You can schedule food donations or Uber volunteer pickups from the Donate tab, or claim active delivery jobs on your Helper Dashboard.`;
+      } else if (lowerMsg.includes('post') || lowerMsg.includes('job') || lowerMsg.includes('hire') || lowerMsg.includes('opportunity')) {
+        reply = `Looking to post a daily cash gig or job opportunity? Tap the "Post Opportunity" button on the Jobs screen to publish work directly for community seekers.`;
+      } else if (lowerMsg.includes('volunteer') || lowerMsg.includes('help') || lowerMsg.includes('driver')) {
+        reply = `As a NorthStar Helper, you can assist with meal deliveries, claim open shelter pickup tasks, or post local work opportunities to help unhoused individuals.`;
+      } else {
+        reply = `Welcome to the Helper Portal! I'm NorthStar AI Assistant. How can I assist you with posting opportunities, coordinating food donations, or volunteer pickups today?`;
+      }
+    }
+
+    res.json({ reply, mode: 'local_assistant' });
+  } catch (err) {
+    console.error('Error in chatbot API:', err);
+    res.json({
+      reply: "I'm NorthStar AI Assistant. I can help you navigate jobs, shelters, food resources, and volunteer pickups across the portal!",
+      mode: 'fallback'
+    });
+  }
+});
 
 const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, async () => {
-  console.log(`🚀 Server running on port ${server.address().port}`);
+const server = app.listen(PORT, '0.0.0.0', async () => {
+  console.log(`🚀 Server running on http://0.0.0.0:${server.address().port}`);
   await fetchAndVetGigs();
 });
 
