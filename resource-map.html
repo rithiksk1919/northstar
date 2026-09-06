@@ -7,6 +7,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link rel="stylesheet" href="css/northstar.css">
+<style>
+    /* Fix click interactions by ignoring child elements */
+    button * {
+        pointer-events: none;
+    }
+    /* Expandable Bottom Drawer Sheet */
+    #bottom-drawer-sheet.expanded {
+        max-height: 55vh !important;
+    }
+</style>
 
 <!-- Leaflet CSS & JS Bundle -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -183,16 +193,47 @@
 
             </div>
 
-            <!-- SPRING-ANIMATED DOCKING "SEARCH THIS AREA" BUTTON (DOCKS BENEATH STATION ON MAP PAN) -->
-            <div class="w-full flex justify-center pointer-events-auto my-auto pt-2">
-                <button id="search-area-btn" onclick="executeSearchThisArea()" class="hidden items-center gap-2 px-5 py-2.5 bg-[#0F141C] text-white font-extrabold text-xs rounded-full shadow-2xl border border-white/20 hover:bg-slate-900 transition-all active:scale-95 transform duration-300 spring-transition">
-                    <span class="material-symbols-outlined text-sm text-emerald-400 animate-pulse">radar</span>
-                    <span>Search this area</span>
-                </button>
+            <!-- RADIUS SELECTOR BAR (CLEANLY CENTERED) -->
+            <div class="w-full flex justify-center pointer-events-auto my-auto pt-1">
+                <div id="radius-controls" class="bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full shadow-lg border border-slate-200/90 flex items-center gap-1.5 transition-all">
+                    <span class="material-symbols-outlined text-xs text-emerald-600">adjust</span>
+                    <span class="text-[10px] font-bold text-slate-700">Radius:</span>
+                    <div class="flex items-center gap-1">
+                        <button id="radius-btn-5" onclick="setSearchRadius(5)" class="radius-pill-btn px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#0F141C] text-white shadow-sm transition-all">5 mi</button>
+                        <button id="radius-btn-10" onclick="setSearchRadius(10)" class="radius-pill-btn px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all">10 mi</button>
+                        <button id="radius-btn-25" onclick="setSearchRadius(25)" class="radius-pill-btn px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all">25 mi</button>
+                    </div>
+                </div>
             </div>
 
         </div>
 
+    </div>
+
+    <!-- ZOOM CONTROLS (DOCKED ABOVE BOTTOM DRAWER) -->
+    <div class="absolute bottom-[134px] right-3.5 z-30 flex flex-col gap-2 pointer-events-auto">
+        <button onclick="if(map) map.zoomIn()" title="Zoom In" class="w-9 h-9 bg-white text-slate-900 rounded-full shadow-md flex items-center justify-center font-bold text-lg hover:bg-slate-100 active:scale-95 transition-all border border-slate-200/80">+</button>
+        <button onclick="if(map) map.zoomOut()" title="Zoom Out" class="w-9 h-9 bg-white text-slate-900 rounded-full shadow-md flex items-center justify-center font-bold text-lg hover:bg-slate-100 active:scale-95 transition-all border border-slate-200/80">-</button>
+    </div>
+
+    <!-- EXPANDABLE BOTTOM DRAWER SHEET ("PLACES LIST") -->
+    <div id="bottom-drawer-sheet" class="absolute bottom-[72px] left-3 right-3 z-30 bg-white/95 backdrop-blur-xl rounded-[24px] shadow-[0_8px_30px_rgba(0,0,0,0.18)] border border-slate-200/80 transition-all duration-300 ease-out overflow-hidden flex flex-col pointer-events-auto" style="max-height: 54px;">
+        <!-- DRAG HANDLE & HEADER BAR (CLICKABLE / DRAGGABLE) -->
+        <div id="drawer-header" onclick="toggleBottomDrawer()" class="w-full pt-2 pb-2.5 px-4 cursor-pointer flex flex-col items-center select-none hover:bg-slate-50/60 transition-colors">
+            <!-- Horizontal drag handle pill -->
+            <div class="w-10 h-1 rounded-full bg-slate-300 mb-1.5"></div>
+            
+            <div class="w-full flex items-center justify-start gap-2">
+                <span class="material-symbols-outlined text-base text-emerald-600">format_list_bulleted</span>
+                <span id="drawer-title" class="text-xs font-extrabold text-slate-900 tracking-tight">Places & Resources</span>
+                <span id="drawer-count-badge" class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black">0</span>
+            </div>
+        </div>
+
+        <!-- SCROLLABLE LIST CONTENT (REVEALED WHEN EXPANDED) -->
+        <div id="places-list" class="drawer-content-list px-3 pb-3 pt-1 overflow-y-auto max-h-[46vh] space-y-2 no-scrollbar">
+            <!-- Populated dynamically by renderDrawerPlaces() -->
+        </div>
     </div>
 
     <!-- FLOATING ROUNDED BOTTOM NAVIGATION BAR -->
@@ -292,7 +333,8 @@
   let activeSelectedCategories = ['all']; // Multi-select array
   let isOpenNowFilterActive = false;
   let activeScopeFilter = 'everyone';   // 'everyone' or 'verified'
-  let isMapBoundsFilteringActive = false;
+  let activeRadiusMiles = 5;            // Radius modifier (5, 10, 25 miles)
+  let isDrawerExpanded = false;
 
   const defaultResources = [
     { id: 'res-real-1', name: "Together Center - Human Services", category: "shelter", lat: 47.6805, lng: -122.1225, status: "Open Now • Housing Navigators", address: "16305 NE 87th St, Redmond", icon: "🏢", details: "Hub for emergency housing navigation.", verifiedOnly: true, hoursOpen: "08:00", hoursClose: "20:00", is24Seven: false },
@@ -309,20 +351,40 @@
   ];
 
   function getResourcesData() {
-    const stored = localStorage.getItem('cached_resources');
-    if (!stored) {
-      localStorage.setItem('cached_resources', JSON.stringify(defaultResources));
-      return defaultResources;
-    }
     try {
-      return JSON.parse(stored);
+      const stored = localStorage.getItem('cached_resources');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
     } catch (e) {
-      return defaultResources;
+      console.warn('Error reading cached_resources:', e);
+    }
+    localStorage.setItem('cached_resources', JSON.stringify(defaultResources));
+    return defaultResources;
+  }
+
+  async function loadResourcesFromDatabase() {
+    if (window.supabaseClient) {
+      try {
+        const { data, error } = await window.supabaseClient.from('resources').select('*');
+        if (!error && Array.isArray(data) && data.length > 0) {
+          localStorage.setItem('cached_resources', JSON.stringify(data));
+          if (typeof updateVisiblePlaces === 'function') {
+            updateVisiblePlaces();
+          }
+        }
+      } catch (err) {
+        console.warn('Could not query Supabase resources table, keeping default mock items:', err);
+      }
     }
   }
 
   document.addEventListener('DOMContentLoaded', () => {
     initLeafletCleanMap();
+    loadResourcesFromDatabase();
   });
 
   function initLeafletCleanMap() {
@@ -333,33 +395,38 @@
       attributionControl: false
     }).setView(startCoords, 14);
 
-    const tileUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-
-    offlineLayer = L.tileLayer(tileUrl, {
-      subdomains: 'abcd',
-      maxZoom: 18
+    offlineLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    // Spring animation for "Search this area" button when user drags/pans map
-    map.on('dragend moveend', () => {
-      const searchBtn = document.getElementById('search-area-btn');
-      if (searchBtn && searchBtn.classList.contains('hidden')) {
-        searchBtn.classList.remove('hidden');
-        searchBtn.classList.add('flex');
-      }
+    // Real-time live auto-updating markers & places as user pans or zooms map
+    map.on('moveend zoomend', () => {
+      updateVisiblePlaces();
     });
 
     locateAndCenterUser();
   }
 
-  function executeSearchThisArea() {
-    const searchBtn = document.getElementById('search-area-btn');
-    if (searchBtn) {
-      searchBtn.classList.add('hidden');
-      searchBtn.classList.remove('flex');
+  function getActiveReferenceCoords() {
+    // 1. If userLocationCoords is set, valid, and within 60 miles of the Seattle mock cluster
+    if (userLocationCoords && typeof userLocationCoords.lat === 'number' && typeof userLocationCoords.lng === 'number') {
+      if (userLocationCoords.lat !== 0 && userLocationCoords.lng !== 0) {
+        const distFromCluster = calculateDistanceMiles(userLocationCoords.lat, userLocationCoords.lng, 47.6062, -122.3321);
+        if (distFromCluster < 60) {
+          return userLocationCoords;
+        }
+      }
     }
-    isMapBoundsFilteringActive = true;
-    applyCombinedFilters();
+    // 2. Otherwise use map center if valid
+    if (map && typeof map.getCenter === 'function') {
+      const c = map.getCenter();
+      if (c && c.lat && c.lng && (c.lat !== 0 || c.lng !== 0)) {
+        return { lat: c.lat, lng: c.lng };
+      }
+    }
+    // 3. Fallback to Downtown Seattle anchor
+    return { lat: 47.6062, lng: -122.3321 };
   }
 
   function renderBlueDot(latitude, longitude) {
@@ -369,8 +436,10 @@
     if (userLocationMarker) map.removeLayer(userLocationMarker);
     if (userRadiusCircle) map.removeLayer(userRadiusCircle);
 
+    const radiusMeters = activeRadiusMiles * 1609.34;
+
     userRadiusCircle = L.circle([latitude, longitude], {
-      radius: 8046.72,
+      radius: radiusMeters,
       color: '#10B981',
       fillColor: '#10B981',
       fillOpacity: 0.08,
@@ -393,7 +462,7 @@
     userLocationMarker = L.marker([latitude, longitude], { icon: blueDotIcon, zIndexOffset: 1000 }).addTo(map);
     userLocationMarker.bindPopup('<b style="color:#ffffff;">📍 Your Location</b>');
 
-    applyCombinedFilters();
+    updateVisiblePlaces();
   }
 
   function locateAndCenterUser() {
@@ -405,13 +474,19 @@
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude, longitude } = pos.coords;
-        renderBlueDot(latitude, longitude);
-        map.flyTo([latitude, longitude], 14, { animate: true });
+        const dist = calculateDistanceMiles(latitude, longitude, 47.6062, -122.3321);
+        // If user is outside Puget Sound / Seattle (>60 mi away), anchor to Seattle mock cluster
+        if (dist > 60) {
+          renderBlueDot(47.6062, -122.3321);
+        } else {
+          renderBlueDot(latitude, longitude);
+          map.flyTo([latitude, longitude], 14, { animate: true });
+        }
       },
       (err) => {
         renderBlueDot(47.6062, -122.3321);
       },
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true, timeout: 5000 }
     );
   }
 
@@ -497,22 +572,21 @@
     const currentDeviceTime = new Date();
     const currentMinutesFromMidnight = currentDeviceTime.getHours() * 60 + currentDeviceTime.getMinutes();
 
-    let bounds = null;
-    if (isMapBoundsFilteringActive && map) {
-      bounds = map.getBounds();
-    }
+    const bounds = map ? map.getBounds() : null;
+    const refCoords = getActiveReferenceCoords();
 
-    const filteredPins = resources.filter(pin => {
-      // 1. Multi-Select Category Match
+    // 1. Filter by category, scope, and open-now time
+    const baseMatchingPins = resources.filter(pin => {
+      // Category Match
       const matchesCategory = activeSelectedCategories.includes('all') || activeSelectedCategories.includes(pin.category);
 
-      // 2. Verified Scope Match
+      // Verified Scope Match
       let matchesScope = true;
       if (activeScopeFilter === 'verified') {
         matchesScope = (pin.verifiedOnly === true);
       }
 
-      // 3. Open Now Time Match (Device clock vs hoursOpen/hoursClose)
+      // Open Now Time Match
       let matchesOpenNow = true;
       if (isOpenNowFilterActive) {
         if (pin.is24Seven) {
@@ -528,18 +602,40 @@
         }
       }
 
-      // 4. Viewport Map Bounds Check (if "Search this area" executed)
-      let matchesBounds = true;
-      if (bounds) {
-        matchesBounds = bounds.contains([pin.lat, pin.lng]);
-      }
-
-      // INTERSECTING AND LOGIC
-      return matchesCategory && matchesScope && matchesOpenNow && matchesBounds;
+      return matchesCategory && matchesScope && matchesOpenNow;
     });
 
+    // Score all candidate pins by distance in miles relative to active reference coordinates
+    const pool = baseMatchingPins.length > 0 ? baseMatchingPins : resources;
+    const scoredPins = pool.map(pin => {
+      const dist = calculateDistanceMiles(refCoords.lat, refCoords.lng, pin.lat, pin.lng);
+      const inBounds = bounds ? bounds.contains([pin.lat, pin.lng]) : true;
+      const inRadius = (dist <= activeRadiusMiles);
+      return {
+        ...pin,
+        distanceMiles: dist,
+        inBounds,
+        inRadius
+      };
+    });
+
+    // Strict boundary & radius match
+    let filteredPins = scoredPins.filter(p => p.inBounds && p.inRadius);
+
+    // If no markers fall within strict boundaries, automatically include the nearest 5 available resources regardless of tight radius limits so the UI always has content
+    if (filteredPins.length === 0) {
+      const sorted = [...scoredPins].sort((a, b) => a.distanceMiles - b.distanceMiles);
+      filteredPins = sorted.slice(0, 5);
+    }
+
     renderLeafletMarkers(filteredPins);
+    renderDrawerPlaces(filteredPins);
   }
+
+  function updateVisiblePlaces() {
+    applyCombinedFilters();
+  }
+  window.updateVisiblePlaces = updateVisiblePlaces;
 
   function renderLeafletMarkers(items) {
     mapMarkers.forEach(m => map.removeLayer(m.marker));
@@ -639,6 +735,169 @@
       showNotification('✨ New resource published to live map!', 'success');
     }
   }
+
+  // RADIUS MODIFIER LOGIC
+  function setSearchRadius(miles) {
+    activeRadiusMiles = miles;
+    
+    [5, 10, 25].forEach(m => {
+      const btn = document.getElementById(`radius-btn-${m}`);
+      if (btn) {
+        if (m === miles) {
+          btn.className = 'radius-pill-btn px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#0F141C] text-white shadow-sm transition-all';
+        } else {
+          btn.className = 'radius-pill-btn px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all';
+        }
+      }
+    });
+
+    if (userRadiusCircle) {
+      userRadiusCircle.setRadius(miles * 1609.34);
+    }
+
+    updateVisiblePlaces();
+  }
+
+  function calculateDistanceMiles(lat1, lon1, lat2, lon2) {
+    if (lat1 === undefined || lon1 === undefined || lat2 === undefined || lon2 === undefined) return 0;
+    const R = 3958.8; // Radius of the Earth in miles
+    const toRad = deg => (deg * Math.PI) / 180;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const dist = R * c;
+    return isNaN(dist) ? 0 : dist;
+  }
+
+  // BOTTOM DRAWER EXPAND / COLLAPSE & PLACES LIST RENDERING
+  function toggleBottomDrawer(forceState) {
+    const drawer = document.getElementById('bottom-drawer-sheet');
+    if (!drawer) return;
+
+    if (typeof forceState === 'boolean') {
+      isDrawerExpanded = forceState;
+    } else {
+      isDrawerExpanded = !isDrawerExpanded;
+    }
+
+    if (isDrawerExpanded) {
+      drawer.classList.add('expanded');
+    } else {
+      drawer.classList.remove('expanded');
+    }
+  }
+
+  function renderDrawerPlaces(items) {
+    const listEl = document.getElementById('places-list') || document.getElementById('drawer-content-list');
+    const badgeEl = document.getElementById('drawer-count-badge');
+    const titleEl = document.getElementById('drawer-title');
+    if (!listEl) return;
+
+    const count = items ? items.length : 0;
+    if (badgeEl) {
+      badgeEl.textContent = count;
+    }
+    if (titleEl) {
+      titleEl.textContent = `Places & Resources (${count})`;
+    }
+
+    if (!items || items.length === 0) {
+      listEl.innerHTML = `
+        <div class="p-6 text-center text-slate-500">
+          <span class="material-symbols-outlined text-3xl text-slate-400 mb-1">search_off</span>
+          <p class="text-xs font-bold text-slate-700">No resources found</p>
+          <p class="text-[11px] text-slate-500 mt-0.5">Try expanding your search radius (e.g. 10 or 25 mi) or adjusting filters.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const refCoords = getActiveReferenceCoords();
+
+    const sorted = [...items].map(pin => {
+      const dist = pin.distanceMiles !== undefined ? pin.distanceMiles : calculateDistanceMiles(refCoords.lat, refCoords.lng, pin.lat, pin.lng);
+      return { ...pin, distanceMiles: dist };
+    }).sort((a, b) => a.distanceMiles - b.distanceMiles);
+
+    listEl.innerHTML = sorted.map(res => {
+      const distStr = res.distanceMiles.toFixed(1) + ' mi';
+      const catColor = res.category === 'food' ? 'text-rose-600 bg-rose-50'
+                     : res.category === 'shelter' ? 'text-blue-600 bg-blue-50'
+                     : res.category === 'work' ? 'text-amber-600 bg-amber-50'
+                     : res.category === 'wifi' ? 'text-indigo-600 bg-indigo-50'
+                     : res.category === 'restroom' ? 'text-teal-600 bg-teal-50'
+                     : 'text-yellow-600 bg-yellow-50';
+
+      return `
+        <div class="p-2.5 bg-slate-50 hover:bg-slate-100/90 rounded-2xl border border-slate-200/70 shadow-sm flex items-center justify-between gap-2.5 transition-all">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-1.5 mb-0.5">
+              <span class="text-sm flex-shrink-0">${res.icon || '📍'}</span>
+              <h5 class="text-xs font-extrabold text-slate-900 truncate">${res.name}</h5>
+              ${res.verifiedOnly ? '<span class="text-[9px] text-amber-500 font-black flex-shrink-0" title="Verified">✓</span>' : ''}
+            </div>
+            <div class="flex items-center gap-1.5 text-[11px] text-slate-500 mb-0.5">
+              <span class="font-extrabold text-emerald-600 flex items-center gap-0.5">
+                <span class="material-symbols-outlined text-[12px]">near_me</span>
+                ${distStr} away
+              </span>
+              <span>•</span>
+              <span class="px-1.5 py-0.2 rounded text-[10px] font-bold ${catColor} capitalize">${res.category}</span>
+            </div>
+            <p class="text-[10px] font-medium text-slate-600 truncate">${res.status}</p>
+          </div>
+          <div class="flex flex-col items-end gap-1 flex-shrink-0">
+            <button onclick="selectAndFocusPlace('${res.id}', ${res.lat}, ${res.lng})" class="px-3 py-1.5 bg-[#0F141C] text-white hover:bg-slate-800 text-[11px] font-extrabold rounded-xl shadow-sm transition-all active:scale-95 flex items-center gap-1">
+              <span>View</span>
+              <span class="material-symbols-outlined text-[12px] text-emerald-400">arrow_forward</span>
+            </button>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${res.lat},${res.lng}&travelmode=walking" target="_blank" class="text-[10px] font-bold text-slate-500 hover:text-slate-800">
+              Directions ↗
+            </a>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function selectAndFocusPlace(resId, lat, lng) {
+    if (!map) return;
+    map.flyTo([lat, lng], 16, { animate: true, duration: 0.8 });
+    const targetMarker = mapMarkers.find(m => m.resId === resId);
+    if (targetMarker && targetMarker.marker) {
+      setTimeout(() => {
+        targetMarker.marker.openPopup();
+      }, 500);
+    }
+    toggleBottomDrawer(false);
+  }
+
+  // TOUCH SWIPE-UP / SWIPE-DOWN GESTURE LISTENER FOR DRAWER HEADER
+  document.addEventListener('DOMContentLoaded', () => {
+    let touchStartY = 0;
+    const header = document.getElementById('drawer-header');
+    if (header) {
+      header.addEventListener('touchstart', (e) => {
+        touchStartY = e.touches[0].clientY;
+      }, { passive: true });
+
+      header.addEventListener('touchend', (e) => {
+        const touchEndY = e.changedTouches[0].clientY;
+        const diffY = touchStartY - touchEndY;
+        if (diffY > 30) {
+          // Swiped up
+          toggleBottomDrawer(true);
+        } else if (diffY < -30) {
+          // Swiped down
+          toggleBottomDrawer(false);
+        }
+      }, { passive: true });
+    }
+  });
 </script>
 </body>
 </html>

@@ -199,13 +199,13 @@ window.switchAuthTab = function (mode) {
   const submitBtn = document.getElementById('auth-submit-btn');
 
   if (mode === 'login') {
-    if (tabLogin) tabLogin.className = 'flex-1 h-9 text-xs font-extrabold rounded-[11px] bg-slate-950 text-white shadow-sm transition-all duration-200';
-    if (tabSignup) tabSignup.className = 'flex-1 h-9 text-xs font-bold rounded-[11px] text-slate-600 hover:text-slate-950 transition-all duration-200';
+    if (tabLogin) tabLogin.className = 'flex-1 h-10 text-xs sm:text-sm font-extrabold rounded-lg bg-slate-950 text-white shadow-sm transition-all duration-200';
+    if (tabSignup) tabSignup.className = 'flex-1 h-10 text-xs sm:text-sm font-bold rounded-lg text-slate-600 hover:text-slate-950 transition-all duration-200';
     if (roleContainer) roleContainer.classList.add('hidden');
     if (submitBtn) submitBtn.textContent = 'Sign In';
   } else {
-    if (tabSignup) tabSignup.className = 'flex-1 h-9 text-xs font-extrabold rounded-[11px] bg-slate-950 text-white shadow-sm transition-all duration-200';
-    if (tabLogin) tabLogin.className = 'flex-1 h-9 text-xs font-bold rounded-[11px] text-slate-600 hover:text-slate-950 transition-all duration-200';
+    if (tabSignup) tabSignup.className = 'flex-1 h-10 text-xs sm:text-sm font-extrabold rounded-lg bg-slate-950 text-white shadow-sm transition-all duration-200';
+    if (tabLogin) tabLogin.className = 'flex-1 h-10 text-xs sm:text-sm font-bold rounded-lg text-slate-600 hover:text-slate-950 transition-all duration-200';
     if (roleContainer) roleContainer.classList.remove('hidden');
     if (submitBtn) submitBtn.textContent = 'Create Account';
   }
@@ -217,11 +217,11 @@ window.setAuthRole = function (role) {
   const volunteerBtn = document.getElementById('role-btn-volunteer');
 
   if (role === 'seeker') {
-    if (seekerBtn) seekerBtn.className = 'py-2.5 px-3 text-xs font-extrabold rounded-xl border border-amber-400/50 bg-amber-500/20 text-amber-400 flex items-center justify-center gap-1.5 transition-all';
-    if (volunteerBtn) volunteerBtn.className = 'py-2.5 px-3 text-xs font-extrabold rounded-xl border border-slate-800 bg-slate-900 text-slate-400 flex items-center justify-center gap-1.5 transition-all';
+    if (seekerBtn) seekerBtn.className = 'h-11 px-3 text-xs sm:text-sm font-extrabold rounded-xl border border-amber-400 bg-amber-500/15 text-amber-900 flex items-center justify-center gap-1.5 transition-all';
+    if (volunteerBtn) volunteerBtn.className = 'h-11 px-3 text-xs sm:text-sm font-bold rounded-xl border border-slate-200 bg-slate-50 text-slate-700 flex items-center justify-center gap-1.5 transition-all';
   } else {
-    if (volunteerBtn) volunteerBtn.className = 'py-2.5 px-3 text-xs font-extrabold rounded-xl border border-amber-400/50 bg-amber-500/20 text-amber-400 flex items-center justify-center gap-1.5 transition-all';
-    if (seekerBtn) seekerBtn.className = 'py-2.5 px-3 text-xs font-extrabold rounded-xl border border-slate-800 bg-slate-900 text-slate-400 flex items-center justify-center gap-1.5 transition-all';
+    if (volunteerBtn) volunteerBtn.className = 'h-11 px-3 text-xs sm:text-sm font-extrabold rounded-xl border border-amber-400 bg-amber-500/15 text-amber-900 flex items-center justify-center gap-1.5 transition-all';
+    if (seekerBtn) seekerBtn.className = 'h-11 px-3 text-xs sm:text-sm font-bold rounded-xl border border-slate-200 bg-slate-50 text-slate-700 flex items-center justify-center gap-1.5 transition-all';
   }
 };
 

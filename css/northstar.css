@@ -353,7 +353,20 @@ input:focus, textarea:focus, select:focus {
 }
 
 #auth-gateway-view {
-  background-color: #020617; /* slate-950 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#guest-btn {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+}
+
+#guest-btn span,
+#guest-btn * {
+  color: #ffffff !important;
 }
 
 .hidden {

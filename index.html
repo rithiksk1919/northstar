@@ -95,82 +95,85 @@
         <!-- ============================================ -->
         <!-- AUTH GATEWAY OVERLAY (EXACT DASHBOARD TOKENS) -->
         <!-- ============================================ -->
-        <div id="auth-gateway-view" class="absolute inset-0 z-[200] p-5 relative overflow-y-auto" style="background-color: var(--bg-light) !important; color: var(--text-dark) !important;">
+        <!-- ============================================ -->
+        <!-- AUTH GATEWAY OVERLAY (EXACT DASHBOARD TOKENS) -->
+        <!-- ============================================ -->
+        <div id="auth-gateway-view" class="absolute inset-0 z-[200] px-4 py-8 overflow-y-auto flex flex-col items-center justify-center" style="background-color: var(--bg-light) !important; color: var(--text-dark) !important;">
             <!-- Magic UI Particles Background Canvas Layer (z-0, gold #F59E0B, 50 particles, absolute inset-0) -->
             <canvas id="auth-particles-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-0"></canvas>
 
-            <!-- Centered Content Wrapper (Sibling layer on z-10, min-h-full flex flex-col items-center justify-center pt-12) -->
-            <div class="relative z-10 w-full max-w-xs mx-auto min-h-full flex flex-col items-center justify-center pt-12 pb-6 space-y-4">
+            <!-- Centered Content Wrapper (Vertically balanced in viewport, scaled for comfortable proportion) -->
+            <div class="relative z-10 w-full max-w-[360px] mx-auto my-auto flex flex-col items-center justify-center py-4 space-y-4 sm:space-y-5">
                 
-                <!-- Group 1: Brand Header Lockup (Exact Dashboard Logotype Match) -->
-                <div class="text-center space-y-1 w-full">
-                    <div class="w-14 h-14 bg-white rounded-[16px] flex items-center justify-center mx-auto mb-2 shadow-md p-2 border border-slate-200">
+                <!-- Group 1: Brand Header Lockup -->
+                <div class="text-center space-y-1.5 w-full">
+                    <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-2.5 shadow-md p-2 border border-slate-200/90">
                         <img src="northstar-logo.png" class="w-full h-full object-contain" alt="NorthStar Logo">
                     </div>
-                    <h1 class="text-2xl font-black font-heading tracking-tight" style="color: var(--text-dark) !important;">Northstar</h1>
-                    <p class="text-xs font-medium" style="color: var(--text-muted) !important;">Navigate. Connect. Move Forward.</p>
+                    <h1 class="text-2xl sm:text-3xl font-black font-heading tracking-tight text-slate-900" style="color: var(--text-dark) !important;">Northstar</h1>
+                    <p class="text-xs sm:text-sm font-medium text-slate-500" style="color: var(--text-muted) !important;">Navigate. Connect. Move Forward.</p>
                 </div>
 
                 <!-- Group 2: Form Wrapped in Dashboard White Card System -->
-                <div class="bg-white border border-slate-200 rounded-[20px] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.06)] space-y-3 w-full" style="background-color: var(--surface-white) !important;">
+                <div class="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-[0_10px_28px_rgba(0,0,0,0.06)] space-y-4 w-full" style="background-color: var(--surface-white) !important;">
 
                     <!-- Light Segmented Controller (Sign In vs Create Account) -->
-                    <div class="bg-slate-100 p-1 rounded-[14px] border border-slate-200 flex items-center shadow-inner">
-                        <button type="button" id="tab-login" onclick="switchAuthTab('login')" class="flex-1 h-9 text-xs font-extrabold rounded-[11px] bg-slate-950 text-white shadow-sm transition-all duration-200">
+                    <div class="bg-slate-100 p-1.5 rounded-xl border border-slate-200 flex items-center shadow-inner">
+                        <button type="button" id="tab-login" onclick="switchAuthTab('login')" class="flex-1 h-10 text-xs sm:text-sm font-extrabold rounded-lg bg-slate-950 text-white shadow-sm transition-all duration-200">
                             Sign In
                         </button>
-                        <button type="button" id="tab-signup" onclick="switchAuthTab('signup')" class="flex-1 h-9 text-xs font-bold rounded-[11px] text-slate-600 hover:text-slate-950 transition-all duration-200">
+                        <button type="button" id="tab-signup" onclick="switchAuthTab('signup')" class="flex-1 h-10 text-xs sm:text-sm font-bold rounded-lg text-slate-600 hover:text-slate-950 transition-all duration-200">
                             Create Account
                         </button>
                     </div>
 
                     <!-- Auth Form -->
-                    <form id="auth-form" onsubmit="handleAuthFormSubmit(event)" class="space-y-2.5">
+                    <form id="auth-form" onsubmit="handleAuthFormSubmit(event)" class="space-y-3">
                         
                         <!-- Role Selection (Shown ONLY during Create Account mode) -->
                         <div id="role-selection-container" class="hidden space-y-1.5 pb-1">
-                            <label class="text-[10px] font-bold uppercase tracking-wider" style="color: var(--text-muted) !important;">Select Account Role</label>
+                            <label class="text-[11px] font-bold uppercase tracking-wider text-slate-500" style="color: var(--text-muted) !important;">Select Account Role</label>
                             <div class="grid grid-cols-2 gap-2">
                                 <button type="button" id="role-btn-seeker" onclick="setAuthRole('seeker')" 
-                                    class="h-10 px-3 text-xs font-extrabold rounded-[14px] border border-amber-400 bg-amber-500/15 text-amber-900 flex items-center justify-center gap-1.5 transition-all">
-                                    <span class="material-symbols-outlined text-sm text-amber-700">search</span> Seeker
+                                    class="h-11 px-3 text-xs sm:text-sm font-extrabold rounded-xl border border-amber-400 bg-amber-500/15 text-amber-900 flex items-center justify-center gap-1.5 transition-all">
+                                    <span class="material-symbols-outlined text-base text-amber-700">search</span> Seeker
                                 </button>
                                 <button type="button" id="role-btn-volunteer" onclick="setAuthRole('volunteer')" 
-                                    class="h-10 px-3 text-xs font-bold rounded-[14px] border border-slate-200 bg-slate-50 text-slate-700 flex items-center justify-center gap-1.5 transition-all">
-                                    <span class="material-symbols-outlined text-sm text-slate-600">volunteer_activism</span> Volunteer
+                                    class="h-11 px-3 text-xs sm:text-sm font-bold rounded-xl border border-slate-200 bg-slate-50 text-slate-700 flex items-center justify-center gap-1.5 transition-all">
+                                    <span class="material-symbols-outlined text-base text-slate-600">volunteer_activism</span> Volunteer
                                 </button>
                             </div>
                         </div>
 
                         <div>
-                            <input type="email" id="auth-email" placeholder="Email address" required class="w-full h-11 px-3.5 rounded-[14px] bg-slate-50 border border-slate-200 text-slate-900 text-xs font-medium placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 transition-all">
+                            <input type="email" id="auth-email" placeholder="Email address" required class="w-full h-12 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-medium placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 transition-all">
                         </div>
                         <div>
-                            <input type="password" id="auth-password" placeholder="Password (min 6 characters)" minlength="6" required class="w-full h-11 px-3.5 rounded-[14px] bg-slate-50 border border-slate-200 text-slate-900 text-xs font-medium placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 transition-all">
+                            <input type="password" id="auth-password" placeholder="Password (min 6 characters)" minlength="6" required class="w-full h-12 px-4 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 text-sm font-medium placeholder-slate-400 focus:outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 transition-all">
                         </div>
 
                         <div id="auth-error-message" class="hidden text-[#EF4444] text-xs font-medium px-1"></div>
 
                         <!-- Primary Highest-Priority Yellow CTA Button -->
-                        <button type="submit" id="auth-submit-btn" class="w-full h-11 font-extrabold rounded-[14px] text-xs shadow-sm active:scale-[0.98] transition-all border border-amber-300" style="background-color: var(--accent-yellow) !important; color: var(--text-dark) !important;">
+                        <button type="submit" id="auth-submit-btn" class="w-full h-12 font-extrabold rounded-xl text-sm shadow-sm active:scale-[0.98] transition-all border border-amber-300" style="background-color: var(--accent-yellow) !important; color: var(--text-dark) !important;">
                             Sign In
                         </button>
                     </form>
                 </div>
 
                 <!-- Group 3: Standardized Secondary Muted Text Divider -->
-                <div class="relative py-0.5 text-center w-full">
-                    <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-300/70"></div></div>
-                    <span class="relative px-3 text-[10px] font-bold uppercase tracking-widest" style="background-color: var(--bg-light) !important; color: var(--text-muted) !important;">Or</span>
+                <div class="relative py-1 text-center w-full">
+                    <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-300/80"></div></div>
+                    <span class="relative px-3 text-[11px] font-bold uppercase tracking-widest" style="background-color: var(--bg-light) !important; color: var(--text-muted) !important;">Or</span>
                 </div>
 
-                <!-- Group 4: Secondary Guest Access CTA -->
-                <div class="space-y-1.5 text-center w-full">
+                <!-- Group 4: Secondary Guest Access CTA with High-Contrast Text -->
+                <div class="space-y-2 text-center w-full">
                     <button id="guest-btn" onclick="continueAsGuest()" type="button"
-                      class="w-full h-11 bg-white hover:bg-slate-50 border border-slate-300 font-bold rounded-[14px] text-xs shadow-sm transition-all active:scale-[0.98]" style="color: var(--text-dark) !important;">
-                      Continue as Guest &rarr;
+                      class="w-full h-12 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-white font-bold rounded-xl text-sm shadow-md transition-all active:scale-[0.98] flex items-center justify-center gap-1.5 cursor-pointer" style="background-color: #0f172a !important; color: #ffffff !important;">
+                      <span class="text-white font-bold text-sm" style="color: #ffffff !important;">Continue as Guest &rarr;</span>
                     </button>
-                    <p class="text-[10px] font-medium leading-relaxed" style="color: var(--text-muted) !important;">Instant access to emergency resources. No registration required.</p>
+                    <p class="text-[11px] font-medium leading-relaxed" style="color: var(--text-muted) !important;">Instant access to emergency resources. No registration required.</p>
                 </div>
 
             </div>
@@ -320,6 +323,14 @@
         function triggerEmergencyCall() {
             openModal('call-overlay-modal');
         }
+
+        window.continueAsGuest = function() {
+            if (typeof loginAsGuest === 'function') {
+                loginAsGuest();
+            } else {
+                window.location.href = 'seeker-dashboard.html';
+            }
+        };
 
         function updateLandingRoleCards() {
             const role = getRole();
