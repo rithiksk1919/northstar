@@ -807,8 +807,13 @@
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    // Real-time live auto-updating markers & places as user pans or zooms map
+    // Do not rebuild every marker while NorthStar is programmatically
+    // focusing a resource. Rebuilding markers destroys an open popup.
     map.on('moveend zoomend', () => {
+      if (window.northstarProgrammaticMapFocus) {
+        return;
+      }
+
       updateVisiblePlaces();
     });
 
@@ -1005,7 +1010,20 @@
   function isPlaceOpenNow(place, targetDate = new Date()) {
     if (!place) return false;
 
-    // 1. Explicit 24/7 locations (e.g. The Sophia Way - Helen's Place)
+    // 1. Explicit closed flag (Google Places / Supabase / cached state)
+    if (place.open_status === 'CLOSED_FOR_REST_OF_TODAY' || place.open_status === 'CLOSED') {
+      return false;
+    }
+
+    // 2. Explicit status text indicating Closed (e.g. "Closed · Opens 9:00 AM Mon", "Closed • Holiday")
+    if (typeof place.status === 'string') {
+      const s = place.status.trim().toLowerCase();
+      if (s.startsWith('closed') || s.includes('• closed') || s.includes('closed •') || s.includes('closed ·') || s.includes('closed.')) {
+        return false;
+      }
+    }
+
+    // 3. Explicit 24/7 locations (e.g. The Sophia Way - Helen's Place)
     if (place.is24Seven === true) return true;
 
     const currentDay = targetDate.getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
@@ -1014,38 +1032,44 @@
     const currentTotalMin = currentHours * 60 + currentMins;
     const currentTimeStr = `${String(currentHours).padStart(2, '0')}${String(currentMins).padStart(2, '0')}`;
 
-    // 2. Structured Google Places API opening_hours object (highest fidelity)
-    if (place.opening_hours && Array.isArray(place.opening_hours.periods) && place.opening_hours.periods.length > 0) {
-      const matchingPeriod = place.opening_hours.periods.find(p => {
-        if (!p.open) return false;
-        // 24/7 period: open on day 0 with time "0000" and no close
-        if (p.open.day === 0 && p.open.time === '0000' && !p.close) return true;
-        if (p.open.day !== currentDay) return false;
-        if (!p.close) return true;
-
-        const openTime = parseInt(p.open.time, 10);
-        const closeTime = parseInt(p.close.time, 10);
-        const currTimeNum = parseInt(currentTimeStr, 10);
-
-        if (closeTime >= openTime) {
-          return currTimeNum >= openTime && currTimeNum <= closeTime;
-        } else {
-          // Spans past midnight
-          return currTimeNum >= openTime || currTimeNum <= closeTime;
-        }
-      });
-
-      if (matchingPeriod) return true;
-      // If structured periods exist and none matched for the requested day/time, place is closed
-      return false;
-    }
-
-    // 3. Explicit closed days list (e.g. [0, 6] for weekends)
+    // 4. Explicit closed days list (e.g. [0, 6] for weekends)
     if (Array.isArray(place.daysClosed) && place.daysClosed.includes(currentDay)) {
       return false;
     }
 
-    // 4. Daily hours range (HH:mm - HH:mm)
+    // 5. Structured Google Places API opening_hours object (highest fidelity)
+    if (place.opening_hours) {
+      if (place.opening_hours.open_now === false && (!Array.isArray(place.opening_hours.periods) || place.opening_hours.periods.length === 0)) {
+        return false;
+      }
+
+      if (Array.isArray(place.opening_hours.periods) && place.opening_hours.periods.length > 0) {
+        const matchingPeriod = place.opening_hours.periods.find(p => {
+          if (!p.open) return false;
+          // 24/7 period: open on day 0 with time "0000" and no close
+          if (p.open.day === 0 && p.open.time === '0000' && !p.close) return true;
+          if (p.open.day !== currentDay) return false;
+          if (!p.close) return true;
+
+          const openTime = parseInt(p.open.time, 10);
+          const closeTime = parseInt(p.close.time, 10);
+          const currTimeNum = parseInt(currentTimeStr, 10);
+
+          if (closeTime >= openTime) {
+            return currTimeNum >= openTime && currTimeNum <= closeTime;
+          } else {
+            // Spans past midnight
+            return currTimeNum >= openTime || currTimeNum <= closeTime;
+          }
+        });
+
+        if (matchingPeriod) return true;
+        // If structured periods exist and none matched for the requested day/time, place is closed
+        return false;
+      }
+    }
+
+    // 6. Daily hours range (HH:mm - HH:mm)
     if (place.hoursOpen && place.hoursClose) {
       const [oH, oM] = place.hoursOpen.split(':').map(Number);
       const [cH, cM] = place.hoursClose.split(':').map(Number);
@@ -1054,16 +1078,15 @@
       return currentTotalMin >= openMin && currentTotalMin <= closeMin;
     }
 
-    // 5. Explicit Google Places / Supabase open_status flag
+    // 7. Explicit Google Places / Supabase open_status flag
     if (place.open_status === 'OPEN_NOW') return true;
-    if (place.open_status === 'CLOSED_FOR_REST_OF_TODAY') return false;
 
-    // 6. Fallback to status text
+    // 8. Fallback to status text
     if (typeof place.status === 'string') {
       const s = place.status.toLowerCase();
-      if (s.includes('open 24') || s.includes('24/7')) return true;
-      if (s.startsWith('closed') || s.includes('• closed') || s.includes('closed •')) return false;
-      if (s.startsWith('open') || s.includes('• open') || s.includes('open •')) return true;
+      if (s.includes('open 24') || s.includes('24/7') || s.startsWith('open') || s.includes('• open') || s.includes('open •') || s.includes('open ·')) {
+        return true;
+      }
     }
 
     return false;
@@ -1143,8 +1166,14 @@
       const marker = L.marker([res.lat, res.lng], { icon: customIcon }).addTo(map);
 
       const isOpen = isPlaceOpenNow(res);
-      const statusColor = isOpen ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold';
-      const statusDot = isOpen ? '<span class="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-1"></span>' : '<span class="inline-block w-2 h-2 rounded-full bg-rose-400 mr-1"></span>';
+
+      const statusColor = isOpen
+        ? 'text-emerald-400 font-bold'
+        : 'text-red-400 font-bold';
+
+      const statusDot = isOpen
+        ? '<span class="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-1"></span>'
+        : '<span class="inline-block w-2 h-2 rounded-full bg-red-400 mr-1"></span>';
 
       const popupContent = `
         <div class="space-y-1.5 text-slate-100 font-sans p-1">
@@ -1174,6 +1203,15 @@
       marker.bindPopup(popupContent);
       mapMarkers.push({ resId: res.id, marker: marker, data: res });
     });
+
+    // If chatbot/navigation supplied ?resource=<id>, wait until
+    // all markers exist, then focus and open that exact resource.
+    if (new URLSearchParams(window.location.search).get('resource')) {
+      setTimeout(() => {
+        focusResourceFromUrl();
+      }, 500);
+    }
+
   }
 
   function openAddResourceModal() {
@@ -1335,7 +1373,7 @@
       const isOpen = isPlaceOpenNow(res);
       const statusBadge = isOpen 
         ? `<span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>${res.status}</span>`
-        : `<span class="inline-flex items-center gap-1 text-[10px] font-bold text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>${res.status}</span>`;
+        : `<span class="inline-flex items-center gap-1 text-[10px] font-bold text-red-600"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>${res.status}</span>`;
 
       const isSaved = isPlaceSaved(res.id);
       const saveBtnClass = isSaved 
@@ -1384,15 +1422,112 @@
     }).join('');
   }
 
-  function selectAndFocusPlace(resId, lat, lng) {
-    if (!map) return;
-    map.flyTo([lat, lng], 16, { animate: true, duration: 0.8 });
-    const targetMarker = mapMarkers.find(m => m.resId === resId);
-    if (targetMarker && targetMarker.marker) {
-      setTimeout(() => {
-        targetMarker.marker.openPopup();
-      }, 500);
+
+  function focusResourceFromUrl() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const resourceId = params.get('resource');
+
+      if (!resourceId || !map) return false;
+
+      const resources = getResourcesData();
+      const resource = resources.find(
+        r => String(r.id) === String(resourceId)
+      );
+
+      if (!resource) return false;
+
+      const refCoords = getActiveReferenceCoords();
+      const distanceMiles = calculateDistanceMiles(
+        refCoords.lat,
+        refCoords.lng,
+        resource.lat,
+        resource.lng
+      );
+
+      // Expand only enough to make this resource eligible/visible.
+      // This happens once when arriving from the chatbot.
+      if (Number.isFinite(distanceMiles) && distanceMiles > activeRadiusMiles) {
+        if (distanceMiles <= 10) {
+          activeRadiusMiles = 10;
+        } else if (distanceMiles <= 25) {
+          activeRadiusMiles = 25;
+        } else {
+          activeRadiusMiles = Math.ceil(distanceMiles + 1);
+        }
+
+        if (typeof updateVisiblePlaces === 'function') {
+          updateVisiblePlaces();
+        }
+      }
+
+      const targetMarker = mapMarkers.find(
+        m => String(m.resId) === String(resourceId)
+      );
+
+      if (!targetMarker || !targetMarker.marker) {
+        return false;
+      }
+
+      selectAndFocusPlace(
+        resource.id,
+        resource.lat,
+        resource.lng,
+        true
+      );
+
+      // IMPORTANT:
+      // Remove the query parameter after the one-time deep-link focus.
+      // This stops future radius/filter updates from re-focusing the resource.
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete('resource');
+      window.history.replaceState({}, '', cleanUrl.pathname + cleanUrl.search);
+
+      return true;
+
+    } catch (err) {
+      console.warn('[NorthStar Map] Deep-link focus failed:', err);
+      return false;
     }
+  }
+
+  window.focusResourceFromUrl = focusResourceFromUrl;
+
+  function selectAndFocusPlace(resId, lat, lng, autoOpenPopup = false) {
+    if (!map) return;
+
+    window.northstarSelectedMapResourceId = String(resId);
+
+    // Prevent moveend/zoomend from rebuilding all markers while
+    // this one-time chatbot/map focus is happening.
+    window.northstarProgrammaticMapFocus = true;
+
+    map.flyTo([lat, lng], 16, {
+      animate: true,
+      duration: 0.8
+    });
+
+    setTimeout(() => {
+      const targetMarker = mapMarkers.find(
+        m => String(m.resId) === String(resId)
+      );
+
+      if (targetMarker && targetMarker.marker && autoOpenPopup) {
+        const popup = targetMarker.marker.getPopup?.();
+
+        if (popup) {
+          popup.options.autoClose = false;
+          popup.options.closeOnClick = false;
+          popup.options.autoPan = false;
+        }
+
+        targetMarker.marker.openPopup();
+      }
+
+      // The one-time View on Map focus is now finished.
+      window.northstarProgrammaticMapFocus = false;
+    }, 1000);
+
     toggleBottomDrawer(false);
   }
 

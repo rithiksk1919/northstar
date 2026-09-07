@@ -76,6 +76,11 @@
             },
         }
     </script>
+    <style>
+        /* Hide scrollbar on the main canvas */
+        .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
 </head>
 
 <body class="bg-[#0F1117] min-h-screen flex items-center justify-center p-0 sm:py-6 text-slate-100 selection:bg-amber-500/30 selection:text-amber-300">
@@ -88,74 +93,86 @@
     </div>
 
     <!-- Mobile Frame Shell -->
-    <div
-        class="app-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-[#0F1117] sm:rounded-[44px] shadow-[0_0_70px_rgba(0,0,0,0.85)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800/80 z-10">
-
-
+    <div class="app-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-[#0F1117] sm:rounded-[44px] shadow-[0_0_70px_rgba(0,0,0,0.85)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800/80 z-10">
 
         <!-- App Header -->
-        <header
-            class="bg-[#0F1117]/80 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center w-full px-6 pt-5 pb-3 border-b border-white/10">
+        <header class="bg-[#0F1117]/90 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center w-full px-5 pt-5 pb-3 border-b border-white/10">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-amber-400/10 border border-amber-400/30 flex items-center justify-center">
-                    <span class="material-symbols-outlined text-amber-400 text-xl">timeline</span>
+                <div class="w-9 h-9 rounded-xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center flex-shrink-0">
+                    <span class="material-symbols-outlined text-amber-400 text-lg">timeline</span>
                 </div>
                 <div>
-                    <h1 class="text-2xl font-extrabold text-white tracking-tight leading-tight">Progress</h1>
-                    <p class="text-sm font-semibold text-slate-400">Every step forward matters.</p>
+                    <h1 class="text-xl font-extrabold text-white tracking-tight leading-tight font-heading">Progress</h1>
+                    <p class="text-xs font-medium text-slate-400" style="color:#475569;">Every step forward matters.</p>
                 </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="toggleTheme()" class="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-slate-300 text-sm transition-all active:scale-95 cursor-pointer" title="Toggle Theme">
+                    <span class="material-symbols-outlined text-base">brightness_4</span>
+                </button>
             </div>
         </header>
 
-        <!-- Main Content Canvas -->
-        <main class="flex-grow p-4 sm:p-5 space-y-5 overflow-y-auto"
-            style="padding-bottom: 100px; -webkit-overflow-scrolling: touch;">
+        <!-- Main Scrollable Canvas -->
+        <main class="flex-grow px-4 pt-4 overflow-y-auto no-scrollbar space-y-3" style="padding-bottom: 90px; -webkit-overflow-scrolling: touch;">
 
-            <!-- Progress Summary Header Card -->
-            <div class="backdrop-blur-md bg-white/[0.04] rounded-2xl p-5 text-white space-y-3 shadow-lg shadow-black/30 border border-white/10 relative overflow-hidden">
-                <div class="flex justify-between items-start">
+            <!-- Journey Summary Card -->
+            <div class="bg-white/[0.04] border border-white/10 rounded-[18px] p-4 space-y-3">
+                <div class="flex items-center justify-between">
                     <div>
-                        <h2 class="text-base font-extrabold text-white">Your NorthStar Journey</h2>
-                        <p class="text-sm text-amber-400 font-bold mt-1" id="journey-progress-text">0 of 5 milestones completed
-                        </p>
+                        <h2 class="text-sm font-extrabold text-white font-heading" style="color:#f1f5f9;">Your NorthStar Journey</h2>
+                        <p class="text-xs font-medium mt-0.5" id="journey-progress-text" style="color:#facc15;">0 of 5 milestones completed</p>
                     </div>
+                    <span id="journey-pct-badge" class="text-xs font-extrabold px-2.5 py-1 rounded-full bg-amber-400/15 text-amber-400 border border-amber-400/30">0%</span>
                 </div>
 
-                <div class="flex items-center justify-between mt-4 relative">
-                    <div class="absolute left-0 top-1/2 w-full h-0.5 bg-white/10 -z-10 -translate-y-1/2"></div>
-                    <!-- Dynamic Stepper Nodes injected by JS -->
-                    <div id="stepper-nodes" class="flex justify-between w-full"></div>
+                <!-- Progress Bar -->
+                <div class="w-full bg-white/10 rounded-full h-2 overflow-hidden">
+                    <div id="journey-progress-bar" class="bg-amber-400 h-full rounded-full transition-all duration-500" style="width:0%"></div>
+                </div>
+
+                <!-- Stepper Nodes -->
+                <div class="relative flex items-center justify-between pt-1">
+                    <div class="absolute left-0 top-1/2 w-full h-px bg-white/10 -translate-y-1/2 z-0"></div>
+                    <div id="stepper-nodes" class="flex justify-between w-full relative z-10"></div>
                 </div>
             </div>
 
-            <!-- Sequential Journey List injected by JS -->
-            <section class="space-y-0 relative" id="journey-list-container"></section>
+            <!-- "Your Next Step" Hero Callout (rendered by JS, hidden initially) -->
+            <div id="next-step-callout" class="hidden bg-[#FFE855] rounded-[18px] p-4 flex items-center justify-between gap-3">
+                <div class="flex-1 min-w-0">
+                    <p class="text-[10px] font-extrabold text-slate-700 uppercase tracking-wider mb-0.5">YOUR NEXT STEP</p>
+                    <p id="next-step-label" class="text-sm font-extrabold text-slate-900 leading-tight font-heading">Find a Resource</p>
+                </div>
+                <a id="next-step-btn" href="resource-map.html" class="flex-shrink-0 px-3.5 py-2 bg-slate-950 text-white rounded-[12px] text-xs font-extrabold active:scale-95 transition-all shadow-sm flex items-center gap-1">
+                    Go <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                </a>
+            </div>
+
+            <!-- Journey Milestone List (injected by JS) -->
+            <section class="space-y-2" id="journey-list-container"></section>
 
             <!-- Account Footer -->
-            <div class="pt-2 pb-2 text-center">
-                <p id="progress-account-label" class="text-[11px] text-slate-400 font-medium"></p>
+            <div class="pt-1 pb-2 text-center">
+                <p id="progress-account-label" class="text-[11px] text-slate-500 font-medium"></p>
                 <button onclick="localStorage.removeItem('northstar_session'); window.location.href='index.html';"
-                    class="mt-1 text-[11px] text-amber-400/80 hover:text-amber-300 underline underline-offset-2 transition-colors">Switch
-                    Account</button>
+                    class="mt-1 text-[11px] text-amber-400/80 hover:text-amber-300 underline underline-offset-2 transition-colors">Switch Account</button>
             </div>
 
         </main>
 
         <!-- Floating Dock Bottom Navigation Bar -->
-        <nav
-            class="absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-3 py-2.5 bg-[#12141C]/80 backdrop-blur-xl shadow-[0px_-4px_25px_rgba(0,0,0,0.5)] border-t border-white/10">
+        <nav class="absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-3 py-2.5 bg-[#12141C]/80 backdrop-blur-xl shadow-[0px_-4px_25px_rgba(0,0,0,0.5)] border-t border-white/10">
             <!-- Dynamically rendered by northstar.js -->
         </nav>
 
         <!-- Milestone Details Drawer/Modal -->
         <div id="milestone-modal" class="absolute inset-0 z-[100] hidden flex-col justify-end">
-            <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onclick="closeModal('milestone-modal')">
-            </div>
-            <div
-                class="modal-drawer bg-[#12141C] border border-white/10 w-full rounded-t-3xl p-6 transform translate-y-full transition-transform duration-300 ease-in-out relative flex flex-col max-h-[85vh] text-white shadow-2xl">
+            <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onclick="closeModal('milestone-modal')"></div>
+            <div class="modal-drawer bg-[#12141C] border border-white/10 w-full rounded-t-3xl p-6 transform translate-y-full transition-transform duration-300 ease-in-out relative flex flex-col max-h-[85vh] text-white shadow-2xl">
                 <div class="w-12 h-1.5 bg-slate-700 rounded-full mx-auto mb-5"></div>
-                <h2 id="modal-title" class="text-xl font-extrabold text-white mb-2">Milestone Details</h2>
-                <p id="modal-desc" class="text-sm text-slate-300 mb-6">Details will appear here.</p>
+                <h2 id="modal-title" class="text-lg font-extrabold text-white mb-2 font-heading">Milestone Details</h2>
+                <p id="modal-desc" class="text-sm text-slate-300 mb-6 leading-relaxed">Details will appear here.</p>
                 <div id="modal-actions" class="mt-auto pt-4 flex flex-col gap-3">
                     <!-- Dynamic Actions -->
                 </div>

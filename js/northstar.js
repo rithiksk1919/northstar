@@ -1625,12 +1625,16 @@ function updateChatbotSuggestionChips() {
   } else {
     if (roleTag) roleTag.innerText = 'Seeker Navigator • Daily Resources';
     container.innerHTML = `
+      <button type="button" onclick="sendQuickChatMessage('Find the best job for me based on my resume.')" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">💼 Best Jobs for Me</button>
       <button type="button" onclick="sendQuickChatMessage('Where can I find $20/hr cash gigs?')" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">💰 Cash Gigs</button>
       <button type="button" onclick="sendQuickChatMessage('Where is the nearest shelter?')" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">🏠 Shelters</button>
       <button type="button" onclick="sendQuickChatMessage('How do I make an AI resume?')" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">📄 AI Resume</button>
     `;
   }
 }
+
+// Canonical in-memory history array for NorthStar AI chatbot
+window.northstarChatHistory = window.northstarChatHistory || [];
 
 function sendQuickChatMessage(msg) {
   const input = document.getElementById('chatbot-input-field');
@@ -1640,6 +1644,338 @@ function sendQuickChatMessage(msg) {
   }
 }
 
+// Helper to safely render user bubble without raw innerHTML
+function appendUserMessageBubble(text) {
+  const messagesList = document.getElementById('chatbot-messages-list');
+  if (!messagesList) return;
+
+  const userBubble = document.createElement('div');
+  userBubble.className = 'flex justify-end chat-msg-outgoing';
+
+  const innerDiv = document.createElement('div');
+  innerDiv.className = 'bg-slate-900 text-white p-3 rounded-2xl rounded-tr-none max-w-[85%] font-medium leading-relaxed shadow-sm';
+  innerDiv.textContent = text;
+
+  userBubble.appendChild(innerDiv);
+  messagesList.appendChild(userBubble);
+  messagesList.scrollTop = messagesList.scrollHeight;
+}
+
+// Helper to safely render assistant/error bubble without interpreting text as HTML
+function appendAssistantMessageBubble(text, isError = false, action = null) {
+  const messagesList = document.getElementById('chatbot-messages-list');
+  if (!messagesList) return;
+
+  const botBubble = document.createElement('div');
+  botBubble.className = 'flex gap-2 chat-msg-incoming';
+
+  const avatar = document.createElement('div');
+  avatar.className = `w-7 h-7 rounded-lg ${isError ? 'bg-red-100 text-red-600' : 'bg-[#FFE855] text-slate-950'} flex items-center justify-center flex-shrink-0 font-bold`;
+
+  const icon = document.createElement('span');
+  icon.className = 'material-symbols-outlined text-sm';
+  icon.textContent = isError ? 'error_outline' : 'smart_toy';
+  avatar.appendChild(icon);
+
+  const bubbleWrapper = document.createElement('div');
+  bubbleWrapper.className = 'flex flex-col gap-2 max-w-[85%]';
+
+  const contentDiv = document.createElement('div');
+  contentDiv.className = `p-3 rounded-2xl rounded-tl-none border shadow-sm leading-relaxed ${
+    isError 
+      ? 'bg-red-50/80 border-red-200 text-red-700' 
+      : 'bg-white border-slate-200/80 text-slate-800'
+  }`;
+  contentDiv.textContent = text;
+  bubbleWrapper.appendChild(contentDiv);
+
+  // Render navigation action button if explicitly provided by backend or deterministic resource lookup
+  if (action && action.type === 'navigate') {
+    if (action.destination === 'jobs') {
+      const actionBtn = document.createElement('button');
+      actionBtn.type = 'button';
+      actionBtn.className = 'self-start inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-850 active:scale-95 text-[#FFE855] text-xs font-bold shadow-sm transition-all border border-slate-800 cursor-pointer';
+      actionBtn.textContent = (action.label ? `${action.label} →` : 'View Jobs →');
+      actionBtn.onclick = (e) => {
+        e.preventDefault();
+        if (typeof toggleAIChatbotWindow === 'function') {
+          toggleAIChatbotWindow();
+        }
+        if (typeof navigateToPageInstant === 'function') {
+          navigateToPageInstant('opportunities.html');
+        } else {
+          window.location.href = 'opportunities.html';
+        }
+      };
+      bubbleWrapper.appendChild(actionBtn);
+    } else if (action.destination === 'map' && action.resourceId) {
+      const mapBtn = document.createElement('button');
+      mapBtn.type = 'button';
+      mapBtn.className = 'self-start inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-850 active:scale-95 text-[#10B981] text-xs font-bold shadow-sm transition-all border border-slate-800 cursor-pointer';
+      mapBtn.textContent = (action.label ? `${action.label} →` : 'View on Map →');
+      mapBtn.onclick = (e) => {
+        e.preventDefault();
+        if (typeof toggleAIChatbotWindow === 'function') {
+          toggleAIChatbotWindow();
+        }
+        const targetUrl = `resource-map.html?resource=${encodeURIComponent(action.resourceId)}`;
+        if (typeof navigateToPageInstant === 'function') {
+          navigateToPageInstant(targetUrl);
+        } else {
+          window.location.href = targetUrl;
+        }
+      };
+      bubbleWrapper.appendChild(mapBtn);
+    }
+  }
+
+  botBubble.appendChild(avatar);
+  botBubble.appendChild(bubbleWrapper);
+  messagesList.appendChild(botBubble);
+  messagesList.scrollTop = messagesList.scrollHeight;
+}
+
+function removeTypingIndicator() {
+  const existingTyping = document.getElementById('chatbot-typing-bubble');
+  if (existingTyping) {
+    existingTyping.classList.add('typing-bubble-exit');
+    setTimeout(() => existingTyping.remove(), 160);
+  }
+}
+
+
+// ============================================================
+// NORTHSTAR AI VERIFIED APP CONTEXT
+// ============================================================
+
+
+function calculateNorthStarDistanceMiles(lat1, lon1, lat2, lon2) {
+  if (
+    lat1 === undefined || lon1 === undefined ||
+    lat2 === undefined || lon2 === undefined
+  ) return null;
+
+  const R = 3958.8;
+  const toRad = deg => (deg * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const dist = R * c;
+
+  return Number.isFinite(dist) ? dist : null;
+}
+
+function getNorthStarCachedResources() {
+  try {
+    const raw = localStorage.getItem('cached_resources_v2_live_hours');
+    if (!raw) return [];
+
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (err) {
+    console.warn('[NorthStar AI] Could not read map resources:', err);
+    return [];
+  }
+}
+
+async function getNorthStarLocationResourceContext(message) {
+  const lower = String(message || '').toLowerCase();
+
+  const asksNearby =
+    lower.includes('nearest') ||
+    lower.includes('closest') ||
+    lower.includes('near me') ||
+    lower.includes('nearby');
+
+  const asksShelter =
+    lower.includes('shelter') ||
+    lower.includes('bed') ||
+    lower.includes('place to stay') ||
+    lower.includes('sleep');
+
+  const asksFood =
+    lower.includes('food') ||
+    lower.includes('meal') ||
+    lower.includes('pantry') ||
+    lower.includes('eat');
+
+  const asksHygiene =
+    lower.includes('shower') ||
+    lower.includes('restroom') ||
+    lower.includes('bathroom') ||
+    lower.includes('hygiene');
+
+  if (!asksNearby || (!asksShelter && !asksFood && !asksHygiene)) {
+    return null;
+  }
+
+  const resources = getNorthStarCachedResources();
+
+  if (!resources.length) {
+    return {
+      resource_lookup_requested: true,
+      resource_lookup_status: 'no_cached_resources'
+    };
+  }
+
+  let category = null;
+
+  if (asksShelter) category = 'shelter';
+  else if (asksFood) category = 'food';
+  else if (asksHygiene) category = 'restroom';
+
+  return await new Promise(resolve => {
+    if (!navigator.geolocation) {
+      resolve({
+        resource_lookup_requested: true,
+        category,
+        resource_lookup_status: 'geolocation_unavailable'
+      });
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        const userLat = position.coords.latitude;
+        const userLng = position.coords.longitude;
+
+        const matching = resources
+          .filter(resource =>
+            resource &&
+            resource.category === category &&
+            typeof resource.lat === 'number' &&
+            typeof resource.lng === 'number'
+          )
+          .map(resource => ({
+            resource,
+            distance_miles: calculateNorthStarDistanceMiles(
+              userLat,
+              userLng,
+              resource.lat,
+              resource.lng
+            )
+          }))
+          .filter(item => item.distance_miles !== null)
+          .sort((a, b) => a.distance_miles - b.distance_miles);
+
+        if (!matching.length) {
+          resolve({
+            resource_lookup_requested: true,
+            category,
+            resource_lookup_status: 'no_matching_resources'
+          });
+          return;
+        }
+
+        const nearest = matching[0];
+
+        const resolvedResource = {
+          resource_lookup_requested: true,
+          resource_lookup_status: 'success',
+          user_location: {
+            lat: userLat,
+            lng: userLng
+          },
+          nearest_resource: {
+            id: nearest.resource.id || '',
+            name: nearest.resource.name || '',
+            category: nearest.resource.category || '',
+            address: nearest.resource.address || '',
+            status: nearest.resource.status || '',
+            statusDetail: nearest.resource.statusDetail || '',
+            details: nearest.resource.details || '',
+            verifiedOnly: nearest.resource.verifiedOnly === true,
+            lat: nearest.resource.lat,
+            lng: nearest.resource.lng,
+            distance_miles: Number(nearest.distance_miles.toFixed(2))
+          }
+        };
+
+        window.northstarLastVerifiedResource = resolvedResource.nearest_resource;
+
+        resolve(resolvedResource);
+      },
+      error => {
+        resolve({
+          resource_lookup_requested: true,
+          category,
+          resource_lookup_status:
+            error && error.code === 1
+              ? 'location_permission_denied'
+              : 'location_lookup_failed'
+        });
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 300000
+      }
+    );
+  });
+}
+
+function getNorthStarChatContext() {
+  let resumeData = null;
+
+  // 1. Prefer the newest resume generated during this browser session.
+  if (
+    window.currentGeneratedResumeData &&
+    typeof window.currentGeneratedResumeData === 'object'
+  ) {
+    resumeData = window.currentGeneratedResumeData;
+  }
+
+  // 2. For logged-in users, use the resume saved in their NorthStar profile.
+  if (!resumeData && typeof getUserData === 'function') {
+    try {
+      const userData = getUserData();
+
+      if (
+        userData &&
+        userData.resumeData &&
+        typeof userData.resumeData === 'object'
+      ) {
+        resumeData = userData.resumeData;
+      }
+    } catch (err) {
+      console.warn('[NorthStar AI] Could not read saved user resume:', err);
+    }
+  }
+
+  // 3. SPA / guest fallback: resume-builder stores the latest generated
+  // structured resume here.
+  if (!resumeData) {
+    try {
+      const rawResume = localStorage.getItem('northstar_latest_resume_data');
+
+      if (rawResume) {
+        const parsedResume = JSON.parse(rawResume);
+
+        if (parsedResume && typeof parsedResume === 'object') {
+          resumeData = parsedResume;
+        }
+      }
+    } catch (err) {
+      console.warn('[NorthStar AI] Could not read latest resume context:', err);
+    }
+  }
+
+  const context = {};
+
+  if (resumeData) {
+    context.resume = resumeData;
+    context.resume_source = 'northstar_saved_resume';
+  }
+
+  return context;
+}
+
 async function handleAIChatSubmit(e) {
   if (e) e.preventDefault();
   const input = document.getElementById('chatbot-input-field');
@@ -1647,23 +1983,21 @@ async function handleAIChatSubmit(e) {
   const sendBtn = document.getElementById('chatbot-send-btn');
   if (!input || !messagesList) return;
 
+  // Prevent multiple simultaneous requests
+  if (window._chatPending) return;
+
   const text = input.value.trim();
   if (!text) return;
 
   input.value = '';
 
-  // Append user bubble (Slide in from right)
-  const userBubble = document.createElement('div');
-  userBubble.className = 'flex justify-end chat-msg-outgoing';
-  userBubble.innerHTML = `
-    <div class="bg-slate-900 text-white p-3 rounded-2xl rounded-tr-none max-w-[85%] font-medium leading-relaxed shadow-sm">
-      ${text}
-    </div>
-  `;
-  messagesList.appendChild(userBubble);
-  messagesList.scrollTop = messagesList.scrollHeight;
+  // 1. Capture the CURRENT history snapshot BEFORE adding the new user message
+  const previousHistory = (window.northstarChatHistory || []).slice(-10);
 
-  // Append typing bubble with staggered wave dots
+  // 2. Safely append user bubble to UI
+  appendUserMessageBubble(text);
+
+  // 3. Append typing bubble with staggered wave dots
   const typingBubble = document.createElement('div');
   typingBubble.id = 'chatbot-typing-bubble';
   typingBubble.className = 'flex gap-2 chat-msg-incoming';
@@ -1680,64 +2014,123 @@ async function handleAIChatSubmit(e) {
   messagesList.appendChild(typingBubble);
   messagesList.scrollTop = messagesList.scrollHeight;
 
+  // Set pending state & disable send button
+  window._chatPending = true;
   if (sendBtn) sendBtn.disabled = true;
 
   const rawRole = (typeof getRole === 'function') ? getRole() : (localStorage.getItem('northstar_user_role') || 'seeker');
   const isHelperRole = (rawRole === 'volunteer' || rawRole === 'donater' || rawRole === 'helper' || rawRole === 'employer');
   const currentRole = isHelperRole ? 'volunteer' : 'seeker';
 
+  // Gather verified NorthStar app data for this chat request.
+  // This currently includes the user's saved/generated resume when available.
+  const northstarContext = getNorthStarChatContext();
+
+  // Add verified location/resource context only when the user's
+  // question actually requires nearby map data.
+  const resourceContext = await getNorthStarLocationResourceContext(text);
+
+  if (resourceContext) {
+    northstarContext.resource_lookup = resourceContext;
+  } else {
+    const lowerText = String(text || '').toLowerCase();
+
+    const refersToPreviousResource =
+      lowerText.includes('that shelter') ||
+      lowerText.includes('that place') ||
+      lowerText.includes('that resource') ||
+      lowerText.includes('is it open') ||
+      lowerText.includes('does it have') ||
+      lowerText.includes('what about that');
+
+    if (
+      refersToPreviousResource &&
+      window.northstarLastVerifiedResource
+    ) {
+      northstarContext.resource_lookup = {
+        resource_lookup_requested: true,
+        resource_lookup_status: 'success',
+        follow_up_reference: true,
+        nearest_resource: window.northstarLastVerifiedResource
+      };
+    }
+  }
+
+  console.log('[NorthStar AI] Verified app context:', northstarContext);
+
   try {
+    // 4. Send request with message, role, history, and verified app context
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: text, role: currentRole })
+      body: JSON.stringify({
+        message: text,
+        role: currentRole,
+        history: previousHistory,
+        context: northstarContext
+      })
     });
+
+    // 5. After sending request, record the user turn into canonical history
+    window.northstarChatHistory.push({
+      role: 'user',
+      content: text
+    });
+    if (window.northstarChatHistory.length > 10) {
+      window.northstarChatHistory = window.northstarChatHistory.slice(-10);
+    }
+
     const data = await res.json();
 
-    const existingTyping = document.getElementById('chatbot-typing-bubble');
-    if (existingTyping) {
-      existingTyping.classList.add('typing-bubble-exit');
-      setTimeout(() => existingTyping.remove(), 160);
-    }
+    removeTypingIndicator();
 
-    // Bot Response Bubble (Fade in + Slide up)
-    setTimeout(() => {
-      const botBubble = document.createElement('div');
-      botBubble.className = 'flex gap-2 chat-msg-incoming';
-      botBubble.innerHTML = `
-        <div class="w-7 h-7 rounded-lg bg-[#FFE855] text-slate-950 flex items-center justify-center flex-shrink-0 font-bold">
-          <span class="material-symbols-outlined text-sm">smart_toy</span>
-        </div>
-        <div class="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-200/80 text-slate-800 shadow-sm leading-relaxed">
-          ${data.reply || "I'm NorthStar AI Assistant. How can I help you today?"}
-        </div>
-      `;
-      messagesList.appendChild(botBubble);
-      messagesList.scrollTop = messagesList.scrollHeight;
-    }, 120);
+    // 6. Only display an AI reply when res.ok, data.success, and data.reply exist
+    if (res.ok && data && data.success && typeof data.reply === 'string' && data.reply.trim()) {
+      // Record assistant reply into canonical history
+      window.northstarChatHistory.push({
+        role: 'assistant',
+        content: data.reply
+      });
+      if (window.northstarChatHistory.length > 10) {
+        window.northstarChatHistory = window.northstarChatHistory.slice(-10);
+      }
+
+      // Determine navigation action: backend data.action takes priority,
+      // followed deterministically by verified nearest resource lookup if available
+      let chatAction = data.action || null;
+      if (!chatAction &&
+          northstarContext &&
+          northstarContext.resource_lookup &&
+          northstarContext.resource_lookup.resource_lookup_status === 'success' &&
+          northstarContext.resource_lookup.nearest_resource &&
+          northstarContext.resource_lookup.nearest_resource.id) {
+        chatAction = {
+          type: 'navigate',
+          destination: 'map',
+          resourceId: northstarContext.resource_lookup.nearest_resource.id,
+          label: 'View on Map'
+        };
+      }
+
+      setTimeout(() => {
+        appendAssistantMessageBubble(data.reply, false, chatAction);
+      }, 120);
+    } else {
+      // API error or unsuccessful response
+      setTimeout(() => {
+        appendAssistantMessageBubble("NorthStar AI is temporarily unavailable. Please try again.", true);
+      }, 120);
+    }
   } catch (err) {
     console.error('Chat error:', err);
-    const existingTyping = document.getElementById('chatbot-typing-bubble');
-    if (existingTyping) {
-      existingTyping.classList.add('typing-bubble-exit');
-      setTimeout(() => existingTyping.remove(), 160);
-    }
+    removeTypingIndicator();
 
+    // Show error message bubble without fake fallback data
     setTimeout(() => {
-      const errBubble = document.createElement('div');
-      errBubble.className = 'flex gap-2 chat-msg-incoming';
-      errBubble.innerHTML = `
-        <div class="w-7 h-7 rounded-lg bg-[#FFE855] text-slate-950 flex items-center justify-center flex-shrink-0 font-bold">
-          <span class="material-symbols-outlined text-sm">smart_toy</span>
-        </div>
-        <div class="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-200/80 text-slate-800 shadow-sm leading-relaxed">
-          I can help you navigate shelters, daily $20/hr cash gigs, food pantries, and resume building!
-        </div>
-      `;
-      messagesList.appendChild(errBubble);
-      messagesList.scrollTop = messagesList.scrollHeight;
+      appendAssistantMessageBubble("NorthStar AI is temporarily unavailable. Please try again.", true);
     }, 120);
   } finally {
+    window._chatPending = false;
     if (sendBtn) sendBtn.disabled = false;
   }
 }

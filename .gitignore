@@ -12,3 +12,61 @@ npm-debug.log*
 .opencode/
 .claude/
 .gemini/
+
+# NorthStar AI local environment
+northstar-ai/.venv/
+northstar-ai/**/__pycache__/
+northstar-ai/**/*.pyc
+
+# Downloaded/base models
+northstar-ai/models/
+
+# macOS
+.DS_Store
+
+# Local backup files
+*.before-*.js
+*.before-*.html
+server.before-*.js
+resource-map.before-*.html
+js/*.before-*.js
+
+# ==============================
+# NorthStar AI
+# ==============================
+
+# Local Python environment / caches
+northstar-ai/.venv/
+northstar-ai/**/__pycache__/
+northstar-ai/**/*.pyc
+
+# Downloaded model files
+northstar-ai/models/
+
+# Training datasets / evaluations
+northstar-ai/data/
+
+# Training checkpoints - ignore all by default
+northstar-ai/adapters/*
+
+# Keep only production V5 checkpoint
+!northstar-ai/adapters/northstar-v5-2900/
+!northstar-ai/adapters/northstar-v5-2900/adapter_config.json
+!northstar-ai/adapters/northstar-v5-2900/adapters.safetensors
+
+# Old packaged releases
+northstar-ai/releases/
+
+# AI backup scripts
+northstar-ai/scripts/*.before-*.py
+
+# macOS
+.DS_Store
+
+# NorthStar AI training/build utilities not needed at runtime
+northstar-ai/scripts/build_*.py
+northstar-ai/scripts/combine_northstar_phases.py
+northstar-ai/scripts/run_phase*.py
+
+# Nested AI gitignore not needed in monorepo
+northstar-ai/.gitignore
