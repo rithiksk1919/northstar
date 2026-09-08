@@ -348,7 +348,54 @@ app.post('/api/generate-resume', async (req, res) => {
 
   try {
     const confirmed = req.body;
+    const northstarAiUrl = process.env.NORTHSTAR_AI_URL;
 
+    // ── Remote HTTP path ──────────────────────────────────────────────────
+    if (northstarAiUrl) {
+      console.log(`🌐 [Resume] Forwarding to remote AI service: ${northstarAiUrl}/resume`);
+
+      const controller = new AbortController();
+      const resumeTimeout = setTimeout(() => controller.abort(), 360000); // 360 s
+
+      let aiResponse;
+      try {
+        aiResponse = await fetch(`${northstarAiUrl}/resume`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(confirmed),
+          signal: controller.signal
+        });
+      } catch (fetchErr) {
+        clearTimeout(resumeTimeout);
+        if (fetchErr.name === 'AbortError') {
+          return res.status(504).json({
+            success: false,
+            error: 'NorthStar AI took too long to respond. Please try again.'
+          });
+        }
+        throw fetchErr;
+      }
+      clearTimeout(resumeTimeout);
+
+      const result = await aiResponse.json();
+
+      if (!result.success) {
+        return res.status(422).json({
+          success: false,
+          error: 'The generated resume did not pass factuality validation.',
+          validation: result.validation
+        });
+      }
+
+      return res.json({
+        success: true,
+        resume: result.resume,
+        repairs: result.repairs,
+        validation: result.validation
+      });
+    }
+
+    // ── Local Python spawn fallback ────────────────────────────────────────
     const pythonPath = NORTHSTAR_AI_PYTHON;
     const pipelinePath = NORTHSTAR_RESUME_PIPELINE;
 
@@ -787,6 +834,71 @@ app.post('/api/chat', async (req, res) => {
       );
     }
 
+    const chatPayload = {
+      message: message.trim(),
+      role: userRole,
+      context: Object.keys(verifiedContext).length ? verifiedContext : null,
+      history: Array.isArray(history) ? history.slice(-10) : []
+    };
+
+    const northstarAiUrl = process.env.NORTHSTAR_AI_URL;
+
+    // ── Remote HTTP path ──────────────────────────────────────────────────
+    if (northstarAiUrl) {
+      console.log(`🌐 [NorthStar V5 Chat] Forwarding to remote AI service: ${northstarAiUrl}/chat`);
+
+      const controller = new AbortController();
+      const chatTimeout = setTimeout(() => controller.abort(), 180000); // 180 s
+
+      let aiResponse;
+      try {
+        aiResponse = await fetch(`${northstarAiUrl}/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(chatPayload),
+          signal: controller.signal
+        });
+      } catch (fetchErr) {
+        clearTimeout(chatTimeout);
+        if (fetchErr.name === 'AbortError') {
+          return res.status(504).json({
+            success: false,
+            error: 'NorthStar AI took too long to respond.'
+          });
+        }
+        throw fetchErr;
+      }
+      clearTimeout(chatTimeout);
+
+      const result = await aiResponse.json();
+
+      if (!result.success || !result.reply) {
+        return res.status(500).json({
+          success: false,
+          error: result.error || 'NorthStar AI returned no response.'
+        });
+      }
+
+      console.log('✅ [NorthStar V5 Chat] Response generated (remote)');
+
+      const responsePayload = {
+        success: true,
+        reply: result.reply,
+        mode: result.mode || 'northstar_v5'
+      };
+
+      if (needsJobContext) {
+        responsePayload.action = {
+          type: 'navigate',
+          destination: 'jobs',
+          label: 'View Jobs'
+        };
+      }
+
+      return res.json(responsePayload);
+    }
+
+    // ── Local Python spawn fallback ────────────────────────────────────────
     const pythonPath = NORTHSTAR_AI_PYTHON;
     const chatScript = NORTHSTAR_CHAT_SCRIPT;
 
@@ -896,13 +1008,7 @@ app.post('/api/chat', async (req, res) => {
       }
     });
 
-    child.stdin.write(JSON.stringify({
-      message: message.trim(),
-      role: userRole,
-      context: Object.keys(verifiedContext).length ? verifiedContext : null,
-      history: Array.isArray(history) ? history.slice(-10) : []
-    }));
-
+    child.stdin.write(JSON.stringify(chatPayload));
     child.stdin.end();
 
   } catch (err) {
