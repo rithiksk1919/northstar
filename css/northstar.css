@@ -955,4 +955,533 @@ html.light nav a.bg-amber-400\/15 {
   transform: rotate(90deg);
 }
 
+/* Job Opportunity Card Styles */
+.job-card {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.job-text-column {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.job-text-column > * {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.job-title-container {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.job-title {
+  white-space: normal !important;
+  overflow: visible !important;
+  hyphens: none !important;
+  -webkit-hyphens: none !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  height: auto !important;
+  max-height: none !important;
+  line-height: 1.25 !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.job-tags-container, .tag-group {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  align-items: center !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  border-left: none !important;
+  width: 100% !important;
+}
+
+.header-subtitle,
+.job-description,
+.card-description {
+  color: #475569 !important;
+}
+
+html.dark .header-subtitle,
+html.dark .job-description,
+html.dark .card-description {
+  color: #d1d5db !important;
+}
+
+.job-description {
+  white-space: normal !important;
+  overflow: visible !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  hyphens: none !important;
+  -webkit-hyphens: none !important;
+  height: auto !important;
+  max-height: none !important;
+  -webkit-line-clamp: unset !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.job-tag, .tag-pill {
+  background-color: #f1f5f9 !important;
+  border-radius: 9999px !important;
+  color: #1e293b !important;
+  font-weight: 500 !important;
+  font-size: 0.75rem !important;
+  line-height: 1rem !important;
+  padding: 0.15rem 0.625rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  border: 1px solid #cbd5e1 !important;
+  white-space: nowrap !important;
+  margin-left: 0 !important;
+}
+
+html.dark .job-tag,
+html.dark .tag-pill {
+  background-color: #334155 !important;
+  color: #f8fafc !important;
+  font-weight: 500 !important;
+  border: 1px solid #475569 !important;
+}
+
+/* Header Container: Expanded Top Internal Padding */
+.header-container {
+  padding-top: 28px;
+  padding-bottom: 20px;
+}
+
+.header-container,
+.app-header,
+.header-bar,
+header,
+.app-frame > header {
+  padding: 20px 16px !important;
+  padding-top: 28px !important;
+  padding-top: max(28px, env(safe-area-inset-top)) !important;
+  padding-bottom: 20px !important;
+  box-sizing: border-box !important;
+}
+
+/* Header Content Row: Shift Downward & Strict Horizontal Flex Alignment */
+.header-content-row {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-content-row,
+.header-flex-wrapper {
+  margin-top: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+}
+
+.header-left {
+  display: flex !important;
+  align-items: center !important;
+  min-width: 0 !important;
+  flex-shrink: 0 !important;
+}
+
+.header-left > div:first-child {
+  flex-shrink: 0 !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+}
+
+.header-title-group {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  justify-content: center !important;
+}
+
+.header-center {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.header-actions-right {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  flex-shrink: 0 !important;
+}
+
+#active-jobs-count,
+.status-badge,
+.active-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+  line-height: 1 !important;
+}
+
+.user-avatar,
+#header-user-avatar,
+.header-account-avatar {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+.audio-primer-btn,
+.btn-secondary {
+  background: #f8fafc !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #1e293b !important;
+  font-weight: 700 !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.audio-primer-btn:hover,
+.btn-secondary:hover {
+  background: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+}
+
+html.dark .audio-primer-btn,
+html.dark .btn-secondary {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  color: #f8fafc !important;
+}
+
+html.dark .audio-primer-btn:hover,
+html.dark .btn-secondary:hover {
+  background: #283548 !important;
+  border-color: #475569 !important;
+}
+
+.card-divider {
+  border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+  margin: 0.75rem 0 0 0 !important;
+  padding-top: 0.75rem !important;
+}
+
+.pay-rate-badge {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 10px;
+}
+
+.apply-cta-btn {
+  background: #facc15 !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.apply-cta-btn:hover {
+  filter: brightness(1.05);
+}
+
+.apply-cta-btn:active {
+  transform: scale(0.97);
+}
+
+/* AI Matcher Banner */
+.ai-match-trigger {
+  background: #fefce8 !important;
+  border: 1px solid #fef08a !important;
+  border-radius: 12px !important;
+  padding: 12px 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  width: 100% !important;
+  text-align: left !important;
+}
+
+.ai-match-trigger:hover {
+  background: #fef9c3 !important;
+  border-color: #fde047 !important;
+}
+
+.ai-match-trigger:active {
+  transform: scale(0.99) !important;
+}
+
+.ai-match-title {
+  color: #0f172a !important;
+}
+
+.ai-match-subtext {
+  color: #64748b !important;
+}
+
+html.dark .ai-match-trigger {
+  background: #1e293b !important;
+  border: 1px solid rgba(250, 204, 21, 0.3) !important;
+}
+
+html.dark .ai-match-trigger:hover {
+  border-color: rgba(250, 204, 21, 0.6) !important;
+  background: #243248 !important;
+}
+
+html.dark .ai-match-title {
+  color: #ffffff !important;
+}
+
+html.dark .ai-match-subtext {
+  color: #94a3b8 !important;
+}
+
+/* Layout Scroll Padding */
+.main-content {
+  padding-bottom: 24px;
+}
+
+main,
+.main-content {
+  padding-bottom: 24px !important;
+  scroll-padding-bottom: 24px !important;
+}
+
+#opportunities-feed,
+#jobs-feed {
+  padding-bottom: 80px !important;
+  margin-bottom: 24px !important;
+}
+
+/* ==========================================================================
+   DYNAMIC DEVICE THEME DETECTION (prefers-color-scheme) & LOGIN STYLING
+   ========================================================================== */
+
+/* Light Mode Defaults */
+:root {
+  --auth-bg: #f8fafc;
+  --auth-card-bg: #ffffff;
+  --auth-card-border: #e2e8f0;
+  --auth-input-bg: #ffffff;
+  --auth-input-border: #e2e8f0;
+  --auth-input-text: #1e293b;
+  --auth-input-placeholder: #94a3b8;
+  --auth-text-primary: #0f172a;
+  --auth-text-secondary: #64748b;
+  --auth-cta-bg: #facc15;
+  --auth-cta-text: #0f172a;
+}
+
+/* Base Light Mode Auth Rules */
+body.auth-page-body,
+.auth-page,
+#auth-gateway-view {
+  background-color: #f8fafc;
+  color: #0f172a;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.auth-card {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+
+.auth-input,
+#auth-email,
+#auth-password {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.auth-input::placeholder,
+#auth-email::placeholder,
+#auth-password::placeholder {
+  color: #94a3b8;
+}
+
+.auth-cta-btn,
+#auth-submit-btn {
+  background-color: #facc15 !important;
+  color: #0f172a !important;
+}
+
+/* Dark Mode: Dynamic Device Theme Detection via OS Settings */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --auth-bg: #0f172a;
+    --auth-card-bg: #1e293b;
+    --auth-card-border: #334155;
+    --auth-input-bg: #0f172a;
+    --auth-input-border: #334155;
+    --auth-input-text: #f8fafc;
+    --auth-input-placeholder: #64748b;
+    --auth-text-primary: #f8fafc;
+    --auth-text-secondary: #94a3b8;
+    --auth-cta-bg: #facc15;
+    --auth-cta-text: #0f172a;
+  }
+
+  body.auth-page-body:not(.light),
+  .auth-page:not(.light),
+  #auth-gateway-view:not(.light) {
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
+  }
+
+  .auth-card:not(.light) {
+    background-color: #1e293b !important;
+    border: 1px solid #334155 !important;
+    color: #f8fafc !important;
+  }
+
+  .auth-input:not(.light),
+  #auth-email:not(.light),
+  #auth-password:not(.light) {
+    background-color: #0f172a !important;
+    border: 1px solid #334155 !important;
+    color: #f8fafc !important;
+  }
+
+  .auth-input:not(.light)::placeholder,
+  #auth-email:not(.light)::placeholder,
+  #auth-password:not(.light)::placeholder {
+    color: #64748b !important;
+  }
+
+  .auth-title:not(.light) {
+    color: #f8fafc !important;
+  }
+
+  .auth-subtitle:not(.light) {
+    color: #94a3b8 !important;
+  }
+}
+
+/* Explicit class-based dark mode override */
+html.dark body.auth-page-body,
+html.dark .auth-page,
+html.dark #auth-gateway-view {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+html.dark .auth-card {
+  background-color: #1e293b !important;
+  border: 1px solid #334155 !important;
+  color: #f8fafc !important;
+}
+
+html.dark .auth-input,
+html.dark #auth-email,
+html.dark #auth-password {
+  background-color: #0f172a !important;
+  border: 1px solid #334155 !important;
+  color: #f8fafc !important;
+}
+
+html.dark .auth-input::placeholder,
+html.dark #auth-email::placeholder,
+html.dark #auth-password::placeholder {
+  color: #64748b !important;
+}
+
+html.dark .auth-title {
+  color: #f8fafc !important;
+}
+
+html.dark .auth-subtitle {
+  color: #94a3b8 !important;
+}
+
+/* Validation failure red border */
+.auth-input.input-error,
+#auth-email.input-error,
+#auth-password.input-error,
+.auth-input[aria-invalid="true"],
+#auth-email[aria-invalid="true"],
+#auth-password[aria-invalid="true"] {
+  border-color: #ef4444 !important;
+}
+
+/* Red Outline Notification Card */
+#auth-error-message,
+.auth-error-message {
+  border: 1px solid #ef4444 !important;
+  background-color: rgba(239, 68, 68, 0.1) !important;
+  color: #f87171 !important;
+  border-radius: 0.75rem !important;
+  padding: 10px 14px !important;
+  font-size: 0.8125rem !important;
+  line-height: 1.25rem !important;
+  font-weight: 600 !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+  box-sizing: border-box !important;
+}
+
+#auth-error-message.hidden,
+.auth-error-message.hidden {
+  display: none !important;
+}
+
+/* Dashboard Container & Full Page Scroll Polish */
+.dashboard-container {
+  overflow-y: auto !important;
+  height: 100% !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Interactive Focus & Hover Outline (Yellow Accent) */
+button:hover,
+button:focus-visible,
+.action-card:hover,
+.action-card:focus-visible,
+a.action-card:hover,
+a.action-card:focus-visible {
+  outline: 2px solid #facc15 !important;
+  outline-offset: 2px !important;
+}
+
+/* Floating Chatbot FAB Widget Repositioning */
+#northstar-chatbot-widget {
+  bottom: 80px !important;
+  right: 16px !important;
+  z-index: 50 !important;
+}
+
+/* Standardized Subtext Contrast */
+.text-subtext,
+.subtext {
+  color: #475569 !important;
+}
+
+html.dark .text-subtext,
+html.dark .subtext {
+  color: #94a3b8 !important;
+}
+
+/* Bottom Navigation Bar Items */
+.bottom-nav-item,
+nav.bottom-nav a,
+nav.bottom-nav button {
+  min-height: 48px !important;
+  min-width: 48px !important;
+}
 

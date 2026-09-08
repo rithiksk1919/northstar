@@ -73,38 +73,359 @@
         },
       }
 </script>
+<style>
+/* Job Opportunity Card Styles */
+.job-card {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.job-text-column {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.job-text-column > * {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.job-title-container {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.job-title {
+  white-space: normal !important;
+  overflow: visible !important;
+  hyphens: none !important;
+  -webkit-hyphens: none !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  height: auto !important;
+  max-height: none !important;
+  line-height: 1.25 !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.job-tags-container, .tag-group {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  align-items: center !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  border-left: none !important;
+  width: 100% !important;
+}
+
+.header-subtitle,
+.job-description,
+.card-description {
+  color: #475569 !important;
+}
+
+html.dark .header-subtitle,
+html.dark .job-description,
+html.dark .card-description {
+  color: #d1d5db !important;
+}
+
+.job-description {
+  white-space: normal !important;
+  overflow: visible !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  hyphens: none !important;
+  -webkit-hyphens: none !important;
+  height: auto !important;
+  max-height: none !important;
+  -webkit-line-clamp: unset !important;
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+.job-tag, .tag-pill {
+  background-color: #f1f5f9 !important;
+  border-radius: 9999px !important;
+  color: #1e293b !important;
+  font-weight: 500 !important;
+  font-size: 0.75rem !important;
+  line-height: 1rem !important;
+  padding: 0.15rem 0.625rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  border: 1px solid #cbd5e1 !important;
+  white-space: nowrap !important;
+  margin-left: 0 !important;
+}
+
+html.dark .job-tag,
+html.dark .tag-pill {
+  background-color: #334155 !important;
+  color: #f8fafc !important;
+  font-weight: 500 !important;
+  border: 1px solid #475569 !important;
+}
+
+/* Header Container: Expanded Top Internal Padding */
+.header-container {
+  padding-top: 28px;
+  padding-bottom: 20px;
+}
+
+.header-container,
+.app-header,
+.header-bar,
+header,
+.app-frame > header {
+  padding: 20px 16px !important;
+  padding-top: 28px !important;
+  padding-top: max(28px, env(safe-area-inset-top)) !important;
+  padding-bottom: 20px !important;
+  box-sizing: border-box !important;
+}
+
+/* Header Content Row: Shift Downward & Strict Horizontal Flex Alignment */
+.header-content-row {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-content-row,
+.header-flex-wrapper {
+  margin-top: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+}
+
+.header-left {
+  display: flex !important;
+  align-items: center !important;
+  min-width: 0 !important;
+  flex-shrink: 0 !important;
+}
+
+.header-left > div:first-child {
+  flex-shrink: 0 !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+}
+
+.header-title-group {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 4px !important;
+  justify-content: center !important;
+}
+
+.header-center {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.header-actions-right {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  flex-shrink: 0 !important;
+}
+
+#active-jobs-count,
+.status-badge,
+.active-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+  line-height: 1 !important;
+}
+
+.user-avatar,
+#header-user-avatar,
+.header-account-avatar {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+.audio-primer-btn,
+.btn-secondary {
+  background: #f8fafc !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #1e293b !important;
+  font-weight: 700 !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.audio-primer-btn:hover,
+.btn-secondary:hover {
+  background: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
+}
+
+html.dark .audio-primer-btn,
+html.dark .btn-secondary {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+  color: #f8fafc !important;
+}
+
+html.dark .audio-primer-btn:hover,
+html.dark .btn-secondary:hover {
+  background: #283548 !important;
+  border-color: #475569 !important;
+}
+
+.card-divider {
+  border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+  margin: 0.75rem 0 0 0 !important;
+  padding-top: 0.75rem !important;
+}
+
+.pay-rate-badge {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 10px;
+}
+
+.apply-cta-btn {
+  background: #facc15 !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.apply-cta-btn:hover {
+  filter: brightness(1.05);
+}
+
+.apply-cta-btn:active {
+  transform: scale(0.97);
+}
+
+/* AI Matcher Banner */
+.ai-match-trigger {
+  background: #fefce8 !important;
+  border: 1px solid #fef08a !important;
+  border-radius: 12px !important;
+  padding: 12px 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  width: 100% !important;
+  text-align: left !important;
+}
+
+.ai-match-trigger:hover {
+  background: #fef9c3 !important;
+  border-color: #fde047 !important;
+}
+
+.ai-match-trigger:active {
+  transform: scale(0.99) !important;
+}
+
+.ai-match-title {
+  color: #0f172a !important;
+}
+
+.ai-match-subtext {
+  color: #64748b !important;
+}
+
+html.dark .ai-match-trigger {
+  background: #1e293b !important;
+  border: 1px solid rgba(250, 204, 21, 0.3) !important;
+}
+
+html.dark .ai-match-trigger:hover {
+  border-color: rgba(250, 204, 21, 0.6) !important;
+  background: #243248 !important;
+}
+
+html.dark .ai-match-title {
+  color: #ffffff !important;
+}
+
+html.dark .ai-match-subtext {
+  color: #94a3b8 !important;
+}
+
+/* Layout Scroll Padding */
+.main-content {
+  padding-bottom: 24px;
+}
+
+main,
+.main-content {
+  padding-bottom: 24px !important;
+  scroll-padding-bottom: 24px !important;
+}
+
+#opportunities-feed,
+#jobs-feed {
+  padding-bottom: 80px !important;
+  margin-bottom: 24px !important;
+}
+</style>
 </head>
-<<body class="bg-[#F4F5F7] min-h-screen flex items-center justify-center p-0 sm:py-6 text-slate-900 selection:bg-amber-300 selection:text-slate-950">
+<body class="bg-[#F4F5F7] min-h-screen flex items-center justify-center p-0 sm:py-6 text-slate-900 selection:bg-amber-300 selection:text-slate-950">
 
 <!-- Mobile Frame Shell -->
 <div class="app-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-[#F4F5F7] sm:rounded-[44px] shadow-2xl relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-300 z-10">
 
-    <!-- App Header (Matching Seeker Dashboard Header) -->
-    <header class="bg-white sticky top-0 z-40 flex justify-between items-center w-full px-5 pt-5 pb-3 border-b border-slate-200">
-        <div class="flex items-center gap-2.5">
-            <a href="seeker-dashboard.html" class="w-9 h-9 rounded-[12px] bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 text-sm font-bold active:scale-95 transition-all">
-                <span class="material-symbols-outlined text-xl">arrow_back</span>
-            </a>
-            <div>
-                <h1 class="text-xl font-extrabold text-slate-900 font-heading tracking-tight">Work Opportunities</h1>
+    <!-- App Header (Matching Progress Page Format) -->
+    <header class="header-container app-header header-bar bg-white sticky top-0 z-40 w-full border-b border-slate-200" style="padding: 20px 16px; padding-top: 28px; padding-top: max(28px, env(safe-area-inset-top, 28px)); padding-bottom: 20px; box-sizing: border-box;">
+      <div class="header-content-row header-flex-wrapper flex items-center justify-between w-full" style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; width: 100%;">
+        <!-- Title & Subtitle Stack -->
+        <div class="header-left flex items-center gap-2.5 min-w-0 flex-shrink-0">
+            <div class="w-9 h-9 rounded-[12px] bg-amber-400/15 border border-amber-400/35 flex items-center justify-center flex-shrink-0 shadow-sm" style="width: 36px; height: 36px; min-width: 36px; min-height: 36px; background: rgba(250, 204, 21, 0.15); border: 1px solid rgba(250, 204, 21, 0.35); border-radius: 12px; flex-shrink: 0;">
+                <span class="material-symbols-outlined text-lg" style="color: #facc15; font-size: 1.25rem;">work</span>
+            </div>
+            <div class="header-title-group min-w-0 flex flex-col justify-center" style="display: flex; flex-direction: column; gap: 4px;">
+                <h1 class="text-[1.15rem] font-extrabold text-[#0f172a] tracking-tight leading-tight whitespace-nowrap font-heading" style="font-size: 1.15rem; font-weight: 800; color: #0f172a; white-space: nowrap; line-height: 1.2; margin: 0;">Work Opportunities</h1>
+                <p class="header-subtitle text-[0.72rem] font-medium leading-tight" style="font-size: 0.72rem; line-height: 1.2; margin: 0;">Vetted daily gigs &amp; local work</p>
             </div>
         </div>
-        <div class="flex items-center gap-2">
-            <span id="jobs-count-badge" class="bg-slate-100 text-slate-700 border border-slate-200 px-2.5 py-1 rounded-[10px] text-xs font-bold">Active</span>
-            <button id="scan-live-feed-btn" onclick="triggerLiveFeedScan()" class="w-9 h-9 rounded-[12px] bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 text-sm font-bold active:scale-95 transition-all" title="Refresh Feed">
-                <span id="scan-btn-icon" class="material-symbols-outlined text-base">sync</span>
-            </button>
-            <button onclick="toggleTheme()" class="w-9 h-9 rounded-[12px] bg-slate-100 border border-slate-200 flex items-center justify-center text-amber-600 text-sm font-bold transition-all active:scale-95 cursor-pointer" title="Toggle Light / Dark Mode">
-                <span class="material-symbols-outlined text-base">brightness_4</span>
-            </button>
+
+        <!-- Center: Active Counter Pill (Centered between Title Stack and Avatar) -->
+        <div class="header-center flex-1 flex items-center justify-center px-2 sm:px-3 min-w-0">
+            <span id="active-jobs-count" class="status-badge active-badge bg-slate-100 text-slate-700 border border-slate-200 px-2.5 py-1 rounded-[10px] text-xs font-bold whitespace-nowrap shadow-sm text-center flex items-center justify-center" style="line-height: 1;">11 Active</span>
+        </div>
+
+        <!-- Right: Actions & Profile Avatar -->
+        <div class="header-actions-right flex items-center justify-end gap-1.5 sm:gap-2 flex-shrink-0">
             <button id="post-job-header-btn" onclick="openModal('post-job-modal')" class="hidden bg-[#FFE855] hover:bg-amber-300 text-slate-950 font-extrabold text-xs px-3 py-1.5 rounded-[12px] active:scale-95 transition-all flex items-center gap-1 shadow-sm">
                 <span class="material-symbols-outlined text-sm">add</span> Post
             </button>
+            <button id="header-user-avatar" type="button" onclick="openSettingsModal()" class="user-avatar header-account-avatar flex items-center justify-center flex-shrink-0 transition-transform active:scale-95 cursor-pointer select-none" title="Signed in as Seeker - Tap for Settings">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-400 to-amber-500 text-slate-950 font-black text-xs flex items-center justify-center shadow-[0_0_12px_rgba(245,158,11,0.4)] border border-amber-300 hover:brightness-110 transition-all" style="width: 32px; height: 32px; min-width: 32px; min-height: 32px; flex-shrink: 0;">
+                    S
+                </div>
+            </button>
         </div>
+      </div>
     </header>
 
     <!-- Main Content Canvas -->
-    <main class="flex-grow p-4 space-y-4 overflow-y-auto pb-28 bg-[#F4F5F7]">
+    <main class="main-content flex-grow p-4 space-y-4 overflow-y-auto bg-[#F4F5F7]" style="padding-bottom: 24px; scroll-padding-bottom: 24px;">
         
         <!-- Post Job Banner (Visible to Volunteers/Employers only) -->
         <div id="post-job-volunteer-banner" class="hidden bg-white border border-slate-200/80 rounded-[20px] p-4 text-slate-900 space-y-2 shadow-sm">
@@ -119,51 +440,17 @@
             </button>
         </div>
 
-        <!-- Push Alerts Toggle Banner -->
-        <div class="bg-white border border-slate-200/80 rounded-[20px] p-3.5 flex items-center justify-between gap-3 shadow-sm">
+        <!-- Sleek AI Match Trigger Button -->
+        <button id="ai-match-trigger" type="button" onclick="triggerAIMatchAssistant()" class="ai-match-trigger group w-full text-left">
             <div class="flex items-center gap-3 min-w-0">
-                <div class="w-10 h-10 rounded-[14px] bg-slate-100 border border-slate-200 text-slate-800 flex-shrink-0 flex items-center justify-center">
-                    <span class="material-symbols-outlined text-xl">notifications_active</span>
-                </div>
-                <div class="truncate">
-                    <h3 class="text-sm font-extrabold text-slate-900 font-heading leading-tight truncate">Instant Gig Alerts</h3>
-                    <p id="push-alert-status-text" class="text-xs text-slate-500 truncate">Notifications for no-ID cash gigs</p>
+                <span class="text-amber-500 text-lg flex-shrink-0 select-none">✨</span>
+                <div class="min-w-0">
+                    <div class="ai-match-title text-xs sm:text-sm font-bold leading-snug tracking-tight">Find your perfect job match</div>
+                    <div class="ai-match-subtext text-[11px] font-medium leading-tight truncate">Tap to match gigs against your resume</div>
                 </div>
             </div>
-            <button id="push-alert-toggle-btn" onclick="togglePushNotifications()" class="bg-[#FFE855] hover:bg-amber-300 text-slate-950 font-extrabold text-xs px-3.5 py-2 rounded-[12px] active:scale-95 transition-all flex items-center gap-1 flex-shrink-0 shadow-sm">
-                <span class="material-symbols-outlined text-xs">notifications</span> Enable
-            </button>
-        </div>
-
-        <!-- Gemini AI Connector Box -->
-        <div class="bg-white border border-slate-200/80 rounded-[20px] p-3.5 flex items-center justify-between gap-3 shadow-sm">
-            <div class="flex items-center gap-3 min-w-0">
-                <div class="w-10 h-10 rounded-[14px] bg-amber-400/15 border border-amber-400/30 text-amber-700 flex-shrink-0 flex items-center justify-center">
-                    <span class="material-symbols-outlined text-xl">auto_awesome</span>
-                </div>
-                <div class="truncate">
-                    <h3 class="text-sm font-extrabold text-slate-900 font-heading leading-tight truncate">Gemini Skill Matcher</h3>
-                    <p class="text-xs text-slate-500 truncate">Match experience against open listings</p>
-                </div>
-            </div>
-            <button onclick="runAIMatchingEngine()" class="bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-900 text-xs font-bold py-2 px-3.5 rounded-[12px] flex-shrink-0 transition-all active:scale-[0.98] flex items-center gap-1">
-                <span class="material-symbols-outlined text-xs text-amber-600">auto_awesome</span> Match Jobs
-            </button>
-        </div>
-
-        <!-- Volunteer Food Delivery Pickups Queue Section -->
-        <section class="space-y-2 pt-1">
-            <div class="flex justify-between items-center px-1">
-                <h3 class="text-base font-extrabold text-slate-900 font-heading tracking-tight flex items-center gap-2">
-                    <span class="material-symbols-outlined text-lg text-amber-600">local_shipping</span> Food Delivery Pickups
-                </h3>
-                <span id="deliveries-count-badge" class="bg-slate-100 text-slate-700 border border-slate-200 px-2.5 py-0.5 rounded-[10px] text-xs font-bold">Queue</span>
-            </div>
-
-            <div id="food-deliveries-queue" class="space-y-3">
-                <!-- Dynamically populated via loadFoodDeliveriesQueue() -->
-            </div>
-        </section>
+            <span class="text-amber-500 font-bold text-base flex-shrink-0 ml-2 group-hover:translate-x-0.5 transition-transform select-none">→</span>
+        </button>
 
         <!-- Opportunities List Feed -->
         <section class="space-y-2.5 pt-1">
@@ -171,7 +458,7 @@
                 <h3 class="text-base font-extrabold text-slate-900 font-heading tracking-tight opacity-100">Vetted Daily Gigs & Job Listings</h3>
             </div>
 
-            <div id="opportunities-feed" class="space-y-3">
+            <div id="opportunities-feed" class="space-y-3 pb-8 mb-6" style="padding-bottom: 80px; margin-bottom: 24px;">
                 <!-- Loaded dynamically via JS -->
             </div>
         </section>
@@ -257,259 +544,8 @@
 </div>
 
 <script src="js/northstar.js"></script>
+<script src="js/jobs.js"></script>
 <script>
-window.loadOpportunities = async function loadOpportunities() {
-  const feed = document.getElementById('opportunities-feed');
-  if (!feed) return;
-
-  // Role Gate: Show Post Job UI only to Volunteers / Employers
-  const rawRole = (typeof getRole === 'function') ? getRole() : (localStorage.getItem('northstar_user_role') || 'seeker');
-  const isHelperRole = (rawRole === 'volunteer' || rawRole === 'donater' || rawRole === 'helper' || rawRole === 'employer');
-  const currentRole = isHelperRole ? 'volunteer' : 'seeker';
-  const session = (typeof getSession === 'function') ? getSession() : JSON.parse(localStorage.getItem('northstar_session') || '{}');
-  const userId = session.id || session.email || '';
-
-  const postBtn = document.getElementById('post-job-header-btn');
-  const postBanner = document.getElementById('post-job-volunteer-banner');
-
-  if (currentRole === 'volunteer') {
-    if (postBtn) { postBtn.classList.remove('hidden'); postBtn.classList.add('flex'); }
-    if (postBanner) { postBanner.classList.remove('hidden'); }
-  } else {
-    if (postBtn) { postBtn.classList.add('hidden'); postBtn.classList.remove('flex'); }
-    if (postBanner) { postBanner.classList.add('hidden'); }
-  }
-
-  try {
-    const jobsApiUrl = `/api/jobs?role=${currentRole}&userId=${encodeURIComponent(userId)}`;
-    const [gigsRes, jobsRes] = await Promise.all([
-      (currentRole === 'seeker') ? fetch('/api/gigs').then(r => r.json()).catch(() => ({ gigs: [] })) : Promise.resolve({ gigs: [] }),
-      fetch(jobsApiUrl).then(r => r.json()).catch(() => ({ jobs: [] }))
-    ]);
-
-    const deduplicate = (items) => {
-      const seen = new Set();
-      return items.filter(item => {
-        const key = `${item.title || item.rawTitle || ''}|${item.summary || item.description || ''}`.trim().toLowerCase();
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
-    };
-
-    const filterOutSurveys = (items) => {
-      return items.filter(item => {
-        const text = `${item.title || ''} ${item.rawTitle || ''} ${item.summary || ''} ${item.description || ''}`.toLowerCase();
-        return !/survey|study|panel|questionnaire/i.test(text);
-      });
-    };
-
-    const defaultSeedGigs = [
-      {
-        id: 'seed-1',
-        title: 'Capitol Hill Same-Day Pay Moving & Hauling',
-        pay: '$150 Cash',
-        summary: 'Assistance needed unloading a moving truck for 3 hours. Immediate cash in hand paid at completion.',
-        safety: 'No ID required casual labor. Cash paid daily.',
-        url: 'https://seattle.craigslist.org/search/lbg?query=same+day+pay'
-      },
-      {
-        id: 'seed-2',
-        title: 'Ballard Under-The-Table Cash Yard Helper',
-        pay: '$25.00 / hr Cash',
-        summary: 'Outdoor yard maintenance, leaf raking, and brush clearing in Ballard neighborhood.',
-        safety: 'Under the table cash gig requiring no onboarding paperwork.',
-        url: 'https://seattle.craigslist.org/search/lbg?query=cash'
-      },
-      {
-        id: 'seed-3',
-        title: 'SODO No-ID Casual Labor Freight Unloader',
-        pay: '$22.00 / hr Cash',
-        summary: 'Unloading commercial pallet boxes and organizing warehouse staging area.',
-        safety: 'Entry level immediate hire. Cash paid at end of shift.',
-        url: 'https://seattle.craigslist.org/search/lbg?query=casual+labor'
-      },
-      {
-        id: 'seed-4',
-        title: 'Rainier Valley Local Daily Gig Work',
-        pay: '$24.00 / hr Cash',
-        summary: 'Local daily gig work assisting with community center event equipment setup.',
-        safety: 'Cash in hand jobs near me. Drop-in daily labor.',
-        url: 'https://seattle.craigslist.org/search/lbg?query=daily+gig'
-      },
-      {
-        id: 'seed-5',
-        title: 'Pioneer Square Day Labor Drop-In Center Helper',
-        pay: '$20.00 / hr Cash',
-        summary: 'Assisting with food prep and inventory staging at local drop-in site.',
-        safety: 'Immediate walk-in entry level daily stipend.',
-        url: 'https://seattle.craigslist.org/search/lbg?query=day+labor'
-      },
-      {
-        id: 'seed-6',
-        title: 'Instant Payout Microtasks & Image Labeling',
-        pay: '$18.00 / hr Instant Cash',
-        summary: 'Digital microtasking and tagging data. Instant payout to digital wallet without ID verification.',
-        safety: 'Low-barrier digital work with instant payout microtasks.',
-        url: 'https://seattle.craigslist.org/search/lbg?query=microtask'
-      }
-    ];
-
-    let approvedGigs = filterOutSurveys(deduplicate(gigsRes.gigs || []));
-    if (approvedGigs.length === 0 && currentRole === 'seeker') {
-      approvedGigs = defaultSeedGigs;
-    }
-    const standardJobs = filterOutSurveys(deduplicate(jobsRes.jobs || []));
-
-    const totalCount = approvedGigs.length + standardJobs.length;
-    document.getElementById('jobs-count-badge').innerText = `${totalCount} Active`;
-
-    if (currentRole === 'volunteer' && standardJobs.length === 0) {
-      feed.innerHTML = `
-        <div class="backdrop-blur-md bg-white/[0.04] border border-white/10 p-8 rounded-2xl text-center space-y-3">
-          <span class="material-symbols-outlined text-4xl text-amber-400">post_add</span>
-          <h4 class="text-sm font-extrabold text-white">No Opportunities Posted Yet</h4>
-          <p class="text-xs text-slate-400 max-w-xs mx-auto">You haven't published any job or task listings. Use the "Post Opportunity" button above to publish work for community members.</p>
-          <button onclick="openModal('post-job-modal')" class="px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-bold text-xs rounded-xl shadow-md">
-            Post Your First Job
-          </button>
-        </div>
-      `;
-      return;
-    }
-
-    const extractPay = (text) => {
-      if (!text) return null;
-      const match = text.match(/\$[\d,]+(\.\d{2})?(\s*-\s*\$[\d,]+(\.\d{2})?)?(\s*\/\s*(hr|hour|h|gig|day|week))?/i);
-      return match ? match[0] : null;
-    };
-
-    const cleanJobTitle = (title) => {
-      if (!title) return '';
-      let cleaned = title.replace(/^-+|-+$/g, '').trim();
-      return cleaned;
-    };
-
-    const formatPay = (pay, title, desc) => {
-      let p = pay ? String(pay).trim() : '';
-      if (!p || p === '0' || p === '$0' || p === '$0.00' || p === '0.00' || p === 'Flexible Pay') {
-        const extracted = extractPay(`${title || ''} ${desc || ''}`);
-        return extracted || '$20.00/hr (Est)';
-      }
-      return p;
-    };
-
-    const getCategoryIcon = (titleStr) => {
-      const t = (titleStr || '').toLowerCase();
-      if (t.includes('move') || t.includes('haul') || t.includes('freight') || t.includes('unload')) return 'local_shipping';
-      if (t.includes('yard') || t.includes('rake') || t.includes('landscaping') || t.includes('outdoor')) return 'yard';
-      if (t.includes('prep') || t.includes('food') || t.includes('kitchen') || t.includes('cook') || t.includes('catering')) return 'restaurant';
-      if (t.includes('warehouse') || t.includes('box') || t.includes('inventory')) return 'inventory_2';
-      if (t.includes('clean') || t.includes('wash') || t.includes('housekeeping')) return 'cleaning_services';
-      if (t.includes('digital') || t.includes('task') || t.includes('data') || t.includes('micro')) return 'laptop_mac';
-      if (t.includes('event') || t.includes('setup') || t.includes('stage')) return 'event_seat';
-      return 'work';
-    };
-
-    feed.innerHTML = `
-      ${approvedGigs.map(g => {
-        const payFormatted = formatPay(g.pay || g.estPay, g.title || g.rawTitle, g.summary || g.description);
-        const iconName = getCategoryIcon(g.title || g.rawTitle);
-        const descriptionText = g.summary || g.description || 'Verified immediate payout daily labor gig in Seattle area.';
-
-        return `
-        <div class="bg-white p-4 rounded-[20px] border border-slate-200/80 shadow-[0_4px_16px_rgba(0,0,0,0.04)] space-y-3 relative overflow-hidden group">
-            <div class="flex items-start justify-between gap-3">
-                <div class="flex items-start gap-3 min-w-0">
-                    <div class="w-10 h-10 rounded-[14px] bg-slate-100 border border-slate-200/80 text-slate-800 flex items-center justify-center flex-shrink-0">
-                        <span class="material-symbols-outlined text-xl">${iconName}</span>
-                    </div>
-                    <div class="min-w-0">
-                        <h4 class="font-bold text-sm text-slate-900 leading-snug tracking-tight">${cleanJobTitle(g.title || g.rawTitle)}</h4>
-                        <p class="text-xs font-semibold text-slate-500 mt-0.5 flex items-center gap-1">
-                            <span>No ID Required</span>
-                            <span>•</span>
-                            <span class="text-slate-700">Immediate Cash</span>
-                        </p>
-                    </div>
-                </div>
-                <span class="px-2.5 py-1 bg-[#FFE855] text-slate-950 font-extrabold text-xs rounded-[10px] shadow-sm flex-shrink-0">
-                    ${payFormatted}
-                </span>
-            </div>
-
-            <p class="text-xs text-slate-600 leading-relaxed font-medium line-clamp-2">${descriptionText}</p>
-
-            <div class="flex items-center justify-between gap-2 pt-2.5 border-t border-slate-100">
-                <a href="${g.url || g.link || 'https://seattle.craigslist.org/search/lbg?query=cash'}" target="_blank" rel="noopener noreferrer" class="flex-1 py-2 bg-[#FFE855] hover:bg-amber-300 text-slate-950 font-extrabold rounded-[12px] text-xs text-center shadow-sm active:scale-95 transition-all flex items-center justify-center gap-1">
-                    <span class="material-symbols-outlined text-sm">open_in_new</span> Apply / View Details
-                </a>
-                <button onclick="playAudioPrepPrimer('${encodeURIComponent(g.title || g.rawTitle)}')" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-[12px] border border-slate-200 flex items-center gap-1 active:scale-95 transition-all flex-shrink-0">
-                    <span class="material-symbols-outlined text-sm text-amber-600">graphic_eq</span> Audio Primer
-                </button>
-            </div>
-        </div>
-      `;}).join('')}
-
-      ${standardJobs.map(j => {
-        const payFormatted = formatPay(j.pay, j.title, j.description);
-        const iconName = getCategoryIcon(j.title);
-
-        return `
-        <div class="bg-white p-4 rounded-[20px] border border-slate-200/80 shadow-[0_4px_16px_rgba(0,0,0,0.04)] space-y-3">
-            <div class="flex items-start justify-between gap-3">
-                <div class="flex items-start gap-3 min-w-0">
-                    <div class="w-10 h-10 rounded-[14px] bg-slate-100 border border-slate-200/80 text-slate-800 flex items-center justify-center flex-shrink-0">
-                        <span class="material-symbols-outlined text-xl">${iconName}</span>
-                    </div>
-                    <div class="min-w-0">
-                        <h4 class="font-bold text-sm text-slate-900 leading-snug tracking-tight">${cleanJobTitle(j.title)}</h4>
-                        <p class="text-xs font-semibold text-slate-500 mt-0.5">${j.company || 'Community Partner'} • ${j.location || 'Seattle, WA'}</p>
-                    </div>
-                </div>
-                <span class="px-2.5 py-1 bg-[#FFE855] text-slate-950 font-extrabold text-xs rounded-[10px] shadow-sm flex-shrink-0">
-                    ${payFormatted}
-                </span>
-            </div>
-
-            <p class="text-xs text-slate-600 leading-relaxed font-medium line-clamp-2">${j.description || 'Verified employment opportunity.'}</p>
-
-            ${(j.requirements || []).length > 0 ? `
-            <div class="flex flex-wrap gap-1 pt-0.5">
-                ${(j.requirements || []).map(r => `<span class="px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200/80 rounded-[8px] text-[10px] font-semibold">${r}</span>`).join('')}
-            </div>
-            ` : ''}
-
-            <div class="flex justify-between items-center pt-2.5 border-t border-slate-100 text-xs">
-                <span class="text-slate-500 text-xs font-medium truncate max-w-[140px]">${j.contact}</span>
-                ${currentRole === 'volunteer' ? `
-                  <div class="flex gap-1.5">
-                    <button onclick="editVolunteerJob('${j.id}')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-[10px] text-xs flex items-center gap-1 active:scale-95 transition-all">
-                      <span class="material-symbols-outlined text-sm">edit</span> Edit
-                    </button>
-                    <button onclick="deleteVolunteerJob('${j.id}')" class="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-[10px] text-xs flex items-center gap-1 active:scale-95 transition-all">
-                      <span class="material-symbols-outlined text-sm">delete</span> Delete
-                    </button>
-                  </div>
-                ` : `
-                  <div class="flex items-center gap-2">
-                    <button onclick="playAudioPrepPrimer('${encodeURIComponent(j.title)}')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-[10px] border border-slate-200 flex items-center gap-1 active:scale-95 transition-all flex-shrink-0">
-                        <span class="material-symbols-outlined text-sm text-amber-600">graphic_eq</span> Audio Primer
-                    </button>
-                    <button onclick="handleJobContactClick('${encodeURIComponent(j.contact)}')" class="px-3.5 py-1.5 bg-[#FFE855] hover:bg-amber-300 text-slate-950 font-extrabold rounded-[10px] text-xs active:scale-95 transition-all flex items-center gap-1 shadow-sm">
-                        <span class="material-symbols-outlined text-sm">open_in_new</span> Apply
-                    </button>
-                  </div>
-                `}
-            </div>
-        </div>
-      `;}).join('')}
-    `;
-  } catch (e) {
-    console.error('Error loading opportunities:', e);
-  }
-};
-
 window.deleteVolunteerJob = async function(id) {
   if (!confirm('Are you sure you want to delete this posted opportunity?')) return;
   try {
@@ -686,208 +722,8 @@ window.replayAudioSpeech = function(encodedTitle, encodedAdvice) {
   }
 };
 
-window.togglePushNotifications = async function() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    showNotification('Web Push notifications are not supported in this browser.', 'error');
-    return;
-  }
-
-  try {
-    const configRes = await fetch('/api/config');
-    const config = await configRes.json();
-    const publicVapidKey = config.vapidPublicKey;
-
-    if (!publicVapidKey) {
-      showNotification('VAPID public key is missing from server configuration.', 'error');
-      return;
-    }
-
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') {
-      showNotification('Push Notification permission was denied.', 'error');
-      return;
-    }
-
-    const registration = await navigator.serviceWorker.ready;
-    let subscription = await registration.pushManager.getSubscription();
-
-    if (!subscription) {
-      const urlBase64ToUint8Array = (base64String) => {
-        const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-        const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
-        const rawData = window.atob(base64);
-        const outputArray = new Uint8Array(rawData.length);
-        for (let i = 0; i < rawData.length; ++i) {
-          outputArray[i] = rawData.charCodeAt(i);
-        }
-        return outputArray;
-      };
-
-      subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicVapidKey)
-      });
-    }
-
-    await fetch('/api/subscribe', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(subscription)
-    });
-
-    const statusText = document.getElementById('push-alert-status-text');
-    const toggleBtn = document.getElementById('push-alert-toggle-btn');
-    if (statusText) statusText.innerText = '🔔 Real-time push notifications are ACTIVE!';
-    if (toggleBtn) {
-      toggleBtn.innerHTML = '<span class="material-symbols-outlined text-sm">notifications_active</span> Alerts Enabled';
-      toggleBtn.className = 'px-3.5 py-2 bg-emerald-400 text-slate-950 text-xs font-black rounded-xl shadow-md cursor-default';
-    }
-
-    showNotification('🔔 Web Push Notifications Enabled! You will be alerted when new low-barrier gigs are posted.', 'success');
-  } catch (err) {
-    console.error('Error registering push subscription:', err);
-    showNotification('Subscribed to job alert feed via local browser push endpoint.', 'info');
-  }
-};
-
-window.loadFoodDeliveriesQueue = async function() {
-  const container = document.getElementById('food-deliveries-queue');
-  if (!container) return;
-
-  try {
-    const res = await fetch('/api/deliveries');
-    const data = await res.json();
-    const deliveries = data.deliveries || [];
-
-    const badge = document.getElementById('deliveries-count-badge');
-    if (badge) badge.innerText = `${deliveries.length} Active`;
-
-    if (deliveries.length === 0) {
-      container.innerHTML = `
-        <div class="bg-[#121722] border border-[#232C3F] rounded-xl p-4 text-center text-xs text-slate-400 space-y-1">
-          <span class="material-symbols-outlined text-amber-400 text-lg">inbox</span>
-          <p class="font-semibold text-slate-300">No active food pickup requests right now.</p>
-          <p class="text-[11px] text-slate-500">Real donor requests submitted under <strong>Donate Food</strong> will appear here instantly for volunteer drivers.</p>
-        </div>
-      `;
-      return;
-    }
-
-    container.innerHTML = deliveries.map(d => {
-      const itemsList = Array.isArray(d.items) ? d.items.join(', ') : d.items;
-      const status = d.status || 'pending_driver';
-      
-      let statusBadgeHtml = '';
-      let actionBtnHtml = '';
-
-      if (status === 'pending_driver' || status === 'pending_volunteer') {
-        statusBadgeHtml = `<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-400/30">Needs Driver</span>`;
-        actionBtnHtml = `
-          <button onclick="claimDeliveryRoute('${d.id}')" class="py-1.5 px-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 rounded-lg text-xs font-bold active:scale-95 transition-all shadow-sm flex items-center gap-1 cursor-pointer">
-            <span class="material-symbols-outlined text-xs">volunteer_activism</span> Claim Delivery Route
-          </button>
-        `;
-      } else if (status === 'driver_assigned' || status === 'claimed') {
-        statusBadgeHtml = `<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">Driver Assigned</span>`;
-        actionBtnHtml = `
-          <button onclick="updateDeliveryStatus('${d.id}', 'in_transit')" class="py-1.5 px-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold active:scale-95 transition-all shadow-sm flex items-center gap-1 cursor-pointer">
-            <span class="material-symbols-outlined text-xs">directions_car</span> Start Route (In Transit)
-          </button>
-        `;
-      } else if (status === 'in_transit') {
-        statusBadgeHtml = `<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-amber-400 text-slate-950 font-black animate-pulse">En Route</span>`;
-        actionBtnHtml = `
-          <button onclick="updateDeliveryStatus('${d.id}', 'delivered')" class="py-1.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold active:scale-95 transition-all shadow-sm flex items-center gap-1 cursor-pointer">
-            <span class="material-symbols-outlined text-xs">check_circle</span> Mark as Delivered
-          </button>
-        `;
-      } else if (status === 'delivered') {
-        statusBadgeHtml = `<span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">Delivered 🎉</span>`;
-        actionBtnHtml = `
-          <span class="text-xs font-bold text-emerald-400 flex items-center gap-1">
-            <span class="material-symbols-outlined text-sm">verified</span> Drop-off Completed
-          </span>
-        `;
-      }
-
-      return `
-        <div class="bg-[#121722] border ${status === 'delivered' ? 'border-emerald-500/30 bg-emerald-950/10' : 'border-[#232C3F]'} rounded-xl p-3.5 space-y-2.5 shadow-sm transition-all hover:border-amber-400/50">
-          <div class="flex justify-between items-start gap-2">
-            <div class="flex items-center gap-2 min-w-0">
-              <div class="w-8 h-8 rounded-lg ${status === 'delivered' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'} flex items-center justify-center font-bold text-sm flex-shrink-0">
-                <span class="material-symbols-outlined text-base">${status === 'delivered' ? 'check_circle' : 'local_shipping'}</span>
-              </div>
-              <div class="min-w-0">
-                <h4 class="text-xs font-bold text-[#F0F4F8] leading-tight flex items-center gap-1.5 truncate">
-                  <span class="truncate">${itemsList}</span>
-                  <span class="text-[10px] text-amber-300 bg-amber-400/15 border border-amber-400/30 px-1.5 py-0.2 rounded font-extrabold flex-shrink-0">${d.bags || 1} Bag(s)</span>
-                </h4>
-                <p class="text-[11px] text-slate-400 font-medium truncate">Pickup: <strong class="text-slate-200">${d.donorArea}</strong> → Target: <strong class="text-amber-300">${d.destination}</strong></p>
-              </div>
-            </div>
-            <div class="flex-shrink-0">${statusBadgeHtml}</div>
-          </div>
-
-          <p class="text-[11px] text-slate-400 bg-slate-900/60 p-2 rounded-lg border border-white/5">
-            📝 <em>${d.contactNotes || 'Contact donor upon arrival'}</em>
-            ${d.driverName ? `<span class="block text-[10px] text-indigo-300 pt-0.5">👤 Driver: <strong>${d.driverName}</strong></span>` : ''}
-          </p>
-
-          <div class="flex justify-between items-center pt-0.5">
-            <span class="text-[10px] text-slate-500 font-medium">Real Donor Request</span>
-            <div>${actionBtnHtml}</div>
-          </div>
-        </div>
-      `;
-    }).join('');
-  } catch (err) {
-    console.error('Error loading food deliveries queue:', err);
-  }
-};
-
-window.claimDeliveryRoute = async function(id) {
-  try {
-    const res = await fetch(`/api/deliveries/${id}/claim`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ driverName: 'Volunteer Driver Sarah M.' })
-    });
-    const data = await res.json();
-    if (data.success) {
-      if (typeof showNotification === 'function') {
-        showNotification('🚚 Route claimed! Uber-style status updated to: Driver Assigned.', 'success');
-      }
-      window.loadFoodDeliveriesQueue();
-    }
-  } catch (err) {
-    console.error('Error claiming delivery:', err);
-  }
-};
-
-window.updateDeliveryStatus = async function(id, newStatus) {
-  try {
-    const res = await fetch(`/api/deliveries/${id}/status`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: newStatus })
-    });
-    const data = await res.json();
-    if (data.success) {
-      const msg = newStatus === 'in_transit' ? '🚗 Route started! Delivery marked as In Transit.' : '🎉 Delivery completed & dropped off at shelter!';
-      if (typeof showNotification === 'function') {
-        showNotification(msg, 'success');
-      }
-      window.loadFoodDeliveriesQueue();
-    }
-  } catch (err) {
-    console.error('Error updating delivery status:', err);
-  }
-};
-
-
 document.addEventListener('DOMContentLoaded', () => {
   window.loadOpportunities();
-  window.loadFoodDeliveriesQueue();
 });
 
 

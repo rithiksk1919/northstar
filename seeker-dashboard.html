@@ -97,17 +97,14 @@
             <h1 class="text-xl font-extrabold text-slate-900 font-heading tracking-tight">Northstar</h1>
         </div>
         <div class="header-actions-right flex items-center gap-2">
-            <button onclick="toggleTheme()" class="w-9 h-9 rounded-[12px] bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-amber-400 text-sm font-bold transition-all active:scale-95 cursor-pointer" title="Toggle Light / Dark Mode">
+            <button onclick="toggleTheme()" class="w-11 h-11 min-w-[44px] min-h-[44px] rounded-[12px] bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-amber-400 text-sm font-bold transition-all active:scale-95 cursor-pointer" title="Toggle Light / Dark Mode">
                 <span class="material-symbols-outlined text-base">brightness_4</span>
-            </button>
-            <button onclick="openSettingsModal()" class="w-9 h-9 rounded-[12px] bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 text-sm font-bold cursor-pointer" title="Settings">
-                👤
             </button>
         </div>
     </header>
 
     <!-- Main Scrollable Canvas (Unified 16px Vertical Rhythm & 20px Edge Padding) -->
-    <main class="flex-grow px-5 pt-4 pb-28 flex flex-col space-y-4 overflow-y-auto bg-[#F4F5F7]">
+    <main class="dashboard-container flex-grow px-5 pt-4 pb-32 flex flex-col space-y-4 overflow-y-auto bg-[#F4F5F7]">
 
         <!-- TOP YELLOW CTA BANNER (Single highest-priority yellow accent card) -->
         <div class="bg-[#FFE855] text-slate-950 p-4 rounded-[20px] flex items-center justify-between shadow-[0_8px_24px_rgba(0,0,0,0.06)] border border-amber-300">
@@ -115,7 +112,7 @@
                 <span class="material-symbols-outlined text-xl text-slate-950">wifi_off</span>
                 <span class="text-xs font-bold leading-tight">Download resources for offline use</span>
             </div>
-            <button onclick="showNotification('Offline resources package downloaded!', 'success')" class="px-3.5 py-1.5 bg-slate-950 text-white rounded-[12px] text-xs font-extrabold active:scale-95 transition-all shadow-sm">
+            <button onclick="showNotification('Offline resources package downloaded!', 'success')" class="px-4 py-2.5 min-h-[44px] min-w-[88px] bg-slate-950 text-white rounded-[12px] text-xs font-extrabold active:scale-95 transition-all shadow-sm flex items-center justify-center cursor-pointer">
                 Download
             </button>
         </div>
@@ -123,11 +120,11 @@
         <!-- Greeting Header -->
         <section class="space-y-1 pt-1.5 pb-0.5">
             <h2 id="dashboard-greeting" class="text-[1.85rem] leading-tight font-extrabold text-slate-900 font-heading tracking-tight">Good Morning</h2>
-            <p class="text-base font-semibold text-slate-600">Find what you need today.</p>
+            <p class="text-base font-semibold text-subtext">Find what you need today.</p>
         </section>
 
-        <!-- LIVE DATA MODULE 1: Live Map of Resources Card (Dark Glass Module Rule) -->
-        <a href="resource-map.html" class="block bg-[#0F141C] text-white rounded-[20px] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.15)] border border-slate-800 relative overflow-hidden group hover:border-[#FFE855]/60 transition-all">
+        <!-- LIVE DATA MODULE 1: Nearby Verified Essentials Card (Dark Glass Module Rule) -->
+        <a href="resource-map.html" class="action-card block bg-[#0F141C] text-white rounded-[20px] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.15)] border border-slate-800 relative overflow-hidden group hover:border-slate-700 transition-all">
             <!-- Background Mini Map Preview -->
             <div id="seeker-mini-map" class="absolute inset-0 w-full h-full opacity-65 z-0 pointer-events-none rounded-[20px]"></div>
             
@@ -137,8 +134,8 @@
             <div class="h-32 flex flex-col justify-between relative z-20">
                 <!-- Top Matched Badge Pair (12px Radii) -->
                 <div class="flex justify-between items-center">
-                    <span class="px-2.5 py-1 bg-[#FFE855] text-slate-950 font-extrabold text-[10px] rounded-[12px] shadow-sm uppercase tracking-wider">
-                        LIVE PREVIEW
+                    <span class="px-2.5 py-1 bg-[#1E293B] text-slate-200 border border-slate-700 font-extrabold text-[10px] rounded-[12px] shadow-sm uppercase tracking-wider">
+                        NEARBY ESSENTIALS
                     </span>
                     <span class="text-[10px] font-extrabold text-white bg-slate-950/80 px-2.5 py-1 rounded-[12px] border border-white/20 flex items-center gap-1.5 backdrop-blur-md">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> 42 Resources Near You
@@ -148,8 +145,8 @@
                 <!-- Bottom Title Bar -->
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2.5 text-white font-extrabold text-[1.15rem] font-heading">
-                        <span class="material-symbols-outlined text-xl text-[#FFE855]">map</span>
-                        <span>Live Map of Resources</span>
+                        <span class="material-symbols-outlined text-xl text-slate-300">explore</span>
+                        <span>Nearby Verified Essentials</span>
                     </div>
                     <span class="material-symbols-outlined text-base text-slate-300 group-hover:translate-x-1 transition-transform">arrow_forward</span>
                 </div>
@@ -178,18 +175,18 @@
 
         <!-- STATIC ACTION TILES: 2 Quick Action Cards (White Card System Rule) -->
         <div class="grid grid-cols-2 gap-3">
-            <a href="resume-builder.html" class="bg-white border border-slate-200 p-4 rounded-[20px] shadow-[0_8px_24px_rgba(0,0,0,0.06)] flex flex-col justify-between h-28 hover:border-slate-300 transition-all">
+            <a href="resume-builder.html" class="action-card bg-white border border-slate-200 p-4 rounded-[20px] shadow-[0_8px_24px_rgba(0,0,0,0.06)] flex flex-col justify-between h-28 hover:border-slate-300 transition-all">
                 <div class="w-8 h-8 rounded-[12px] bg-slate-100 flex items-center justify-center text-slate-900 shadow-sm">
-                    <span class="material-symbols-outlined text-lg">person_add</span>
+                    <span class="material-symbols-outlined text-lg">description</span>
                 </div>
-                <span class="font-extrabold text-sm text-slate-900 font-heading">Build My Profile</span>
+                <span class="font-extrabold text-sm text-slate-900 font-heading">Build My Resume</span>
             </a>
 
-            <a href="progress.html" class="bg-white border border-slate-200 p-4 rounded-[20px] shadow-[0_8px_24px_rgba(0,0,0,0.06)] flex flex-col justify-between h-28 hover:border-slate-300 transition-all">
+            <a href="jobs.html" class="action-card bg-white border border-slate-200 p-4 rounded-[20px] shadow-[0_8px_24px_rgba(0,0,0,0.06)] flex flex-col justify-between h-28 hover:border-slate-300 transition-all">
                 <div class="w-8 h-8 rounded-[12px] bg-slate-100 flex items-center justify-center text-slate-900 shadow-sm">
-                    <span class="material-symbols-outlined text-lg">inventory_2</span>
+                    <span class="material-symbols-outlined text-lg">work</span>
                 </div>
-                <span class="font-extrabold text-sm text-slate-900 font-heading">Starter Pack</span>
+                <span class="font-extrabold text-sm text-slate-900 font-heading">Find a Job</span>
             </a>
         </div>
 
@@ -200,16 +197,16 @@
                     <span class="material-symbols-outlined text-xl text-slate-900">trending_up</span>
                     <h3 class="font-extrabold text-[1.15rem] text-slate-900 font-heading">My Progress</h3>
                 </div>
-                <span class="px-2.5 py-0.5 bg-[#FFE855] text-slate-950 font-extrabold text-xs rounded-[12px]">Level 2</span>
+                <span class="px-2.5 py-0.5 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-extrabold text-xs rounded-[12px]">Level 2</span>
             </div>
-            <p class="text-xs text-slate-600 font-medium">You've completed 4 tasks this week!</p>
+            <p class="text-xs text-subtext font-medium">You've completed 4 tasks this week!</p>
             <div class="space-y-1.5 pt-0.5">
-                <div class="flex justify-between text-[11px] font-semibold text-slate-500">
+                <div class="flex justify-between text-[11px] font-semibold text-subtext">
                     <span>Next Milestone: ID Assistance</span>
                     <span>65%</span>
                 </div>
                 <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200/80">
-                    <div class="bg-[#FFE855] h-full rounded-full w-[65%]"></div>
+                    <div class="bg-amber-400 h-full rounded-full w-[65%]"></div>
                 </div>
             </div>
         </div>
@@ -217,10 +214,10 @@
         <!-- LIVE DATA MODULE 2: Dark Stay Connected Card (Dark Glass Module Rule) -->
         <div class="bg-[#0F141C] text-white rounded-[20px] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.15)] border border-slate-800 flex items-center justify-between">
             <div class="space-y-0.5">
-                <span class="text-[10px] font-extrabold text-[#FFE855] uppercase tracking-wider">STAY CONNECTED</span>
+                <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">STAY CONNECTED</span>
                 <p class="text-sm font-bold text-white">Find nearest Wi-Fi hotspot</p>
             </div>
-            <div class="w-10 h-10 rounded-[12px] bg-[#FFE855] text-slate-950 flex items-center justify-center font-bold shadow-md">
+            <div class="w-10 h-10 rounded-[12px] bg-[#1E293B] text-slate-200 border border-slate-700 flex items-center justify-center font-bold shadow-md">
                 <span class="material-symbols-outlined text-xl">wifi</span>
             </div>
         </div>
@@ -228,24 +225,24 @@
     </main>
 
     <!-- Bottom Navigation Bar (Standardized Active Tab & Icon Rhythm) -->
-    <nav class="absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-3 py-2.5 bg-[#12141C]/80 backdrop-blur-xl shadow-[0px_-4px_25px_rgba(0,0,0,0.5)] border-t border-white/10">
-        <a class="flex flex-col items-center justify-center bg-amber-400/15 text-amber-400 border border-amber-400/30 rounded-[16px] px-3.5 py-1 shadow-[0_0_15px_rgba(245,158,11,0.25)]" href="seeker-dashboard.html">
+    <nav class="bottom-nav absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-3 py-2 bg-[#12141C]/90 backdrop-blur-xl shadow-[0px_-4px_25px_rgba(0,0,0,0.5)] border-t border-white/10">
+        <a class="flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center bg-amber-400/15 text-amber-400 border border-amber-400/30 rounded-[16px] px-2 py-1 shadow-[0_0_15px_rgba(245,158,11,0.25)]" href="seeker-dashboard.html">
             <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">dashboard</span>
             <span class="text-[10px] font-extrabold mt-0.5">Dashboard</span>
         </a>
-        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="opportunities.html">
+        <a class="flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center text-slate-400 hover:text-white px-2 py-1 transition-colors" href="jobs.html">
             <span class="material-symbols-outlined text-xl">work</span>
             <span class="text-[10px] font-medium mt-0.5">Jobs</span>
         </a>
-        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="resource-map.html">
+        <a class="flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center text-slate-400 hover:text-white px-2 py-1 transition-colors" href="resource-map.html">
             <span class="material-symbols-outlined text-xl">map</span>
             <span class="text-[10px] font-medium mt-0.5">Map</span>
         </a>
-        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="resume-builder.html">
+        <a class="flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center text-slate-400 hover:text-white px-2 py-1 transition-colors" href="resume-builder.html">
             <span class="material-symbols-outlined text-xl">description</span>
             <span class="text-[10px] font-medium mt-0.5">Resume</span>
         </a>
-        <button onclick="openSettingsModal()" class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors">
+        <button onclick="openSettingsModal()" class="flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center text-slate-400 hover:text-white px-2 py-1 transition-colors">
             <span class="material-symbols-outlined text-xl">settings</span>
             <span class="text-[10px] font-medium mt-0.5">Settings</span>
         </button>
