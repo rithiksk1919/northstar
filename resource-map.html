@@ -232,6 +232,67 @@
         </div>
     </div>
 
+    <!-- TRANSIT DIRECTIONS IN-APP MODAL SHEET (STRICTLY CONSTRAINED TO APP FRAME) -->
+    <div id="transit-directions-modal" class="absolute inset-0 z-[100] hidden items-center justify-center bg-slate-950/70 backdrop-blur-sm p-3 transition-all">
+        <div class="modal-drawer w-full max-w-[340px] bg-[#0F141C] border border-slate-700/80 rounded-[28px] p-3.5 text-slate-100 space-y-2.5 shadow-2xl overflow-hidden max-h-[88vh] flex flex-col my-auto">
+            
+            <div class="flex justify-between items-center flex-shrink-0 border-b border-slate-800/80 pb-2.5">
+                <div class="flex items-center gap-2 min-w-0">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 flex-shrink-0">
+                        <span class="material-symbols-outlined text-base">directions_bus</span>
+                    </div>
+                    <div class="min-w-0">
+                        <h3 id="transit-dest-name" class="text-xs font-extrabold text-white truncate">Bus & Transit Directions</h3>
+                        <p id="transit-dest-address" class="text-[10px] font-medium text-slate-400 truncate">Live Google Transit Schedule</p>
+                    </div>
+                </div>
+                <button onclick="closeTransitModal()" class="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors flex-shrink-0">
+                    <span class="material-symbols-outlined text-sm">close</span>
+                </button>
+            </div>
+
+            <!-- Mode Selector (Bus+Walk Hybrid, Bus Only, Walk Only) -->
+            <div class="flex items-center justify-between bg-slate-900/90 p-1 rounded-2xl border border-slate-800 flex-shrink-0 text-[11px] font-extrabold">
+                <button id="mode-btn-hybrid" onclick="switchRouteMode('transit')" class="mode-tab-btn flex-1 py-1 px-2 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center gap-1 shadow-sm transition-all">
+                    <span class="material-symbols-outlined text-xs">directions_bus</span>
+                    <span>Bus + Walk</span>
+                </button>
+                <button id="mode-btn-walking" onclick="switchRouteMode('walking')" class="mode-tab-btn flex-1 py-1 px-2 rounded-xl text-slate-400 hover:text-white flex items-center justify-center gap-1 transition-all">
+                    <span class="material-symbols-outlined text-xs">directions_walk</span>
+                    <span>Walk Only</span>
+                </button>
+            </div>
+
+            <!-- Transit Summary Bar -->
+            <div id="transit-summary-bar" class="bg-slate-900/90 border border-slate-800/80 rounded-2xl p-2.5 flex items-center justify-between gap-2 flex-shrink-0">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-amber-400 text-lg">schedule</span>
+                    <div>
+                        <span id="transit-total-duration" class="text-xs font-black text-white">-- mins</span>
+                        <span id="transit-total-distance" class="text-[10px] text-slate-400 ml-0.5">(-- mi)</span>
+                    </div>
+                </div>
+                <div id="transit-time-range" class="px-2.5 py-0.5 rounded-xl bg-emerald-500/20 text-emerald-300 font-extrabold text-[10px] border border-emerald-500/30">
+                    Departs Now
+                </div>
+            </div>
+
+            <!-- Map View Direct Navigation Action -->
+            <button id="view-on-map-route-btn" onclick="drawRouteOnMapAndClose()" class="w-full py-2 bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-black text-xs rounded-xl shadow flex items-center justify-center gap-1.5 transition-all flex-shrink-0">
+                <span class="material-symbols-outlined text-sm">map</span>
+                <span>Show Walking & Bus Path on Map</span>
+            </button>
+
+            <!-- Scrollable Step-by-Step Directions Container -->
+            <div id="transit-steps-list" class="space-y-2.5 overflow-y-auto pr-0.5 flex-1 no-scrollbar min-h-[140px]">
+                <div class="p-6 text-center text-slate-400 flex flex-col items-center gap-2">
+                    <span class="material-symbols-outlined text-2xl animate-spin text-emerald-400">sync</span>
+                    <p class="text-xs font-bold text-slate-300">Fetching live bus timings...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- FLOATING ROUNDED BOTTOM NAVIGATION BAR -->
     <div class="absolute bottom-3 left-4 right-4 z-40">
         <nav class="bg-white/95 backdrop-blur-xl rounded-full py-2.5 px-4 shadow-[0_10px_30px_rgba(0,0,0,0.3)] border border-slate-200/80 flex items-center justify-between">
@@ -1193,9 +1254,10 @@
             <button onclick="toggleSavePlace('${res.id}')" class="flex-1 text-center py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-extrabold text-xs rounded-xl shadow transition-colors flex items-center justify-center gap-1">
               <span>${isPlaceSaved(res.id) ? '🔖 Saved' : '🔖 Save'}</span>
             </button>
-            <a href="https://www.google.com/maps/dir/?api=1&destination=${res.lat},${res.lng}&travelmode=walking" target="_blank" class="flex-1 text-center py-2 bg-emerald-500 text-slate-950 font-extrabold text-xs rounded-xl shadow hover:bg-emerald-400 transition-colors">
-              🚶 Directions
-            </a>
+            <button onclick="openTransitModal('${res.name.replace(/'/g, "\\'")}', '${res.address.replace(/'/g, "\\'")}', ${res.lat}, ${res.lng})" class="flex-1 text-center py-2 bg-emerald-500 text-slate-950 font-extrabold text-xs rounded-xl shadow hover:bg-emerald-400 transition-colors flex items-center justify-center gap-1">
+              <span class="material-symbols-outlined text-sm">directions_bus</span>
+              <span>Bus Times</span>
+            </button>
           </div>
         </div>
       `;
@@ -1413,9 +1475,10 @@
                 <span class="material-symbols-outlined text-[12px] text-emerald-400">arrow_forward</span>
               </button>
             </div>
-            <a href="https://www.google.com/maps/dir/?api=1&destination=${res.lat},${res.lng}&travelmode=walking" target="_blank" class="text-[10px] font-bold text-slate-500 hover:text-slate-800 pr-0.5">
-              Directions ↗
-            </a>
+            <button onclick="openTransitModal('${res.name.replace(/'/g, "\\'")}', '${res.address.replace(/'/g, "\\'")}', ${res.lat}, ${res.lng})" class="text-[10px] font-extrabold text-emerald-600 hover:text-emerald-500 flex items-center gap-0.5 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 shadow-xs active:scale-95 transition-all">
+              <span class="material-symbols-outlined text-[12px]">directions_bus</span>
+              <span>Bus Times ↗</span>
+            </button>
           </div>
         </div>
       `;
@@ -1531,28 +1594,238 @@
     toggleBottomDrawer(false);
   }
 
-  // TOUCH SWIPE-UP / SWIPE-DOWN GESTURE LISTENER FOR DRAWER HEADER
-  document.addEventListener('DOMContentLoaded', () => {
-    let touchStartY = 0;
-    const header = document.getElementById('drawer-header');
-    if (header) {
-      header.addEventListener('touchstart', (e) => {
-        touchStartY = e.touches[0].clientY;
-      }, { passive: true });
+  let currentTransitRouteData = null;
+  let currentTransitDest = null;
+  let mapRouteLayerGroup = null;
 
-      header.addEventListener('touchend', (e) => {
-        const touchEndY = e.changedTouches[0].clientY;
-        const diffY = touchStartY - touchEndY;
-        if (diffY > 30) {
-          // Swiped up
-          toggleBottomDrawer(true);
-        } else if (diffY < -30) {
-          // Swiped down
-          toggleBottomDrawer(false);
-        }
-      }, { passive: true });
+  function decodePolyline(encoded) {
+    if (!encoded) return [];
+    let points = [];
+    let index = 0, len = encoded.length;
+    let lat = 0, lng = 0;
+    while (index < len) {
+      let b, shift = 0, result = 0;
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      let dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+      lat += dlat;
+      shift = 0;
+      result = 0;
+      do {
+        b = encoded.charCodeAt(index++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      let dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+      lng += dlng;
+      points.push([lat / 1e5, lng / 1e5]);
     }
-  });
+    return points;
+  }
+
+  function clearActiveRouteOnMap() {
+    if (mapRouteLayerGroup) {
+      mapRouteLayerGroup.clearLayers();
+      if (map) map.removeLayer(mapRouteLayerGroup);
+      mapRouteLayerGroup = null;
+    }
+  }
+
+  function drawRouteOnMapAndClose() {
+    closeTransitModal();
+    if (!map || !currentTransitRouteData || !currentTransitRouteData.steps) return;
+
+    clearActiveRouteOnMap();
+    mapRouteLayerGroup = L.layerGroup().addTo(map);
+
+    const boundsPoints = [];
+
+    currentTransitRouteData.steps.forEach((step, idx) => {
+      let decodedPts = decodePolyline(step.polyline);
+      if (!decodedPts.length && step.start_location && step.end_location) {
+        decodedPts = [
+          [step.start_location.lat, step.start_location.lng],
+          [step.end_location.lat, step.end_location.lng]
+        ];
+      }
+
+      if (decodedPts.length > 0) {
+        boundsPoints.push(...decodedPts);
+
+        if (step.travel_mode === 'TRANSIT') {
+          // Solid Emerald Line for Bus Route
+          L.polyline(decodedPts, {
+            color: '#10b981',
+            weight: 6,
+            opacity: 0.9,
+            lineCap: 'round',
+            lineJoin: 'round'
+          }).addTo(mapRouteLayerGroup);
+
+          // Add Bus Stop Markers
+          if (step.transit) {
+            if (step.transit.departure_location) {
+              L.circleMarker([step.transit.departure_location.lat, step.transit.departure_location.lng], {
+                radius: 6,
+                fillColor: '#10b981',
+                color: '#ffffff',
+                weight: 2,
+                fillOpacity: 1
+              }).bindTooltip(`Bus ${step.transit.line_name}: Board at ${step.transit.departure_stop}`, { permanent: false }).addTo(mapRouteLayerGroup);
+            }
+          }
+        } else {
+          // Dashed Blue Line for Walking Route
+          L.polyline(decodedPts, {
+            color: '#3b82f6',
+            weight: 5,
+            opacity: 0.85,
+            dashArray: '6, 8',
+            lineCap: 'round'
+          }).addTo(mapRouteLayerGroup);
+        }
+      }
+    });
+
+    if (boundsPoints.length > 0) {
+      map.fitBounds(boundsPoints, { padding: [40, 40], maxZoom: 16 });
+    }
+  }
+
+  async function openTransitModal(destName, destAddress, destLat, destLng, mode = 'transit') {
+    const modal = document.getElementById('transit-directions-modal');
+    const nameEl = document.getElementById('transit-dest-name');
+    const addrEl = document.getElementById('transit-dest-address');
+    const stepsListEl = document.getElementById('transit-steps-list');
+    const durEl = document.getElementById('transit-total-duration');
+    const distEl = document.getElementById('transit-total-distance');
+    const timeRangeEl = document.getElementById('transit-time-range');
+
+    if (!modal) return;
+
+    currentTransitDest = { destName, destAddress, destLat, destLng };
+
+    // Update Mode Pill UI
+    const hybridBtn = document.getElementById('mode-btn-hybrid');
+    const walkingBtn = document.getElementById('mode-btn-walking');
+    if (hybridBtn && walkingBtn) {
+      if (mode === 'walking') {
+        walkingBtn.className = "mode-tab-btn flex-1 py-1 px-2 rounded-xl bg-blue-500 text-white flex items-center justify-center gap-1 shadow-sm transition-all";
+        hybridBtn.className = "mode-tab-btn flex-1 py-1 px-2 rounded-xl text-slate-400 hover:text-white flex items-center justify-center gap-1 transition-all";
+      } else {
+        hybridBtn.className = "mode-tab-btn flex-1 py-1 px-2 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center gap-1 shadow-sm transition-all";
+        walkingBtn.className = "mode-tab-btn flex-1 py-1 px-2 rounded-xl text-slate-400 hover:text-white flex items-center justify-center gap-1 transition-all";
+      }
+    }
+
+    nameEl.textContent = destName || 'Directions';
+    addrEl.textContent = destAddress || 'Live Google Directions';
+    durEl.textContent = 'Calculating...';
+    distEl.textContent = '';
+    timeRangeEl.textContent = mode === 'walking' ? 'Walking Mode' : 'Live Schedule';
+
+    stepsListEl.innerHTML = `
+      <div class="p-6 text-center text-slate-400 flex flex-col items-center gap-2">
+        <span class="material-symbols-outlined text-3xl animate-spin text-emerald-400">sync</span>
+        <p class="text-xs font-bold text-slate-300">Fetching live ${mode === 'walking' ? 'walking' : 'bus'} route details...</p>
+      </div>
+    `;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+
+    const originCoords = userLocationCoords || { lat: 47.6062, lng: -122.3321 };
+    const originStr = `${originCoords.lat},${originCoords.lng}`;
+    const destStr = `${destLat},${destLng}`;
+
+    try {
+      const resp = await fetch(`/api/transit-directions?origin=${encodeURIComponent(originStr)}&destination=${encodeURIComponent(destStr)}`);
+      const data = await resp.json();
+
+      if (data.success && data.steps && data.steps.length > 0) {
+        currentTransitRouteData = data;
+        durEl.textContent = data.summary.duration || 'Live Route';
+        distEl.textContent = `(${data.summary.distance || ''})`;
+        timeRangeEl.textContent = mode === 'walking' ? 'Walking Path' : `Departs ${data.summary.departure_time || 'Now'}`;
+
+        stepsListEl.innerHTML = data.steps.map((step, idx) => {
+          if (step.travel_mode === 'TRANSIT' && step.transit) {
+            const t = step.transit;
+            return `
+              <div class="p-3 bg-slate-900 border border-slate-800 rounded-2xl space-y-1.5 text-left">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-1.5">
+                    <span class="px-2 py-0.5 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs flex items-center gap-1 shadow-sm">
+                      <span class="material-symbols-outlined text-xs">directions_bus</span>
+                      ${t.line_name || t.vehicle}
+                    </span>
+                    <span class="text-xs font-extrabold text-white">${t.departure_time}</span>
+                  </div>
+                  <span class="text-[10px] font-bold text-slate-400">${step.duration}</span>
+                </div>
+                <div class="text-xs text-slate-200 font-medium space-y-0.5 pt-0.5">
+                  <div class="flex items-center gap-1 text-slate-300">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"></span>
+                    <span>Board at: <strong class="text-white font-bold">${t.departure_stop}</strong></span>
+                  </div>
+                  <div class="flex items-center gap-1 text-slate-400 pl-3 text-[11px]">
+                    <span>↓ Ride ${t.num_stops || 1} stops</span>
+                  </div>
+                  <div class="flex items-center gap-1 text-slate-300">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0"></span>
+                    <span>Arrive at: <strong class="text-white font-bold">${t.arrival_stop}</strong> (${t.arrival_time})</span>
+                  </div>
+                </div>
+              </div>
+            `;
+          } else {
+            return `
+              <div class="p-2.5 bg-slate-900/60 border border-slate-800/80 rounded-xl flex items-center justify-between text-xs text-slate-300 text-left">
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="material-symbols-outlined text-blue-400 text-base flex-shrink-0">directions_walk</span>
+                  <span class="truncate font-medium">${step.instructions}</span>
+                </div>
+                <span class="text-[10px] font-bold text-slate-400 flex-shrink-0 ml-2">${step.duration} (${step.distance})</span>
+              </div>
+            `;
+          }
+        }).join('');
+      } else {
+        stepsListEl.innerHTML = `
+          <div class="p-4 bg-slate-900 border border-slate-800 rounded-2xl text-center space-y-2">
+            <span class="material-symbols-outlined text-2xl text-amber-400">directions_bus</span>
+            <p class="text-xs font-bold text-white">Direct Route Details</p>
+            <p class="text-[11px] text-slate-400">Head to destination or nearest bus stop nearby.</p>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}&travelmode=${mode}" target="_blank" class="inline-flex items-center gap-1 px-4 py-2 bg-emerald-500 text-slate-950 font-extrabold text-xs rounded-xl shadow mt-1 hover:bg-emerald-400">
+              Open Google Maps ↗
+            </a>
+          </div>
+        `;
+      }
+    } catch (err) {
+      console.error('Failed to load transit modal:', err);
+    }
+  }
+
+  function switchRouteMode(mode) {
+    if (!currentTransitDest) return;
+    openTransitModal(currentTransitDest.destName, currentTransitDest.destAddress, currentTransitDest.destLat, currentTransitDest.destLng, mode);
+  }
+
+  function closeTransitModal() {
+    const modal = document.getElementById('transit-directions-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+  }
+  window.openTransitModal = openTransitModal;
+  window.closeTransitModal = closeTransitModal;
+  window.switchRouteMode = switchRouteMode;
+  window.drawRouteOnMapAndClose = drawRouteOnMapAndClose;
 </script>
 </body>
 </html>

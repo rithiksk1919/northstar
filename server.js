@@ -9,6 +9,8 @@ import { spawn } from 'child_process';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
+import fs from 'fs';
+
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -18,9 +20,16 @@ const NORTHSTAR_AI_DIR =
   process.env.NORTHSTAR_AI_DIR ||
   path.resolve(__dirname, 'northstar-ai');
 
+const venvPython = process.platform === 'win32'
+  ? path.join(NORTHSTAR_AI_DIR, '.venv', 'Scripts', 'python.exe')
+  : path.join(NORTHSTAR_AI_DIR, '.venv', 'bin', 'python');
+
+const defaultPython = fs.existsSync(venvPython)
+  ? venvPython
+  : (process.platform === 'win32' ? 'python' : 'python3');
+
 const NORTHSTAR_AI_PYTHON =
-  process.env.NORTHSTAR_AI_PYTHON ||
-  path.join(NORTHSTAR_AI_DIR, '.venv', 'bin', 'python');
+  process.env.NORTHSTAR_AI_PYTHON || defaultPython;
 
 const NORTHSTAR_RESUME_PIPELINE =
   path.join(NORTHSTAR_AI_DIR, 'scripts', 'resume_pipeline_api.py');
@@ -37,6 +46,11 @@ const supabase = (supabaseUrl && supabaseServiceKey) ? createClient(supabaseUrl,
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '5mb' }));
+
+app.get('/jobs.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'opportunities.html'));
+});
+
 app.use(express.static(__dirname));
 
 const apify = new ApifyClient({ token: process.env.APIFY_TOKEN });
@@ -48,67 +62,60 @@ const stripe = stripeKey ? new Stripe(stripeKey) : null;
 let activeDeliveries = [];
 
 let activeGigs = [
-
-
   {
-    id: 'seed-1',
-    title: 'Capitol Hill Same-Day Pay Moving & Hauling',
-    category: 'Core Keywords',
-    pay: '$150 Cash',
-    summary: 'Assistance needed unloading a moving truck for 3 hours. Immediate cash in hand paid at completion.',
-    safety: 'No ID required casual labor. Cash paid daily.',
-    url: 'https://seattle.craigslist.org/search/lbg?query=same+day+pay',
-    postedAt: new Date().toISOString()
-  },
-  {
-    id: 'seed-2',
-    title: 'Ballard Under-The-Table Cash Yard Helper',
+    id: 'Ehj2AOaq8RGAGd78USHONQ',
+    title: 'Get Paid to Lift 💪 Earn Daily Cash as a Mover',
     category: 'Core Keywords',
     pay: '$25.00 / hr Cash',
-    summary: 'Outdoor yard maintenance, leaf raking, and brush clearing in Ballard neighborhood.',
-    safety: 'Under the table cash gig requiring no onboarding paperwork.',
-    url: 'https://seattle.craigslist.org/search/lbg?query=cash',
-    postedAt: new Date().toISOString()
+    summary: 'Casual daily labor opportunity unloading trucks and moving items.',
+    safety: 'No ID required casual labor. Cash paid daily.',
+    url: 'https://www.craigslist.org/view/d/seattle-get-paid-to-lift-earn-daily/Ehj2AOaq8RGAGd78USHONQ',
+    postedAt: new Date().toISOString(),
+    isCash: true
   },
   {
-    id: 'seed-3',
-    title: 'SODO No-ID Casual Labor Freight Unloader',
+    id: 'iKh1EuHWHofcvUTdnacqs3',
+    title: 'START TODAY $40/HR Handyman | Helper | Demo',
+    category: 'Core Keywords',
+    pay: '$40.00 / hr Cash',
+    summary: 'Flexible local handyman, demo, moving, or trade labor gigs paid directly in cash.',
+    safety: 'Under the table cash gig requiring no onboarding paperwork.',
+    url: 'https://www.craigslist.org/view/d/seattle-start-today-40-hr-handyman/iKh1EuHWHofcvUTdnacqs3',
+    postedAt: new Date().toISOString(),
+    isCash: true
+  },
+  {
+    id: 'ure18rin8RGNNY3Ml6t41Q',
+    title: 'Can You Lift Heavy Items? Earn Daily Cash as a Helper',
     category: 'Core Keywords',
     pay: '$22.00 / hr Cash',
-    summary: 'Unloading commercial pallet boxes and organizing warehouse staging area.',
+    summary: 'Unloading commercial pallet boxes and heavy staging equipment.',
     safety: 'Entry level immediate hire. Cash paid at end of shift.',
-    url: 'https://seattle.craigslist.org/search/lbg?query=casual+labor',
-    postedAt: new Date().toISOString()
+    url: 'https://www.craigslist.org/view/d/seattle-can-you-lift-heavy-items-earn/ure18rin8RGNNY3Ml6t41Q',
+    postedAt: new Date().toISOString(),
+    isCash: true
   },
   {
-    id: 'seed-4',
-    title: 'Rainier Valley Local Daily Gig Work',
+    id: 't2MJV7LmjTGLBA9nd1sHgd',
+    title: 'General Labor -- $18/hr Misc. Work (NO TAXES)',
     category: 'Local & Immediate',
-    pay: '$24.00 / hr Cash',
-    summary: 'Local daily gig work assisting with community center event equipment setup.',
+    pay: '$18.00 / hr Cash',
+    summary: 'Local daily gig work assisting with yard work and equipment setup.',
     safety: 'Cash in hand jobs near me. Drop-in daily labor.',
-    url: 'https://seattle.craigslist.org/search/lbg?query=daily+gig',
-    postedAt: new Date().toISOString()
+    url: 'https://www.craigslist.org/view/d/general-labor-18hr-misc-stuff-no-taxes/t2MJV7LmjTGLBA9nd1sHgd',
+    postedAt: new Date().toISOString(),
+    isCash: true
   },
   {
-    id: 'seed-5',
-    title: 'Pioneer Square Day Labor Drop-In Center Helper',
+    id: '4fKDdW5GyK3edG4E4MKvch',
+    title: 'Home Office & Storage Organizing Helper',
     category: 'Local & Immediate',
     pay: '$20.00 / hr Cash',
-    summary: 'Assisting with food prep and inventory staging at local drop-in site.',
-    safety: 'Immediate walk-in entry level daily stipend.',
-    url: 'https://seattle.craigslist.org/search/lbg?query=day+labor',
-    postedAt: new Date().toISOString()
-  },
-  {
-    id: 'seed-6',
-    title: 'Instant Payout Microtasks & Image Labeling',
-    category: 'Low-Barrier Digital',
-    pay: '$18.00 / hr Instant Cash',
-    summary: 'Digital microtasking and tagging data. Instant payout to digital wallet without ID verification.',
-    safety: 'Low-barrier digital work with instant payout microtasks.',
-    url: 'https://seattle.craigslist.org/search/lbg?query=microtask',
-    postedAt: new Date().toISOString()
+    summary: 'Assisting with box sorting and inventory staging at local site.',
+    safety: 'Immediate walk-in entry level daily cash pay.',
+    url: 'https://www.craigslist.org/view/d/bellevue-need-help-organizing-my-home/4fKDdW5GyK3edG4E4MKvch',
+    postedAt: new Date().toISOString(),
+    isCash: true
   }
 ];
 
@@ -124,8 +131,8 @@ async function fetchAndVetGigs() {
     const run = await apify.actor('automation-lab/craigslist-scraper').call({
       city: 'seattle',
       category: 'gigs',
-      searchQueries: ['same day pay', 'cash in hand', 'casual labor', 'immediate hire', 'day labor', 'microtasks'],
-      maxResults: 8,
+      searchQueries: ['cash in hand', 'same day cash', 'cash daily', 'casual labor cash', 'immediate cash hire', 'day labor cash'],
+      maxResults: 10,
       includeDetails: true
     });
 
@@ -134,60 +141,46 @@ async function fetchAndVetGigs() {
     console.log(`📥 Apify extracted ${items.length} live listings with direct URLs.`);
   } catch (apifyErr) {
     console.warn('⚠️ Apify cloud scraper notice:', apifyErr.message);
-    console.log('📡 Switching to direct HTML scraper fallback...');
-
-    try {
-      const { data: html } = await (await import('axios')).default.get('https://seattle.craigslist.org/search/lbg?query=same+day+pay', {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
-        }
-      });
-      const cheerio = await import('cheerio');
-      const $ = cheerio.load(html);
-
-      $('.cl-static-search-result, .result-node, li.cl-search-result, a.posting-title').each((_, el) => {
-        const title = $(el).text().trim() || $(el).attr('title');
-        let link = $(el).attr('href') || $(el).find('a').attr('href') || '';
-        if (link && !link.startsWith('http')) link = `https://seattle.craigslist.org${link}`;
-        if (title && link && items.length < 8) {
-          if (!/survey|study|panel|questionnaire/i.test(title)) {
-            items.push({ title, description: title, url: link });
-          }
-        }
-      });
-      console.log(`📡 Fallback extracted ${items.length} live posts.`);
-    } catch (fallbackErr) {
-      console.error('Fallback scraper error:', fallbackErr.message);
-    }
   }
 
   const newlyApproved = [];
   const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
   for (const item of items) {
-    const itemUrl = item.url || item.link;
+    let itemUrl = item.url || item.link || '';
     const itemTitle = item.title || item.name || '';
     
-    // STRICT FILTER: Exclude Cash Surveys
-    if (/survey|study|panel|questionnaire/i.test(itemTitle)) continue;
-    if (itemUrl && itemUrl.includes('/search/')) continue; // Must be a direct post URL
+    // CRITICAL URL RULE (NEW 2026 FORMAT):
+    // - A valid individual listing URL ALWAYS contains "/view/d/" and ends with an alphanumeric hash ID.
+    // - Do NOT append ".html" to the end of the URL.
+    // - FORBIDDEN: NEVER use search URLs containing "/search/"
+    if (!itemUrl || itemUrl.includes('/search/')) continue;
+    if (!itemUrl.includes('/view/d/') && !itemUrl.includes('/d/')) continue;
+    
+    // Strip trailing .html if present to enforce 2026 format
+    itemUrl = itemUrl.replace(/\.html$/i, '');
+
+    // STRICT FILTER: Exclude Cash Surveys, Card Pay, Visa Cards, Checks, etc.
+    if (/survey|study|panel|questionnaire|gift\s*card|debit\s*card|visa|check\s*pay/i.test(itemTitle)) continue;
 
     const prompt = `Analyze this Craigslist gig:
 Title: ${itemTitle}
 Description: ${item.description || item.text || itemTitle}
 
 CRITICAL RULES:
-1. Is this casual, same-day/daily paid physical or digital microtask work?
-2. Does it require formal government ID, W-2 paperwork, or background checks?
-3. ABSOLUTELY EXCLUDE any paid online surveys, cash surveys, scams, or study panels!
+1. Is this casual, same-day/daily paid labor, handyman, moving, or helper work?
+2. Does it pay CASH IN HAND? (ABSOLUTELY EXCLUDE gift cards, prepaid visa/debit cards, check payments, direct deposit waiting periods, or crypto!)
+3. Does it require formal government ID, W-2 paperwork, or background checks?
+4. ABSOLUTELY EXCLUDE any paid online surveys, cash surveys, scams, or study panels!
 
 Return JSON ONLY:
 {
   "is_valid": true/false,
+  "is_cash_payment": true/false,
   "is_survey": true/false,
   "no_gov_info_needed": true/false,
   "clean_title": "Clean Title",
-  "pay_rate": "Extracted Pay (e.g. $150 Cash or $25/hr)",
+  "pay_rate": "Extracted Cash Pay (e.g. $150 Cash or $25/hr Cash)",
   "short_summary": "1 sentence description"
 }`;
 
@@ -196,40 +189,58 @@ Return JSON ONLY:
       const text = result.response.text().replace(/```json|```/g, '').trim();
       const parsed = JSON.parse(text);
 
-      if (parsed.is_valid && !parsed.is_survey && parsed.no_gov_info_needed) {
+      if (parsed.is_valid && parsed.is_cash_payment && !parsed.is_survey && parsed.no_gov_info_needed) {
+        let payStr = parsed.pay_rate || item.price || '$20/hr Cash';
+        if (!/cash/i.test(payStr)) payStr = `${payStr} Cash`;
         newlyApproved.push({
           id: item.listingId || item.id || String(Date.now() + Math.random()),
           title: parsed.clean_title,
-          pay: parsed.pay_rate || item.price || '$20/hr Cash',
+          pay: payStr,
           summary: parsed.short_summary,
-          safety: 'Verified casual labor requiring no government ID or W-2 paperwork.',
-          url: itemUrl || 'https://seattle.craigslist.org/search/lbg?query=same+day+pay',
-          postedAt: item.postedAt || new Date().toISOString()
+          safety: parsed.no_gov_info_needed ? 'Verified casual labor requiring no government ID or W-2 paperwork.' : 'Verification or ID may be requested.',
+          url: itemUrl,
+          postedAt: item.postedAt || new Date().toISOString(),
+          isCash: true,
+          noIdRequired: !!parsed.no_gov_info_needed
         });
       }
     } catch (geminiErr) {
       console.error('Gemini parse/quota notice:', geminiErr.message.slice(0, 80));
-      if (!/survey|study|panel/i.test(itemTitle) && /cash|mover|labor|help|clean|yard|paint|unload|microtask/i.test(itemTitle)) {
+      if (!/survey|study|panel|card|check/i.test(itemTitle) && /cash|mover|labor|help|clean|yard|paint|unload|handyman/i.test(itemTitle)) {
         newlyApproved.push({
           id: item.listingId || item.id || String(Date.now() + Math.random()),
           title: itemTitle.replace(/\s*-\s*\$\d+.*$/, '').slice(0, 45),
-          pay: item.price || '$20.00 / hr Cash',
-          summary: 'Casual daily labor opportunity verified for unhoused job seekers.',
-          safety: 'No formal ID or W-2 paperwork required upfront.',
-          url: itemUrl || 'https://seattle.craigslist.org/search/lbg?query=same+day+pay',
-          postedAt: item.postedAt || new Date().toISOString()
+          pay: item.price ? (item.price.includes('Cash') ? item.price : `${item.price} Cash`) : '$20.00 / hr Cash',
+          summary: 'Casual daily labor opportunity paying immediate cash in hand for unhoused job seekers.',
+          safety: 'No formal ID or W-2 paperwork required upfront. Cash paid daily.',
+          url: itemUrl,
+          postedAt: item.postedAt || new Date().toISOString(),
+          isCash: true
         });
       }
     }
-    await sleep(2000);
+    await sleep(1500);
   }
 
   if (newlyApproved.length > 0) {
-    const existingIds = new Set(activeGigs.map(g => g.id || g.title));
-    const uniqueNew = newlyApproved.filter(g => !existingIds.has(g.id || g.title));
+    const existingUrls = new Set(activeGigs.map(g => g.url || g.title));
+    const uniqueNew = newlyApproved.filter(g => !existingUrls.has(g.url || g.title));
     activeGigs = [...uniqueNew, ...activeGigs];
   }
-  console.log(`✅ Stored ${activeGigs.length} vetted gigs with verified direct links.`);
+
+  // Filter activeGigs to strictly enforce direct URLs
+  activeGigs = activeGigs.filter(gig => gig.url && gig.url.includes('/d/') && !gig.url.includes('/search/'));
+
+  // Prioritize Cash pay gigs at the top of activeGigs array
+  activeGigs.sort((a, b) => {
+    const aIsCash = /cash/i.test(a.pay || '') || /cash/i.test(a.summary || '') || a.isCash;
+    const bIsCash = /cash/i.test(b.pay || '') || /cash/i.test(b.summary || '') || b.isCash;
+    if (aIsCash && !bIsCash) return -1;
+    if (!aIsCash && bIsCash) return 1;
+    return 0;
+  });
+
+  console.log(`✅ Stored ${activeGigs.length} vetted gigs with strict direct permalinks prioritizing cash pay.`);
 }
 
 // REST Endpoints
@@ -237,7 +248,8 @@ app.get('/api/config', (req, res) => {
   res.json({
     supabaseUrl: process.env.SUPABASE_URL || 'https://gvhyukdmuhvitonzlxoq.supabase.co',
     supabaseAnonKey: process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2aHl1a2RtdWh2aXRvbnpseG9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4MzE0NTMsImV4cCI6MjEwMjQwNzQ1M30.822oKaNPMpHjcdksRD1jrs6fmX-WzapAVTXeCDefDgA',
-    vapidPublicKey: process.env.VAPID_PUBLIC_KEY || ''
+    vapidPublicKey: process.env.VAPID_PUBLIC_KEY || '',
+    googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY || ''
   });
 });
 
@@ -245,6 +257,87 @@ app.get('/api/gigs', (req, res) => res.json({ success: true, count: activeGigs.l
 app.get('/api/trigger-scrape', async (req, res) => {
   await fetchAndVetGigs();
   res.json({ success: true, count: activeGigs.length, gigs: activeGigs });
+});
+
+// Google Transit Directions Proxy API
+app.get('/api/transit-directions', async (req, res) => {
+  const { origin, destination } = req.query;
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY;
+
+  if (!origin || !destination) {
+    return res.status(400).json({ success: false, error: 'Origin and destination coordinates are required.' });
+  }
+
+  if (!apiKey) {
+    return res.status(500).json({ success: false, error: 'Google Maps API Key is missing in environment.' });
+  }
+
+  try {
+    const axios = (await import('axios')).default;
+    const response = await axios.get('https://maps.googleapis.com/maps/api/directions/json', {
+      params: {
+        origin,
+        destination,
+        mode: 'transit',
+        transit_mode: 'bus',
+        departure_time: 'now',
+        key: apiKey
+      }
+    });
+
+    if (response.data.status === 'OK' && response.data.routes.length > 0) {
+      const route = response.data.routes[0];
+      const leg = route.legs[0];
+
+      const steps = leg.steps.map(step => {
+        const item = {
+          travel_mode: step.travel_mode,
+          duration: step.duration.text,
+          distance: step.distance.text,
+          instructions: step.html_instructions.replace(/<[^>]*>?/gm, ''),
+          polyline: step.polyline ? step.polyline.points : '',
+          start_location: step.start_location,
+          end_location: step.end_location
+        };
+
+        if (step.transit_details) {
+          const td = step.transit_details;
+          item.transit = {
+            line_name: td.line.short_name || td.line.name,
+            vehicle: td.line.vehicle.name,
+            icon: td.line.vehicle.icon || '',
+            departure_stop: td.departure_stop.name,
+            arrival_stop: td.arrival_stop.name,
+            departure_time: td.departure_time.text,
+            arrival_time: td.arrival_time.text,
+            num_stops: td.num_stops,
+            departure_location: td.departure_stop.location,
+            arrival_location: td.arrival_stop.location
+          };
+        }
+        return item;
+      });
+
+      return res.json({
+        success: true,
+        summary: {
+          departure_time: leg.departure_time ? leg.departure_time.text : 'Now',
+          arrival_time: leg.arrival_time ? leg.arrival_time.text : '',
+          duration: leg.duration.text,
+          distance: leg.distance.text,
+          start_address: leg.start_address,
+          end_address: leg.end_address,
+          overview_polyline: route.overview_polyline ? route.overview_polyline.points : ''
+        },
+        steps
+      });
+    } else {
+      return res.json({ success: false, error: response.data.error_message || `No transit routes found (${response.data.status})` });
+    }
+  } catch (err) {
+    console.error('Transit directions error:', err.message);
+    return res.status(500).json({ success: false, error: 'Failed to fetch transit directions.' });
+  }
 });
 
 
@@ -1025,6 +1118,17 @@ const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, '0.0.0.0', async () => {
   console.log(`🚀 Server running on http://0.0.0.0:${server.address().port}`);
   await fetchAndVetGigs();
+
+  // Daily automated refresh mechanism (every 24 hours / 86400000 ms)
+  const DAILY_REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000;
+  setInterval(async () => {
+    console.log('⏰ Executing scheduled daily automated Craigslist refresh...');
+    try {
+      await fetchAndVetGigs();
+    } catch (err) {
+      console.error('Scheduled daily refresh error:', err);
+    }
+  }, DAILY_REFRESH_INTERVAL_MS);
 });
 
 server.on('error', (err) => {

@@ -122,15 +122,22 @@
               <div class="w-10 h-10 rounded-[14px] bg-slate-100 border border-slate-200/80 text-slate-800 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <span class="material-symbols-outlined text-xl">${iconName}</span>
               </div>
-              <div class="job-text-column min-w-0 flex-1 space-y-2">
-                  <div class="job-title-container flex items-start justify-between gap-2" style="height: auto; max-height: none; overflow: visible;">
-                      <h4 class="job-title font-bold text-sm text-slate-900 leading-snug tracking-tight flex-1" style="white-space: normal; overflow: visible; word-break: break-word; overflow-wrap: break-word; hyphens: none; -webkit-hyphens: none; height: auto; max-height: none; line-height: 1.25; margin-left: 0; padding-left: 0;">${cleanJobTitle(g.title || g.rawTitle)}</h4>
-                      <span class="pay-rate-badge px-2.5 py-1 text-xs font-bold rounded-[10px] flex-shrink-0 shadow-none whitespace-nowrap self-start" style="background: #f8fafc; border: 1px solid #e2e8f0; color: #0f172a; font-size: 0.75rem;">
-                          ${payFormatted}
-                      </span>
+              <div class="job-text-column min-w-0 flex-1 space-y-2" style="min-width: 0; width: 100%;">
+                  <div class="job-header-stack space-y-1.5 w-full min-w-0">
+                      <div class="flex items-start justify-between gap-2 w-full min-w-0">
+                          <h4 class="job-title font-bold text-xs sm:text-sm text-slate-900 leading-normal tracking-tight flex-1 min-w-0" style="flex: 1 1 auto; min-width: 0; white-space: normal; overflow: visible; word-break: normal; overflow-wrap: break-word; line-height: 1.35; margin: 0; padding: 0; font-size: 0.8125rem;">${cleanJobTitle(g.title || g.rawTitle)}</h4>
+                      </div>
+                      <div>
+                          <span class="pay-rate-badge inline-block px-2.5 py-0.5 text-[0.7rem] font-bold rounded-[8px] shadow-none whitespace-normal break-words" style="background: #f8fafc; border: 1px solid #e2e8f0; color: #0f172a; max-width: 100%;">
+                              ${payFormatted}
+                          </span>
+                      </div>
                   </div>
                   <div class="job-tags-container tag-group flex flex-wrap items-center gap-2" style="margin-left: 0; padding-left: 0; gap: 8px;">
-                      <span class="job-tag tag-pill inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" style="border-radius: 9999px; margin-left: 0;">No ID Required</span>
+                      ${(g.noIdRequired !== false && g.no_id_required !== false && !/ID required|W2|background check/i.test(g.safety || '')) 
+                        ? `<span class="job-tag tag-pill inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200" style="border-radius: 9999px; margin-left: 0; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;">✓ No ID Required</span>`
+                        : `<span class="job-tag tag-pill inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200" style="border-radius: 9999px; margin-left: 0; background: #fffbeb; color: #92400e; border: 1px solid #fde68a;">🪪 ID / Verification Required</span>`
+                      }
                       <span class="job-tag tag-pill inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" style="border-radius: 9999px; margin-left: 0;">Immediate Cash</span>
                   </div>
                   <p class="job-description text-xs leading-relaxed font-medium" style="white-space: normal; overflow: visible; word-break: normal; overflow-wrap: break-word; hyphens: none; -webkit-hyphens: none; height: auto; max-height: none; margin-left: 0; padding-left: 0;">${descriptionText}</p>

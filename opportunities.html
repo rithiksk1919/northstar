@@ -84,31 +84,41 @@
 .job-text-column {
   margin-left: 0 !important;
   padding-left: 0 !important;
+  width: 100% !important;
+  min-width: 0 !important;
 }
 
-.job-text-column > * {
-  margin-left: 0 !important;
-  padding-left: 0 !important;
-}
-
-.job-title-container {
-  height: auto !important;
-  max-height: none !important;
-  overflow: visible !important;
+.job-header-stack {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  width: 100% !important;
+  min-width: 0 !important;
 }
 
 .job-title {
+  display: block !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  font-size: 0.8125rem !important; /* 13px */
+  line-height: 1.35 !important;
   white-space: normal !important;
   overflow: visible !important;
-  hyphens: none !important;
-  -webkit-hyphens: none !important;
-  word-break: break-word !important;
+  word-break: normal !important;
   overflow-wrap: break-word !important;
-  height: auto !important;
-  max-height: none !important;
-  line-height: 1.25 !important;
-  margin-left: 0 !important;
-  padding-left: 0 !important;
+  hyphens: manual !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.pay-rate-badge {
+  display: inline-block !important;
+  font-size: 0.725rem !important; /* 11.5px */
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+  word-break: break-word !important;
 }
 
 .job-tags-container, .tag-group {
