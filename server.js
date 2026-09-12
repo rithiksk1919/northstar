@@ -445,6 +445,11 @@ app.post('/api/generate-resume', async (req, res) => {
 
     // ── Remote HTTP path ──────────────────────────────────────────────────
     if (northstarAiUrl) {
+      if (!process.env.NORTHSTAR_AI_KEY) {
+        console.error('Error: NORTHSTAR_AI_URL is set but NORTHSTAR_AI_KEY is missing.');
+        return res.status(500).json({ success: false, error: 'Remote AI service is not configured correctly.' });
+      }
+
       console.log(`🌐 [Resume] Forwarding to remote AI service: ${northstarAiUrl}/resume`);
 
       const controller = new AbortController();
@@ -454,7 +459,10 @@ app.post('/api/generate-resume', async (req, res) => {
       try {
         aiResponse = await fetch(`${northstarAiUrl}/resume`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-NorthStar-AI-Key': process.env.NORTHSTAR_AI_KEY
+          },
           body: JSON.stringify(confirmed),
           signal: controller.signal
         });
@@ -938,6 +946,11 @@ app.post('/api/chat', async (req, res) => {
 
     // ── Remote HTTP path ──────────────────────────────────────────────────
     if (northstarAiUrl) {
+      if (!process.env.NORTHSTAR_AI_KEY) {
+        console.error('Error: NORTHSTAR_AI_URL is set but NORTHSTAR_AI_KEY is missing.');
+        return res.status(500).json({ success: false, error: 'Remote AI service is not configured correctly.' });
+      }
+
       console.log(`🌐 [NorthStar V5 Chat] Forwarding to remote AI service: ${northstarAiUrl}/chat`);
 
       const controller = new AbortController();
@@ -947,7 +960,10 @@ app.post('/api/chat', async (req, res) => {
       try {
         aiResponse = await fetch(`${northstarAiUrl}/chat`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'X-NorthStar-AI-Key': process.env.NORTHSTAR_AI_KEY
+          },
           body: JSON.stringify(chatPayload),
           signal: controller.signal
         });

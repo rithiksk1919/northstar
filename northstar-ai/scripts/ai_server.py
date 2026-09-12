@@ -1,6 +1,8 @@
 import json
 import subprocess
 import sys
+import os
+import hmac
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
@@ -90,6 +92,13 @@ class NorthStarAIHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         try:
+            expected_key = os.environ.get("NORTHSTAR_AI_KEY")
+            supplied_key = self.headers.get("X-NorthStar-AI-Key", "")
+
+            if not expected_key or not hmac.compare_digest(supplied_key, expected_key):
+                self.send_json(401, {"success": False, "error": "Unauthorized"})
+                return
+
             content_length = int(
                 self.headers.get("Content-Length", "0")
             )

@@ -1645,29 +1645,32 @@ function initGlobalAIChatbot() {
 
   const appFrame = document.querySelector('.app-frame') || document.body;
 
-  // Insert Backdrop Overlay
+  // Insert Backdrop Overlay (placed behind the chatbot widget at z-index 90)
   if (!document.getElementById('chatbot-backdrop-overlay')) {
     const backdrop = document.createElement('div');
     backdrop.id = 'chatbot-backdrop-overlay';
-    backdrop.className = 'fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-[98] chatbot-backdrop-hidden transition-opacity';
-    backdrop.onclick = () => toggleAIChatbotWindow();
+    backdrop.className = 'fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-[90] chatbot-backdrop-hidden transition-opacity pointer-events-none';
+    backdrop.onclick = (e) => {
+      e.stopPropagation();
+      toggleAIChatbotWindow();
+    };
     appFrame.appendChild(backdrop);
   }
 
   const widget = document.createElement('div');
   widget.id = 'northstar-chatbot-widget';
-  widget.className = 'absolute bottom-[80px] right-4 z-50 no-print select-none';
+  widget.className = 'absolute bottom-[80px] right-4 z-[100] no-print';
   widget.innerHTML = `
     <!-- Launcher FAB Button -->
-    <button id="chatbot-fab-btn" onclick="toggleAIChatbotWindow()" class="w-13 h-13 rounded-full bg-[#FFE855] text-slate-950 shadow-xl border-2 border-white flex items-center justify-center font-bold transition-all active:scale-95 hover:bg-amber-300 relative group">
+    <button id="chatbot-fab-btn" onclick="toggleAIChatbotWindow()" class="w-13 h-13 rounded-full bg-[#FFE855] text-slate-950 shadow-xl border-2 border-white flex items-center justify-center font-bold transition-all active:scale-95 hover:bg-amber-300 relative group cursor-pointer select-none">
       <span id="chatbot-fab-icon" class="material-symbols-outlined text-2xl">smart_toy</span>
       <span class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full"></span>
     </button>
 
     <!-- Chatbot Window Drawer -->
-    <div id="chatbot-window-drawer" class="hidden absolute bottom-16 right-0 w-[330px] sm:w-[360px] bg-white rounded-[24px] shadow-2xl border border-slate-200/80 overflow-hidden flex-col z-50">
+    <div id="chatbot-window-drawer" class="hidden absolute bottom-16 right-0 w-[330px] sm:w-[360px] bg-white rounded-[24px] shadow-2xl border border-slate-200/80 overflow-hidden flex-col z-[101] pointer-events-auto">
       <!-- Header -->
-      <div class="bg-slate-900 text-white px-4 py-3 flex items-center justify-between">
+      <div class="bg-slate-900 text-white px-4 py-3 flex items-center justify-between select-none">
         <div class="flex items-center gap-2.5">
           <div class="w-8 h-8 rounded-xl bg-[#FFE855] text-slate-950 flex items-center justify-center font-bold flex-shrink-0 shadow-sm">
             <span class="material-symbols-outlined text-lg">smart_toy</span>
@@ -1677,7 +1680,7 @@ function initGlobalAIChatbot() {
             <span id="chatbot-role-tag" class="text-[10px] font-semibold text-amber-400">Ask anything • Instant help</span>
           </div>
         </div>
-        <button onclick="toggleAIChatbotWindow()" class="text-slate-400 hover:text-white transition-colors p-1">
+        <button onclick="toggleAIChatbotWindow()" class="text-slate-400 hover:text-white transition-colors p-1 cursor-pointer" aria-label="Close chatbot">
           <span class="material-symbols-outlined text-lg">close</span>
         </button>
       </div>
@@ -1688,7 +1691,7 @@ function initGlobalAIChatbot() {
       </div>
 
       <!-- Messages Body -->
-      <div id="chatbot-messages-list" class="p-3.5 h-[260px] overflow-y-auto space-y-3 bg-[#F4F5F7] text-xs">
+      <div id="chatbot-messages-list" class="p-3.5 h-[260px] overflow-y-auto space-y-3 bg-[#F4F5F7] text-xs select-text">
         <div class="flex gap-2">
           <div class="w-7 h-7 rounded-lg bg-[#FFE855] text-slate-950 flex items-center justify-center flex-shrink-0 font-bold">
             <span class="material-symbols-outlined text-sm">smart_toy</span>
@@ -1700,9 +1703,9 @@ function initGlobalAIChatbot() {
       </div>
 
       <!-- Input Form -->
-      <form onsubmit="handleAIChatSubmit(event)" class="p-2.5 bg-white border-t border-slate-200/80 flex items-center gap-2">
-        <input type="text" id="chatbot-input-field" placeholder="Ask NorthStar AI..." class="flex-1 rounded-[12px] bg-slate-50 border border-slate-200 px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 font-medium">
-        <button type="submit" id="chatbot-send-btn" class="w-9 h-9 rounded-[12px] bg-[#FFE855] text-slate-950 hover:bg-amber-300 font-bold flex items-center justify-center shadow-sm active:scale-95 transition-all flex-shrink-0">
+      <form id="chatbot-input-form" onsubmit="handleAIChatSubmit(event)" class="p-2.5 bg-white border-t border-slate-200/80 flex items-center gap-2">
+        <input type="text" id="chatbot-input-field" placeholder="Ask NorthStar AI..." class="flex-1 rounded-[12px] bg-slate-50 border border-slate-200 px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 font-medium select-text">
+        <button type="submit" id="chatbot-send-btn" onclick="handleAIChatSubmit(event)" class="w-9 h-9 rounded-[12px] bg-[#FFE855] text-slate-950 hover:bg-amber-300 font-bold flex items-center justify-center shadow-sm active:scale-95 transition-all flex-shrink-0 cursor-pointer" aria-label="Send message">
           <span class="material-symbols-outlined text-base">send</span>
         </button>
       </form>
@@ -1711,6 +1714,25 @@ function initGlobalAIChatbot() {
 
   appFrame.appendChild(widget);
   updateChatbotSuggestionChips();
+
+  // Document-level outside click handler with proper containment logic
+  if (!window._chatbotOutsideClickListenerAttached) {
+    window._chatbotOutsideClickListenerAttached = true;
+    document.addEventListener('click', (e) => {
+      const drawer = document.getElementById('chatbot-window-drawer');
+      
+      // Check if chatbot is open
+      if (drawer && !drawer.classList.contains('hidden') && !drawer.classList.contains('chatbot-drawer-close')) {
+        // Do not close if clicking inside the chatbot widget (drawer or launcher FAB)
+        if (e.target.closest('#northstar-chatbot-widget')) {
+          return;
+        }
+        
+        // Click was outside, safely close
+        toggleAIChatbotWindow();
+      }
+    });
+  }
 }
 
 function toggleAIChatbotWindow() {
@@ -2172,47 +2194,46 @@ async function handleAIChatSubmit(e) {
   window._chatPending = true;
   if (sendBtn) sendBtn.disabled = true;
 
-  const rawRole = (typeof getRole === 'function') ? getRole() : (localStorage.getItem('northstar_user_role') || 'seeker');
-  const isHelperRole = (rawRole === 'volunteer' || rawRole === 'donater' || rawRole === 'helper' || rawRole === 'employer');
-  const currentRole = isHelperRole ? 'volunteer' : 'seeker';
-
-  // Gather verified NorthStar app data for this chat request.
-  // This currently includes the user's saved/generated resume when available.
-  const northstarContext = getNorthStarChatContext();
-
-  // Add verified location/resource context only when the user's
-  // question actually requires nearby map data.
-  const resourceContext = await getNorthStarLocationResourceContext(text);
-
-  if (resourceContext) {
-    northstarContext.resource_lookup = resourceContext;
-  } else {
-    const lowerText = String(text || '').toLowerCase();
-
-    const refersToPreviousResource =
-      lowerText.includes('that shelter') ||
-      lowerText.includes('that place') ||
-      lowerText.includes('that resource') ||
-      lowerText.includes('is it open') ||
-      lowerText.includes('does it have') ||
-      lowerText.includes('what about that');
-
-    if (
-      refersToPreviousResource &&
-      window.northstarLastVerifiedResource
-    ) {
-      northstarContext.resource_lookup = {
-        resource_lookup_requested: true,
-        resource_lookup_status: 'success',
-        follow_up_reference: true,
-        nearest_resource: window.northstarLastVerifiedResource
-      };
-    }
-  }
-
-  console.log('[NorthStar AI] Verified app context:', northstarContext);
-
   try {
+    const rawRole = (typeof getRole === 'function') ? getRole() : (localStorage.getItem('northstar_user_role') || 'seeker');
+    const isHelperRole = (rawRole === 'volunteer' || rawRole === 'donater' || rawRole === 'helper' || rawRole === 'employer');
+    const currentRole = isHelperRole ? 'volunteer' : 'seeker';
+
+    // Gather verified NorthStar app data for this chat request.
+    // This currently includes the user's saved/generated resume when available.
+    const northstarContext = getNorthStarChatContext();
+
+    // Add verified location/resource context only when the user's
+    // question actually requires nearby map data.
+    const resourceContext = await getNorthStarLocationResourceContext(text);
+
+    if (resourceContext) {
+      northstarContext.resource_lookup = resourceContext;
+    } else {
+      const lowerText = String(text || '').toLowerCase();
+
+      const refersToPreviousResource =
+        lowerText.includes('that shelter') ||
+        lowerText.includes('that place') ||
+        lowerText.includes('that resource') ||
+        lowerText.includes('is it open') ||
+        lowerText.includes('does it have') ||
+        lowerText.includes('what about that');
+
+      if (
+        refersToPreviousResource &&
+        window.northstarLastVerifiedResource
+      ) {
+        northstarContext.resource_lookup = {
+          resource_lookup_requested: true,
+          resource_lookup_status: 'success',
+          follow_up_reference: true,
+          nearest_resource: window.northstarLastVerifiedResource
+        };
+      }
+    }
+
+    console.log('[NorthStar AI] Verified app context:', northstarContext);
     // 4. Send request with message, role, history, and verified app context
     const res = await fetch('/api/chat', {
       method: 'POST',
