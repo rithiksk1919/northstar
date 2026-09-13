@@ -70,3 +70,5 @@ northstar-ai/scripts/run_phase*.py
 
 # Nested AI gitignore not needed in monorepo
 northstar-ai/.gitignore
+
+.agents/mcp_config.json
