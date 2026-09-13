@@ -57,7 +57,22 @@ if (typeof document !== 'undefined') {
 // 2. STRICT CREDENTIAL REGISTRY & DEMO TEST ACCOUNT GATING
 // ==========================================================================
 
-const REGISTERED_USERS_KEY = 'northstar_registered_users_v1';
+const REGISTERED_USERS_KEY = 'northstar_registered_users_v2';
+
+// One-time migration: clear any corrupted v1 data that used hashed passwords
+(function migrateRegisteredUsers() {
+  try {
+    const oldRaw = localStorage.getItem('northstar_registered_users_v1');
+    if (oldRaw) {
+      // If any record has no 'password' field (old hashed-only records), purge the whole v1 store
+      const oldMap = JSON.parse(oldRaw);
+      const hasCorrupted = Object.values(oldMap).some(r => !r.password);
+      if (hasCorrupted) {
+        localStorage.removeItem('northstar_registered_users_v1');
+      }
+    }
+  } catch (e) {}
+})();
 
 function getRegisteredUsersMap() {
   const defaultDemoAccounts = {
@@ -216,7 +231,7 @@ async function redirectToRoleDashboard(user) {
 
   const normalizedRole = (role || '').toLowerCase();
   if (normalizedRole === 'volunteer' || normalizedRole === 'helper') {
-    window.location.href = 'volunteer-dashboard.html';
+    window.location.href = 'helper-dashboard.html';
   } else {
     window.location.href = 'seeker-dashboard.html';
   }
@@ -399,8 +414,8 @@ window.handleAuthFormSubmit = async function(e) {
     const supabase = window.supabaseClient || await getSupabase();
 
     if (currentAuthMode === 'signup') {
-      if (password.length < 6) {
-        showAuthError('Password must be at least 6 characters long.');
+      if (password.length < 4) {
+        showAuthError('Password must be at least 4 characters long.');
         return;
       }
 

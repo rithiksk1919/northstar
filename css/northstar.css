@@ -8,7 +8,7 @@
   --text-muted: #64748B;
   --border-light: #E2E8F0;
   --border-dark: #1E293B;
-  
+
   --bg-obsidian: #F4F5F7;
   --surface-navy: #FFFFFF;
   --stroke-slate: #E2E8F0;
@@ -25,14 +25,24 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4, h5, h6, .heading-font {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.heading-font {
   font-family: 'Plus Jakarta Sans', sans-serif;
   font-weight: 700;
   letter-spacing: -0.025em;
 }
 
 /* UI/UX Pro Max Touch & Interaction Targets */
-button, a, input, select, textarea {
+button,
+a,
+input,
+select,
+textarea {
   touch-action: manipulation;
 }
 
@@ -53,22 +63,80 @@ nav a {
   position: relative;
 }
 
-/* Button & Card Micro-Interactions (150-250ms spring timing) */
-button, .interactive-card, nav a, .chip-btn {
-  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), 
-              box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
-              background-color 0.2s ease, 
-              color 0.15s ease,
-              border-color 0.2s ease;
+/* Button & Card Micro-Interactions (Flutter Spring Physics) */
+button,
+.interactive-card,
+nav a,
+.chip-btn,
+.flutter-btn {
+  transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    box-shadow 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    background-color 0.2s ease,
+    color 0.15s ease,
+    border-color 0.2s ease;
+  position: relative;
 }
 
-button:hover, nav a:hover {
-  transform: translateY(-1px);
+/* Allow ripple to be contained within buttons while not affecting nav a or cards globally */
+button, .chip-btn, .flutter-btn {
+  overflow: hidden;
 }
 
-button:active, .interactive-card:active, nav a:active {
-  transform: scale(0.96) translateY(0);
+button:hover,
+nav a:hover,
+.flutter-btn:hover {
+  transform: translateY(-2px);
+}
+
+button:active,
+.interactive-card:active,
+nav a:active,
+.flutter-btn:active {
+  transform: scale(0.94) translateY(0);
   opacity: 0.94;
+}
+
+/* InkWell Ripple Effect */
+.ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  animation: flutterRipple 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: rgba(255, 255, 255, 0.3); /* Default light ripple */
+  pointer-events: none;
+}
+
+/* Darker ripple for light buttons/backgrounds */
+.bg-white .ripple-effect,
+.bg-slate-50 .ripple-effect,
+.bg-amber-400 .ripple-effect,
+.bg-\\[\\#FFE855\\] .ripple-effect {
+  background-color: rgba(0, 0, 0, 0.12);
+}
+
+@keyframes flutterRipple {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Staggered Animations */
+.stagger-1 { animation: slideFadeUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.05s both; }
+.stagger-2 { animation: slideFadeUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.1s both; }
+.stagger-3 { animation: slideFadeUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.15s both; }
+.stagger-4 { animation: slideFadeUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s both; }
+.stagger-5 { animation: slideFadeUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.25s both; }
+
+@keyframes slideFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Glassmorphism & Elevation */
@@ -119,10 +187,13 @@ nav a.bg-secondary-container::after {
 }
 
 @keyframes starlightGlowPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 15px rgba(252, 223, 70, 0.25);
     transform: scale(1);
   }
+
   50% {
     box-shadow: 0 0 35px rgba(252, 223, 70, 0.6);
     transform: scale(1.02);
@@ -149,7 +220,9 @@ nav a.bg-secondary-container::after {
 }
 
 @keyframes pulsePing {
-  75%, 100% {
+
+  75%,
+  100% {
     transform: scale(2.2);
     opacity: 0;
   }
@@ -161,8 +234,16 @@ nav a.bg-secondary-container::after {
 }
 
 @keyframes pulse-ring {
-  0% { transform: scale(0.6); opacity: 0.9; }
-  80%, 100% { transform: scale(1.5); opacity: 0; }
+  0% {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+
+  80%,
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
 }
 
 /* Interactive Card Hover Effects */
@@ -200,7 +281,8 @@ nav a.bg-secondary-container::after {
 }
 
 /* Bottom Sheet Modal */
-#bottom-sheet, .modal-drawer {
+#bottom-sheet,
+.modal-drawer {
   transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -308,9 +390,19 @@ nav a.bg-secondary-container::after {
 }
 
 @keyframes switchPop {
-  0% { transform: scale(0.93); opacity: 0.7; }
-  50% { transform: scale(1.03); }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0.93);
+    opacity: 0.7;
+  }
+
+  50% {
+    transform: scale(1.03);
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .animate-fade-in-up {
@@ -322,6 +414,7 @@ nav a.bg-secondary-container::after {
     opacity: 0;
     transform: translateY(12px) scale(0.99);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -329,17 +422,22 @@ nav a.bg-secondary-container::after {
 }
 
 /* Form Input Smooth Focus Elevation */
-input, textarea, select {
+input,
+textarea,
+select {
   transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.18s ease;
 }
 
-input:focus, textarea:focus, select:focus {
+input:focus,
+textarea:focus,
+select:focus {
   border-color: var(--starlight-amber) !important;
   box-shadow: 0 0 0 3px rgba(252, 223, 70, 0.3) !important;
 }
 
 /* Ensure views swap inside the phone frame instead of sitting side-by-side */
-.phone-frame, .app-frame {
+.phone-frame,
+.app-frame {
   position: relative;
   width: 100%;
   max-width: 412px;
@@ -393,7 +491,8 @@ input:focus, textarea:focus, select:focus {
 html.dark .theme-toggle-btn {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #f59e0b; /* Amber Sun */
+  color: #f59e0b;
+  /* Amber Sun */
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
 }
 
@@ -407,7 +506,8 @@ html.dark .theme-toggle-btn:hover {
 html.light .theme-toggle-btn {
   background: rgba(15, 23, 42, 0.08);
   border: 1px solid rgba(15, 23, 42, 0.15);
-  color: #6366f1; /* Indigo Moon */
+  color: #6366f1;
+  /* Indigo Moon */
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
 }
 
@@ -436,12 +536,28 @@ html.light .theme-toggle-btn:hover {
 /* Comprehensive Contrast Engine (Light & Dark Modes) */
 /* ---------------------------------------------------- */
 
-html, body, div, header, nav, section, main, button, input, textarea, h1, h2, h3, h4, p, span {
+html,
+body,
+div,
+header,
+nav,
+section,
+main,
+button,
+input,
+textarea,
+h1,
+h2,
+h3,
+h4,
+p,
+span {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 /* DARK MODE CONTRAST RULES */
-html.dark, html.dark body {
+html.dark,
+html.dark body {
   background-color: #05070B !important;
   color: #F8FAFC !important;
 }
@@ -463,8 +579,8 @@ html.dark header {
   color: #F8FAFC !important;
 }
 
-html.dark header h1, 
-html.dark header span, 
+html.dark header h1,
+html.dark header span,
 html.dark header div {
   color: #F8FAFC !important;
 }
@@ -504,13 +620,16 @@ html.dark .border-amber-100 {
   border-color: #232C3F !important;
 }
 
-html.dark input, html.dark textarea, html.dark select {
+html.dark input,
+html.dark textarea,
+html.dark select {
   background-color: #12141c !important;
   color: #ffffff !important;
   border-color: rgba(255, 255, 255, 0.15) !important;
 }
 
-html.dark input::placeholder, html.dark textarea::placeholder {
+html.dark input::placeholder,
+html.dark textarea::placeholder {
   color: #64748b !important;
 }
 
@@ -518,7 +637,8 @@ html.dark input::placeholder, html.dark textarea::placeholder {
 /* VIBRANT NEO-HUMANITARIAN LIGHT MODE DESIGN ENGINE    */
 /* ==================================================== */
 
-html.light, html.light body {
+html.light,
+html.light body {
   background-color: #cbd5e1 !important;
   color: #0f172a !important;
 }
@@ -702,12 +822,30 @@ html.light .active-chip {
   color: #FFFFFF !important;
 }
 
-[class*="from-\[\#1C2538\]"] h1, [class*="from-\[\#1C2538\]"] h2, [class*="from-\[\#1C2538\]"] h3, [class*="from-\[\#1C2538\]"] h4,
-[class*="from-slate-900"] h1, [class*="from-slate-900"] h2, [class*="from-slate-900"] h3, [class*="from-slate-900"] h4,
-.bg-slate-950 h1, .bg-slate-950 h2, .bg-slate-950 h3, .bg-slate-950 h4,
-.bg-slate-900 h1, .bg-slate-900 h2, .bg-slate-900 h3, .bg-slate-900 h4,
-.bg-\[\#0D1424\] h1, .bg-\[\#0D1424\] h2, .bg-\[\#0D1424\] h3, .bg-\[\#0D1424\] h4,
-.bg-\[\#1C2538\] h1, .bg-\[\#1C2538\] h2, .bg-\[\#1C2538\] h3, .bg-\[\#1C2538\] h4 {
+[class*="from-\[\#1C2538\]"] h1,
+[class*="from-\[\#1C2538\]"] h2,
+[class*="from-\[\#1C2538\]"] h3,
+[class*="from-\[\#1C2538\]"] h4,
+[class*="from-slate-900"] h1,
+[class*="from-slate-900"] h2,
+[class*="from-slate-900"] h3,
+[class*="from-slate-900"] h4,
+.bg-slate-950 h1,
+.bg-slate-950 h2,
+.bg-slate-950 h3,
+.bg-slate-950 h4,
+.bg-slate-900 h1,
+.bg-slate-900 h2,
+.bg-slate-900 h3,
+.bg-slate-900 h4,
+.bg-\[\#0D1424\] h1,
+.bg-\[\#0D1424\] h2,
+.bg-\[\#0D1424\] h3,
+.bg-\[\#0D1424\] h4,
+.bg-\[\#1C2538\] h1,
+.bg-\[\#1C2538\] h2,
+.bg-\[\#1C2538\] h3,
+.bg-\[\#1C2538\] h4 {
   color: #FFFFFF !important;
 }
 
@@ -785,6 +923,7 @@ html.light nav a.bg-amber-400\/15 {
     opacity: 0;
     transform: translateY(8px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
@@ -802,6 +941,7 @@ html.light nav a.bg-amber-400\/15 {
     opacity: 0;
     transform: translateX(15px);
   }
+
   100% {
     opacity: 1;
     transform: translateX(0);
@@ -822,18 +962,24 @@ html.light nav a.bg-amber-400\/15 {
 .typing-dot:nth-child(1) {
   animation-delay: 0ms;
 }
+
 .typing-dot:nth-child(2) {
   animation-delay: 160ms;
 }
+
 .typing-dot:nth-child(3) {
   animation-delay: 320ms;
 }
 
 @keyframes typingDotPulse {
-  0%, 60%, 100% {
+
+  0%,
+  60%,
+  100% {
     transform: scale(0.75);
     opacity: 0.35;
   }
+
   30% {
     transform: scale(1.15);
     opacity: 1;
@@ -850,6 +996,7 @@ html.light nav a.bg-amber-400\/15 {
     opacity: 1;
     transform: scale(1);
   }
+
   100% {
     opacity: 0;
     transform: scale(0.92);
@@ -858,6 +1005,7 @@ html.light nav a.bg-amber-400\/15 {
 
 /* Accessibility: Respect OS prefers-reduced-motion settings */
 @media (prefers-reduced-motion: reduce) {
+
   .chat-msg-incoming,
   .chat-msg-outgoing,
   .typing-bubble-exit,
@@ -865,23 +1013,40 @@ html.light nav a.bg-amber-400\/15 {
   .chatbot-drawer-close {
     animation: simpleFadeIn 150ms ease-out forwards !important;
   }
+
   .typing-dot {
     animation: simpleDotOpacity 1s ease-in-out infinite !important;
   }
+
   #chatbot-fab-btn,
   #chatbot-fab-icon {
     transition: none !important;
   }
+
   #chatbot-messages-list {
     scroll-behavior: auto !important;
   }
+
   @keyframes simpleFadeIn {
-    0% { opacity: 0; }
-    100% { opacity: 1; }
+    0% {
+      opacity: 0;
+    }
+
+    100% {
+      opacity: 1;
+    }
   }
+
   @keyframes simpleDotOpacity {
-    0%, 100% { opacity: 0.3; }
-    50% { opacity: 0.9; }
+
+    0%,
+    100% {
+      opacity: 0.3;
+    }
+
+    50% {
+      opacity: 0.9;
+    }
   }
 }
 
@@ -905,6 +1070,7 @@ html.light nav a.bg-amber-400\/15 {
     opacity: 0;
     transform: scale(0.88) translateY(10px);
   }
+
   100% {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -922,6 +1088,7 @@ html.light nav a.bg-amber-400\/15 {
     opacity: 1;
     transform: scale(1) translateY(0);
   }
+
   100% {
     opacity: 0;
     transform: scale(0.88) translateY(10px);
@@ -969,7 +1136,7 @@ html.light nav a.bg-amber-400\/15 {
   padding-left: 0 !important;
 }
 
-.job-text-column > * {
+.job-text-column>* {
   margin-left: 0 !important;
   padding-left: 0 !important;
 }
@@ -994,7 +1161,8 @@ html.light nav a.bg-amber-400\/15 {
   padding-left: 0 !important;
 }
 
-.job-tags-container, .tag-group {
+.job-tags-container,
+.tag-group {
   display: flex !important;
   flex-wrap: wrap !important;
   gap: 8px !important;
@@ -1031,7 +1199,8 @@ html.dark .card-description {
   padding-left: 0 !important;
 }
 
-.job-tag, .tag-pill {
+.job-tag,
+.tag-pill {
   background-color: #f1f5f9 !important;
   border-radius: 9999px !important;
   color: #1e293b !important;
@@ -1064,7 +1233,7 @@ html.dark .tag-pill {
 .app-header,
 .header-bar,
 header,
-.app-frame > header {
+.app-frame>header {
   padding: 20px 16px !important;
   padding-top: 28px !important;
   padding-top: max(28px, env(safe-area-inset-top)) !important;
@@ -1096,7 +1265,7 @@ header,
   flex-shrink: 0 !important;
 }
 
-.header-left > div:first-child {
+.header-left>div:first-child {
   flex-shrink: 0 !important;
   width: 36px !important;
   height: 36px !important;
@@ -1444,17 +1613,24 @@ html.dark .auth-subtitle {
 }
 
 /* Ensure outer viewport containers allow vertical scrolling */
-html, body, .app-container, .dashboard-container {
+html,
+body,
+.app-container,
+.dashboard-container {
   height: 100%;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
 }
 
 /* Ensure main content container scrolls independently above the bottom nav */
-main.dashboard-content, .main-content, main.dashboard-container {
+main.dashboard-content,
+.main-content,
+main.dashboard-container {
   overflow-y: auto !important;
-  max-height: calc(100vh - 70px); /* Leave space for bottom nav bar */
-  padding-bottom: 80px; /* Prevent bottom content from being obscured by bottom nav */
+  max-height: calc(100vh - 70px);
+  /* Leave space for bottom nav bar */
+  padding-bottom: 80px;
+  /* Prevent bottom content from being obscured by bottom nav */
 }
 
 /* Interactive Focus & Hover Outline (Yellow Accent) */
@@ -1537,7 +1713,8 @@ a[href*="guest"]:focus {
   border: none !important;
   box-shadow: none !important;
   text-decoration: none !important;
-  opacity: 0.8; /* Subtle opacity shift instead of a border box */
+  opacity: 0.8;
+  /* Subtle opacity shift instead of a border box */
 }
 
 /* Floating Chatbot FAB Widget Repositioning */
@@ -1627,7 +1804,8 @@ button[data-role]:focus-visible {
 .role-toggle.active,
 button.role-btn.active,
 button[data-role].active {
-  background-color: #facc15 !important; /* Main yellow accent */
+  background-color: #facc15 !important;
+  /* Main yellow accent */
   color: #0f172a !important;
   border: none !important;
   outline: none !important;
@@ -1650,34 +1828,26 @@ button[data-role].active {
   display: none !important;
 }
 
-/* Chatbot FAB Fixed Positioning at bottom: 80px (bottom-20), right: 16px, z-index: 50 */
-#northstar-chatbot-widget,
-.chat-fab,
+/* Chatbot Header Button & Drawer Styling */
 #chat-fab {
-  position: fixed !important;
-  bottom: 80px !important;
-  right: 16px !important;
-  z-index: 50 !important;
+  position: relative !important;
+  bottom: auto !important;
+  right: auto !important;
+  z-index: 10 !important;
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+  border-radius: 12px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 @media (min-width: 640px) {
-  #northstar-chatbot-widget,
-  .chat-fab,
-  #chat-fab {
-    right: max(16px, calc(50vw - 210px + 16px)) !important;
-  }
   #chatbot-window-drawer {
     right: max(16px, calc(50vw - 210px + 16px)) !important;
   }
-}
-
-#chat-fab {
-  width: 56px !important;
-  height: 56px !important;
-  border-radius: 9999px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
 }
 
 /* 6-Tab Responsive Bottom Navigation Bar */
@@ -1700,8 +1870,8 @@ html.dark .bottom-nav {
   border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
-.bottom-nav > a,
-.bottom-nav > button {
+.bottom-nav>a,
+.bottom-nav>button {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
@@ -1735,6 +1905,7 @@ main.progress-scroll-container,
 }
 
 @media (min-width: 640px) {
+
   .phone-frame,
   .app-frame,
   .phone-screen,
@@ -1743,8 +1914,8 @@ main.progress-scroll-container,
   }
 }
 
-.app-frame > main,
-.phone-frame > main,
+.app-frame>main,
+.phone-frame>main,
 main.main-content,
 main.progress-scroll-container {
   flex: 1 1 0% !important;
@@ -1755,8 +1926,8 @@ main.progress-scroll-container {
   z-index: 10 !important;
 }
 
-.app-frame > header,
-.phone-frame > header,
+.app-frame>header,
+.phone-frame>header,
 header.app-header {
   flex-shrink: 0 !important;
   position: sticky !important;
@@ -1765,8 +1936,8 @@ header.app-header {
   background-color: #ffffff !important;
 }
 
-html.dark .app-frame > header,
-html.dark .phone-frame > header,
+html.dark .app-frame>header,
+html.dark .phone-frame>header,
 html.dark header.app-header {
   background-color: #0F1117 !important;
 }
@@ -2040,9 +2211,3 @@ html.dark #download-banner .banner-subtitle {
   background-color: #22c55e !important;
   color: #ffffff !important;
 }
-
-
-
-
-
-

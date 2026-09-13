@@ -73,7 +73,7 @@ function renderAccountHeaderAvatar() {
       container = document.createElement('div');
       container.className = 'header-actions-right flex items-center gap-2 flex-shrink-0';
       const existingBtns = Array.from(header.children).filter(child => !child.querySelector('h1') && child.tagName !== 'H1' && !child.classList.contains('flex-1') && child.id !== 'offline-save-btn');
-      
+
       const offlineBtn = header.querySelector('#offline-save-btn');
       if (offlineBtn) {
         container.appendChild(offlineBtn);
@@ -148,7 +148,7 @@ function initThemeToggle() {
 }
 initThemeToggle();
 
-window.setThemeMode = function(mode) {
+window.setThemeMode = function (mode) {
   document.documentElement.classList.remove('light', 'dark');
   document.documentElement.classList.add(mode);
   localStorage.setItem('northstar_theme', mode);
@@ -162,14 +162,14 @@ window.setThemeMode = function(mode) {
         window.supabaseClient
           .from('profiles')
           .upsert({ id: session.id, theme: mode }, { onConflict: 'id' })
-          .then(() => {})
-          .catch(() => {});
+          .then(() => { })
+          .catch(() => { });
       }
-    } catch (_) {}
+    } catch (_) { }
   }
 };
 
-window.toggleTheme = function() {
+window.toggleTheme = function () {
   const current = localStorage.getItem('northstar_theme') || 'light';
   const newTheme = current === 'dark' ? 'light' : 'dark';
   window.setThemeMode(newTheme);
@@ -520,7 +520,7 @@ function setRole(role) {
   if (role !== 'seeker' && role !== 'volunteer') role = 'seeker';
   cachedSupabaseRole = role;
   localStorage.setItem('northstar_user_role', role);
-  
+
   if (window.supabaseClient) {
     try {
       const raw = localStorage.getItem('northstar_session');
@@ -529,12 +529,12 @@ function setRole(role) {
         window.supabaseClient
           .from('profiles')
           .upsert({ id: session.id, role: role }, { onConflict: 'id' })
-          .then(() => {})
-          .catch(() => {});
+          .then(() => { })
+          .catch(() => { });
       }
-    } catch (_) {}
+    } catch (_) { }
   }
-  
+
   renderDynamicNav();
   renderRoleHeaderToggle();
   enforceFeatureGate();
@@ -1016,7 +1016,7 @@ window.saveResumeData = saveResumeData;
 window.setGatewayMode = setGatewayMode;
 window.handleGatewayLogin = window.handleAuthFormSubmit;
 window.logout = logout;
-window.redirectToAuthGateway = function() {
+window.redirectToAuthGateway = function () {
   if (typeof window.closeModal === 'function') window.closeModal('settings-modal');
   // Show the onboarding overlay and go back to step 1
   const overlay = document.getElementById('onboarding-overlay');
@@ -1222,7 +1222,7 @@ function getUserData() {
     try {
       const parsed = JSON.parse(savedRes);
       if (Array.isArray(parsed) && parsed.length > 0) data.progress.savedLocation = true;
-    } catch (e) {}
+    } catch (e) { }
   }
   if (data.resumeData || localStorage.getItem('northstar_resume_saved') === 'true') {
     data.progress.resumeBuilder = true;
@@ -1289,7 +1289,7 @@ function updateMilestone(milestoneKey, isCompleted) {
   syncDashboardProgressWidget();
 }
 
-window.toggleMilestoneCompletion = function(milestoneKey, event) {
+window.toggleMilestoneCompletion = function (milestoneKey, event) {
   if (event) event.stopPropagation();
   const userData = getUserData();
   const current = !!userData.progress[milestoneKey];
@@ -1325,7 +1325,7 @@ function saveResumeData(data) {
     if (path.includes('jobs')) {
       localStorage.setItem('northstar_jobs_explored', 'true');
     }
-  } catch (e) {}
+  } catch (e) { }
 })();
 
 function renderProgressPage() {
@@ -1477,7 +1477,7 @@ function renderBottomNav() {
 }
 window.renderBottomNav = renderBottomNav;
 
-window.matchAndRenderJobs = async function(resumeData) {
+window.matchAndRenderJobs = async function (resumeData) {
   const container = document.getElementById('matched-jobs-container');
   if (!container || !resumeData) return;
 
@@ -1594,45 +1594,60 @@ function checkDashboardJobMatchLock() {
 // GLOBAL AI CHATBOT WIDGET (SEEKER & HELPER / VOLUNTEER)
 // ============================================================
 function initGlobalAIChatbot() {
-  const existingWidget = document.getElementById('northstar-chatbot-widget');
-  if (existingWidget) {
-    if (existingWidget.parentElement !== document.body) {
-      document.body.appendChild(existingWidget);
-    }
-    existingWidget.style.cssText = 'position: fixed !important; bottom: 80px !important; right: 16px !important; z-index: 50 !important;';
-    const fab = document.getElementById('chat-fab');
-    if (fab) {
-      fab.style.bottom = '80px';
-      fab.style.zIndex = '50';
-    }
-    return;
-  }
+  // ── 1. Inject the FAB into every page header (left of dark-mode btn) ──
+  function injectHeaderBtn() {
+    document.querySelectorAll('header').forEach(header => {
+      if (header.querySelector('#chat-fab')) return; // already injected
 
-  // Insert Backdrop Overlay on document.body (placed behind the chatbot widget at z-index 90)
+      // Find or create the right-side actions container
+      let container = header.querySelector('.header-actions-right') || header.querySelector('.header-actions');
+      if (!container) {
+        container = document.createElement('div');
+        container.className = 'header-actions-right flex items-center gap-2 flex-shrink-0';
+        header.appendChild(container);
+      }
+
+      // Build the chatbot icon button — same size/radius as theme-toggle-btn
+      const btn = document.createElement('button');
+      btn.id = 'chat-fab';
+      btn.setAttribute('data-fab-alias', 'chatbot-fab-btn');
+      btn.type = 'button';
+      btn.onclick = toggleAIChatbotWindow;
+      btn.setAttribute('aria-label', 'Open AI Assistant');
+      btn.title = 'NorthStar AI Assistant';
+      btn.className = 'icon-btn w-11 h-11 min-w-[44px] min-h-[44px] rounded-[12px] bg-[#FFE855] text-slate-950 border border-amber-300 flex items-center justify-center font-bold transition-all active:scale-95 hover:brightness-105 cursor-pointer relative select-none flex-shrink-0';
+      btn.innerHTML = `
+        <span id="chatbot-fab-icon" class="material-symbols-outlined" style="font-size:20px;line-height:1;">smart_toy</span>
+        <span class="absolute top-1 right-1 w-2 h-2 bg-emerald-500 border border-white rounded-full"></span>
+      `;
+
+      // Insert BEFORE the first existing button in the container (dark mode, etc.)
+      const firstBtn = container.querySelector('button, a');
+      if (firstBtn) {
+        container.insertBefore(btn, firstBtn);
+      } else {
+        container.appendChild(btn);
+      }
+    });
+  }
+  injectHeaderBtn();
+
+  // ── 2. Backdrop overlay ──
   if (!document.getElementById('chatbot-backdrop-overlay')) {
     const backdrop = document.createElement('div');
     backdrop.id = 'chatbot-backdrop-overlay';
     backdrop.className = 'fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-[90] chatbot-backdrop-hidden transition-opacity pointer-events-none';
-    backdrop.onclick = (e) => {
-      e.stopPropagation();
-      toggleAIChatbotWindow();
-    };
+    backdrop.onclick = (e) => { e.stopPropagation(); toggleAIChatbotWindow(); };
     document.body.appendChild(backdrop);
   }
 
-  const widget = document.createElement('div');
-  widget.id = 'northstar-chatbot-widget';
-  widget.className = 'chat-fab fixed bottom-[80px] right-[16px] z-50 no-print';
-  widget.style.cssText = 'position: fixed !important; bottom: 80px !important; right: 16px !important; z-index: 50 !important;';
-  widget.innerHTML = `
-    <!-- Launcher FAB Button (56x56px Circular Badge at bottom: 80px, right: 16px, z-index: 50) -->
-    <button id="chat-fab" data-fab-alias="chatbot-fab-btn" onclick="toggleAIChatbotWindow()" style="position: fixed; bottom: 80px; right: 16px; z-index: 50; width: 56px; height: 56px; border-radius: 9999px; display: flex; align-items: center; justify-content: center;" class="w-14 h-14 rounded-full bg-[#FFE855] text-slate-950 shadow-xl border-2 border-white flex items-center justify-center font-bold transition-all active:scale-95 hover:bg-amber-300 group cursor-pointer select-none">
-      <span id="chatbot-fab-icon" class="material-symbols-outlined text-[28px] leading-none flex items-center justify-center">smart_toy</span>
-      <span class="absolute top-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full"></span>
-    </button>
-
-    <!-- Chatbot Window Drawer -->
-    <div id="chatbot-window-drawer" style="position: fixed; bottom: 146px; right: 16px; z-index: 101;" class="hidden w-[330px] sm:w-[360px] bg-white rounded-[24px] shadow-2xl border border-slate-200/80 overflow-hidden flex-col pointer-events-auto">
+  // ── 3. Drawer panel (fixed, opens below the header) ──
+  if (!document.getElementById('chatbot-window-drawer')) {
+    const drawer = document.createElement('div');
+    drawer.id = 'chatbot-window-drawer';
+    drawer.style.cssText = 'position: fixed; top: 72px; right: 16px; z-index: 9001;';
+    drawer.className = 'hidden w-[330px] sm:w-[360px] bg-white rounded-[24px] shadow-2xl border border-slate-200/80 overflow-hidden flex-col pointer-events-auto';
+    drawer.innerHTML = `
       <!-- Header -->
       <div class="bg-slate-900 text-white px-4 py-3 flex items-center justify-between select-none">
         <div class="flex items-center gap-2.5">
@@ -1673,26 +1688,27 @@ function initGlobalAIChatbot() {
           <span class="material-symbols-outlined text-base">send</span>
         </button>
       </form>
-    </div>
-  `;
+    `;
+    document.body.appendChild(drawer);
+  }
 
-  document.body.appendChild(widget);
+  // Keep the widget reference for external code that looks for #northstar-chatbot-widget
+  if (!document.getElementById('northstar-chatbot-widget')) {
+    const stub = document.createElement('span');
+    stub.id = 'northstar-chatbot-widget';
+    stub.style.display = 'none';
+    document.body.appendChild(stub);
+  }
+
   updateChatbotSuggestionChips();
 
-  // Document-level outside click handler with proper containment logic
+  // Document-level outside click handler
   if (!window._chatbotOutsideClickListenerAttached) {
     window._chatbotOutsideClickListenerAttached = true;
     document.addEventListener('click', (e) => {
       const drawer = document.getElementById('chatbot-window-drawer');
-      
-      // Check if chatbot is open
       if (drawer && !drawer.classList.contains('hidden') && !drawer.classList.contains('chatbot-drawer-close')) {
-        // Do not close if clicking inside the chatbot widget (drawer or launcher FAB)
-        if (e.target.closest('#northstar-chatbot-widget')) {
-          return;
-        }
-        
-        // Click was outside, safely close
+        if (e.target.closest('#chat-fab') || e.target.closest('#chatbot-window-drawer')) return;
         toggleAIChatbotWindow();
       }
     });
@@ -1827,11 +1843,10 @@ function appendAssistantMessageBubble(text, isError = false, action = null) {
   bubbleWrapper.className = 'flex flex-col gap-2 max-w-[85%]';
 
   const contentDiv = document.createElement('div');
-  contentDiv.className = `p-3 rounded-2xl rounded-tl-none border shadow-sm leading-relaxed ${
-    isError 
-      ? 'bg-red-50/80 border-red-200 text-red-700' 
+  contentDiv.className = `p-3 rounded-2xl rounded-tl-none border shadow-sm leading-relaxed ${isError
+      ? 'bg-red-50/80 border-red-200 text-red-700'
       : 'bg-white border-slate-200/80 text-slate-800'
-  }`;
+    }`;
   contentDiv.textContent = text;
   bubbleWrapper.appendChild(contentDiv);
 
@@ -2244,11 +2259,11 @@ async function handleAIChatSubmit(e) {
       // followed deterministically by verified nearest resource lookup if available
       let chatAction = data.action || null;
       if (!chatAction &&
-          northstarContext &&
-          northstarContext.resource_lookup &&
-          northstarContext.resource_lookup.resource_lookup_status === 'success' &&
-          northstarContext.resource_lookup.nearest_resource &&
-          northstarContext.resource_lookup.nearest_resource.id) {
+        northstarContext &&
+        northstarContext.resource_lookup &&
+        northstarContext.resource_lookup.resource_lookup_status === 'success' &&
+        northstarContext.resource_lookup.nearest_resource &&
+        northstarContext.resource_lookup.nearest_resource.id) {
         chatAction = {
           type: 'navigate',
           destination: 'map',
@@ -2292,4 +2307,43 @@ if (document.readyState === 'loading') {
 } else {
   setTimeout(initGlobalAIChatbot, 100);
 }
+
+// ============================================================
+// FLUTTER-STYLE RIPPLE ANIMATION (INKWELL)
+// ============================================================
+document.addEventListener('mousedown', function(e) {
+  const target = e.target.closest('button, .interactive-card, nav a, .chip-btn, .flutter-btn, .chat-fab');
+  if (!target) return;
+
+  // Create ripple element
+  const ripple = document.createElement('span');
+  ripple.classList.add('ripple-effect');
+
+  // Calculate coordinates relative to the button
+  const rect = target.getBoundingClientRect();
+  
+  // Set ripple size based on the element size (multiply by 1.5 to ensure full coverage)
+  const diameter = Math.max(rect.width, rect.height) * 1.5;
+  const radius = diameter / 2;
+
+  // Set position based on click coordinates
+  ripple.style.width = ripple.style.height = `${diameter}px`;
+  ripple.style.left = `${e.clientX - rect.left - radius}px`;
+  ripple.style.top = `${e.clientY - rect.top - radius}px`;
+
+  // Remove existing ripples to prevent DOM bloat
+  const existingRipple = target.querySelector('.ripple-effect');
+  if (existingRipple) {
+    existingRipple.remove();
+  }
+
+  // Append ripple and remove after animation completes
+  target.appendChild(ripple);
+  
+  setTimeout(() => {
+    if (ripple.parentElement) {
+      ripple.remove();
+    }
+  }, 600); // Matches the 0.6s animation duration in CSS
+});
 

@@ -108,6 +108,10 @@
                     <h1 class="text-lg font-bold text-slate-900 font-heading tracking-tight">Northstar</h1>
                 </div>
                 <div class="header-actions-right flex items-center gap-2">
+                    <button id="chat-fab" data-fab-alias="chatbot-fab-btn" onclick="toggleAIChatbotWindow()" class="icon-btn w-8 h-8 rounded-[10px] bg-[#FFE855] text-slate-950 border border-amber-300 flex items-center justify-center font-bold transition-all active:scale-95 hover:brightness-105 cursor-pointer relative select-none flex-shrink-0" aria-label="Open AI Assistant" title="NorthStar AI Assistant">
+                        <span id="chatbot-fab-icon" class="material-symbols-outlined" style="font-size:18px;line-height:1;">smart_toy</span>
+                        <span class="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-emerald-500 border border-white rounded-full"></span>
+                    </button>
                     <button onclick="toggleTheme()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-amber-400 text-xs font-bold transition-all active:scale-95 cursor-pointer" title="Toggle Light / Dark Mode">
                         <span class="material-symbols-outlined text-sm">brightness_4</span>
                     </button>
@@ -213,33 +217,48 @@
                 <button onclick="dismissOnboarding(true)" style="background:none;border:none;color:#4b5563;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;padding:4px 8px;text-decoration:underline;text-underline-offset:3px;">Continue as guest</button>
             </div>
 
-            <!-- ======= STEP 2: Name + Password Form ======= -->
-            <div id="onboarding-step-2" style="display:none;flex-direction:column;gap:18px;animation:fadeInUp 0.4s ease both;">
+            <!-- ======= STEP 2: Create Account / Sign In Form ======= -->
+            <div id="onboarding-step-2" style="display:none;flex-direction:column;gap:16px;animation:fadeInUp 0.4s ease both;">
 
                 <!-- Back + Title -->
-                <div style="display:flex;align-items:center;gap:12px;">
-                    <button onclick="showOnboardingStep(1)" style="width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#f0f4f8;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                        <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:2px;">
+                    <button type="button" onclick="showOnboardingStep(1)" style="width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#f0f4f8;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <span class="material-symbols-outlined" style="font-size:20px;">arrow_back</span>
                     </button>
                     <div>
-                        <h2 id="onboarding-form-title" style="font-family:'Plus Jakarta Sans',sans-serif;font-size:20px;font-weight:800;color:#f0f4f8;margin:0 0 2px;">Create Account</h2>
-                        <p id="onboarding-form-subtitle" style="font-size:12px;color:#8896ab;margin:0;">Choose a name and password to get started.</p>
+                        <h2 id="onboarding-form-title" style="font-family:'Plus Jakarta Sans',sans-serif;font-size:22px;font-weight:800;color:#f0f4f8;margin:0 0 2px;letter-spacing:-0.02em;">Create Account</h2>
+                        <p id="onboarding-form-subtitle" style="font-size:12px;color:#8896ab;margin:0;">Complete your details to get started.</p>
+                    </div>
+                </div>
+
+                <!-- Role Selector (I AM A: Seeker | Helper) -->
+                <div id="onboarding-role-selector" style="display:flex;flex-direction:column;gap:6px;">
+                    <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#8896ab;">I AM A:</label>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                        <button type="button" id="role-toggle-seeker" onclick="selectOnboardingRole('seeker')" style="height:48px;border-radius:14px;background:#f59e0b;border:none;color:#0b0e14;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s;box-shadow:0 4px 14px rgba(245,158,11,0.25);">
+                            <span class="material-symbols-outlined" style="font-size:18px;">search</span>
+                            Seeker
+                        </button>
+                        <button type="button" id="role-toggle-helper" onclick="selectOnboardingRole('volunteer')" style="height:48px;border-radius:14px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.12);color:#f0f4f8;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s;">
+                            <span class="material-symbols-outlined" style="font-size:18px;">volunteer_activism</span>
+                            Helper
+                        </button>
                     </div>
                 </div>
 
                 <!-- Form -->
-                <form id="simple-login-form" onsubmit="handleSimpleLoginSubmit(event)" style="display:flex;flex-direction:column;gap:14px;">
-                    <div>
-                        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#8896ab;margin-bottom:6px;">Your Name</label>
-                        <input type="text" id="simple-login-name" placeholder="e.g. Alex Smith" required autocomplete="name"
-                            style="width:100%;height:50px;border-radius:14px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.1);color:#f0f4f8;font-size:14px;font-family:inherit;padding:0 16px;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
+                <form id="simple-login-form" onsubmit="handleSimpleLoginSubmit(event)" style="display:flex;flex-direction:column;gap:12px;">
+                    <div id="onboarding-name-group">
+                        <label id="onboarding-name-label" style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#8896ab;margin-bottom:6px;">YOUR NAME</label>
+                        <input type="text" id="simple-login-name" placeholder="e.g. Alex Smith" required autocomplete="username"
+                            style="width:100%;height:48px;border-radius:14px;background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.1);color:#f0f4f8;font-size:14px;font-family:inherit;padding:0 16px;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
                             onfocus="this.style.borderColor='#f59e0b'"
                             onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
                     </div>
                     <div>
-                        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#8896ab;margin-bottom:6px;">Password</label>
-                        <input type="password" id="simple-login-password" placeholder="Min 4 characters" required minlength="4" autocomplete="current-password"
-                            style="width:100%;height:50px;border-radius:14px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.1);color:#f0f4f8;font-size:14px;font-family:inherit;padding:0 16px;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
+                        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#8896ab;margin-bottom:6px;">PASSWORD</label>
+                        <input type="password" id="simple-login-password" placeholder="Min 6 characters" required minlength="4" autocomplete="current-password"
+                            style="width:100%;height:48px;border-radius:14px;background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.1);color:#f0f4f8;font-size:14px;font-family:inherit;padding:0 16px;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
                             onfocus="this.style.borderColor='#f59e0b'"
                             onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
                     </div>
@@ -247,10 +266,10 @@
                     <div id="simple-login-error" style="display:none;font-size:12px;color:#f87171;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);padding:10px 14px;border-radius:12px;text-align:center;"></div>
 
                     <button type="submit" id="simple-login-submit-btn"
-                        style="width:100%;height:52px;border-radius:16px;background:linear-gradient(135deg,#f59e0b,#fbbf24);border:none;color:#0b0e14;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 6px 24px rgba(245,158,11,0.3);transition:transform 0.15s;"
+                        style="width:100%;height:52px;border-radius:16px;background:linear-gradient(135deg,#f59e0b,#fbbf24);border:none;color:#0b0e14;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 6px 24px rgba(245,158,11,0.3);transition:transform 0.15s;margin-top:4px;"
                         onmouseover="this.style.transform='translateY(-2px)'"
                         onmouseout="this.style.transform=''">
-                        <span id="onboarding-submit-icon" class="material-symbols-outlined" style="font-size:18px;font-variation-settings:'FILL' 1;">person_add</span>
+                        <span id="onboarding-submit-icon" class="material-symbols-outlined" style="font-size:20px;font-variation-settings:'FILL' 1;">person_add</span>
                         <span id="onboarding-submit-label">Create Account</span>
                     </button>
                 </form>
@@ -406,6 +425,45 @@
 
         // Current onboarding mode: 'create' or 'signin'
         let _onboardingMode = 'create';
+        let _selectedOnboardingRole = 'seeker';
+
+        window.selectOnboardingRole = function(role) {
+            _selectedOnboardingRole = role;
+            if (typeof window.setRole === 'function') window.setRole(role);
+            const seekerBtn = document.getElementById('role-toggle-seeker');
+            const helperBtn = document.getElementById('role-toggle-helper');
+            if (role === 'seeker') {
+                if (seekerBtn) {
+                    seekerBtn.style.background = '#f59e0b';
+                    seekerBtn.style.border = 'none';
+                    seekerBtn.style.color = '#0b0e14';
+                    seekerBtn.style.fontWeight = '800';
+                    seekerBtn.style.boxShadow = '0 4px 14px rgba(245,158,11,0.25)';
+                }
+                if (helperBtn) {
+                    helperBtn.style.background = 'rgba(255,255,255,0.06)';
+                    helperBtn.style.border = '1.5px solid rgba(255,255,255,0.12)';
+                    helperBtn.style.color = '#f0f4f8';
+                    helperBtn.style.fontWeight = '700';
+                    helperBtn.style.boxShadow = 'none';
+                }
+            } else {
+                if (helperBtn) {
+                    helperBtn.style.background = '#f59e0b';
+                    helperBtn.style.border = 'none';
+                    helperBtn.style.color = '#0b0e14';
+                    helperBtn.style.fontWeight = '800';
+                    helperBtn.style.boxShadow = '0 4px 14px rgba(245,158,11,0.25)';
+                }
+                if (seekerBtn) {
+                    seekerBtn.style.background = 'rgba(255,255,255,0.06)';
+                    seekerBtn.style.border = '1.5px solid rgba(255,255,255,0.12)';
+                    seekerBtn.style.color = '#f0f4f8';
+                    seekerBtn.style.fontWeight = '700';
+                    seekerBtn.style.boxShadow = 'none';
+                }
+            }
+        };
 
         window.showOnboardingStep = function(step, mode) {
             const step1 = document.getElementById('onboarding-step-1');
@@ -415,6 +473,9 @@
             const subtitle = document.getElementById('onboarding-form-subtitle');
             const submitIcon = document.getElementById('onboarding-submit-icon');
             const submitLabel = document.getElementById('onboarding-submit-label');
+            const roleSelector = document.getElementById('onboarding-role-selector');
+            const emailGroup = document.getElementById('onboarding-email-group');
+            const nameLabel = document.getElementById('onboarding-name-label');
             const errDiv = document.getElementById('simple-login-error');
 
             if (step === 1) {
@@ -432,15 +493,21 @@
 
                 if (title) title.textContent = isCreate ? 'Create Account' : 'Welcome Back';
                 if (subtitle) subtitle.textContent = isCreate
-                    ? 'Choose a name and password to get started.'
-                    : 'Enter your name and password to sign in.';
+                    ? 'Complete your details to get started.'
+                    : 'Enter your details to sign in.';
                 if (submitIcon) submitIcon.textContent = isCreate ? 'person_add' : 'login';
                 if (submitLabel) submitLabel.textContent = isCreate ? 'Create Account' : 'Sign In';
+
+                if (roleSelector) roleSelector.style.display = isCreate ? 'flex' : 'none';
+                if (nameLabel) nameLabel.textContent = isCreate ? 'YOUR NAME' : 'USERNAME OR EMAIL';
 
                 // Reset form
                 const form = document.getElementById('simple-login-form');
                 if (form) form.reset();
                 if (errDiv) { errDiv.style.display = 'none'; errDiv.textContent = ''; }
+
+                // Set default role
+                selectOnboardingRole('seeker');
 
                 if(step1) step1.style.display = 'none';
                 if(step3) step3.style.display = 'none';
@@ -464,20 +531,20 @@
 
         // guestDismiss = true when called from "Continue as guest" button
         window.dismissOnboarding = function(guestDismiss) {
+            if (guestDismiss) {
+                // Set a lightweight guest session and redirect to dashboard
+                const guestSession = { id: 'guest', username: 'Guest', role: 'seeker', isGuest: true };
+                localStorage.setItem('northstar_session', JSON.stringify(guestSession));
+                window.location.href = 'seeker-dashboard.html';
+                return;
+            }
+            // Non-guest dismiss: just fade out the overlay
             const overlay = document.getElementById('onboarding-overlay');
             if (!overlay) return;
             overlay.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
             overlay.style.opacity = '0';
             overlay.style.transform = 'scale(1.04)';
             setTimeout(() => { overlay.style.display = 'none'; }, 420);
-            if (guestDismiss) {
-                // Set a lightweight guest session so the main app works
-                const guestSession = { username: 'Guest', role: 'seeker', isGuest: true };
-                localStorage.setItem('northstar_session', JSON.stringify(guestSession));
-                if (typeof window.renderAccountHeaderAvatar === 'function') {
-                    setTimeout(() => window.renderAccountHeaderAvatar(), 500);
-                }
-            }
         };
 
         // Patch handleSimpleLoginSubmit to dismiss the overlay on success
@@ -544,183 +611,116 @@
                 } catch(e) {}
             }
 
-            // ---- Auth submit: Supabase-backed Create Account & Sign In ----
+            // ---- Auth submit: self-contained, no external dependencies ----
             window.handleSimpleLoginSubmit = async function(e) {
                 if (e && typeof e.preventDefault === 'function') e.preventDefault();
-                const nameInput = document.getElementById('simple-login-name');
-                const passInput = document.getElementById('simple-login-password');
-                const name = nameInput ? nameInput.value.trim() : '';
-                const pass = passInput ? passInput.value.trim() : '';
-                const errDiv = document.getElementById('simple-login-error');
-                const submitBtn = document.getElementById('simple-login-submit-btn');
-                const lbl = document.getElementById('onboarding-submit-label');
 
-                // --- Client-side validation ---
-                if (!name || !pass) {
-                    if (errDiv) { errDiv.textContent = 'Please enter both your name and password.'; errDiv.style.display = 'block'; }
-                    return;
-                }
-                if (pass.length < 4) {
-                    if (errDiv) { errDiv.textContent = 'Password must be at least 4 characters.'; errDiv.style.display = 'block'; }
-                    return;
-                }
+                const nameInput    = document.getElementById('simple-login-name');
+                const passInput    = document.getElementById('simple-login-password');
+                const submitBtn    = document.getElementById('simple-login-submit-btn');
+                const submitLabel  = document.getElementById('onboarding-submit-label');
+                const errDiv       = document.getElementById('simple-login-error');
 
+                const name = (nameInput ? nameInput.value.trim() : '');
+                const pass = (passInput ? passInput.value.trim() : '');
+
+                // Clear previous errors
                 if (errDiv) { errDiv.style.display = 'none'; errDiv.textContent = ''; }
-                if (submitBtn) { submitBtn.disabled = true; submitBtn.style.opacity = '0.7'; }
-                if (lbl) lbl.textContent = _onboardingMode === 'create' ? 'Creating...' : 'Signing in...';
+                if (nameInput) nameInput.style.borderColor = 'rgba(255,255,255,0.1)';
+                if (passInput) passInput.style.borderColor = 'rgba(255,255,255,0.1)';
 
-                // Simple deterministic hash (not cryptographic — Supabase is not doing email auth here)
-                async function simpleHash(str) {
-                    if (window.crypto && window.crypto.subtle) {
-                        const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-                        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
-                    }
-                    // Fallback hash for non-secure HTTP contexts (e.g. accessing via local IP address http://192.168.x.x)
-                    let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
-                    for (let i = 0; i < str.length; i++) {
-                        const ch = str.charCodeAt(i);
-                        h1 = Math.imul(h1 ^ ch, 2654435761);
-                        h2 = Math.imul(h2 ^ ch, 1597334677);
-                    }
-                    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-                    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-                    return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16);
+                function showErr(msg) {
+                    if (errDiv) { errDiv.textContent = msg; errDiv.style.display = 'block'; }
+                    if (nameInput) nameInput.style.borderColor = '#ef4444';
+                    if (passInput) passInput.style.borderColor = '#ef4444';
+                    if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = '1'; }
+                    if (submitLabel) submitLabel.textContent = _onboardingMode === 'create' ? 'Create Account' : 'Sign In';
                 }
 
-                try {
-                    const supabase = window.supabaseClient;
-                    const role = (typeof window.getRole === 'function') ? window.getRole() : 'seeker';
-                    const passHash = await simpleHash(pass);
+                if (!name) { showErr('Please enter your name.'); return; }
+                if (!pass || pass.length < 4) { showErr('Password must be at least 4 characters.'); return; }
 
-                    if (_onboardingMode === 'create') {
-                        // --- CREATE ACCOUNT ---
-                        const localCheck = (typeof window.validateLocalCredentials === 'function')
-                            ? window.validateLocalCredentials(name, pass)
-                            : { found: false };
-                        if (localCheck.found) {
-                            if (errDiv) { errDiv.textContent = 'That username is already registered. Please sign in instead.'; errDiv.style.display = 'block'; }
-                            if (nameInput) nameInput.style.borderColor = '#ef4444';
-                            return;
-                        }
+                if (submitBtn) { submitBtn.disabled = true; submitBtn.style.opacity = '0.7'; }
+                if (submitLabel) submitLabel.textContent = _onboardingMode === 'create' ? 'Creating...' : 'Signing in...';
 
-                        let newId = 'user_' + name.toLowerCase().replace(/[^a-z0-9]/g,'_') + '_' + Math.floor(Math.random()*9000+1000);
-                        if (supabase) {
-                            const { data: existing } = await supabase
-                                .from('profiles')
-                                .select('id, pass_hash')
-                                .eq('username', name)
-                                .maybeSingle();
-                            if (existing && existing.pass_hash) {
-                                if (errDiv) { errDiv.textContent = 'That name is already taken. Try signing in instead.'; errDiv.style.display = 'block'; }
-                                if (nameInput) nameInput.style.borderColor = '#ef4444';
-                                return;
-                            }
-                            try {
-                                await supabase.from('profiles').upsert({
-                                    id: existing ? existing.id : newId,
-                                    username: name,
-                                    role,
-                                    pass_hash: passHash,
-                                    updated_at: new Date().toISOString()
-                                });
-                                if (existing && existing.id) newId = existing.id;
-                            } catch (dbErr) {
-                                console.warn('Supabase profile upsert fallback:', dbErr);
-                            }
-                        }
-                        if (typeof window.saveRegisteredUserRecord === 'function') {
-                            window.saveRegisteredUserRecord(name, pass, role, newId);
-                        }
-                        const sessionData = { id: newId, username: name, role, isGuest: false };
-                        localStorage.setItem('northstar_session', JSON.stringify(sessionData));
-                        if (typeof window.setRole === 'function') window.setRole(role);
-                        showOnboardingStep(3);
+                // ---- Storage helpers ----
+                const STORE_KEY = 'ns_users_v3';
+                function getUsers() {
+                    const defaults = {
+                        'demo':      { username: 'demo',      password: 'demo123',      role: 'seeker',    id: 'demo-seeker-001',      full_name: 'Demo Seeker' },
+                        'seeker':    { username: 'seeker',    password: 'northstar123', role: 'seeker',    id: 'seeker-test-001',      full_name: 'Alex Seeker' },
+                        'volunteer': { username: 'volunteer', password: 'northstar123', role: 'volunteer', id: 'volunteer-test-001',    full_name: 'Jordan Volunteer' }
+                    };
+                    try { return { ...defaults, ...JSON.parse(localStorage.getItem(STORE_KEY) || '{}') }; }
+                    catch(e) { return defaults; }
+                }
+                function saveUser(u) {
+                    try {
+                        const map = getUsers();
+                        map[u.username.toLowerCase()] = u;
+                        localStorage.setItem(STORE_KEY, JSON.stringify(map));
+                    } catch(e) {}
+                }
+
+                const users = getUsers();
+                const key   = name.toLowerCase();
+                const role  = _selectedOnboardingRole || 'seeker';
+
+                if (_onboardingMode === 'create') {
+                    // --- CREATE ---
+                    if (users[key]) {
+                        showErr('That username is already taken. Try signing in instead.');
                         return;
-
-                    } else {
-                        // --- SIGN IN (STRICT PASSWORD VALIDATION) ---
-                        let authenticatedUser = null;
-
-                        // 1. Check persistent local credentials registry first (includes seeded demo accounts & newly created accounts)
-                        if (typeof window.validateLocalCredentials === 'function') {
-                            const localAuth = window.validateLocalCredentials(name, pass);
-                            if (localAuth.found) {
-                                if (!localAuth.valid) {
-                                    if (errDiv) { errDiv.textContent = 'Invalid username or password'; errDiv.style.display = 'block'; }
-                                    if (nameInput) nameInput.style.borderColor = '#ef4444';
-                                    if (passInput) {
-                                        passInput.style.borderColor = '#ef4444';
-                                        passInput.style.animation = 'shake 0.4s ease';
-                                        setTimeout(() => { passInput.style.animation = ''; }, 600);
-                                    }
-                                    return;
-                                }
-                                authenticatedUser = localAuth.user;
-                            }
-                        }
-
-                        // 2. If not in local registry, verify against Supabase profiles with strict pass_hash comparison
-                        if (!authenticatedUser && supabase) {
-                            const { data: profile, error: fetchErr } = await supabase
-                                .from('profiles')
-                                .select('id, username, role, pass_hash')
-                                .eq('username', name)
-                                .maybeSingle();
-
-                            if (fetchErr) {
-                                console.warn('Supabase profile fetch warning:', fetchErr.message);
-                            }
-                            if (!profile) {
-                                if (errDiv) { errDiv.textContent = 'Invalid username or password'; errDiv.style.display = 'block'; }
-                                if (nameInput) nameInput.style.borderColor = '#ef4444';
-                                if (passInput) passInput.style.borderColor = '#ef4444';
-                                return;
-                            }
-                            // Strictly require pass_hash to exist and match
-                            if (!profile.pass_hash || profile.pass_hash !== passHash) {
-                                if (errDiv) { errDiv.textContent = 'Invalid username or password'; errDiv.style.display = 'block'; }
-                                if (nameInput) nameInput.style.borderColor = '#ef4444';
-                                if (passInput) {
-                                    passInput.style.borderColor = '#ef4444';
-                                    passInput.style.animation = 'shake 0.4s ease';
-                                    setTimeout(() => { passInput.style.animation = ''; }, 600);
-                                }
-                                return;
-                            }
-                            authenticatedUser = {
-                                id: profile.id,
-                                username: profile.username,
-                                role: profile.role || role
-                            };
-                            if (typeof window.saveRegisteredUserRecord === 'function') {
-                                window.saveRegisteredUserRecord(profile.username, pass, authenticatedUser.role, profile.id);
-                            }
-                        }
-
-                        if (!authenticatedUser) {
-                            if (errDiv) { errDiv.textContent = 'Invalid username or password'; errDiv.style.display = 'block'; }
-                            if (nameInput) nameInput.style.borderColor = '#ef4444';
-                            if (passInput) passInput.style.borderColor = '#ef4444';
-                            return;
-                        }
-
-                        const sessionData = {
-                            id: authenticatedUser.id,
-                            username: authenticatedUser.username,
-                            role: authenticatedUser.role || role,
-                            isGuest: false
-                        };
-                        localStorage.setItem('northstar_session', JSON.stringify(sessionData));
-                        if (typeof window.setRole === 'function') window.setRole(sessionData.role);
-                        window.location.href = (sessionData.role === 'volunteer') ? 'helper-dashboard.html' : 'seeker-dashboard.html';
                     }
+                    const newUser = {
+                        username:  name,
+                        password:  pass,
+                        role:      role,
+                        id:        'user_' + key.replace(/[^a-z0-9]/g,'_') + '_' + Math.floor(Math.random()*9000+1000),
+                        full_name: name
+                    };
+                    saveUser(newUser);
 
-                } catch (err) {
-                    console.error('Auth error:', err);
-                    if (errDiv) { errDiv.textContent = err?.message || 'Invalid username or password'; errDiv.style.display = 'block'; }
-                } finally {
-                    if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = '1'; }
-                    if (lbl) lbl.textContent = _onboardingMode === 'create' ? 'Create Account' : 'Sign In';
+                    // Background: sync to Supabase profiles (non-blocking)
+                    try {
+                        const sb = window.supabaseClient;
+                        if (sb) {
+                            sb.from('profiles').upsert({
+                                id: newUser.id, username: newUser.username,
+                                role: newUser.role, updated_at: new Date().toISOString()
+                            }).then(() => {}).catch(() => {});
+                        }
+                    } catch(e) {}
+
+                    localStorage.setItem('northstar_session', JSON.stringify({
+                        id: newUser.id, username: newUser.username,
+                        full_name: newUser.full_name, role: newUser.role, isGuest: false
+                    }));
+                    if (typeof window.setRole === 'function') window.setRole(newUser.role);
+                    window.location.href = (newUser.role === 'volunteer') ? 'helper-dashboard.html' : 'seeker-dashboard.html';
+
+                } else {
+                    // --- SIGN IN ---
+                    const record = users[key];
+                    if (!record) {
+                        showErr('No account found with that username.');
+                        return;
+                    }
+                    if (record.password !== pass) {
+                        if (passInput) {
+                            passInput.style.animation = 'shake 0.4s ease';
+                            setTimeout(() => { passInput.style.animation = ''; }, 600);
+                        }
+                        showErr('Wrong password. Please try again.');
+                        return;
+                    }
+                    localStorage.setItem('northstar_session', JSON.stringify({
+                        id: record.id, username: record.username,
+                        full_name: record.full_name || record.username,
+                        role: record.role, isGuest: false
+                    }));
+                    if (typeof window.setRole === 'function') window.setRole(record.role);
+                    window.location.href = (record.role === 'volunteer') ? 'helper-dashboard.html' : 'seeker-dashboard.html';
                 }
             };
 

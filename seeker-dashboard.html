@@ -95,6 +95,12 @@
             <h1 class="text-xl font-extrabold text-slate-900 font-heading tracking-tight">Northstar</h1>
         </div>
         <div class="header-actions header-actions-right flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
+            <!-- AI Chatbot Header Button -->
+            <button id="chat-fab" data-fab-alias="chatbot-fab-btn" onclick="toggleAIChatbotWindow()" class="icon-btn w-10 h-10 min-w-[40px] min-h-[40px] rounded-[12px] bg-[#FFE855] text-slate-950 border border-amber-300 flex items-center justify-center font-bold transition-all active:scale-95 hover:brightness-105 cursor-pointer relative select-none flex-shrink-0" aria-label="Open AI Assistant" title="NorthStar AI Assistant">
+                <span id="chatbot-fab-icon" class="material-symbols-outlined" style="font-size:20px;line-height:1;">smart_toy</span>
+                <span class="absolute top-1 right-1 w-2 h-2 bg-emerald-500 border border-white rounded-full"></span>
+            </button>
+
             <!-- Existing theme toggle button -->
             <button id="theme-toggle-btn" onclick="toggleTheme()" class="icon-btn w-11 h-11 min-w-[44px] min-h-[44px] rounded-[12px] bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-amber-400 text-sm font-bold transition-all active:scale-95 cursor-pointer" aria-label="Toggle Theme" title="Toggle Light / Dark Mode">
                 <span class="material-symbols-outlined text-base">brightness_4</span>
@@ -111,13 +117,13 @@
     <main class="dashboard-container dashboard-content main-content flex-grow px-5 pt-4 pb-32 flex flex-col space-y-4 overflow-y-auto bg-[#F4F5F7]">
 
         <!-- Greeting Header -->
-        <section class="space-y-1 pt-0.5 pb-0.5">
+        <section class="space-y-1 pt-0.5 pb-0.5 stagger-1">
             <h2 id="dashboard-greeting" class="text-[1.85rem] leading-tight font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">Good Morning, Seeker</h2>
             <p class="dashboard-subtext text-base font-semibold text-[#475569] dark:text-[#94A3B8]">Find what you need today.</p>
         </section>
 
         <!-- LIVE DATA MODULE 1: Nearby Verified Essentials Card (Light & Dark Mode Integrated) -->
-        <a href="map.html" class="action-card map-preview-card nearby-essentials-card dashboard-card-border block bg-white dark:bg-[#0F141C] text-slate-900 dark:text-white rounded-[20px] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.06)] relative overflow-hidden group transition-all flex-shrink-0" style="min-height: 160px !important; height: 160px !important; width: 100% !important;">
+        <a href="map.html" class="action-card map-preview-card nearby-essentials-card dashboard-card-border block bg-white dark:bg-[#0F141C] text-slate-900 dark:text-white rounded-[20px] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.06)] relative overflow-hidden group transition-all flex-shrink-0 stagger-2" style="min-height: 160px !important; height: 160px !important; width: 100% !important;">
             <!-- Background Mini Map Preview (Clean Light Tiles) -->
             <div id="seeker-mini-map" class="map-preview absolute inset-0 w-full h-full opacity-95 z-0 pointer-events-none rounded-[20px]"></div>
             
@@ -167,7 +173,7 @@
         </div>
 
         <!-- STATIC ACTION TILES: 2 Quick Action Cards (Standardized Borders, No Yellow Border) -->
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-2 gap-3 stagger-3">
             <a href="resume-builder.html" class="action-card dashboard-card-border bg-white dark:bg-[#1E293B] p-4 rounded-[20px] shadow-[0_8px_24px_rgba(0,0,0,0.06)] flex flex-col justify-between h-28 transition-all">
                 <div class="w-8 h-8 rounded-[12px] bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-800 dark:text-[#FACC15] shadow-sm">
                     <span class="material-symbols-outlined text-lg">description</span>
@@ -184,7 +190,7 @@
         </div>
 
         <!-- LIVE PROGRESS MODULE: My Progress Card (Synced with Central Progress State) -->
-        <a href="progress.html" id="my-progress-card" class="progress-card dashboard-card-border block bg-white dark:bg-[#1E293B] rounded-[20px] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.06)] space-y-3 hover:brightness-98 transition-all cursor-pointer">
+        <a href="progress.html" id="my-progress-card" class="progress-card dashboard-card-border block bg-white dark:bg-[#1E293B] rounded-[20px] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.06)] space-y-3 hover:brightness-98 transition-all cursor-pointer stagger-4">
             <div class="flex justify-between items-center">
                 <div class="flex items-center gap-2">
                     <span class="material-symbols-outlined text-xl text-[#EAB308] dark:text-[#FACC15]" style="color: #EAB308 !important;">trending_up</span>
@@ -206,7 +212,7 @@
         </a>
 
         <!-- OFFLINE RESOURCES BANNER (Theme-Aligned Light Gray in Light Mode / Dark Slate in Dark Mode + High-Contrast Yellow CTA) -->
-        <div id="download-banner" class="offline-banner offline-download-banner p-4 rounded-[20px] flex items-center justify-between shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
+        <div id="download-banner" class="offline-banner offline-download-banner p-4 rounded-[20px] flex items-center justify-between shadow-[0_8px_24px_rgba(0,0,0,0.06)] stagger-5">
             <div class="flex items-center gap-2.5">
                 <span class="material-symbols-outlined text-xl text-[#EAB308] dark:text-[#FACC15]">wifi_off</span>
                 <span class="offline-banner-label text-xs font-bold leading-tight">Download resources for offline use</span>
