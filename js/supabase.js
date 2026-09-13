@@ -1,34 +1,48 @@
 /**
- * Northstar Supabase Global Client Initialization
- * Plain browser JS script using standard browser window references
+ * NorthStar Supabase Browser Client Initialization
+ *
+ * Credentials are fetched from the server-side /api/config endpoint so that
+ * no Supabase URL or key is ever hardcoded in this file.
+ *
+ * The server reads SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY from .env and
+ * sends them to the browser. The service role key is never sent here.
  */
 
-const SUPABASE_URL = (typeof process !== 'undefined' && process.env && process.env.SUPABASE_URL)
-  ? process.env.SUPABASE_URL.trim()
-  : 'https://gvhyukdmuhvitonzlxoq.supabase.co';
+(async function initNorthStarSupabase() {
+  if (typeof window === 'undefined') return;
 
-const SUPABASE_ANON_KEY = (typeof process !== 'undefined' && process.env && process.env.SUPABASE_ANON_KEY)
-  ? process.env.SUPABASE_ANON_KEY.trim()
-  : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2aHl1a2RtdWh2aXRvbnpseG9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4MzE0NTMsImV4cCI6MjEwMjQwNzQ1M30.822oKaNPMpHjcdksRD1jrs6fmX-WzapAVTXeCDefDgA';
+  // If another script already initialized the client, skip.
+  if (window.supabaseClient) return;
 
-// Ensure SUPABASE_URL includes https:// and points to an active Supabase project
-if (!SUPABASE_URL.startsWith('https://')) {
-  console.error('SUPABASE_URL must include https:// and point to an active Supabase project:', SUPABASE_URL);
-}
+  let supabaseUrl = '';
+  let supabaseKey = '';
 
-// Ensure SUPABASE_ANON_KEY is not a placeholder string
-if (!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.includes('YOUR_KEY_HERE') || SUPABASE_ANON_KEY.includes('YOUR_ACTUAL_ANON_KEY')) {
-  console.error('SUPABASE_ANON_KEY must be a valid, non-placeholder Supabase anon key.');
-}
-
-/**
- * Global Supabase client initialization using standard browser window references
- */
-if (typeof window !== 'undefined') {
-  if (window.supabase && typeof window.supabase.createClient === 'function') {
-    window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    console.log('✅ Supabase client successfully initialized on window.supabaseClient');
-  } else {
-    console.error('Supabase library failed to load from CDN/npm.');
+  // Fetch config from the Node server (single source of truth for credentials)
+  try {
+    const res = await fetch('/api/config');
+    if (res.ok) {
+      const config = await res.json();
+      supabaseUrl = (config.supabaseUrl || '').trim();
+      supabaseKey  = (config.supabaseAnonKey || '').trim();
+    }
+  } catch (e) {
+    console.warn('[Supabase] Could not fetch /api/config:', e.message);
   }
-}
+
+  if (!supabaseUrl || !supabaseUrl.startsWith('https://')) {
+    console.error('[Supabase] SUPABASE_URL is missing or invalid. Check your .env file.');
+    return;
+  }
+
+  if (!supabaseKey) {
+    console.error('[Supabase] SUPABASE_PUBLISHABLE_KEY is missing. Check your .env file.');
+    return;
+  }
+
+  if (window.supabase && typeof window.supabase.createClient === 'function') {
+    window.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+    console.log('✅ [Supabase] Client initialized for project:', supabaseUrl);
+  } else {
+    console.error('[Supabase] supabase-js library not loaded. Check CDN script tag.');
+  }
+})();

@@ -39,7 +39,25 @@ const NORTHSTAR_CHAT_SCRIPT =
 
 
 const supabaseUrl = process.env.SUPABASE_URL || '';
+const supabasePublishableKey = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+// Startup validation — warn clearly if Supabase credentials are missing, never print key values
+if (!supabaseUrl) {
+  console.warn('⚠️  [Supabase] SUPABASE_URL is not set. Supabase features will be disabled.');
+} else if (!supabasePublishableKey) {
+  console.warn('⚠️  [Supabase] SUPABASE_PUBLISHABLE_KEY (or SUPABASE_ANON_KEY) is not set. Frontend Supabase features will be unavailable.');
+} else {
+  console.log(`✅ [Supabase] Configured — project: ${supabaseUrl}`);
+}
+
+if (supabaseServiceKey) {
+  console.log('✅ [Supabase] Service role key present — server-side admin operations enabled.');
+} else {
+  console.warn('⚠️  [Supabase] SUPABASE_SERVICE_ROLE_KEY not set — admin DB operations (jobs/deliveries persistence) will fall back to in-memory.');
+}
+
+// Admin client for server-side operations (deliveries, jobs persistence) — never exposed to browser
 const supabase = (supabaseUrl && supabaseServiceKey) ? createClient(supabaseUrl, supabaseServiceKey) : null;
 
 
@@ -245,9 +263,10 @@ Return JSON ONLY:
 
 // REST Endpoints
 app.get('/api/config', (req, res) => {
+  // NOTE: Only send the public/publishable key to the browser — never the service role key.
   res.json({
-    supabaseUrl: process.env.SUPABASE_URL || 'https://gvhyukdmuhvitonzlxoq.supabase.co',
-    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2aHl1a2RtdWh2aXRvbnpseG9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4MzE0NTMsImV4cCI6MjEwMjQwNzQ1M30.822oKaNPMpHjcdksRD1jrs6fmX-WzapAVTXeCDefDgA',
+    supabaseUrl: process.env.SUPABASE_URL || '',
+    supabaseAnonKey: process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || '',
     vapidPublicKey: process.env.VAPID_PUBLIC_KEY || '',
     googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY || ''
   });

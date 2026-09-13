@@ -64,33 +64,28 @@ if (typeof document !== 'undefined') {
  * CORS Configuration Note:
  * Ensure the local dev origin (http://localhost:3000 or http://127.0.0.1:3000) is
  * allowed in Supabase Authentication -> URL Configuration -> Redirect URLs / Web Origins.
+ *
+ * Credentials are loaded from /api/config (server reads SUPABASE_URL and
+ * SUPABASE_PUBLISHABLE_KEY from .env). No credentials are hardcoded here.
  */
-
-const SUPABASE_URL = 'https://gvhyukdmuhvitonzlxoq.supabase.co'.trim();
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2aHl1a2RtdWh2aXRvbnpseG9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4MzE0NTMsImV4cCI6MjEwMjQwNzQ1M30.822oKaNPMpHjcdksRD1jrs6fmX-WzapAVTXeCDefDgA'.trim();
-
-// Ensure SUPABASE_URL is a fully qualified HTTPS URL
-if (!SUPABASE_URL.startsWith('https://')) {
-  console.error('SUPABASE_URL must be a fully qualified HTTPS URL:', SUPABASE_URL);
-}
-
-// Ensure SUPABASE_ANON_KEY is non-empty and correctly trimmed
-if (!SUPABASE_ANON_KEY) {
-  console.error('SUPABASE_ANON_KEY cannot be empty.');
-}
 
 let supabaseClientInstance = null;
 
-function initGlobalSupabaseClient(url = SUPABASE_URL, key = SUPABASE_ANON_KEY) {
+function initGlobalSupabaseClient(url, key) {
   if (typeof window === 'undefined') return null;
   if (window.supabaseClient) return window.supabaseClient;
   if (supabaseClientInstance) {
     window.supabaseClient = supabaseClientInstance;
     return supabaseClientInstance;
   }
+  if (!url || !key) return null;
   if (window.supabase && typeof window.supabase.createClient === 'function') {
-    const cleanUrl = (url || SUPABASE_URL).trim();
-    const cleanKey = (key || SUPABASE_ANON_KEY).trim();
+    const cleanUrl = url.trim();
+    const cleanKey = key.trim();
+    if (!cleanUrl.startsWith('https://')) {
+      console.error('[Supabase] SUPABASE_URL must be a fully qualified HTTPS URL.');
+      return null;
+    }
     supabaseClientInstance = window.supabase.createClient(cleanUrl, cleanKey);
     window.supabaseClient = supabaseClientInstance;
     return supabaseClientInstance;
@@ -105,29 +100,37 @@ async function getSupabase() {
     return supabaseClientInstance;
   }
 
-  // Pre-initialize with verified credentials
-  const client = initGlobalSupabaseClient();
-  if (client) return client;
-
+  // Fetch credentials from the server — reads SUPABASE_URL & SUPABASE_PUBLISHABLE_KEY from .env
   try {
     const res = await fetch('/api/config');
     if (res.ok) {
       const config = await res.json();
-      const url = (config.supabaseUrl || SUPABASE_URL).trim();
-      const key = (config.supabaseAnonKey || SUPABASE_ANON_KEY).trim();
+      const url = (config.supabaseUrl || '').trim();
+      const key = (config.supabaseAnonKey || '').trim();
+      if (!url || !key) {
+        console.error('[Supabase] Missing credentials from /api/config. Check SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY in .env.');
+        return null;
+      }
       return initGlobalSupabaseClient(url, key);
     }
   } catch (e) {
-    console.warn('Config fetch notice, using verified credentials:', e.message);
+    console.warn('[Supabase] Could not fetch /api/config:', e.message);
   }
 
-  return initGlobalSupabaseClient();
+  return null;
 }
 
-// Preload globally
+// Preload: kick off async config fetch so client is ready when auth is needed
 if (typeof window !== 'undefined') {
-  initGlobalSupabaseClient();
+  getSupabase().then(client => {
+    if (client) {
+      console.log('✅ [Supabase] Auth client ready.');
+    } else {
+      console.warn('[Supabase] Auth client not initialized — check SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY in .env.');
+    }
+  });
 }
+
 
 // ==========================================================================
 // 3. STRICT AUTHENTICATION SUBMISSION HANDLER
