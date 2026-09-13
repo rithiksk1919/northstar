@@ -8,23 +8,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const currentPath = window.location.pathname.split('/').pop() || 'index.html';
   const session = JSON.parse(localStorage.getItem('northstar_session'));
 
-  // Force Auth Gateway on Launch: Always require explicit login/guest access on index.html
+  // Index launch view
   if (currentPath === 'index.html' || currentPath === '') {
-    localStorage.removeItem('northstar_session');
-    localStorage.removeItem('northstar_user_role');
-    const gatewayView = document.getElementById('auth-gateway-view');
     const mainLayout = document.getElementById('main-app-layout');
     const bottomNav = document.querySelector('nav');
-    if (gatewayView) { gatewayView.classList.remove('hidden'); gatewayView.style.display = 'flex'; }
-    if (mainLayout) { mainLayout.classList.add('hidden'); mainLayout.style.display = 'none'; }
-    if (bottomNav) { bottomNav.style.display = 'none'; }
-    return;
-  }
-
-  // Session Gate: Check authentication globally for internal pages
-  if (!session || (session && !session.isGuest && !session.email && !session.username)) {
-    window.location.href = 'index.html';
-    return;
+    if (mainLayout) { mainLayout.classList.remove('hidden'); mainLayout.style.display = 'flex'; }
+    if (bottomNav) { bottomNav.style.display = 'flex'; }
   }
 
   // Fetch persisted role and theme from Supabase on page load for authenticated users
@@ -238,288 +227,8 @@ window.setAuthRole = function (role) {
   }
 };
 
-function isLocalDevEnvironment() {
-  if (typeof window === 'undefined') return false;
-  return (
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1' ||
-    window.location.hostname === '0.0.0.0' ||
-    window.location.port === '5000' ||
-    window.location.port === '3000'
-  );
-}
+// Auth handlers are strictly managed by js/auth.js
 
-function executeDevBypassRedirect(email, reason) {
-  console.warn(`⚠️ [Dev Bypass Active] Supabase connection issue on localhost (${reason}). Auto-redirecting to jobs.html for seamless local testing.`);
-  const role = authSelectedRole || 'seeker';
-  const username = (email && email.includes('@')) ? email.split('@')[0] : (email || 'dev_user');
-  const devSession = {
-    username: username,
-    email: email || 'dev@northstar.local',
-    role: role,
-    id: 'dev-user-' + Date.now(),
-    isGuest: false
-  };
-  localStorage.setItem('northstar_session', JSON.stringify(devSession));
-  if (typeof setRole === 'function') setRole(role);
-  
-  const gatewayView = document.getElementById('auth-gateway-view');
-  const mainLayout = document.getElementById('main-app-layout');
-  if (gatewayView) { gatewayView.classList.add('hidden'); gatewayView.style.display = 'none'; }
-  if (mainLayout) { mainLayout.classList.remove('hidden'); mainLayout.style.display = 'flex'; }
-  
-  window.location.href = 'jobs.html';
-}
-
-window.handleAuthFormSubmit = async function (e) {
-  if (e && typeof e.preventDefault === 'function') e.preventDefault();
-  const emailInput = document.getElementById('auth-email');
-  const passwordInput = document.getElementById('auth-password');
-  const errorContainer = document.getElementById('auth-error-message');
-  
-  // Clean input formatting & immediate sanitization
-  const cleanEmail = emailInput ? emailInput.value.trim().toLowerCase() : '';
-  const cleanPassword = passwordInput ? passwordInput.value.trim() : '';
-
-  const clearError = () => {
-    if (errorContainer) {
-      errorContainer.classList.add('hidden');
-      errorContainer.style.display = 'none';
-      errorContainer.textContent = '';
-    }
-    if (emailInput) {
-      emailInput.style.borderColor = '';
-      emailInput.classList.remove('input-error');
-    }
-    if (passwordInput) {
-      passwordInput.style.borderColor = '';
-      passwordInput.classList.remove('input-error');
-    }
-  };
-
-  if (emailInput && !emailInput.dataset.hasErrorListener) {
-    emailInput.addEventListener('input', clearError);
-    emailInput.dataset.hasErrorListener = 'true';
-  }
-  if (passwordInput && !passwordInput.dataset.hasErrorListener) {
-    passwordInput.addEventListener('input', clearError);
-    passwordInput.dataset.hasErrorListener = 'true';
-  }
-
-  const showError = (msg) => {
-    if (emailInput) {
-      emailInput.style.borderColor = '#ef4444';
-      emailInput.classList.add('input-error');
-    }
-    if (passwordInput) {
-      passwordInput.style.borderColor = '#ef4444';
-      passwordInput.classList.add('input-error');
-    }
-    if (errorContainer) {
-      errorContainer.textContent = msg;
-      errorContainer.style.border = '1px solid #ef4444';
-      errorContainer.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
-      errorContainer.style.color = '#f87171';
-      errorContainer.style.borderRadius = '0.75rem';
-      errorContainer.style.padding = '10px 14px';
-      errorContainer.classList.remove('hidden');
-      errorContainer.style.display = 'block';
-    }
-    if (typeof showNotification === 'function') {
-      showNotification(msg, 'error');
-    }
-  };
-
-  clearError();
-
-  if (!cleanEmail || !cleanPassword) {
-    showError('Invalid email or password. Please check your credentials and try again.');
-    return; // Strict: Prevent redirection
-  }
-
-  // Password Policy Protocol: Minimum 6 characters required for signup
-  if (authMode === 'signup' && cleanPassword.length < 6) {
-    showError('Password must be at least 6 characters long.');
-    return;
-  }
-
-  let role = authSelectedRole || 'seeker';
-
-  // Ensure Supabase client is initialized
-  let client = window.supabaseClient;
-  if (!client && typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
-    try {
-      const res = await fetch('/api/config');
-      const config = await res.json();
-      const url = config.supabaseUrl || 'https://gvhyukdmuhvitonzlxoq.supabase.co';
-      const key = config.supabaseAnonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2aHl1a2RtdWh2aXRvbnpseG9xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY4MzE0NTMsImV4cCI6MjEwMjQwNzQ1M30.822oKaNPMpHjcdksRD1jrs6fmX-WzapAVTXeCDefDgA';
-      client = window.supabase.createClient(url, key);
-      window.supabaseClient = client;
-    } catch (_) {}
-  }
-
-  if (!client && !window.supabaseClient) {
-    if (isLocalDevEnvironment()) {
-      executeDevBypassRedirect(cleanEmail, 'Supabase client not initialized');
-      return;
-    }
-    showError('Supabase client is not initialized. Please check script imports.');
-    return; // Strict: Prevent redirection without valid auth client
-  }
-  if (!client) client = window.supabaseClient;
-
-  const submitBtn = document.getElementById('auth-submit-btn');
-  const originalBtnText = submitBtn ? submitBtn.textContent : (authMode === 'signup' ? 'Create Account' : 'Sign In');
-  if (submitBtn) {
-    submitBtn.disabled = true;
-    submitBtn.textContent = authMode === 'signup' ? 'Creating Account...' : 'Signing In...';
-  }
-
-  try {
-    if (authMode === 'signup') {
-      const { data, error } = await client.auth.signUp({
-        email: cleanEmail,
-        password: cleanPassword,
-        options: { data: { role } }
-      });
-
-      if (error || !data?.user) {
-        if (isLocalDevEnvironment()) {
-          executeDevBypassRedirect(cleanEmail, error?.message || 'Signup fallback');
-          return;
-        }
-        showError(error?.message || 'Registration failed. Please try again.');
-        return;
-      }
-
-      if (data.user.identities && data.user.identities.length === 0) {
-        showError('This email address is already in use. Please sign in instead.');
-        return;
-      }
-
-      try {
-        await client.from('profiles').upsert({ id: data.user.id, role, email: cleanEmail });
-      } catch (_) {}
-
-      const userData = {
-        username: cleanEmail,
-        email: cleanEmail,
-        role,
-        id: data.user.id,
-        isGuest: false
-      };
-      localStorage.setItem('northstar_session', JSON.stringify(userData));
-      setRole(role);
-      showNotification('Account created successfully!', 'success');
-      window.location.href = 'jobs.html';
-      return;
-
-    } else {
-      // Direct login into Supabase signInWithPassword
-      console.log('Auth attempt:', { email: cleanEmail, hasPassword: !!cleanPassword });
-
-      try {
-        const { data, error } = await client.auth.signInWithPassword({
-          email: cleanEmail,
-          password: cleanPassword
-        });
-
-        if (error) throw error;
-
-        if (!data?.session && !data?.user) {
-          throw new Error('Invalid login credentials');
-        }
-
-        const userId = data?.user?.id || data?.session?.user?.id;
-
-        // Verified Supabase user session
-        try {
-          if (userId) {
-            const { data: profile } = await client
-              .from('profiles')
-              .select('role, theme')
-              .eq('id', userId)
-              .single();
-            if (profile?.role) role = profile.role;
-            if (profile?.theme && (profile.theme === 'light' || profile.theme === 'dark')) {
-              localStorage.setItem('northstar_theme', profile.theme);
-              document.documentElement.classList.remove('light', 'dark');
-              document.documentElement.classList.add(profile.theme);
-            }
-          }
-        } catch (_) {}
-
-        const userData = {
-          username: cleanEmail,
-          email: cleanEmail,
-          role,
-          id: userId,
-          isGuest: false
-        };
-        localStorage.setItem('northstar_session', JSON.stringify(userData));
-        setRole(role);
-
-        const gatewayView = document.getElementById('auth-gateway-view');
-        const mainLayout = document.getElementById('main-app-layout');
-        const bottomNav = document.querySelector('nav');
-
-        if (gatewayView) {
-          gatewayView.classList.add('hidden');
-          gatewayView.style.display = 'none';
-        }
-        if (mainLayout) {
-          mainLayout.classList.remove('hidden');
-          mainLayout.style.display = 'flex';
-        }
-        if (bottomNav) {
-          bottomNav.style.display = 'flex';
-          bottomNav.classList.remove('hidden');
-        }
-
-        showNotification('Signed in successfully!', 'success');
-
-        // Successful Session Redirect
-        window.location.href = 'jobs.html';
-      } catch (err) {
-        console.error('Supabase auth catch:', err);
-        if (isLocalDevEnvironment()) {
-          executeDevBypassRedirect(cleanEmail, err?.message || 'Local dev fallback');
-          return;
-        }
-
-        const errMsg = err?.message || '';
-        if (errMsg === 'Failed to fetch' || errMsg.toLowerCase().includes('failed to fetch')) {
-          console.warn('CORS / Origin warning: If running on http://localhost:3000 or http://127.0.0.1:3000, ensure the local origin is allowed in Supabase Authentication -> URL Configuration -> Redirect URLs / Web Origins.');
-          showError('Unable to connect to authentication server. Please check your internet connection or API settings.');
-        } else if (errMsg.includes('Invalid login credentials')) {
-          showError('Invalid email or password. Please check your credentials and try again.');
-        } else if (errMsg.includes('Email not confirmed')) {
-          showError('Please verify your email address before logging in.');
-        } else {
-          showError(errMsg || 'An error occurred during sign in.');
-        }
-      }
-    }
-  } catch (outerErr) {
-    console.error('Supabase auth catch:', outerErr);
-    if (isLocalDevEnvironment()) {
-      executeDevBypassRedirect(cleanEmail, outerErr?.message || 'Outer exception fallback');
-      return;
-    }
-    const outerMsg = outerErr?.message || '';
-    if (outerMsg === 'Failed to fetch' || outerMsg.toLowerCase().includes('failed to fetch')) {
-      console.warn('CORS / Origin warning: If running on http://localhost:3000 or http://127.0.0.1:3000, ensure the local origin is allowed in Supabase Authentication -> URL Configuration -> Redirect URLs / Web Origins.');
-      showError('Unable to connect to authentication server. Please check your internet connection or API settings.');
-    } else {
-      showError(outerMsg || 'An error occurred during sign in.');
-    }
-  } finally {
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.textContent = originalBtnText;
-    }
-  }
-};
 
 window.signOutUser = async function () {
   if (window.supabaseClient) {
@@ -1249,7 +958,20 @@ window.saveResumeData = saveResumeData;
 window.setGatewayMode = setGatewayMode;
 window.handleGatewayLogin = window.handleAuthFormSubmit;
 window.logout = logout;
-window.redirectToAuthGateway = function() { window.location.href = 'index.html'; };
+window.redirectToAuthGateway = function() {
+  if (typeof window.closeModal === 'function') window.closeModal('settings-modal');
+  // Show the onboarding overlay and go back to step 1
+  const overlay = document.getElementById('onboarding-overlay');
+  if (overlay) {
+    overlay.style.display = 'flex';
+    overlay.style.opacity = '1';
+    overlay.style.transform = '';
+    if (typeof window.showOnboardingStep === 'function') window.showOnboardingStep(1);
+  } else {
+    // Fallback: reload index to show onboarding
+    window.location.href = 'index.html';
+  }
+};
 window.renderAccountHeaderAvatar = renderAccountHeaderAvatar;
 
 // --- Guest Feature Locking Engine ---

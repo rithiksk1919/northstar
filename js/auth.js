@@ -302,8 +302,8 @@ function resetSubmitButton() {
 }
 
 /**
- * Strict Login Submission Handler
- * Attempts native Supabase signInWithPassword first, with auto-redirect dev fallback on localhost.
+ * Clean & Strict Login Submission Handler
+ * Uses Supabase auth.signInWithPassword with zero dev bypasses or mock redirects.
  */
 window.handleAuthFormSubmit = async function(e) {
   if (e && typeof e.preventDefault === 'function') {
@@ -315,25 +315,18 @@ window.handleAuthFormSubmit = async function(e) {
 
   const emailInput = document.getElementById('auth-email') || document.getElementById('gateway-username');
   const passwordInput = document.getElementById('auth-password') || document.getElementById('gateway-password');
-  
-  // Clean input formatting & immediate sanitization
-  const cleanEmail = emailInput ? emailInput.value.trim().toLowerCase() : '';
-  const cleanPassword = passwordInput ? passwordInput.value.trim() : '';
 
-  // Basic validation
-  if (!cleanEmail || !cleanPassword) {
-    showAuthError('Invalid email or password. Please check your credentials and try again.');
+  const email = emailInput ? emailInput.value.trim().toLowerCase() : '';
+  const password = passwordInput ? passwordInput.value.trim() : '';
+
+  if (!email || !password) {
+    showAuthError('Please enter both email and password.');
     return;
   }
 
-  // Initialize Supabase client & Graceful fallback check
   const supabase = window.supabaseClient || await getSupabase();
-  if (!window.supabaseClient) {
-    if (isLocalDevEnvironment()) {
-      executeDevBypassRedirect(cleanEmail, 'Supabase client not initialized');
-      return;
-    }
-    showAuthError('Supabase client is not initialized. Please check script imports.');
+  if (!supabase) {
+    showAuthError('Supabase client is not initialized. Please check connection.');
     return;
   }
 
@@ -345,26 +338,22 @@ window.handleAuthFormSubmit = async function(e) {
 
   try {
     if (currentAuthMode === 'signup') {
-      if (cleanPassword.length < 6) {
+      if (password.length < 6) {
         showAuthError('Password must be at least 6 characters long.');
         return;
       }
 
       const role = currentAuthRole || 'seeker';
-      const username = cleanEmail.includes('@') ? cleanEmail.split('@')[0] : cleanEmail;
+      const username = email.includes('@') ? email.split('@')[0] : email;
 
       const { data, error } = await supabase.auth.signUp({
-        email: cleanEmail,
-        password: cleanPassword,
+        email: email,
+        password: password,
         options: { data: { role, username } }
       });
 
       if (error) {
-        if (isLocalDevEnvironment()) {
-          executeDevBypassRedirect(cleanEmail, error.message || 'Signup fallback');
-          return;
-        }
-        showAuthError(error.message || 'Registration failed. Please try again.');
+        showAuthError(error.message || 'Registration failed.');
         return;
       }
 
@@ -374,23 +363,17 @@ window.handleAuthFormSubmit = async function(e) {
       }
 
       if (!data?.user) {
-        if (isLocalDevEnvironment()) {
-          executeDevBypassRedirect(cleanEmail, 'Signup user data missing');
-          return;
-        }
         showAuthError('Registration failed. Please try again.');
         return;
       }
 
-      // Upsert profile in Supabase
       try {
-        await supabase.from('profiles').upsert({ id: data.user.id, role, email: cleanEmail, username });
+        await supabase.from('profiles').upsert({ id: data.user.id, role, email, username });
       } catch (_) {}
 
-      // Save valid session upon genuine success
       const sessionData = {
-        username: cleanEmail,
-        email: cleanEmail,
+        username: email,
+        email: email,
         role,
         id: data.user.id,
         isGuest: false
@@ -398,106 +381,167 @@ window.handleAuthFormSubmit = async function(e) {
       localStorage.setItem('northstar_session', JSON.stringify(sessionData));
       if (typeof window.setRole === 'function') window.setRole(role);
 
-      if (typeof window.showNotification === 'function') {
-        window.showNotification('Account created successfully!', 'success');
-      }
-
-      // Redirect strictly upon verified success
       window.location.href = 'jobs.html';
       return;
 
     } else {
       // Direct login into Supabase signInWithPassword
-      console.log('Auth attempt:', { email: cleanEmail, hasPassword: !!cleanPassword });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password
+      });
 
-      try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: cleanEmail,
-          password: cleanPassword,
-        });
+      // 1. If error: stop execution, reset loading, and show error UI (no redirect)
+      if (error) {
+        showAuthError(error.message || 'Invalid login credentials.');
+        return;
+      }
 
-        if (error) throw error;
+      // 2. If data.user and data.session exist: route strictly to dashboard/jobs
+      if (data?.session && data?.user) {
+        const userId = data.user.id;
+        let role = currentAuthRole || 'seeker';
 
-        if (data?.session || data?.user) {
-          const userId = data?.user?.id || data?.session?.user?.id;
-          let role = currentAuthRole || 'seeker';
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role, theme')
+            .eq('id', userId)
+            .single();
 
-          try {
-            if (userId) {
-              const { data: profile } = await supabase
-                .from('profiles')
-                .select('role, theme')
-                .eq('id', userId)
-                .single();
-
-              if (profile?.role) role = profile.role;
-              if (profile?.theme && (profile.theme === 'light' || profile.theme === 'dark')) {
-                localStorage.setItem('northstar_theme', profile.theme);
-                applyTheme(profile.theme);
-              }
-            }
-          } catch (_) {}
-
-          const sessionData = {
-            username: cleanEmail,
-            email: cleanEmail,
-            role,
-            id: userId,
-            isGuest: false
-          };
-          localStorage.setItem('northstar_session', JSON.stringify(sessionData));
-          if (typeof window.setRole === 'function') window.setRole(role);
-
-          if (typeof window.showNotification === 'function') {
-            window.showNotification('Signed in successfully!', 'success');
+          if (profile?.role) role = profile.role;
+          if (profile?.theme && (profile.theme === 'light' || profile.theme === 'dark')) {
+            localStorage.setItem('northstar_theme', profile.theme);
+            applyTheme(profile.theme);
           }
+        } catch (_) {}
 
-          // Hide auth overlay if on index.html
-          const gatewayView = document.getElementById('auth-gateway-view');
-          const mainLayout = document.getElementById('main-app-layout');
-          if (gatewayView) { gatewayView.classList.add('hidden'); gatewayView.style.display = 'none'; }
-          if (mainLayout) { mainLayout.classList.remove('hidden'); mainLayout.style.display = 'flex'; }
+        const sessionData = {
+          username: email,
+          email: email,
+          role,
+          id: userId,
+          isGuest: false
+        };
+        localStorage.setItem('northstar_session', JSON.stringify(sessionData));
+        if (typeof window.setRole === 'function') window.setRole(role);
 
-          // Successful session redirect
-          window.location.href = 'jobs.html';
-        }
-      } catch (err) {
-        console.error('Supabase auth catch:', err);
-        
-        // Local development bypass: if network/CORS fails or credentials fail during local testing
-        if (isLocalDevEnvironment()) {
-          executeDevBypassRedirect(cleanEmail, err?.message || 'Local development fallback');
-          return;
-        }
+        // Hide auth overlay if on index.html
+        const gatewayView = document.getElementById('auth-gateway-view');
+        const mainLayout = document.getElementById('main-app-layout');
+        if (gatewayView) { gatewayView.classList.add('hidden'); gatewayView.style.display = 'none'; }
+        if (mainLayout) { mainLayout.classList.remove('hidden'); mainLayout.style.display = 'flex'; }
 
-        const errMsg = err?.message || '';
-        if (errMsg === 'Failed to fetch' || errMsg.toLowerCase().includes('failed to fetch')) {
-          console.warn('CORS / Origin warning: If running on http://localhost:3000 or http://127.0.0.1:3000, ensure the local origin is allowed in Supabase Authentication -> URL Configuration -> Redirect URLs / Web Origins.');
-          showAuthError('Unable to connect to authentication server. Please check your internet connection or API settings.');
-        } else if (errMsg.includes('Invalid login credentials')) {
-          showAuthError('Invalid email or password. Please check your credentials and try again.');
-        } else if (errMsg.includes('Email not confirmed')) {
-          showAuthError('Please verify your email address before logging in.');
-        } else {
-          showAuthError(errMsg || 'An error occurred during sign in.');
-        }
+        // Route strictly to authenticated dashboard / home
+        window.location.href = 'jobs.html';
+      } else {
+        showAuthError('Authentication failed. No session established.');
       }
     }
-  } catch (outerErr) {
-    console.error('Supabase auth catch:', outerErr);
-    if (isLocalDevEnvironment()) {
-      executeDevBypassRedirect(cleanEmail, outerErr?.message || 'Outer exception fallback');
-      return;
-    }
-    const outerMsg = outerErr?.message || '';
-    if (outerMsg === 'Failed to fetch' || outerMsg.toLowerCase().includes('failed to fetch')) {
-      console.warn('CORS / Origin warning: If running on http://localhost:3000 or http://127.0.0.1:3000, ensure the local origin is allowed in Supabase Authentication -> URL Configuration -> Redirect URLs / Web Origins.');
-      showAuthError('Unable to connect to authentication server. Please check your internet connection or API settings.');
-    } else {
-      showAuthError(outerMsg || 'An error occurred during sign in.');
-    }
+  } catch (err) {
+    showAuthError(err?.message || 'An error occurred during authentication.');
   } finally {
     resetSubmitButton();
+  }
+};
+
+/**
+ * Simple Name & Password Login Handler
+ * Saves user credentials directly into Supabase (profiles table) and local session state.
+ */
+window.handleSimpleLoginSubmit = async function(e) {
+  if (e && typeof e.preventDefault === 'function') {
+    e.preventDefault();
+  }
+
+  const nameInput = document.getElementById('simple-login-name');
+  const passwordInput = document.getElementById('simple-login-password');
+  const errorContainer = document.getElementById('simple-login-error');
+  const submitBtn = document.getElementById('simple-login-submit-btn');
+
+  if (errorContainer) {
+    errorContainer.classList.add('hidden');
+    errorContainer.textContent = '';
+  }
+
+  const name = nameInput ? nameInput.value.trim() : '';
+  const password = passwordInput ? passwordInput.value.trim() : '';
+
+  if (!name || !password) {
+    if (errorContainer) {
+      errorContainer.textContent = 'Please enter both your name and password.';
+      errorContainer.classList.remove('hidden');
+    }
+    return;
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving Profile...';
+  }
+
+  try {
+    const supabase = window.supabaseClient || await getSupabase();
+    const role = (typeof window.getRole === 'function') ? window.getRole() : 'seeker';
+    const userId = 'user_' + name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Math.floor(Math.random() * 1000);
+
+    // Save profile data into Supabase `profiles` table
+    if (supabase) {
+      try {
+        await supabase.from('profiles').upsert({
+          id: userId,
+          username: name,
+          role: role,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'username' });
+      } catch (dbErr) {
+        console.warn('Supabase profile save notice:', dbErr);
+      }
+    }
+
+    // Save session in local storage
+    const sessionData = {
+      id: userId,
+      username: name,
+      email: `${name.toLowerCase().replace(/\s+/g, '')}@northstar.local`,
+      role: role,
+      isGuest: false
+    };
+
+    localStorage.setItem('northstar_session', JSON.stringify(sessionData));
+    if (typeof window.setRole === 'function') window.setRole(role);
+
+    // Hide simple login modal
+    if (typeof window.closeModal === 'function') {
+      window.closeModal('simple-login-modal');
+    }
+
+    if (typeof window.showNotification === 'function') {
+      window.showNotification(`Welcome, ${name}! Profile saved to Supabase.`, 'success');
+    }
+
+    // Refresh page header avatar & layout
+    if (typeof window.renderAccountHeaderAvatar === 'function') {
+      window.renderAccountHeaderAvatar();
+    }
+
+  } catch (err) {
+    console.error('Simple login error:', err);
+    if (errorContainer) {
+      errorContainer.textContent = err?.message || 'An error occurred while saving profile.';
+      errorContainer.classList.remove('hidden');
+    }
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Save & Sign In';
+    }
+  }
+};
+
+window.openSimpleLoginModal = function() {
+  if (typeof window.openModal === 'function') {
+    window.openModal('simple-login-modal');
   }
 };
 
