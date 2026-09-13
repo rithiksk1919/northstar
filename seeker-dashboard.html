@@ -86,9 +86,7 @@
 </div>
 
 <!-- Mobile Frame Shell -->
-<div class="app-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-[#0F1117] sm:rounded-[44px] shadow-[0_0_70px_rgba(0,0,0,0.85)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800/80 z-10">
-
-
+<div class="app-frame app-container w-full sm:max-w-[420px] h-screen sm:h-[900px] max-h-screen sm:max-h-[920px] bg-[#0F1117] sm:rounded-[44px] shadow-[0_0_70px_rgba(0,0,0,0.85)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800/80 z-10">
 
     <!-- App Header -->
     <header class="bg-white sticky top-0 z-40 flex justify-between items-center w-full px-5 pt-5 pb-3 border-b border-slate-200">
@@ -96,59 +94,54 @@
             <span class="material-symbols-outlined text-slate-800 text-2xl font-bold cursor-pointer">menu</span>
             <h1 class="text-xl font-extrabold text-slate-900 font-heading tracking-tight">Northstar</h1>
         </div>
-        <div class="header-actions-right flex items-center gap-2">
-            <button onclick="toggleTheme()" class="w-11 h-11 min-w-[44px] min-h-[44px] rounded-[12px] bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-amber-400 text-sm font-bold transition-all active:scale-95 cursor-pointer" title="Toggle Light / Dark Mode">
+        <div class="header-actions header-actions-right flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
+            <!-- Existing theme toggle button -->
+            <button id="theme-toggle-btn" onclick="toggleTheme()" class="icon-btn w-11 h-11 min-w-[44px] min-h-[44px] rounded-[12px] bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-amber-400 text-sm font-bold transition-all active:scale-95 cursor-pointer" aria-label="Toggle Theme" title="Toggle Light / Dark Mode">
                 <span class="material-symbols-outlined text-base">brightness_4</span>
+            </button>
+
+            <!-- Dynamic First-Initial Profile / Settings Avatar Button -->
+            <button id="profile-btn" class="profile-avatar-btn w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-slate-900 text-[#facc15] dark:bg-[#facc15] dark:text-slate-950 border border-slate-300 dark:border-amber-300 flex items-center justify-center font-extrabold text-sm shadow-sm transition-all active:scale-95 cursor-pointer select-none" aria-label="Settings & Profile" title="Open Settings" onclick="openSettingsModal()">
+                S
             </button>
         </div>
     </header>
 
     <!-- Main Scrollable Canvas (Unified 16px Vertical Rhythm & 20px Edge Padding) -->
-    <main class="dashboard-container flex-grow px-5 pt-4 pb-32 flex flex-col space-y-4 overflow-y-auto bg-[#F4F5F7]">
-
-        <!-- TOP YELLOW CTA BANNER (Single highest-priority yellow accent card) -->
-        <div class="bg-[#FFE855] text-slate-950 p-4 rounded-[20px] flex items-center justify-between shadow-[0_8px_24px_rgba(0,0,0,0.06)] border border-amber-300">
-            <div class="flex items-center gap-2.5">
-                <span class="material-symbols-outlined text-xl text-slate-950">wifi_off</span>
-                <span class="text-xs font-bold leading-tight">Download resources for offline use</span>
-            </div>
-            <button onclick="showNotification('Offline resources package downloaded!', 'success')" class="px-4 py-2.5 min-h-[44px] min-w-[88px] bg-slate-950 text-white rounded-[12px] text-xs font-extrabold active:scale-95 transition-all shadow-sm flex items-center justify-center cursor-pointer">
-                Download
-            </button>
-        </div>
+    <main class="dashboard-container dashboard-content main-content flex-grow px-5 pt-4 pb-32 flex flex-col space-y-4 overflow-y-auto bg-[#F4F5F7]">
 
         <!-- Greeting Header -->
-        <section class="space-y-1 pt-1.5 pb-0.5">
-            <h2 id="dashboard-greeting" class="text-[1.85rem] leading-tight font-extrabold text-slate-900 font-heading tracking-tight">Good Morning</h2>
-            <p class="text-base font-semibold text-subtext">Find what you need today.</p>
+        <section class="space-y-1 pt-0.5 pb-0.5">
+            <h2 id="dashboard-greeting" class="text-[1.85rem] leading-tight font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">Good Morning, Seeker</h2>
+            <p class="dashboard-subtext text-base font-semibold text-[#475569] dark:text-[#94A3B8]">Find what you need today.</p>
         </section>
 
-        <!-- LIVE DATA MODULE 1: Nearby Verified Essentials Card (Dark Glass Module Rule) -->
-        <a href="resource-map.html" class="action-card block bg-[#0F141C] text-white rounded-[20px] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.15)] border border-slate-800 relative overflow-hidden group hover:border-slate-700 transition-all">
-            <!-- Background Mini Map Preview -->
-            <div id="seeker-mini-map" class="absolute inset-0 w-full h-full opacity-65 z-0 pointer-events-none rounded-[20px]"></div>
+        <!-- LIVE DATA MODULE 1: Nearby Verified Essentials Card (Light & Dark Mode Integrated) -->
+        <a href="map.html" class="action-card map-preview-card nearby-essentials-card dashboard-card-border block bg-white dark:bg-[#0F141C] text-slate-900 dark:text-white rounded-[20px] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.06)] relative overflow-hidden group transition-all flex-shrink-0" style="min-height: 160px !important; height: 160px !important; width: 100% !important;">
+            <!-- Background Mini Map Preview (Clean Light Tiles) -->
+            <div id="seeker-mini-map" class="map-preview absolute inset-0 w-full h-full opacity-95 z-0 pointer-events-none rounded-[20px]"></div>
             
-            <!-- Gradient Overlay for Readable Text -->
-            <div class="absolute inset-0 bg-gradient-to-t from-[#0F141C] via-[#0F141C]/50 to-transparent z-10"></div>
+            <!-- Light/Dark Theme Gradient Overlay -->
+            <div class="map-card-gradient absolute inset-0 bg-gradient-to-t from-white/90 via-white/25 to-transparent dark:from-[#0F141C]/85 dark:via-[#0F141C]/20 dark:to-transparent z-10"></div>
             
-            <div class="h-32 flex flex-col justify-between relative z-20">
-                <!-- Top Matched Badge Pair (12px Radii) -->
+            <div class="h-full flex flex-col justify-between relative z-20">
+                <!-- Top Matched Badge Pair (Light Translucent Pills in Light Mode) -->
                 <div class="flex justify-between items-center">
-                    <span class="px-2.5 py-1 bg-[#1E293B] text-slate-200 border border-slate-700 font-extrabold text-[10px] rounded-[12px] shadow-sm uppercase tracking-wider">
+                    <span class="map-overlay-badge px-2.5 py-1 font-extrabold text-[10px] rounded-[12px] shadow-sm uppercase tracking-wider backdrop-blur-md">
                         NEARBY ESSENTIALS
                     </span>
-                    <span class="text-[10px] font-extrabold text-white bg-slate-950/80 px-2.5 py-1 rounded-[12px] border border-white/20 flex items-center gap-1.5 backdrop-blur-md">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> 42 Resources Near You
+                    <span class="map-overlay-badge text-[10px] font-extrabold px-2.5 py-1 rounded-[12px] shadow-sm flex items-center gap-1.5 backdrop-blur-md">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> 42 Resources Near You
                     </span>
                 </div>
                 
                 <!-- Bottom Title Bar -->
                 <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2.5 text-white font-extrabold text-[1.15rem] font-heading">
-                        <span class="material-symbols-outlined text-xl text-slate-300">explore</span>
+                    <div class="flex items-center gap-2.5 text-slate-900 dark:text-white font-extrabold text-[1.15rem] font-heading">
+                        <span class="material-symbols-outlined text-xl text-[#EAB308] dark:text-[#FACC15]">explore</span>
                         <span>Nearby Verified Essentials</span>
                     </div>
-                    <span class="material-symbols-outlined text-base text-slate-300 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                    <span class="material-symbols-outlined text-base text-slate-700 dark:text-white group-hover:translate-x-1 transition-transform">arrow_forward</span>
                 </div>
             </div>
         </a>
@@ -173,78 +166,86 @@
             </div>
         </div>
 
-        <!-- STATIC ACTION TILES: 2 Quick Action Cards (White Card System Rule) -->
+        <!-- STATIC ACTION TILES: 2 Quick Action Cards (Standardized Borders, No Yellow Border) -->
         <div class="grid grid-cols-2 gap-3">
-            <a href="resume-builder.html" class="action-card bg-white border border-slate-200 p-4 rounded-[20px] shadow-[0_8px_24px_rgba(0,0,0,0.06)] flex flex-col justify-between h-28 hover:border-slate-300 transition-all">
-                <div class="w-8 h-8 rounded-[12px] bg-slate-100 flex items-center justify-center text-slate-900 shadow-sm">
+            <a href="resume-builder.html" class="action-card dashboard-card-border bg-white dark:bg-[#1E293B] p-4 rounded-[20px] shadow-[0_8px_24px_rgba(0,0,0,0.06)] flex flex-col justify-between h-28 transition-all">
+                <div class="w-8 h-8 rounded-[12px] bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-800 dark:text-[#FACC15] shadow-sm">
                     <span class="material-symbols-outlined text-lg">description</span>
                 </div>
-                <span class="font-extrabold text-sm text-slate-900 font-heading">Build My Resume</span>
+                <span class="font-extrabold text-sm text-slate-900 dark:text-white font-heading">Build My Resume</span>
             </a>
 
-            <a href="jobs.html" class="action-card bg-white border border-slate-200 p-4 rounded-[20px] shadow-[0_8px_24px_rgba(0,0,0,0.06)] flex flex-col justify-between h-28 hover:border-slate-300 transition-all">
-                <div class="w-8 h-8 rounded-[12px] bg-slate-100 flex items-center justify-center text-slate-900 shadow-sm">
+            <a href="jobs.html" class="action-card dashboard-card-border bg-white dark:bg-[#1E293B] p-4 rounded-[20px] shadow-[0_8px_24px_rgba(0,0,0,0.06)] flex flex-col justify-between h-28 transition-all">
+                <div class="w-8 h-8 rounded-[12px] bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-800 dark:text-[#FACC15] shadow-sm">
                     <span class="material-symbols-outlined text-lg">work</span>
                 </div>
-                <span class="font-extrabold text-sm text-slate-900 font-heading">Find a Job</span>
+                <span class="font-extrabold text-sm text-slate-900 dark:text-white font-heading">Find a Job</span>
             </a>
         </div>
 
-        <!-- STATIC NAVIGATION MODULE: My Progress Card (White Card System Rule) -->
-        <div class="bg-white border border-slate-200 rounded-[20px] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.06)] space-y-3">
+        <!-- LIVE PROGRESS MODULE: My Progress Card (Synced with Central Progress State) -->
+        <a href="progress.html" id="my-progress-card" class="progress-card dashboard-card-border block bg-white dark:bg-[#1E293B] rounded-[20px] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.06)] space-y-3 hover:brightness-98 transition-all cursor-pointer">
             <div class="flex justify-between items-center">
                 <div class="flex items-center gap-2">
-                    <span class="material-symbols-outlined text-xl text-slate-900">trending_up</span>
-                    <h3 class="font-extrabold text-[1.15rem] text-slate-900 font-heading">My Progress</h3>
+                    <span class="material-symbols-outlined text-xl text-[#EAB308] dark:text-[#FACC15]" style="color: #EAB308 !important;">trending_up</span>
+                    <h3 class="font-extrabold text-[1.15rem] text-slate-900 dark:text-white font-heading">My Progress</h3>
                 </div>
-                <span class="px-2.5 py-0.5 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 font-extrabold text-xs rounded-[12px]">Level 2</span>
+                <span id="dashboard-level-badge" class="level-badge px-2.5 py-0.5 font-extrabold text-xs rounded-[12px]">Level 1</span>
             </div>
-            <p class="text-xs text-subtext font-medium">You've completed 4 tasks this week!</p>
-            <div class="space-y-1.5 pt-0.5">
-                <div class="flex justify-between text-[11px] font-semibold text-subtext">
-                    <span>Next Milestone: ID Assistance</span>
-                    <span>65%</span>
+            <p id="dashboard-progress-tasks-text" class="dashboard-subtext text-xs text-[#475569] dark:text-[#94A3B8] font-medium">You've completed 1 of 5 milestones!</p>
+            <div class="space-y-2 pt-0.5">
+                <!-- High-contrast label positioned directly above the 8px progress bar -->
+                <div class="flex justify-between items-center text-xs font-bold text-slate-900 dark:text-white">
+                    <span id="dashboard-next-milestone-label">Next Milestone: AI Companion</span>
+                    <span id="dashboard-progress-pct" class="text-[#EAB308] dark:text-[#FACC15] font-extrabold" style="color: #EAB308 !important;">20%</span>
                 </div>
-                <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden border border-slate-200/80">
-                    <div class="bg-amber-400 h-full rounded-full w-[65%]"></div>
+                <div class="w-full bg-slate-200 dark:bg-slate-700/80 overflow-hidden" style="height: 8px !important; border-radius: 4px !important;">
+                    <div id="dashboard-progress-bar" class="h-full transition-all duration-500" style="width: 20%; background-color: #EAB308 !important; height: 8px !important; border-radius: 4px !important;"></div>
                 </div>
             </div>
+        </a>
+
+        <!-- OFFLINE RESOURCES BANNER (Theme-Aligned Light Gray in Light Mode / Dark Slate in Dark Mode + High-Contrast Yellow CTA) -->
+        <div id="download-banner" class="offline-banner offline-download-banner p-4 rounded-[20px] flex items-center justify-between shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
+            <div class="flex items-center gap-2.5">
+                <span class="material-symbols-outlined text-xl text-[#EAB308] dark:text-[#FACC15]">wifi_off</span>
+                <span class="offline-banner-label text-xs font-bold leading-tight">Download resources for offline use</span>
+            </div>
+            <button id="download-offline-btn" class="download-default px-4 py-2.5 min-h-[40px] min-w-[110px] rounded-[10px] text-[13px] font-bold whitespace-nowrap active:scale-95 transition-all shadow-sm inline-flex items-center justify-center cursor-pointer flex-shrink-0" style="background: #facc15 !important; color: #000000 !important; font-weight: 700 !important;">
+                Download
+            </button>
         </div>
 
-        <!-- LIVE DATA MODULE 2: Dark Stay Connected Card (Dark Glass Module Rule) -->
-        <div class="bg-[#0F141C] text-white rounded-[20px] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.15)] border border-slate-800 flex items-center justify-between">
-            <div class="space-y-0.5">
-                <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">STAY CONNECTED</span>
-                <p class="text-sm font-bold text-white">Find nearest Wi-Fi hotspot</p>
-            </div>
-            <div class="w-10 h-10 rounded-[12px] bg-[#1E293B] text-slate-200 border border-slate-700 flex items-center justify-center font-bold shadow-md">
-                <span class="material-symbols-outlined text-xl">wifi</span>
-            </div>
-        </div>
+        <!-- Offline Directory List Component (Hidden per UI cleanup rule) -->
+        <div id="offline-directory-container" class="hidden" style="display: none !important;"></div>
 
     </main>
 
-    <!-- Bottom Navigation Bar (Standardized Active Tab & Icon Rhythm) -->
-    <nav class="bottom-nav absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-3 py-2 bg-[#12141C]/90 backdrop-blur-xl shadow-[0px_-4px_25px_rgba(0,0,0,0.5)] border-t border-white/10">
-        <a class="flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center bg-amber-400/15 text-amber-400 border border-amber-400/30 rounded-[16px] px-2 py-1 shadow-[0_0_15px_rgba(245,158,11,0.25)]" href="seeker-dashboard.html">
-            <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">dashboard</span>
-            <span class="text-[10px] font-extrabold mt-0.5">Dashboard</span>
+    <!-- Full 6-Tab Bottom Navigation Bar -->
+    <nav class="bottom-nav absolute bottom-0 left-0 w-full z-40 grid grid-cols-6 items-center justify-items-center px-1.5 py-2 bg-white dark:bg-[#12141C] shadow-[0px_-4px_25px_rgba(0,0,0,0.2)] border-t border-slate-200 dark:border-white/10">
+        <a href="seeker-dashboard.html" class="active-tab flex flex-col items-center justify-center w-full py-1 px-0.5 bg-amber-400/15 text-amber-500 dark:text-amber-400 border border-amber-400/30 rounded-xl shadow-[0_0_12px_rgba(245,158,11,0.2)] font-extrabold transition-all">
+            <span class="material-symbols-outlined text-[20px] leading-none" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Dashboard</span>
         </a>
-        <a class="flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center text-slate-400 hover:text-white px-2 py-1 transition-colors" href="jobs.html">
-            <span class="material-symbols-outlined text-xl">work</span>
-            <span class="text-[10px] font-medium mt-0.5">Jobs</span>
+        <a href="progress.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
+            <span class="material-symbols-outlined text-[20px] leading-none">trending_up</span>
+            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Progress</span>
         </a>
-        <a class="flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center text-slate-400 hover:text-white px-2 py-1 transition-colors" href="resource-map.html">
-            <span class="material-symbols-outlined text-xl">map</span>
-            <span class="text-[10px] font-medium mt-0.5">Map</span>
+        <a href="opportunities.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
+            <span class="material-symbols-outlined text-[20px] leading-none">work</span>
+            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Jobs</span>
         </a>
-        <a class="flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center text-slate-400 hover:text-white px-2 py-1 transition-colors" href="resume-builder.html">
-            <span class="material-symbols-outlined text-xl">description</span>
-            <span class="text-[10px] font-medium mt-0.5">Resume</span>
+        <a href="resource-map.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
+            <span class="material-symbols-outlined text-[20px] leading-none">map</span>
+            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Map</span>
         </a>
-        <button onclick="openSettingsModal()" class="flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center text-slate-400 hover:text-white px-2 py-1 transition-colors">
-            <span class="material-symbols-outlined text-xl">settings</span>
-            <span class="text-[10px] font-medium mt-0.5">Settings</span>
+        <a href="resume-builder.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
+            <span class="material-symbols-outlined text-[20px] leading-none">description</span>
+            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Resume</span>
+        </a>
+        <button type="button" onclick="openSettingsModal()" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
+            <span class="material-symbols-outlined text-[20px] leading-none">settings</span>
+            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Settings</span>
         </button>
     </nav>
 
@@ -326,7 +327,7 @@
           doubleClickZoom: false
         });
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', {
           maxZoom: 19,
           attribution: '© OpenStreetMap contributors'
         }).addTo(map);
@@ -340,14 +341,18 @@
 
         pins.forEach(coords => {
           L.circleMarker(coords, {
-            radius: 6,
-            fillColor: '#FFE855',
-            color: '#0A0E1A',
+            radius: 6.5,
+            fillColor: '#EAB308',
+            color: '#0f172a',
             weight: 2,
             opacity: 1,
             fillOpacity: 0.95
           }).addTo(map);
         });
+
+        setTimeout(() => {
+          map.invalidateSize();
+        }, 150);
       } catch (err) {
         console.warn('Mini map init error:', err);
       }
@@ -412,6 +417,8 @@ window.initSeekerActiveDonation = async function() {
 document.addEventListener('DOMContentLoaded', () => { setTimeout(initSeekerActiveDonation, 600); });
 </script>
 <script src="js/northstar.js"></script>
+    <script src="js/jobs.js"></script>
+<script src="js/offline-map.js"></script>
 </body>
 </html>
 

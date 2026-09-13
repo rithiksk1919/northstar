@@ -1,0 +1,45 @@
+{
+  "seeker": {
+    "id": "seeker-demo-001",
+    "username": "seeker",
+    "full_name": "Alex Seeker",
+    "email": "seeker@northstar.local",
+    "role": "seeker",
+    "passwordHash": "d842250b2cecd6943b7d2e33e5d23067a4d2c164449a688cdfedf5ee9aec2644"
+  },
+  "volunteer": {
+    "id": "volunteer-demo-001",
+    "username": "volunteer",
+    "full_name": "Jordan Volunteer",
+    "email": "volunteer@northstar.local",
+    "role": "volunteer",
+    "passwordHash": "d842250b2cecd6943b7d2e33e5d23067a4d2c164449a688cdfedf5ee9aec2644"
+  },
+  "sid.balaji120@gmail.com": {
+    "id": "ns-mtzqqygs-skans",
+    "username": "sid.balaji120@gmail.com",
+    "full_name": "Sidharth Balaji",
+    "email": "sid.balaji120@gmail.com",
+    "role": "seeker",
+    "passwordHash": "8dfd58190d516443064b1ac794238f4069a30a1196e18046a4eed6140375012c",
+    "createdAt": "2026-09-13T11:39:01.756Z"
+  },
+  "alex_smith": {
+    "id": "ns-mtzqrazc-jji7g",
+    "username": "alex_smith",
+    "full_name": "Alex Smith",
+    "email": "alex_smith@northstar.local",
+    "role": "seeker",
+    "passwordHash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
+    "createdAt": "2026-09-13T11:39:17.976Z"
+  },
+  "alex_smith@northstar.local": {
+    "id": "ns-mtzqrazc-jji7g",
+    "username": "alex_smith",
+    "full_name": "Alex Smith",
+    "email": "alex_smith@northstar.local",
+    "role": "seeker",
+    "passwordHash": "ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f",
+    "createdAt": "2026-09-13T11:39:17.976Z"
+  }
+}

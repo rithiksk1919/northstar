@@ -6,7 +6,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   initThemeToggle();
   const currentPath = window.location.pathname.split('/').pop() || 'index.html';
-  const session = JSON.parse(localStorage.getItem('northstar_session'));
+  const session = JSON.parse(localStorage.getItem('northstar_session')) || { isGuest: true };
 
   // Index launch view
   if (currentPath === 'index.html' || currentPath === '') {
@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Fetch persisted role and theme from Supabase on page load for authenticated users
-  if (!session.isGuest && session.id && window.supabaseClient) {
+  if (session && !session.isGuest && session.id && window.supabaseClient) {
     window.supabaseClient
       .from('profiles')
       .select('role, theme')
@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Automatic Trigger: Viewing Shelter Info
   if (currentPath === 'call-shelter.html') {
-    setTimeout(() => updateMilestone('safePlace', true), 500);
+    setTimeout(() => updateMilestone('savedLocation', true), 500);
   }
 
   initThemeToggle();
@@ -53,7 +53,9 @@ document.addEventListener('DOMContentLoaded', () => {
   initCallModal();
   initTaskClaiming();
   initInstantPageTransitions();
+  renderBottomNav();
   renderProgressPage();
+  syncDashboardProgressWidget();
   checkGuestLockAccess();
   checkDashboardJobMatchLock();
   renderAccountHeaderAvatar();
@@ -85,9 +87,27 @@ function renderAccountHeaderAvatar() {
       header.appendChild(container);
     }
 
-    // Remove any redundant generic profile buttons or old avatars
-    const redundantBtns = container.querySelectorAll('#profile-btn, .header-account-avatar');
+    // Remove any old dynamically injected avatars
+    const redundantBtns = container.querySelectorAll('.header-account-avatar');
     redundantBtns.forEach(btn => btn.remove());
+
+    const userName = (session && session.full_name)
+      || (session && session.username && session.username !== 'Guest' ? session.username : null)
+      || localStorage.getItem('northstar_full_name')
+      || localStorage.getItem('northstar_username')
+      || localStorage.getItem('northstar_user_name')
+      || (session && session.role ? (session.role.charAt(0).toUpperCase() + session.role.slice(1)) : (localStorage.getItem('northstar_user_role') === 'volunteer' ? 'Volunteer' : 'Seeker'));
+    const initial = userName.charAt(0).toUpperCase();
+
+    // If explicit #profile-btn exists in markup, populate it dynamically with the user's first initial
+    const profileBtn = container.querySelector('#profile-btn') || header.querySelector('#profile-btn');
+    if (profileBtn) {
+      profileBtn.textContent = initial;
+      profileBtn.title = `Signed in as ${userName} - Tap for Settings`;
+      profileBtn.onclick = window.openSettingsModal;
+      profileBtn.className = 'profile-avatar-btn w-10 h-10 rounded-full flex items-center justify-center font-black text-sm bg-slate-800 text-amber-400 border border-slate-700 hover:brightness-110 transition-all active:scale-95 cursor-pointer select-none shadow-sm';
+      return;
+    }
 
     const avatarBtn = document.createElement('button');
     avatarBtn.type = 'button';
@@ -95,13 +115,8 @@ function renderAccountHeaderAvatar() {
     avatarBtn.onclick = window.openSettingsModal;
     avatarBtn.className = 'header-account-avatar flex-shrink-0 transition-transform active:scale-95 cursor-pointer select-none';
 
-    const username = (session && session.username && session.username !== 'Guest')
-      ? session.username
-      : (session && session.role ? (session.role.charAt(0).toUpperCase() + session.role.slice(1)) : (localStorage.getItem('northstar_user_role') === 'volunteer' ? 'Volunteer' : 'Seeker'));
-    const initial = username.charAt(0).toUpperCase();
-
     avatarBtn.innerHTML = `
-      <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-400 to-amber-500 text-slate-950 font-black text-xs flex items-center justify-center shadow-[0_0_12px_rgba(245,158,11,0.4)] border border-amber-300 hover:brightness-110 transition-all" title="Signed in as ${username} - Tap for Settings">
+      <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-400 to-amber-500 text-slate-950 font-black text-xs flex items-center justify-center shadow-[0_0_12px_rgba(245,158,11,0.4)] border border-amber-300 hover:brightness-110 transition-all" title="Signed in as ${userName} - Tap for Settings">
         ${initial}
       </div>
     `;
@@ -347,15 +362,53 @@ async function navigateToPageInstant(url, pushState = true) {
           initHelpModal();
           initCallModal();
           initTaskClaiming();
-          // Execute inline script tags present in the loaded page document (skipping duplicate config script)
-          doc.querySelectorAll('script').forEach(s => {
-            if (s.textContent && s.id !== 'tailwind-config') {
-              try {
-                eval(s.textContent);
-              } catch (err) {
-                console.warn('Script execution notice:', err);
+
+          // Synchronously render cached/seed jobs immediately if switching to Jobs view
+          if (typeof window.renderJobsInstant === 'function') {
+            window.renderJobsInstant(true);
+          }
+
+          // Dynamically load any external scripts present in the target document that aren't loaded yet
+          const externalScripts = Array.from(doc.querySelectorAll('script[src]'));
+          const loadExternalScriptsPromise = Promise.all(
+            externalScripts.map(s => {
+              const src = s.getAttribute('src');
+              if (!src) return Promise.resolve();
+              const alreadyLoaded = Array.from(document.querySelectorAll('script[src]')).some(
+                existing => existing.getAttribute('src') === src || existing.src === s.src
+              );
+              if (alreadyLoaded) return Promise.resolve();
+              return new Promise(resolve => {
+                const newScript = document.createElement('script');
+                newScript.src = src;
+                newScript.onload = resolve;
+                newScript.onerror = resolve;
+                document.body.appendChild(newScript);
+              });
+            })
+          );
+
+          loadExternalScriptsPromise.then(() => {
+            // Execute inline script tags present in the loaded page document (skipping duplicate config script)
+            doc.querySelectorAll('script:not([src])').forEach(s => {
+              if (s.textContent && s.id !== 'tailwind-config') {
+                try {
+                  eval(s.textContent);
+                } catch (err) {
+                  console.warn('Script execution notice:', err);
+                }
               }
+            });
+
+            if (typeof window.renderJobsInstant === 'function') {
+              window.renderJobsInstant();
             }
+            if (typeof window.loadOpportunities === 'function') {
+              window.loadOpportunities();
+            } else if (typeof loadOpportunities === 'function') {
+              loadOpportunities();
+            }
+            window.dispatchEvent(new CustomEvent('northstar:tabSwitched', { detail: { url } }));
           });
 
           if (typeof window.updateLandingRoleCards === 'function') {
@@ -383,6 +436,9 @@ async function navigateToPageInstant(url, pushState = true) {
 
           const path = url.split('/').pop();
           if (path === 'call-shelter.html') updateMilestone('safePlace', true);
+          if (path === 'opportunities.html' || path === 'jobs.html') {
+            updateMilestone('jobMatcher', true);
+          }
 
           // Re-run session gate check when navigating to Home so gateway stays hidden
           if (path === 'index.html' || path === '') {
@@ -398,7 +454,9 @@ async function navigateToPageInstant(url, pushState = true) {
             }
           }
 
+          renderBottomNav();
           renderProgressPage();
+          if (typeof initGlobalAIChatbot === 'function') initGlobalAIChatbot();
           window.scrollTo(0, 0);
         } finally {
           resetLock();
@@ -1088,55 +1146,187 @@ function getSession() {
   return JSON.parse(localStorage.getItem('northstar_session')) || { role: 'seeker', isGuest: true, username: 'Guest' };
 }
 
+const CORE_MILESTONES = [
+  {
+    id: 'appExplorer',
+    icon: 'explore',
+    title: 'App Explorer',
+    desc: 'Navigated through key screens and features across Northstar.',
+    actionUrl: 'seeker-dashboard.html',
+    actionLabel: 'Explore App'
+  },
+  {
+    id: 'aiCompanion',
+    icon: 'smart_toy',
+    title: 'AI Companion',
+    desc: 'Used Northstar AI to ask questions and get instant guidance.',
+    actionUrl: 'javascript:toggleAIChatbotWindow()',
+    actionLabel: 'Ask Northstar AI'
+  },
+  {
+    id: 'savedLocation',
+    icon: 'bookmark',
+    title: 'Saved Essential Location',
+    desc: 'Bookmarked a resource or shelter on the interactive map.',
+    actionUrl: 'map.html',
+    actionLabel: 'Open Map'
+  },
+  {
+    id: 'resumeBuilder',
+    icon: 'description',
+    title: 'Resume Builder',
+    desc: 'Created or updated your professional resume in the app.',
+    actionUrl: 'resume-builder.html',
+    actionLabel: 'Build Resume'
+  },
+  {
+    id: 'jobMatcher',
+    icon: 'work',
+    title: 'Job Matcher',
+    desc: 'Explored personalized job recommendations in the Jobs section.',
+    actionUrl: 'jobs.html',
+    actionLabel: 'View Jobs'
+  }
+];
+
 const defaultUserData = {
   isGuest: true,
   username: 'Guest',
   resumeData: null,
   progress: {
-    firstStep: false,       // Milestone 1
-    safePlace: false,       // Milestone 2
-    basicNeeds: false,      // Milestone 3
-    connected: false,      // Milestone 4
-    movingForward: false,  // Milestone 5
+    appExplorer: true,
+    aiCompanion: false,
+    savedLocation: false,
+    resumeBuilder: false,
+    jobMatcher: false
   }
 };
 
 function getUserData() {
   const session = getSession();
-  if (session.isGuest) {
-    return JSON.parse(JSON.stringify(defaultUserData)); // Always clean slate for Guest
+  const storageKey = session.isGuest ? 'northstar_guest_progress_data' : `northstar_data_${session.username}`;
+  const raw = localStorage.getItem(storageKey);
+  let data = raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(defaultUserData));
+  if (!data.progress) data.progress = {};
+
+  // Ensure all 5 core milestone keys exist
+  CORE_MILESTONES.forEach(m => {
+    if (typeof data.progress[m.id] !== 'boolean') {
+      data.progress[m.id] = m.id === 'appExplorer';
+    }
+  });
+
+  // Sync automatic detections from app usage if not explicitly toggled off
+  const savedRes = localStorage.getItem('northstar_saved_resources');
+  if (savedRes) {
+    try {
+      const parsed = JSON.parse(savedRes);
+      if (Array.isArray(parsed) && parsed.length > 0) data.progress.savedLocation = true;
+    } catch (e) {}
   }
-  const key = `northstar_data_${session.username}`;
-  return JSON.parse(localStorage.getItem(key)) || JSON.parse(JSON.stringify(defaultUserData));
+  if (data.resumeData || localStorage.getItem('northstar_resume_saved') === 'true') {
+    data.progress.resumeBuilder = true;
+  }
+  if (localStorage.getItem('northstar_jobs_explored') === 'true') {
+    data.progress.jobMatcher = true;
+  }
+  if (localStorage.getItem('northstar_ai_used') === 'true') {
+    data.progress.aiCompanion = true;
+  }
+
+  return data;
+}
+
+function saveUserData(userData) {
+  const session = getSession();
+  const storageKey = session.isGuest ? 'northstar_guest_progress_data' : `northstar_data_${session.username}`;
+  localStorage.setItem(storageKey, JSON.stringify(userData));
+}
+
+function syncDashboardProgressWidget() {
+  const userData = getUserData();
+  const state = userData.progress || {};
+  const completedCount = CORE_MILESTONES.filter(m => state[m.id] === true).length;
+  const percentage = completedCount * 20;
+  const nextPending = CORE_MILESTONES.find(m => !state[m.id]);
+
+  const tasksTextEl = document.getElementById('dashboard-progress-tasks-text');
+  if (tasksTextEl) {
+    tasksTextEl.textContent = `You've completed ${completedCount} of 5 milestones!`;
+  }
+
+  const nextMilestoneEl = document.getElementById('dashboard-next-milestone-label');
+  if (nextMilestoneEl) {
+    nextMilestoneEl.textContent = nextPending
+      ? `Next Milestone: ${nextPending.title}`
+      : 'All Milestones Completed! 🎉';
+  }
+
+  const pctEl = document.getElementById('dashboard-progress-pct');
+  if (pctEl) {
+    pctEl.textContent = `${percentage}%`;
+  }
+
+  const barEl = document.getElementById('dashboard-progress-bar');
+  if (barEl) {
+    barEl.style.width = `${percentage}%`;
+    barEl.style.setProperty('background-color', '#EAB308', 'important');
+  }
+
+  const levelBadgeEl = document.getElementById('dashboard-level-badge');
+  if (levelBadgeEl) {
+    const level = Math.min(5, Math.max(1, completedCount));
+    levelBadgeEl.textContent = `Level ${level}`;
+  }
 }
 
 function updateMilestone(milestoneKey, isCompleted) {
-  const session = getSession();
-  if (session.isGuest) return; // Do not save milestones for Guests
-
-  const key = `northstar_data_${session.username}`;
   const userData = getUserData();
+  if (!userData.progress) userData.progress = {};
   userData.progress[milestoneKey] = isCompleted;
-
-  const completedCount = Object.keys(userData.progress).filter(k => userData.progress[k] === true).length;
-  userData.progress.movingForward = completedCount >= 5;
-
-  localStorage.setItem(key, JSON.stringify(userData));
+  saveUserData(userData);
   renderProgressPage();
+  syncDashboardProgressWidget();
 }
 
-
+window.toggleMilestoneCompletion = function(milestoneKey, event) {
+  if (event) event.stopPropagation();
+  const userData = getUserData();
+  const current = !!userData.progress[milestoneKey];
+  userData.progress[milestoneKey] = !current;
+  saveUserData(userData);
+  renderProgressPage();
+  syncDashboardProgressWidget();
+};
 
 function saveResumeData(data) {
   if (typeof window.matchAndRenderJobs === 'function') window.matchAndRenderJobs(data);
-  const session = getSession();
-  if (session.isGuest) return; // Do not save resume data for Guests
-
-  const key = `northstar_data_${session.username}`;
+  localStorage.setItem('northstar_resume_saved', 'true');
   const userData = getUserData();
   userData.resumeData = data;
-  localStorage.setItem(key, JSON.stringify(userData));
+  userData.progress.resumeBuilder = true;
+  saveUserData(userData);
+  syncDashboardProgressWidget();
 }
+
+// Track page exploration automatically
+(function trackAppNavigation() {
+  try {
+    const path = window.location.pathname.split('/').pop() || 'index.html';
+    const visitedRaw = localStorage.getItem('northstar_visited_pages');
+    const visited = visitedRaw ? JSON.parse(visitedRaw) : [];
+    if (!visited.includes(path)) {
+      visited.push(path);
+      localStorage.setItem('northstar_visited_pages', JSON.stringify(visited));
+    }
+    if (visited.length >= 2) {
+      localStorage.setItem('northstar_app_explored', 'true');
+    }
+    if (path.includes('jobs')) {
+      localStorage.setItem('northstar_jobs_explored', 'true');
+    }
+  } catch (e) {}
+})();
 
 function renderProgressPage() {
   const stepperContainer = document.getElementById('stepper-nodes');
@@ -1145,106 +1335,147 @@ function renderProgressPage() {
 
   const session = getSession();
   const userData = getUserData();
-  const state = userData.progress;
-  const completedCount = Object.keys(state).filter(k => state[k] === true).length;
-  
-  const isLocked = session.isGuest;
-  if (isLocked) {
-    stepperContainer.innerHTML = '';
-    listContainer.innerHTML = `
-      <div class="relative w-full flex flex-col items-center justify-center rounded-2xl border border-white/10 p-8 text-center shadow-lg bg-slate-900/60 backdrop-blur-md my-4">
-        <span class="material-symbols-outlined text-5xl text-amber-500 mb-3">lock</span>
-        <h3 class="text-lg font-extrabold text-white mb-2">Progress Locked</h3>
-        <p class="text-xs text-slate-300 font-medium mb-5 max-w-xs mx-auto">Create a free account to permanently unlock progress tracking and milestone history.</p>
-        <a href="index.html" class="px-5 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-extrabold rounded-xl text-xs shadow-lg hover:from-amber-300 hover:to-amber-400 transition-all">
-          Create Account
-        </a>
-      </div>
-    `;
-    const progressText = document.getElementById('journey-progress-text');
-    if (progressText) progressText.innerText = 'Account Required';
-    const accountLabel = document.getElementById('progress-account-label');
-    if (accountLabel) accountLabel.textContent = 'Browsing as Guest';
-    return;
-  }
+  const state = userData.progress || {};
+
+  const completedCount = CORE_MILESTONES.filter(m => state[m.id] === true).length;
+  const percentage = completedCount * 20;
 
   const accountLabel = document.getElementById('progress-account-label');
+  if (accountLabel) {
+    accountLabel.textContent = session.isGuest
+      ? 'Browsing as Guest • Tap any milestone to mark complete'
+      : `Signed in as ${session.full_name || session.username}`;
+  }
 
+  // Update header text (X of 5 milestones completed) in yellow (#EAB308 / #FACC15)
   const progressText = document.getElementById('journey-progress-text');
   if (progressText) {
     progressText.innerText = `${completedCount} of 5 milestones completed`;
+    progressText.style.setProperty('color', '#EAB308', 'important');
   }
 
-  const milestones = [
-    {
-      id: 'firstStep', icon: 'star', title: 'First Step', desc: 'Found your first resource through NorthStar.',
-      status: state.firstStep ? 'completed' : 'pending', color: 'amber', hasModal: true
-    },
-    {
-      id: 'safePlace', icon: 'home', title: 'Safe Place', desc: 'Found a shelter that can provide support.',
-      status: state.safePlace ? 'completed' : 'pending', color: 'blue', hasModal: true
-    },
-    {
-      id: 'basicNeeds', icon: 'restaurant', title: 'Basic Needs Connected', desc: 'Found a food, meal, clothing, or essential-needs resource.',
-      status: state.basicNeeds ? 'completed' : 'pending', color: 'emerald', hasModal: true
-    },
-    {
-      id: 'connected', icon: 'call', title: 'Connected', desc: 'Reached out to a resource for help.',
-      status: state.connected ? 'completed' : 'pending', color: 'slate', hasModal: false,
-      customAction: '<a href="resource-map.html" class="mt-2 inline-block px-3 py-1.5 bg-primary text-on-primary text-xs font-bold rounded-lg shadow hover:bg-slate-800 transition-colors">Search Resources &rarr;</a>'
-    },
-    {
-      id: 'movingForward', icon: 'trending_up', title: 'Moving Forward', desc: 'Completed 5 helpful actions through NorthStar.',
-      status: state.movingForward ? 'completed' : 'in-progress', color: 'slate', hasModal: false,
-      customAction: `
-        <div class="mt-2.5">
-            <div class="flex justify-between text-[10px] font-semibold text-slate-500 mb-1">
-                <span>Progress</span>
-                <span>${completedCount} / 5 actions</span>
-            </div>
-            <div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-                <div class="bg-amber-500 h-full transition-all duration-500" style="width: ${(completedCount / 5) * 100}%"></div>
-            </div>
-        </div>
-      `
-    }
-  ];
+  // Update percentage badge (0% to 100%, 20% per completed task) in yellow (#EAB308 / #FACC15)
+  const pctBadge = document.getElementById('journey-pct-badge');
+  if (pctBadge) {
+    pctBadge.innerText = `${percentage}%`;
+    pctBadge.style.setProperty('color', '#EAB308', 'important');
+  }
 
-  stepperContainer.innerHTML = milestones.map(m => {
-    const isCompleted = m.status === 'completed';
+  // Update progress bar fill in yellow (#EAB308 / #FACC15)
+  const progressBar = document.getElementById('journey-progress-bar');
+  if (progressBar) {
+    progressBar.style.width = `${percentage}%`;
+    progressBar.style.setProperty('background-color', '#EAB308', 'important');
+  }
+
+  // Render Stepper Nodes with yellow (#EAB308 / #FACC15) fill when completed
+  stepperContainer.innerHTML = CORE_MILESTONES.map(m => {
+    const isCompleted = !!state[m.id];
     return `
-      <div class="w-6 h-6 rounded-full flex items-center justify-center ${isCompleted ? 'bg-amber-400 text-slate-900 shadow-[0_0_10px_rgba(251,191,36,0.5)]' : 'bg-slate-200 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400'} z-10 text-xs transition-colors duration-300">
-          <span class="material-symbols-outlined text-[14px]">${isCompleted ? 'circle' : 'radio_button_unchecked'}</span>
-      </div>
+      <button type="button" onclick="toggleMilestoneCompletion('${m.id}', event)" title="${m.title} (${isCompleted ? 'Completed' : 'Tap to complete'})" class="w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 z-10 text-xs ${isCompleted ? 'bg-[#EAB308] text-slate-950 shadow-[0_0_10px_rgba(234,179,8,0.5)] border-2 border-[#EAB308]' : 'bg-slate-200 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400'}">
+          <span class="material-symbols-outlined text-[14px] font-bold">${isCompleted ? 'check' : 'radio_button_unchecked'}</span>
+      </button>
     `;
   }).join('');
 
-  listContainer.innerHTML = milestones.map((m, index) => {
-    const isCompleted = m.status === 'completed';
-    const isLast = index === milestones.length - 1;
-    let clickHandler = m.hasModal ? `onclick="openMilestoneModal('${m.id}')"` : '';
-    let cursorClass = m.hasModal ? 'cursor-pointer hover:bg-slate-50/10 transition-colors' : '';
+  // Render 5 Core Action Milestone Cards (36x36px Timeline Nodes + Centered 2px Connector Line at left: 17px)
+  listContainer.innerHTML = CORE_MILESTONES.map((m, index) => {
+    const isCompleted = !!state[m.id];
+    const isLast = index === CORE_MILESTONES.length - 1;
 
     return `
-      <div class="relative flex gap-4 ${!isLast ? 'pb-6' : ''}">
-        ${!isLast ? '<div class="absolute left-[19px] top-10 bottom-0 w-0.5 bg-slate-300 dark:bg-slate-700"></div>' : ''}
+      <div class="relative flex gap-3.5 ${!isLast ? 'pb-4' : ''}">
+        ${!isLast ? `<div class="timeline-connector-line absolute z-0 ${isCompleted ? 'bg-[#EAB308]' : 'bg-slate-300 dark:bg-slate-700'}" style="left: 17px !important; top: 36px !important; bottom: 0 !important; width: 2px !important;"></div>` : ''}
         
-        <div class="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center z-10 ${isCompleted ? 'bg-amber-400/20 text-amber-500 shadow-sm border border-amber-400/30' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-white/10'} transition-colors duration-300">
-            <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' ${isCompleted ? '1' : '0'};">${m.icon}</span>
-        </div>
+        <button type="button" onclick="toggleMilestoneCompletion('${m.id}', event)" title="Tap to toggle milestone" style="width: 36px !important; height: 36px !important; flex-shrink: 0 !important;" class="timeline-node-circle w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center z-10 cursor-pointer transition-all active:scale-95 ${isCompleted ? 'bg-[#EAB308] text-slate-950 shadow-sm border border-[#EAB308]' : 'bg-slate-100 dark:bg-slate-800 text-[#EAB308] dark:text-[#FACC15] border border-slate-300 dark:border-white/15'}">
+            <span class="material-symbols-outlined text-[18px] leading-none flex items-center justify-center" style="font-variation-settings: 'FILL' ${isCompleted ? '1' : '0'};">${m.icon}</span>
+        </button>
         
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 p-4 rounded-2xl shadow-sm flex-1 ${cursorClass}" ${clickHandler}>
-            <div class="flex justify-between items-start">
-                <h4 class="font-bold text-sm text-slate-900 dark:text-white">${m.title}</h4>
-                ${isCompleted ? '<span class="material-symbols-outlined text-emerald-500 text-lg">check_circle</span>' : (m.status === 'in-progress' ? '<span class="material-symbols-outlined text-amber-500 text-lg">pending</span>' : '<span class="material-symbols-outlined text-slate-400 text-lg">lock</span>')}
+        <div onclick="toggleMilestoneCompletion('${m.id}', event)" class="milestone-card dashboard-card-border bg-white dark:bg-[#1E293B] p-4 rounded-[18px] shadow-sm flex-1 cursor-pointer hover:brightness-98 transition-all">
+            <div class="flex justify-between items-start gap-2">
+                <div>
+                    <h4 class="font-extrabold text-sm text-slate-900 dark:text-white font-heading">${m.title}</h4>
+                    <p class="dashboard-subtext text-xs text-[#4A5568] dark:text-[#94A3B8] mt-1 leading-snug font-medium" style="color: #4A5568;">${m.desc}</p>
+                </div>
+                <div class="flex flex-col items-end flex-shrink-0 gap-1">
+                    <span class="milestone-status-badge inline-flex items-center gap-1 rounded-full text-[11px]" style="background: rgba(234, 179, 8, 0.15) !important; color: #EAB308 !important; border-radius: 9999px !important; font-weight: 600 !important; padding: 2px 8px !important; border: none !important; box-shadow: none !important;">
+                        ${isCompleted ? '<span class="material-symbols-outlined text-xs">check_circle</span> +20%' : '+20%'}
+                    </span>
+                </div>
             </div>
-            <p class="text-[11px] text-slate-600 dark:text-slate-400 mt-1 leading-snug">${m.desc}</p>
-            ${(!isCompleted && m.customAction) || m.id === 'movingForward' ? m.customAction : ''}
+            <div class="mt-3 pt-2.5 border-t border-slate-200/80 dark:border-white/10 flex items-center justify-between gap-2">
+                <span class="pending-status-text text-[11px] font-bold ${isCompleted ? 'completed-status-pill' : 'text-[#4A5568] dark:text-[#94A3B8]'}" style="${isCompleted ? 'background: #EDF2F7; border: 1px solid #CBD5E1; color: #4A5568; padding: 2px 8px; border-radius: 6px; font-weight: 600;' : 'color: #4A5568;'}">
+                    ${isCompleted ? 'Completed ✓' : 'Pending action'}
+                </span>
+                <a href="${m.actionUrl}" onclick="event.stopPropagation();" class="action-btn milestone-cta-btn inline-flex items-center gap-1 text-xs font-medium px-3.5 py-1.5 rounded-full transition-all active:scale-95" style="background: #1A202C !important; color: #FFFFFF !important; border-radius: 9999px !important; font-weight: 500 !important; border: 1px solid #1A202C !important;">
+                    ${m.actionLabel} <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                </a>
+            </div>
         </div>
       </div>
     `;
   }).join('');
 }
+window.renderProgress = renderProgressPage;
+window.renderProgressPage = renderProgressPage;
+
+// 6-Tab Bottom Navigation Bar Renderer (Dashboard, Progress, Jobs, Map, Resume, Settings)
+function renderBottomNav() {
+  const path = (window.location.pathname || '').toLowerCase();
+  const isLanding = (path.endsWith('/index.html') || path.endsWith('/login.html') || path.endsWith('/signup.html') || path === '/');
+  if (isLanding && (document.getElementById('onboarding-step-1') || document.getElementById('simple-login-name'))) {
+    return;
+  }
+
+  const appFrame = document.querySelector('.app-frame') || document.querySelector('.phone-frame');
+  if (!appFrame) return;
+
+  let nav = appFrame.querySelector('nav.bottom-nav') || appFrame.querySelector('nav');
+  if (!nav) {
+    nav = document.createElement('nav');
+    appFrame.appendChild(nav);
+  }
+
+  nav.className = 'bottom-nav absolute bottom-0 left-0 w-full z-40 grid grid-cols-6 items-center justify-items-center px-1.5 py-2 bg-white dark:bg-[#12141C] shadow-[0px_-4px_25px_rgba(0,0,0,0.2)] border-t border-slate-200 dark:border-white/10';
+
+  const isDashboard = path.includes('dashboard');
+  const isProgress = path.includes('progress') || path.includes('profile');
+  const isJobs = path.includes('opportunities') || path.includes('jobs');
+  const isMap = path.includes('map');
+  const isResume = path.includes('resume');
+
+  const tabs = [
+    { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', href: 'seeker-dashboard.html', active: isDashboard },
+    { id: 'progress', label: 'Progress', icon: 'trending_up', href: 'progress.html', active: isProgress },
+    { id: 'jobs', label: 'Jobs', icon: 'work', href: 'opportunities.html', active: isJobs },
+    { id: 'map', label: 'Map', icon: 'map', href: 'resource-map.html', active: isMap },
+    { id: 'resume', label: 'Resume', icon: 'description', href: 'resume-builder.html', active: isResume },
+    { id: 'settings', label: 'Settings', icon: 'settings', action: 'openSettingsModal()', active: false }
+  ];
+
+  nav.innerHTML = tabs.map(tab => {
+    const activeClasses = 'active-tab bg-amber-400/15 text-amber-500 dark:text-amber-400 border border-amber-400/30 rounded-xl shadow-[0_0_12px_rgba(245,158,11,0.2)] font-extrabold';
+    const inactiveClasses = 'text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium';
+    const iconFill = tab.active ? "font-variation-settings: 'FILL' 1;" : '';
+
+    if (tab.action) {
+      return `
+        <button type="button" onclick="${tab.action}" class="flex flex-col items-center justify-center w-full py-1 px-0.5 transition-all ${inactiveClasses}">
+          <span class="material-symbols-outlined text-[20px] leading-none">${tab.icon}</span>
+          <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">${tab.label}</span>
+        </button>
+      `;
+    }
+
+    return `
+      <a href="${tab.href}" data-nav-tab="${tab.id}" class="flex flex-col items-center justify-center w-full py-1 px-0.5 transition-all ${tab.active ? activeClasses : inactiveClasses}">
+        <span class="material-symbols-outlined text-[20px] leading-none" style="${iconFill}">${tab.icon}</span>
+        <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">${tab.label}</span>
+      </a>
+    `;
+  }).join('');
+}
+window.renderBottomNav = renderBottomNav;
 
 window.matchAndRenderJobs = async function(resumeData) {
   const container = document.getElementById('matched-jobs-container');
@@ -1363,11 +1594,21 @@ function checkDashboardJobMatchLock() {
 // GLOBAL AI CHATBOT WIDGET (SEEKER & HELPER / VOLUNTEER)
 // ============================================================
 function initGlobalAIChatbot() {
-  if (document.getElementById('northstar-chatbot-widget')) return;
+  const existingWidget = document.getElementById('northstar-chatbot-widget');
+  if (existingWidget) {
+    if (existingWidget.parentElement !== document.body) {
+      document.body.appendChild(existingWidget);
+    }
+    existingWidget.style.cssText = 'position: fixed !important; bottom: 80px !important; right: 16px !important; z-index: 50 !important;';
+    const fab = document.getElementById('chat-fab');
+    if (fab) {
+      fab.style.bottom = '80px';
+      fab.style.zIndex = '50';
+    }
+    return;
+  }
 
-  const appFrame = document.querySelector('.app-frame') || document.body;
-
-  // Insert Backdrop Overlay (placed behind the chatbot widget at z-index 90)
+  // Insert Backdrop Overlay on document.body (placed behind the chatbot widget at z-index 90)
   if (!document.getElementById('chatbot-backdrop-overlay')) {
     const backdrop = document.createElement('div');
     backdrop.id = 'chatbot-backdrop-overlay';
@@ -1376,21 +1617,22 @@ function initGlobalAIChatbot() {
       e.stopPropagation();
       toggleAIChatbotWindow();
     };
-    appFrame.appendChild(backdrop);
+    document.body.appendChild(backdrop);
   }
 
   const widget = document.createElement('div');
   widget.id = 'northstar-chatbot-widget';
-  widget.className = 'absolute bottom-[80px] right-4 z-[100] no-print';
+  widget.className = 'chat-fab fixed bottom-[80px] right-[16px] z-50 no-print';
+  widget.style.cssText = 'position: fixed !important; bottom: 80px !important; right: 16px !important; z-index: 50 !important;';
   widget.innerHTML = `
-    <!-- Launcher FAB Button -->
-    <button id="chatbot-fab-btn" onclick="toggleAIChatbotWindow()" class="w-13 h-13 rounded-full bg-[#FFE855] text-slate-950 shadow-xl border-2 border-white flex items-center justify-center font-bold transition-all active:scale-95 hover:bg-amber-300 relative group cursor-pointer select-none">
-      <span id="chatbot-fab-icon" class="material-symbols-outlined text-2xl">smart_toy</span>
-      <span class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full"></span>
+    <!-- Launcher FAB Button (56x56px Circular Badge at bottom: 80px, right: 16px, z-index: 50) -->
+    <button id="chat-fab" data-fab-alias="chatbot-fab-btn" onclick="toggleAIChatbotWindow()" style="position: fixed; bottom: 80px; right: 16px; z-index: 50; width: 56px; height: 56px; border-radius: 9999px; display: flex; align-items: center; justify-content: center;" class="w-14 h-14 rounded-full bg-[#FFE855] text-slate-950 shadow-xl border-2 border-white flex items-center justify-center font-bold transition-all active:scale-95 hover:bg-amber-300 group cursor-pointer select-none">
+      <span id="chatbot-fab-icon" class="material-symbols-outlined text-[28px] leading-none flex items-center justify-center">smart_toy</span>
+      <span class="absolute top-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full"></span>
     </button>
 
     <!-- Chatbot Window Drawer -->
-    <div id="chatbot-window-drawer" class="hidden absolute bottom-16 right-0 w-[330px] sm:w-[360px] bg-white rounded-[24px] shadow-2xl border border-slate-200/80 overflow-hidden flex-col z-[101] pointer-events-auto">
+    <div id="chatbot-window-drawer" style="position: fixed; bottom: 146px; right: 16px; z-index: 101;" class="hidden w-[330px] sm:w-[360px] bg-white rounded-[24px] shadow-2xl border border-slate-200/80 overflow-hidden flex-col pointer-events-auto">
       <!-- Header -->
       <div class="bg-slate-900 text-white px-4 py-3 flex items-center justify-between select-none">
         <div class="flex items-center gap-2.5">
@@ -1434,7 +1676,7 @@ function initGlobalAIChatbot() {
     </div>
   `;
 
-  appFrame.appendChild(widget);
+  document.body.appendChild(widget);
   updateChatbotSuggestionChips();
 
   // Document-level outside click handler with proper containment logic
@@ -1460,7 +1702,7 @@ function initGlobalAIChatbot() {
 function toggleAIChatbotWindow() {
   const drawer = document.getElementById('chatbot-window-drawer');
   const backdrop = document.getElementById('chatbot-backdrop-overlay');
-  const fabBtn = document.getElementById('chatbot-fab-btn');
+  const fabBtn = document.getElementById('chat-fab') || document.getElementById('chatbot-fab-btn');
   const fabIcon = document.getElementById('chatbot-fab-icon');
   if (!drawer) return;
 
@@ -1477,6 +1719,12 @@ function toggleAIChatbotWindow() {
     if (backdrop) {
       backdrop.classList.remove('chatbot-backdrop-hidden');
       backdrop.classList.add('chatbot-backdrop-visible');
+    }
+
+    // Track AI Companion milestone
+    localStorage.setItem('northstar_ai_used', 'true');
+    if (typeof updateMilestone === 'function') {
+      updateMilestone('aiCompanion', true);
     }
 
     updateChatbotSuggestionChips();

@@ -488,33 +488,38 @@
 
 
 
-    <!-- Floating Dock Bottom Navigation Bar -->
-    <nav class="absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-3 py-2.5 bg-[#12141C]/80 backdrop-blur-xl shadow-[0px_-4px_25px_rgba(0,0,0,0.5)] border-t border-white/10 no-print">
-        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="index.html">
-            <span class="material-symbols-outlined text-xl">home</span>
-            <span class="text-[10px] font-medium mt-0.5">Home</span>
+    <!-- Full 6-Tab Bottom Navigation Bar -->
+    <nav class="bottom-nav absolute bottom-0 left-0 w-full z-40 grid grid-cols-6 items-center justify-items-center px-1.5 py-2 bg-white dark:bg-[#12141C] shadow-[0px_-4px_25px_rgba(0,0,0,0.2)] border-t border-slate-200 dark:border-white/10 no-print">
+        <a href="seeker-dashboard.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
+            <span class="material-symbols-outlined text-[20px] leading-none">dashboard</span>
+            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Dashboard</span>
         </a>
-        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="seeker-dashboard.html">
-            <span class="material-symbols-outlined text-xl">dashboard</span>
-            <span class="text-[10px] font-medium mt-0.5">Dashboard</span>
+        <a href="progress.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
+            <span class="material-symbols-outlined text-[20px] leading-none">trending_up</span>
+            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Progress</span>
         </a>
-        <a class="flex flex-col items-center justify-center bg-amber-400/15 text-amber-400 border border-amber-400/30 rounded-2xl px-3.5 py-1 shadow-[0_0_15px_rgba(245,158,11,0.25)]" href="resume-builder.html">
-            <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">description</span>
-            <span class="text-[10px] font-extrabold mt-0.5">Resume</span>
+        <a href="opportunities.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
+            <span class="material-symbols-outlined text-[20px] leading-none">work</span>
+            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Jobs</span>
         </a>
-        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="resource-map.html">
-            <span class="material-symbols-outlined text-xl">map</span>
-            <span class="text-[10px] font-medium mt-0.5">Map</span>
+        <a href="resource-map.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
+            <span class="material-symbols-outlined text-[20px] leading-none">map</span>
+            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Map</span>
         </a>
-        <a class="flex flex-col items-center justify-center text-slate-400 hover:text-white px-3 py-1 transition-colors" href="call-shelter.html">
-            <span class="material-symbols-outlined text-xl">call</span>
-            <span class="text-[10px] font-medium mt-0.5">Shelter</span>
+        <a href="resume-builder.html" class="active-tab flex flex-col items-center justify-center w-full py-1 px-0.5 bg-amber-400/15 text-amber-500 dark:text-amber-400 border border-amber-400/30 rounded-xl shadow-[0_0_12px_rgba(245,158,11,0.2)] font-extrabold transition-all">
+            <span class="material-symbols-outlined text-[20px] leading-none" style="font-variation-settings: 'FILL' 1;">description</span>
+            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Resume</span>
         </a>
+        <button type="button" onclick="openSettingsModal()" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
+            <span class="material-symbols-outlined text-[20px] leading-none">settings</span>
+            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Settings</span>
+        </button>
     </nav>
 
 </div>
 
 <script src="js/northstar.js"></script>
+    <script src="js/jobs.js"></script>
 <script>
 // ============================================================
 // RESUME BUILDER — NorthStar AI

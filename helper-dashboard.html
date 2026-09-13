@@ -84,9 +84,7 @@
 </div>
 
 <!-- Mobile Frame Shell -->
-<div class="app-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-[#0F1117] sm:rounded-[44px] shadow-[0_0_70px_rgba(0,0,0,0.85)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800/80 z-10">
-
-
+<div class="app-frame app-container w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-[#0F1117] sm:rounded-[44px] shadow-[0_0_70px_rgba(0,0,0,0.85)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800/80 z-10">
 
     <!-- App Header -->
     <header class="bg-white sticky top-0 z-40 flex justify-between items-center w-full px-5 pt-5 pb-3 border-b border-slate-200">
@@ -94,23 +92,26 @@
             <span class="material-symbols-outlined text-slate-800 text-2xl font-bold cursor-pointer">menu</span>
             <h1 class="text-xl font-extrabold text-slate-900 font-heading tracking-tight">Northstar</h1>
         </div>
-        <div class="header-actions-right flex items-center gap-2">
-            <button onclick="toggleTheme()" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-amber-400 text-sm font-bold transition-all active:scale-95 cursor-pointer" title="Toggle Light / Dark Mode">
+        <div class="header-actions header-actions-right flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
+            <!-- Existing theme toggle button -->
+            <button id="theme-toggle-btn" onclick="toggleTheme()" class="icon-btn w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-amber-400 text-sm font-bold transition-all active:scale-95 cursor-pointer" aria-label="Toggle Theme" title="Toggle Light / Dark Mode">
                 <span class="material-symbols-outlined text-base">brightness_4</span>
             </button>
-            <div onclick="openSettingsModal()" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 text-sm font-bold cursor-pointer" title="Settings">
-                👤
-            </div>
+
+            <!-- Dynamic First-Initial Profile / Settings Avatar Button -->
+            <button id="profile-btn" class="profile-avatar-btn w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-slate-900 text-[#facc15] dark:bg-[#facc15] dark:text-slate-950 border border-slate-300 dark:border-amber-300 flex items-center justify-center font-extrabold text-sm shadow-sm transition-all active:scale-95 cursor-pointer select-none" aria-label="Settings & Profile" title="Open Settings" onclick="openSettingsModal()">
+                V
+            </button>
         </div>
     </header>
 
     <!-- Main Scrollable Canvas -->
-    <main class="flex-grow px-5 pt-4 pb-28 flex flex-col gap-4 overflow-y-auto bg-[#F4F5F7]">
+    <main class="dashboard-container dashboard-content main-content flex-grow px-5 pt-3 pb-28 flex flex-col gap-4 overflow-y-auto bg-[#F4F5F7]">
 
         <!-- Greeting Header -->
-        <section class="space-y-1 pt-1.5 pb-0.5">
+        <section class="space-y-1 pt-0.5 pb-0.5">
             <span class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">DASHBOARD</span>
-            <h2 class="text-[1.85rem] leading-tight font-extrabold text-slate-900 font-heading tracking-tight">Hello, Sarah</h2>
+            <h2 class="text-[1.85rem] leading-tight font-extrabold text-slate-900 font-heading tracking-tight">Hello, Volunteer</h2>
             <p class="text-base font-semibold text-slate-600">Your contribution is guiding the way for 12 families this month.</p>
         </section>
 
@@ -254,26 +255,40 @@
             </div>
         </section>
 
+        <!-- OFFLINE RESOURCES BANNER -->
+        <div id="download-banner" class="offline-banner offline-download-banner p-4 rounded-[20px] flex items-center justify-between shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
+            <div class="flex items-center gap-2.5">
+                <span class="material-symbols-outlined text-xl text-[#EAB308] dark:text-[#FACC15]">wifi_off</span>
+                <span class="offline-banner-label text-xs font-bold leading-tight">Download resources for offline use</span>
+            </div>
+            <button id="download-offline-btn" class="download-default px-4 py-2.5 min-h-[40px] min-w-[110px] rounded-[10px] text-[13px] font-bold whitespace-nowrap active:scale-95 transition-all shadow-sm inline-flex items-center justify-center cursor-pointer flex-shrink-0" style="background: #facc15 !important; color: #000000 !important; font-weight: 700 !important;">
+                Download
+            </button>
+        </div>
+
+        <!-- Offline Directory List Component (Hidden per UI cleanup rule) -->
+        <div id="offline-directory-container" class="hidden" style="display: none !important;"></div>
+
     </main>
 
-    <!-- Floating Dock Bottom Navigation Bar -->
-    <nav class="absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-3 py-2.5 bg-[#12141C]/80 backdrop-blur-xl shadow-[0px_-4px_25px_rgba(0,0,0,0.5)] border-t border-white/10">
-        <a class="flex-1 flex flex-col items-center justify-center bg-amber-400/15 text-amber-400 border border-amber-400/30 rounded-2xl px-2 py-1 shadow-[0_0_15px_rgba(245,158,11,0.25)]" href="helper-dashboard.html">
+    <!-- Floating Dock Bottom Navigation Bar (4 Core Tabs) -->
+    <nav class="bottom-nav absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-3 py-2 bg-[#12141C]/95 backdrop-blur-xl shadow-[0px_-4px_25px_rgba(0,0,0,0.5)] border-t border-white/10" style="justify-content: space-around !important;">
+        <a class="bottom-nav-tab active-tab flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center rounded-[14px] px-2 py-1 transition-colors" href="helper-dashboard.html">
             <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">dashboard</span>
             <span class="text-[10px] font-extrabold mt-0.5">Dashboard</span>
         </a>
-        <a class="flex-1 flex flex-col items-center justify-center text-slate-400 hover:text-white px-2 py-1 transition-colors" href="opportunities.html">
+        <a class="bottom-nav-tab flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center text-slate-400 hover:text-white px-2 py-1 transition-colors" href="opportunities.html">
             <span class="material-symbols-outlined text-xl">work</span>
             <span class="text-[10px] font-medium mt-0.5">Opportunities</span>
         </a>
-        <a class="flex-1 flex flex-col items-center justify-center text-slate-400 hover:text-white px-2 py-1 transition-colors" href="donate.html">
+        <a class="bottom-nav-tab flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center text-slate-400 hover:text-white px-2 py-1 transition-colors" href="donate.html">
             <span class="material-symbols-outlined text-xl">volunteer_activism</span>
             <span class="text-[10px] font-medium mt-0.5">Donate</span>
         </a>
-        <button onclick="openSettingsModal()" class="flex-1 flex flex-col items-center justify-center text-slate-400 hover:text-white px-2 py-1 transition-colors">
-            <span class="material-symbols-outlined text-xl">settings</span>
-            <span class="text-[10px] font-medium mt-0.5">Settings</span>
-        </button>
+        <a class="bottom-nav-tab flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center text-slate-400 hover:text-white px-2 py-1 transition-colors" href="map.html">
+            <span class="material-symbols-outlined text-xl">map</span>
+            <span class="text-[10px] font-medium mt-0.5">Map</span>
+        </a>
     </nav>
 
 </div>
@@ -314,6 +329,7 @@ window.initVolunteerActiveDelivery = async function() {
 document.addEventListener('DOMContentLoaded', () => { setTimeout(initVolunteerActiveDelivery, 600); });
 </script>
 <script src="js/northstar.js"></script>
+<script src="js/jobs.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
   const container = document.getElementById('dashboard-deliveries-queue');
@@ -348,6 +364,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 </script>
-
+<script src="js/offline-map.js"></script>
 </html>
 

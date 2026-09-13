@@ -109,13 +109,16 @@
                 
                 <!-- TIER 1: COLLAPSED CAPSULE ROW (MODE TOGGLE + ACTION BUTTONS TIGHTLY GROUPED) -->
                 <div class="flex justify-between items-center w-full">
-                    <!-- Segmented Mode Controller (Nearby vs Saved) -->
+                    <!-- Segmented Mode Controller (Nearby vs Saved vs Offline) -->
                     <div class="bg-slate-200/80 p-1 rounded-[20px] flex items-center gap-1 shadow-inner">
-                        <button id="mode-btn-nearby" onclick="switchMapMode('nearby')" class="px-3.5 py-1.5 rounded-[16px] text-xs font-bold bg-white text-slate-950 shadow-sm transition-all">
+                        <button id="mode-btn-nearby" onclick="switchMapMode('nearby')" class="px-3 py-1.5 rounded-[16px] text-xs font-bold bg-white text-slate-950 shadow-sm transition-all">
                             Nearby
                         </button>
-                        <button id="mode-btn-saved" onclick="switchMapMode('saved')" class="px-3.5 py-1.5 rounded-[16px] text-xs font-bold text-slate-600 hover:text-slate-950 transition-all">
+                        <button id="mode-btn-saved" onclick="switchMapMode('saved')" class="px-3 py-1.5 rounded-[16px] text-xs font-bold text-slate-600 hover:text-slate-950 transition-all">
                             Saved
+                        </button>
+                        <button id="mode-btn-offline" onclick="window.toggleOfflineDirectoryModal && window.toggleOfflineDirectoryModal()" class="px-3 py-1.5 rounded-[16px] text-xs font-bold text-slate-600 hover:text-slate-950 transition-all flex items-center gap-1">
+                            <span>Offline</span>
                         </button>
                     </div>
 
@@ -293,33 +296,33 @@
         </div>
     </div>
 
-    <!-- FLOATING ROUNDED BOTTOM NAVIGATION BAR -->
-    <div class="absolute bottom-3 left-4 right-4 z-40">
-        <nav class="bg-white/95 backdrop-blur-xl rounded-full py-2.5 px-4 shadow-[0_10px_30px_rgba(0,0,0,0.3)] border border-slate-200/80 flex items-center justify-between">
-            
-            <a href="index.html" class="flex flex-col items-center text-slate-400 hover:text-slate-900 transition-colors p-1">
-                <span class="material-symbols-outlined text-xl">home</span>
-            </a>
-
-            <a href="resource-map.html" class="flex flex-col items-center text-slate-950 transition-colors p-1 relative">
-                <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">map</span>
-                <span class="w-1 h-1 rounded-full bg-slate-950 absolute -bottom-1"></span>
-            </a>
-
-            <a href="seeker-dashboard.html" class="flex flex-col items-center text-slate-400 hover:text-slate-900 transition-colors p-1">
-                <span class="material-symbols-outlined text-xl">search</span>
-            </a>
-
-            <a href="resume-builder.html" class="flex flex-col items-center text-slate-400 hover:text-slate-900 transition-colors p-1">
-                <span class="material-symbols-outlined text-xl">person</span>
-            </a>
-
-            <!-- Prominent Floating "+" Action Button for Volunteers / Posting Resources -->
-            <button onclick="openAddResourceModal()" class="w-10 h-10 rounded-full bg-[#0F141C] text-white flex items-center justify-center shadow-lg hover:bg-slate-800 transition-all active:scale-95 border border-white/10 ml-1">
-                <span class="material-symbols-outlined text-xl">add</span>
-            </button>
-        </nav>
-    </div>
+    <!-- Full 6-Tab Bottom Navigation Bar -->
+    <nav class="bottom-nav absolute bottom-0 left-0 w-full z-40 grid grid-cols-6 items-center justify-items-center px-1.5 py-2 bg-white dark:bg-[#12141C] shadow-[0px_-4px_25px_rgba(0,0,0,0.2)] border-t border-slate-200 dark:border-white/10">
+        <a href="seeker-dashboard.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
+            <span class="material-symbols-outlined text-[20px] leading-none">dashboard</span>
+            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Dashboard</span>
+        </a>
+        <a href="progress.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
+            <span class="material-symbols-outlined text-[20px] leading-none">trending_up</span>
+            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Progress</span>
+        </a>
+        <a href="opportunities.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
+            <span class="material-symbols-outlined text-[20px] leading-none">work</span>
+            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Jobs</span>
+        </a>
+        <a href="resource-map.html" class="active-tab flex flex-col items-center justify-center w-full py-1 px-0.5 bg-amber-400/15 text-amber-500 dark:text-amber-400 border border-amber-400/30 rounded-xl shadow-[0_0_12px_rgba(245,158,11,0.2)] font-extrabold transition-all">
+            <span class="material-symbols-outlined text-[20px] leading-none" style="font-variation-settings: 'FILL' 1;">map</span>
+            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Map</span>
+        </a>
+        <a href="resume-builder.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
+            <span class="material-symbols-outlined text-[20px] leading-none">description</span>
+            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Resume</span>
+        </a>
+        <button type="button" onclick="openSettingsModal()" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
+            <span class="material-symbols-outlined text-[20px] leading-none">settings</span>
+            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Settings</span>
+        </button>
+    </nav>
 
 </div><!-- /.app-frame -->
 
@@ -378,6 +381,7 @@
 </div>
 
 <script src="js/northstar.js"></script>
+    <script src="js/jobs.js"></script>
 <script>
   let map;
   let offlineLayer;
@@ -818,8 +822,62 @@
 
   const RESOURCE_STORAGE_KEY = 'cached_resources_v2_live_hours';
 
+  function normalizeOfflineResource(item, idx) {
+    const catRaw = (item.category || 'shelter').toLowerCase();
+    let category = 'shelter';
+    let icon = '🛏️';
+    if (catRaw.includes('food') || catRaw.includes('pantry')) {
+      category = 'food';
+      icon = '🍲';
+    } else if (catRaw.includes('health') || catRaw.includes('medical') || catRaw.includes('clinic')) {
+      category = 'health';
+      icon = '🏥';
+    } else if (catRaw.includes('restroom') || catRaw.includes('hygiene')) {
+      category = 'restroom';
+      icon = '🚿';
+    }
+
+    return {
+      id: item.id || `offline-res-${idx}`,
+      name: item.name || 'Essential Resource',
+      category: category,
+      lat: Number(item.lat) || 47.6062,
+      lng: Number(item.lng) || -122.3321,
+      rating: item.rating || 4.8,
+      open_status: item.open_24_7 ? 'OPEN_NOW' : 'OPEN_NOW',
+      status: item.open_24_7 ? 'Open · 24/7 Resource' : (item.opening_hours || 'Open Today'),
+      statusDetail: item.opening_hours || (item.open_24_7 ? 'Open 24/7' : 'Open Today'),
+      address: item.address || 'Seattle, WA',
+      phone: item.phone || '(206) 211-0000',
+      icon: item.icon || icon,
+      details: item.details || `${item.category || 'Essential Resource'} · Phone: ${item.phone || 'N/A'}`,
+      verifiedOnly: true,
+      is24Seven: Boolean(item.open_24_7),
+      opening_hours: { open_now: true }
+    };
+  }
+
   function getResourcesData() {
+    const isOfflineMode = !navigator.onLine || window.location.search.includes('offline=true');
     try {
+      const offlineRaw = localStorage.getItem('northstar_offline_resources');
+      if (offlineRaw) {
+        const offlineParsed = JSON.parse(offlineRaw);
+        if (Array.isArray(offlineParsed) && offlineParsed.length > 0) {
+          const normalizedOffline = offlineParsed.map(normalizeOfflineResource);
+          if (isOfflineMode) {
+            return normalizedOffline;
+          }
+          // Merge offline essentials with default resources avoiding duplicate names
+          const existingNames = new Set(normalizedOffline.map(r => r.name.toLowerCase()));
+          const merged = [
+            ...normalizedOffline,
+            ...defaultResources.filter(r => !existingNames.has((r.name || '').toLowerCase()))
+          ];
+          return merged;
+        }
+      }
+
       const stored = localStorage.getItem(RESOURCE_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
@@ -835,6 +893,12 @@
   }
 
   async function loadResourcesFromDatabase() {
+    if (!navigator.onLine || window.location.search.includes('offline=true')) {
+      if (typeof updateVisiblePlaces === 'function') {
+        updateVisiblePlaces();
+      }
+      return;
+    }
     if (window.supabaseClient) {
       try {
         const { data, error } = await window.supabaseClient.from('resources').select('*');
@@ -845,7 +909,7 @@
           }
         }
       } catch (err) {
-        console.warn('Could not query Supabase resources table, keeping default mock items:', err);
+        console.warn('Could not query Supabase resources table, keeping offline/cached items:', err);
       }
     }
   }
@@ -853,6 +917,20 @@
   document.addEventListener('DOMContentLoaded', () => {
     initLeafletCleanMap();
     loadResourcesFromDatabase();
+
+    // Highlight Offline mode pill if loaded with ?offline=true or when offline
+    if (!navigator.onLine || window.location.search.includes('offline=true')) {
+      const offlineBtn = document.getElementById('mode-btn-offline');
+      const nearbyBtn = document.getElementById('mode-btn-nearby');
+      if (offlineBtn && nearbyBtn) {
+        nearbyBtn.className = 'px-3 py-1.5 rounded-[16px] text-xs font-bold text-slate-600 hover:text-slate-950 transition-all';
+        offlineBtn.className = 'px-3 py-1.5 rounded-[16px] text-xs font-bold bg-emerald-500 text-white shadow-sm transition-all flex items-center gap-1';
+      }
+      const locLabel = document.getElementById('location-name-label');
+      if (locLabel) {
+        locLabel.textContent = 'Offline Map Ready';
+      }
+    }
   });
 
   function initLeafletCleanMap() {
@@ -1827,5 +1905,6 @@
   window.switchRouteMode = switchRouteMode;
   window.drawRouteOnMapAndClose = drawRouteOnMapAndClose;
 </script>
+<script src="js/offline-map.js"></script>
 </body>
 </html>

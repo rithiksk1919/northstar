@@ -93,79 +93,229 @@
     </div>
 
     <!-- Mobile Frame Shell -->
-    <div class="app-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-[#0F1117] sm:rounded-[44px] shadow-[0_0_70px_rgba(0,0,0,0.85)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800/80 z-10">
+    <div class="app-frame w-full sm:max-w-[420px] h-screen sm:h-[900px] max-h-screen sm:max-h-[920px] bg-[#0F1117] sm:rounded-[44px] shadow-[0_0_70px_rgba(0,0,0,0.85)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800/80 z-10">
 
         <!-- App Header -->
-        <header class="bg-[#0F1117]/90 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center w-full px-5 pt-5 pb-3 border-b border-white/10">
+        <header class="bg-white dark:bg-[#0F1117]/90 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center w-full px-5 pt-5 pb-3 border-b border-slate-200 dark:border-white/10">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center flex-shrink-0">
-                    <span class="material-symbols-outlined text-amber-400 text-lg">timeline</span>
+                <div class="w-9 h-9 rounded-xl bg-[#EAB308]/15 border border-[#EAB308]/30 flex items-center justify-center flex-shrink-0">
+                    <span class="material-symbols-outlined text-[#EAB308] dark:text-[#FACC15] text-lg" style="color: #EAB308 !important;">trending_up</span>
                 </div>
                 <div>
-                    <h1 class="text-xl font-extrabold text-white tracking-tight leading-tight font-heading">Progress</h1>
-                    <p class="text-xs font-medium text-slate-400" style="color:#475569;">Every step forward matters.</p>
+                    <h1 class="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight font-heading">Progress</h1>
+                    <p class="dashboard-subtext text-xs font-medium text-[#4A5568] dark:text-[#94A3B8]">Every step forward matters.</p>
                 </div>
             </div>
-            <div class="header-actions-right flex items-center gap-2">
-                <button id="header-user-avatar" type="button" onclick="openSettingsModal()" class="header-account-avatar flex-shrink-0 transition-transform active:scale-95 cursor-pointer select-none" title="Signed in as Seeker - Tap for Settings">
-                    <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-400 to-amber-500 text-slate-950 font-black text-xs flex items-center justify-center shadow-[0_0_12px_rgba(245,158,11,0.4)] border border-amber-300 hover:brightness-110 transition-all">
-                        S
-                    </div>
+            <div class="header-actions header-actions-right flex items-center gap-2">
+                <button id="theme-toggle-btn" onclick="toggleTheme()" class="icon-btn w-10 h-10 rounded-[12px] bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-amber-400 text-sm font-bold transition-all active:scale-95 cursor-pointer" aria-label="Toggle Theme" title="Toggle Light / Dark Mode">
+                    <span class="material-symbols-outlined text-base">brightness_4</span>
+                </button>
+                <button id="profile-btn" type="button" onclick="openSettingsModal()" class="profile-avatar-btn w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm shadow-sm transition-all active:scale-95 cursor-pointer select-none" title="Signed in as Seeker - Tap for Settings">
+                    S
                 </button>
             </div>
         </header>
 
         <!-- Main Scrollable Canvas -->
-        <main class="flex-grow px-4 pt-4 overflow-y-auto no-scrollbar space-y-3" style="padding-bottom: 90px; -webkit-overflow-scrolling: touch;">
+        <main class="progress-scroll-container main-content flex-grow px-4 pt-4 pb-32 overflow-y-auto no-scrollbar space-y-3 bg-[#F4F5F7] dark:bg-[#0F1117]" style="padding-bottom: 120px !important; -webkit-overflow-scrolling: touch;">
 
             <!-- Journey Summary Card -->
-            <div class="bg-white/[0.04] border border-white/10 rounded-[18px] p-4 space-y-3">
+            <div class="progress-card dashboard-card-border bg-white dark:bg-[#1E293B] rounded-[20px] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.06)] space-y-3">
                 <div class="flex items-center justify-between">
                     <div>
-                        <h2 class="text-sm font-extrabold text-white font-heading" style="color:#f1f5f9;">Your NorthStar Journey</h2>
-                        <p class="text-xs font-medium mt-0.5" id="journey-progress-text" style="color:#facc15;">0 of 5 milestones completed</p>
+                        <div class="flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-base text-[#EAB308] dark:text-[#FACC15]" style="color: #EAB308 !important;">trending_up</span>
+                            <h2 class="text-sm font-extrabold text-slate-900 dark:text-white font-heading">Your NorthStar Journey</h2>
+                        </div>
+                        <p class="text-xs font-extrabold mt-0.5 text-[#EAB308] dark:text-[#FACC15]" id="journey-progress-text" style="color: #EAB308 !important;">1 of 5 milestones completed</p>
                     </div>
-                    <span id="journey-pct-badge" class="text-xs font-extrabold px-2.5 py-1 rounded-full bg-amber-400/15 text-amber-400 border border-amber-400/30">0%</span>
+                    <span id="journey-pct-badge" class="text-xs font-extrabold px-2.5 py-1 rounded-full bg-[#EAB308]/15 text-[#EAB308] dark:text-[#FACC15] border border-[#EAB308]/40" style="color: #EAB308 !important;">20%</span>
                 </div>
 
-                <!-- Progress Bar -->
-                <div class="w-full bg-white/10 rounded-full h-2 overflow-hidden">
-                    <div id="journey-progress-bar" class="bg-amber-400 h-full rounded-full transition-all duration-500" style="width:0%"></div>
+                <!-- Progress Bar (Yellow #EAB308 / #FACC15 Fill) -->
+                <div class="w-full bg-slate-200 dark:bg-white/10 rounded-full h-2 overflow-hidden">
+                    <div id="journey-progress-bar" class="h-full rounded-full transition-all duration-500" style="width: 20%; background-color: #EAB308 !important;"></div>
                 </div>
 
                 <!-- Stepper Nodes -->
                 <div class="relative flex items-center justify-between pt-1">
-                    <div class="absolute left-0 top-1/2 w-full h-px bg-white/10 -translate-y-1/2 z-0"></div>
-                    <div id="stepper-nodes" class="flex justify-between w-full relative z-10"></div>
+                    <div class="absolute left-0 top-1/2 w-full h-px bg-slate-200 dark:bg-white/10 -translate-y-1/2 z-0"></div>
+                    <div id="stepper-nodes" class="flex justify-between w-full relative z-10">
+                        <div class="w-6 h-6 rounded-full flex items-center justify-center bg-[#EAB308] text-slate-950 shadow-[0_0_10px_rgba(234,179,8,0.5)] border-2 border-[#EAB308] z-10 text-xs"><span class="material-symbols-outlined text-[14px] font-bold">check</span></div>
+                        <div class="w-6 h-6 rounded-full flex items-center justify-center bg-slate-200 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-slate-500 z-10 text-xs"><span class="material-symbols-outlined text-[14px]">radio_button_unchecked</span></div>
+                        <div class="w-6 h-6 rounded-full flex items-center justify-center bg-slate-200 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-slate-500 z-10 text-xs"><span class="material-symbols-outlined text-[14px]">radio_button_unchecked</span></div>
+                        <div class="w-6 h-6 rounded-full flex items-center justify-center bg-slate-200 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-slate-500 z-10 text-xs"><span class="material-symbols-outlined text-[14px]">radio_button_unchecked</span></div>
+                        <div class="w-6 h-6 rounded-full flex items-center justify-center bg-slate-200 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-slate-500 z-10 text-xs"><span class="material-symbols-outlined text-[14px]">radio_button_unchecked</span></div>
+                    </div>
                 </div>
             </div>
 
-            <!-- "Your Next Step" Hero Callout (rendered by JS, hidden initially) -->
-            <div id="next-step-callout" class="hidden bg-[#FFE855] rounded-[18px] p-4 flex items-center justify-between gap-3">
-                <div class="flex-1 min-w-0">
-                    <p class="text-[10px] font-extrabold text-slate-700 uppercase tracking-wider mb-0.5">YOUR NEXT STEP</p>
-                    <p id="next-step-label" class="text-sm font-extrabold text-slate-900 leading-tight font-heading">Find a Resource</p>
+            <!-- Journey Milestone List (5 Core User Actions Ordered Easiest/Onboarding -> Advanced Goals) -->
+            <section class="space-y-2.5" id="journey-list-container">
+                <!-- 1. Navigating Through Northstar -->
+                <div class="relative flex gap-3.5 pb-4">
+                    <div class="timeline-connector-line absolute z-0 bg-[#EAB308]" style="left: 17px !important; top: 36px !important; bottom: 0 !important; width: 2px !important;"></div>
+                    <button type="button" style="width: 36px !important; height: 36px !important; flex-shrink: 0 !important;" class="timeline-node-circle w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center z-10 bg-[#EAB308] text-slate-950 shadow-sm border border-[#EAB308]">
+                        <span class="material-symbols-outlined text-[18px] leading-none flex items-center justify-center" style="font-variation-settings: 'FILL' 1;">explore</span>
+                    </button>
+                    <div class="milestone-card dashboard-card-border bg-white dark:bg-[#1E293B] p-4 rounded-[18px] shadow-sm flex-1 transition-all" data-milestone-id="appExplorer">
+                        <div class="flex justify-between items-start gap-2">
+                            <div>
+                                <h4 class="font-extrabold text-sm text-slate-900 dark:text-white font-heading">App Explorer</h4>
+                                <p class="dashboard-subtext text-xs text-[#4A5568] dark:text-[#94A3B8] mt-1 leading-snug font-medium">Navigated through key screens and features across Northstar.</p>
+                            </div>
+                            <span class="milestone-status-badge inline-flex items-center gap-1 rounded-full text-[11px]" style="background: rgba(234, 179, 8, 0.15) !important; color: #EAB308 !important; border-radius: 9999px !important; font-weight: 600 !important; padding: 2px 8px !important; border: none !important; box-shadow: none !important;">
+                                <span class="material-symbols-outlined text-xs">check_circle</span> +20%
+                            </span>
+                        </div>
+                        <div class="mt-3 pt-2.5 border-t border-slate-200/80 dark:border-white/10 flex items-center justify-between gap-2">
+                            <span class="pending-status-text completed-status-pill text-[11px] font-bold" style="background: #EDF2F7; border: 1px solid #CBD5E1; color: #4A5568; padding: 2px 8px; border-radius: 6px; font-weight: 600;">Completed ✓</span>
+                            <a href="seeker-dashboard.html" class="action-btn milestone-cta-btn inline-flex items-center gap-1 text-xs font-medium px-3.5 py-1.5 rounded-full transition-all active:scale-95" style="background: #1A202C !important; color: #FFFFFF !important; border-radius: 9999px !important; font-weight: 500 !important;">
+                                Explore App <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                <a id="next-step-btn" href="resource-map.html" class="flex-shrink-0 px-3.5 py-2 bg-slate-950 text-white rounded-[12px] text-xs font-extrabold active:scale-95 transition-all shadow-sm flex items-center gap-1">
-                    Go <span class="material-symbols-outlined text-xs">arrow_forward</span>
-                </a>
-            </div>
 
-            <!-- Journey Milestone List (injected by JS) -->
-            <section class="space-y-2" id="journey-list-container"></section>
+                <!-- 2. Northstar AI Assistant -->
+                <div class="relative flex gap-3.5 pb-4">
+                    <div class="timeline-connector-line absolute z-0 bg-slate-300 dark:bg-slate-700" style="left: 17px !important; top: 36px !important; bottom: 0 !important; width: 2px !important;"></div>
+                    <button type="button" style="width: 36px !important; height: 36px !important; flex-shrink: 0 !important;" class="timeline-node-circle w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center z-10 bg-slate-100 dark:bg-slate-800 text-[#EAB308] dark:text-[#FACC15] border border-slate-300 dark:border-white/15">
+                        <span class="material-symbols-outlined text-[18px] leading-none flex items-center justify-center">smart_toy</span>
+                    </button>
+                    <div class="milestone-card dashboard-card-border bg-white dark:bg-[#1E293B] p-4 rounded-[18px] shadow-sm flex-1 transition-all" data-milestone-id="aiCompanion">
+                        <div class="flex justify-between items-start gap-2">
+                            <div>
+                                <h4 class="font-extrabold text-sm text-slate-900 dark:text-white font-heading">AI Companion</h4>
+                                <p class="dashboard-subtext text-xs text-[#4A5568] dark:text-[#94A3B8] mt-1 leading-snug font-medium">Used Northstar AI to ask questions and get instant guidance.</p>
+                            </div>
+                            <span class="milestone-status-badge inline-flex items-center gap-1 rounded-full text-[11px]" style="background: rgba(234, 179, 8, 0.15) !important; color: #EAB308 !important; border-radius: 9999px !important; font-weight: 600 !important; padding: 2px 8px !important; border: none !important; box-shadow: none !important;">
+                                +20%
+                            </span>
+                        </div>
+                        <div class="mt-3 pt-2.5 border-t border-slate-200/80 dark:border-white/10 flex items-center justify-between gap-2">
+                            <span class="pending-status-text text-[11px] font-bold text-[#4A5568] dark:text-[#94A3B8]">Pending action</span>
+                            <a href="javascript:toggleAIChatbotWindow()" class="action-btn milestone-cta-btn inline-flex items-center gap-1 text-xs font-medium px-3.5 py-1.5 rounded-full transition-all shadow-xs active:scale-95" style="background: #1A202C !important; color: #FFFFFF !important; border-radius: 9999px !important; font-weight: 500 !important;">
+                                Ask Northstar AI <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Saving a Place on the Map -->
+                <div class="relative flex gap-3.5 pb-4">
+                    <div class="timeline-connector-line absolute z-0 bg-slate-300 dark:bg-slate-700" style="left: 17px !important; top: 36px !important; bottom: 0 !important; width: 2px !important;"></div>
+                    <button type="button" style="width: 36px !important; height: 36px !important; flex-shrink: 0 !important;" class="timeline-node-circle w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center z-10 bg-slate-100 dark:bg-slate-800 text-[#EAB308] dark:text-[#FACC15] border border-slate-300 dark:border-white/15">
+                        <span class="material-symbols-outlined text-[18px] leading-none flex items-center justify-center">bookmark</span>
+                    </button>
+                    <div class="milestone-card dashboard-card-border bg-white dark:bg-[#1E293B] p-4 rounded-[18px] shadow-sm flex-1 transition-all" data-milestone-id="savedLocation">
+                        <div class="flex justify-between items-start gap-2">
+                            <div>
+                                <h4 class="font-extrabold text-sm text-slate-900 dark:text-white font-heading">Saved Essential Location</h4>
+                                <p class="dashboard-subtext text-xs text-[#4A5568] dark:text-[#94A3B8] mt-1 leading-snug font-medium">Bookmarked a resource or shelter on the interactive map.</p>
+                            </div>
+                            <span class="milestone-status-badge inline-flex items-center gap-1 rounded-full text-[11px]" style="background: rgba(234, 179, 8, 0.15) !important; color: #EAB308 !important; border-radius: 9999px !important; font-weight: 600 !important; padding: 2px 8px !important; border: none !important; box-shadow: none !important;">
+                                +20%
+                            </span>
+                        </div>
+                        <div class="mt-3 pt-2.5 border-t border-slate-200/80 dark:border-white/10 flex items-center justify-between gap-2">
+                            <span class="pending-status-text text-[11px] font-bold text-[#4A5568] dark:text-[#94A3B8]">Pending action</span>
+                            <a href="map.html" class="action-btn milestone-cta-btn inline-flex items-center gap-1 text-xs font-medium px-3.5 py-1.5 rounded-full transition-all shadow-xs active:scale-95" style="background: #1A202C !important; color: #FFFFFF !important; border-radius: 9999px !important; font-weight: 500 !important;">
+                                Open Map <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Resume Creation -->
+                <div class="relative flex gap-3.5 pb-4">
+                    <div class="timeline-connector-line absolute z-0 bg-slate-300 dark:bg-slate-700" style="left: 17px !important; top: 36px !important; bottom: 0 !important; width: 2px !important;"></div>
+                    <button type="button" style="width: 36px !important; height: 36px !important; flex-shrink: 0 !important;" class="timeline-node-circle w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center z-10 bg-slate-100 dark:bg-slate-800 text-[#EAB308] dark:text-[#FACC15] border border-slate-300 dark:border-white/15">
+                        <span class="material-symbols-outlined text-[18px] leading-none flex items-center justify-center">description</span>
+                    </button>
+                    <div class="milestone-card dashboard-card-border bg-white dark:bg-[#1E293B] p-4 rounded-[18px] shadow-sm flex-1 transition-all" data-milestone-id="resumeBuilder">
+                        <div class="flex justify-between items-start gap-2">
+                            <div>
+                                <h4 class="font-extrabold text-sm text-slate-900 dark:text-white font-heading">Resume Builder</h4>
+                                <p class="dashboard-subtext text-xs text-[#4A5568] dark:text-[#94A3B8] mt-1 leading-snug font-medium">Created or updated your professional resume in the app.</p>
+                            </div>
+                            <span class="milestone-status-badge inline-flex items-center gap-1 rounded-full text-[11px]" style="background: rgba(234, 179, 8, 0.15) !important; color: #EAB308 !important; border-radius: 9999px !important; font-weight: 600 !important; padding: 2px 8px !important; border: none !important; box-shadow: none !important;">
+                                +20%
+                            </span>
+                        </div>
+                        <div class="mt-3 pt-2.5 border-t border-slate-200/80 dark:border-white/10 flex items-center justify-between gap-2">
+                            <span class="pending-status-text text-[11px] font-bold text-[#4A5568] dark:text-[#94A3B8]">Pending action</span>
+                            <a href="resume-builder.html" class="action-btn milestone-cta-btn inline-flex items-center gap-1 text-xs font-medium px-3.5 py-1.5 rounded-full transition-all shadow-xs active:scale-95" style="background: #1A202C !important; color: #FFFFFF !important; border-radius: 9999px !important; font-weight: 500 !important;">
+                                Build Resume <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. Job Recommendation Engine -->
+                <div class="relative flex gap-3.5">
+                    <button type="button" style="width: 36px !important; height: 36px !important; flex-shrink: 0 !important;" class="timeline-node-circle w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center z-10 bg-slate-100 dark:bg-slate-800 text-[#EAB308] dark:text-[#FACC15] border border-slate-300 dark:border-white/15">
+                        <span class="material-symbols-outlined text-[18px] leading-none flex items-center justify-center">work</span>
+                    </button>
+                    <div class="milestone-card dashboard-card-border bg-white dark:bg-[#1E293B] p-4 rounded-[18px] shadow-sm flex-1 transition-all" data-milestone-id="jobMatcher">
+                        <div class="flex justify-between items-start gap-2">
+                            <div>
+                                <h4 class="font-extrabold text-sm text-slate-900 dark:text-white font-heading">Job Matcher</h4>
+                                <p class="dashboard-subtext text-xs text-[#4A5568] dark:text-[#94A3B8] mt-1 leading-snug font-medium">Explored personalized job recommendations in the Jobs section.</p>
+                            </div>
+                            <span class="milestone-status-badge inline-flex items-center gap-1 rounded-full text-[11px]" style="background: rgba(234, 179, 8, 0.15) !important; color: #EAB308 !important; border-radius: 9999px !important; font-weight: 600 !important; padding: 2px 8px !important; border: none !important; box-shadow: none !important;">
+                                +20%
+                            </span>
+                        </div>
+                        <div class="mt-3 pt-2.5 border-t border-slate-200/80 dark:border-white/10 flex items-center justify-between gap-2">
+                            <span class="pending-status-text text-[11px] font-bold text-[#4A5568] dark:text-[#94A3B8]">Pending action</span>
+                            <a href="jobs.html" class="action-btn milestone-cta-btn inline-flex items-center gap-1 text-xs font-medium px-3.5 py-1.5 rounded-full transition-all shadow-xs active:scale-95" style="background: #1A202C !important; color: #FFFFFF !important; border-radius: 9999px !important; font-weight: 500 !important;">
+                                View Jobs <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
             <!-- Account Footer -->
-            <div class="pt-1 pb-2 text-center">
-                <p id="progress-account-label" class="text-[11px] text-slate-500 font-medium"></p>
-                <button onclick="localStorage.removeItem('northstar_session'); window.location.href='index.html';"
-                    class="mt-1 text-[11px] text-amber-400/80 hover:text-amber-300 underline underline-offset-2 transition-colors">Switch Account</button>
+            <div class="pt-3 pb-4 text-center">
+                <p id="progress-account-label" class="text-[11px] text-[#4A5568] dark:text-[#94A3B8] font-semibold"></p>
+                <button id="switch-account-btn" type="button" onclick="localStorage.removeItem('northstar_session'); window.location.href='index.html';"
+                    style="border: none !important; background: transparent !important; padding: 0 !important; outline: none !important; box-shadow: none !important;"
+                    class="switch-account-link mt-1 text-[11px] text-[#EAB308] dark:text-[#FACC15] hover:underline underline-offset-2 transition-colors font-bold bg-transparent border-0 p-0 outline-none shadow-none">Switch Account</button>
             </div>
+
+            <!-- Extra Bottom Scroll Clearance Spacer above FAB & Bottom Navigation Bar -->
+            <div class="h-12 w-full flex-shrink-0" aria-hidden="true"></div>
 
         </main>
 
-        <!-- Floating Dock Bottom Navigation Bar -->
-        <nav class="absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-3 py-2.5 bg-[#12141C]/80 backdrop-blur-xl shadow-[0px_-4px_25px_rgba(0,0,0,0.5)] border-t border-white/10">
-            <!-- Dynamically rendered by northstar.js -->
+        <!-- Full 6-Tab Bottom Navigation Bar -->
+        <nav class="bottom-nav absolute bottom-0 left-0 w-full z-40 grid grid-cols-6 items-center justify-items-center px-1.5 py-2 bg-white dark:bg-[#12141C] shadow-[0px_-4px_25px_rgba(0,0,0,0.08)] border-t border-slate-200 dark:border-white/10">
+            <a href="seeker-dashboard.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
+                <span class="material-symbols-outlined text-[20px] leading-none">dashboard</span>
+                <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Dashboard</span>
+            </a>
+            <a href="progress.html" class="active-tab flex flex-col items-center justify-center w-full py-1 px-0.5 bg-amber-400/15 text-amber-500 dark:text-amber-400 border border-amber-400/30 rounded-xl shadow-[0_0_12px_rgba(245,158,11,0.2)] font-extrabold transition-all">
+                <span class="material-symbols-outlined text-[20px] leading-none" style="font-variation-settings: 'FILL' 1;">trending_up</span>
+                <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Progress</span>
+            </a>
+            <a href="opportunities.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
+                <span class="material-symbols-outlined text-[20px] leading-none">work</span>
+                <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Jobs</span>
+            </a>
+            <a href="resource-map.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
+                <span class="material-symbols-outlined text-[20px] leading-none">map</span>
+                <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Map</span>
+            </a>
+            <a href="resume-builder.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
+                <span class="material-symbols-outlined text-[20px] leading-none">description</span>
+                <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Resume</span>
+            </a>
+            <button type="button" onclick="openSettingsModal()" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
+                <span class="material-symbols-outlined text-[20px] leading-none">settings</span>
+                <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Settings</span>
+            </button>
         </nav>
 
         <!-- Milestone Details Drawer/Modal -->
@@ -184,6 +334,7 @@
     </div>
 
     <script src="js/northstar.js"></script>
+    <script src="js/jobs.js"></script>
 </body>
 
 </html>

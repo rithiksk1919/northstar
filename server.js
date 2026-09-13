@@ -65,8 +65,27 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '5mb' }));
 
-app.get('/jobs.html', (req, res) => {
+// Explicit HTML page routes so every URL and symlink resolves reliably
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+app.get(['/index.html', '/login.html', '/signup.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+app.get(['/jobs.html', '/opportunities.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'opportunities.html'));
+});
+app.get(['/progress.html', '/profile.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'progress.html'));
+});
+app.get(['/map.html', '/resource-map.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'resource-map.html'));
+});
+app.get('/seeker-dashboard.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'seeker-dashboard.html'));
+});
+app.get(['/helper-dashboard.html', '/volunteer-dashboard.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'helper-dashboard.html'));
 });
 
 app.use(express.static(__dirname));
@@ -1149,10 +1168,18 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, '0.0.0.0', async () => {
-  console.log(`🚀 Server running on http://0.0.0.0:${server.address().port}`);
-  await fetchAndVetGigs();
+const PORT = process.env.PORT || 3000;
+const server = app.listen(PORT, '0.0.0.0', () => {
+  const actualPort = server.address().port;
+  console.log(`✅ Northstar App Ready at http://localhost:${actualPort}`);
+  console.log(`🚀 Server running on http://0.0.0.0:${actualPort}`);
+
+  // Run Apify scraper asynchronously in background so server is immediately responsive
+  setTimeout(() => {
+    fetchAndVetGigs().catch((err) => {
+      console.warn('Background Apify scrape warning:', err?.message || err);
+    });
+  }, 1500);
 
   // Daily automated refresh mechanism (every 24 hours / 86400000 ms)
   const DAILY_REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000;

@@ -1,10 +1,12 @@
 /**
  * NorthStar Work Opportunities & Job Listings Module
- * Handles job fetching, rendering, DOM reconciliation, and silent background polling.
+ * Handles job fetching, synchronous persistent cache re-hydration, instant rendering on tab switch,
+ * DOM reconciliation, and silent background polling.
  */
 
 (function () {
   const BACKGROUND_POLL_INTERVAL_MS = 30000; // 30 seconds
+  const JOBS_CACHE_STORAGE_KEY = 'northstar_cached_jobs_items_v1';
   let jobsPollingTimer = null;
   let isFetchInProgress = false;
 
@@ -117,15 +119,15 @@
     const id = g.id || `gig-${encodeURIComponent(g.title || g.rawTitle || Math.random())}`;
 
     return `
-      <div data-job-id="${id}" data-job-key="${key}" class="job-card bg-white p-4 rounded-[20px] border border-slate-200/80 shadow-[0_4px_16px_rgba(0,0,0,0.04)] space-y-3 relative overflow-visible group">
+      <div data-job-id="${id}" data-job-key="${key}" class="job-card bg-white dark:bg-[#1E293B] p-4 rounded-[20px] border border-slate-200/80 dark:border-white/10 shadow-[0_4px_16px_rgba(0,0,0,0.04)] space-y-3 relative overflow-visible group">
           <div class="flex items-start gap-3 min-w-0">
-              <div class="w-10 h-10 rounded-[14px] bg-slate-100 border border-slate-200/80 text-slate-800 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <div class="w-10 h-10 rounded-[14px] bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-white/10 text-slate-800 dark:text-slate-100 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <span class="material-symbols-outlined text-xl">${iconName}</span>
               </div>
               <div class="job-text-column min-w-0 flex-1 space-y-2" style="min-width: 0; width: 100%;">
                   <div class="job-header-stack space-y-1.5 w-full min-w-0">
                       <div class="flex items-start justify-between gap-2 w-full min-w-0">
-                          <h4 class="job-title font-bold text-xs sm:text-sm text-slate-900 leading-normal tracking-tight flex-1 min-w-0" style="flex: 1 1 auto; min-width: 0; white-space: normal; overflow: visible; word-break: normal; overflow-wrap: break-word; line-height: 1.35; margin: 0; padding: 0; font-size: 0.8125rem;">${cleanJobTitle(g.title || g.rawTitle)}</h4>
+                          <h4 class="job-title font-bold text-xs sm:text-sm text-slate-900 dark:text-white leading-normal tracking-tight flex-1 min-w-0" style="flex: 1 1 auto; min-width: 0; white-space: normal; overflow: visible; word-break: normal; overflow-wrap: break-word; line-height: 1.35; margin: 0; padding: 0; font-size: 0.8125rem;">${cleanJobTitle(g.title || g.rawTitle)}</h4>
                       </div>
                       <div>
                           <span class="pay-rate-badge inline-block px-2.5 py-0.5 text-[0.7rem] font-bold rounded-[8px] shadow-none whitespace-normal break-words" style="background: #f8fafc; border: 1px solid #e2e8f0; color: #0f172a; max-width: 100%;">
@@ -144,7 +146,7 @@
               </div>
           </div>
 
-          <div class="card-divider flex items-center justify-between gap-2 border-t" style="border-top: 1px solid rgba(255, 255, 255, 0.15); margin: 0.75rem 0 0 0; padding-top: 0.75rem; margin-left: 0; padding-left: 0;">
+          <div class="card-divider flex items-center justify-between gap-2 border-t" style="border-top: 1px solid rgba(148, 163, 184, 0.2); margin: 0.75rem 0 0 0; padding-top: 0.75rem; margin-left: 0; padding-left: 0;">
               <a href="${g.url || g.link || 'https://seattle.craigslist.org/search/lbg?query=cash'}" target="_blank" rel="noopener noreferrer" class="apply-cta-btn flex-1 py-2 rounded-[12px] text-xs text-center shadow-sm active:scale-95 transition-all flex items-center justify-center gap-1 hover:brightness-105" style="background: #facc15; color: #0f172a; font-weight: 700;">
                   <span class="material-symbols-outlined text-sm">open_in_new</span> Apply / View Details
               </a>
@@ -162,14 +164,14 @@
     const id = j.id || `job-${encodeURIComponent(j.title || Math.random())}`;
 
     return `
-      <div data-job-id="${id}" data-job-key="${key}" class="job-card bg-white p-4 rounded-[20px] border border-slate-200/80 shadow-[0_4px_16px_rgba(0,0,0,0.04)] space-y-3 relative overflow-visible">
+      <div data-job-id="${id}" data-job-key="${key}" class="job-card bg-white dark:bg-[#1E293B] p-4 rounded-[20px] border border-slate-200/80 dark:border-white/10 shadow-[0_4px_16px_rgba(0,0,0,0.04)] space-y-3 relative overflow-visible">
           <div class="flex items-start gap-3 min-w-0">
-              <div class="w-10 h-10 rounded-[14px] bg-slate-100 border border-slate-200/80 text-slate-800 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <div class="w-10 h-10 rounded-[14px] bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-white/10 text-slate-800 dark:text-slate-100 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <span class="material-symbols-outlined text-xl">${iconName}</span>
               </div>
               <div class="job-text-column min-w-0 flex-1 space-y-2">
                   <div class="job-title-container flex items-start justify-between gap-2" style="height: auto; max-height: none; overflow: visible;">
-                      <h4 class="job-title font-bold text-sm text-slate-900 leading-snug tracking-tight flex-1" style="white-space: normal; overflow: visible; word-break: break-word; overflow-wrap: break-word; hyphens: none; -webkit-hyphens: none; height: auto; max-height: none; line-height: 1.25; margin-left: 0; padding-left: 0;">${cleanJobTitle(j.title)}</h4>
+                      <h4 class="job-title font-bold text-sm text-slate-900 dark:text-white leading-snug tracking-tight flex-1" style="white-space: normal; overflow: visible; word-break: break-word; overflow-wrap: break-word; hyphens: none; -webkit-hyphens: none; height: auto; max-height: none; line-height: 1.25; margin-left: 0; padding-left: 0;">${cleanJobTitle(j.title)}</h4>
                       <span class="pay-rate-badge px-2.5 py-1 text-xs font-bold rounded-[10px] flex-shrink-0 shadow-none whitespace-nowrap self-start" style="background: #f8fafc; border: 1px solid #e2e8f0; color: #0f172a; font-size: 0.75rem;">
                           ${payFormatted}
                       </span>
@@ -187,7 +189,7 @@
               </div>
           </div>
 
-          <div class="card-divider flex justify-between items-center border-t text-xs" style="border-top: 1px solid rgba(255, 255, 255, 0.15); margin: 0.75rem 0 0 0; padding-top: 0.75rem; margin-left: 0; padding-left: 0;">
+          <div class="card-divider flex justify-between items-center border-t text-xs" style="border-top: 1px solid rgba(148, 163, 184, 0.2); margin: 0.75rem 0 0 0; padding-top: 0.75rem; margin-left: 0; padding-left: 0;">
               <span class="text-slate-400 text-xs font-medium truncate max-w-[140px]">${j.contact}</span>
               ${currentRole === 'volunteer' ? `
                 <div class="flex gap-1.5">
@@ -212,6 +214,93 @@
       </div>
     `.trim();
   }
+
+  /**
+   * Builds default seed item objects so state cache is never empty.
+   */
+  function buildSeedItemsList() {
+    return defaultSeedGigs.map((g, idx) => {
+      const id = g.id || `seed-${idx}`;
+      const key = `${id}|${g.title || ''}|${g.pay || ''}|${g.summary || ''}`;
+      return {
+        id,
+        key,
+        html: generateGigCardHtml(g, key)
+      };
+    });
+  }
+
+  /**
+   * Retrieves cached job items synchronously from memory or localStorage,
+   * falling back to defaultSeedGigs so the feed is never blank.
+   */
+  function getCachedJobsItems() {
+    if (Array.isArray(window._northstarJobsCache) && window._northstarJobsCache.length > 0) {
+      return window._northstarJobsCache;
+    }
+    try {
+      const raw = localStorage.getItem(JOBS_CACHE_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          window._northstarJobsCache = parsed;
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to parse cached jobs from localStorage:', e);
+    }
+    const seedList = buildSeedItemsList();
+    window._northstarJobsCache = seedList;
+    return seedList;
+  }
+
+  function saveCachedJobsItems(itemsList) {
+    if (!Array.isArray(itemsList) || itemsList.length === 0) return;
+    window._northstarJobsCache = itemsList;
+    try {
+      localStorage.setItem(JOBS_CACHE_STORAGE_KEY, JSON.stringify(itemsList));
+    } catch (e) {
+      // Ignore quota errors
+    }
+  }
+
+  /**
+   * Finds the target job feed container in the current DOM.
+   */
+  function getJobsFeedContainer() {
+    return (
+      document.getElementById('opportunities-feed') ||
+      document.getElementById('jobs-feed') ||
+      document.getElementById('jobs-container') ||
+      document.getElementById('jobs-list')
+    );
+  }
+
+  /**
+   * Synchronously renders cached or seed job listings into the feed container immediately.
+   * Ensures zero blank state on initial page load or tab switch before async fetch resolves.
+   * @param {boolean} [force=false] - If true, repopulates even if children exist.
+   */
+  function renderJobsInstant(force = false) {
+    const feed = getJobsFeedContainer();
+    if (!feed) return false;
+
+    const existingCards = feed.querySelectorAll('[data-job-id]');
+    if (!force && existingCards.length > 0) {
+      updateActiveJobsCount(existingCards.length);
+      return true;
+    }
+
+    const cachedItems = getCachedJobsItems();
+    if (cachedItems && cachedItems.length > 0) {
+      feed.innerHTML = cachedItems.map(item => item.html).join('');
+      updateActiveJobsCount(cachedItems.length);
+      return true;
+    }
+    return false;
+  }
+  window.renderJobsInstant = renderJobsInstant;
 
   /**
    * Reconciles the feed DOM elements without full-page re-renders or scroll interruption.
@@ -284,7 +373,7 @@
   function updateActiveJobsCount(explicitCount) {
     let count = explicitCount;
     if (typeof count !== 'number') {
-      const feed = document.getElementById('opportunities-feed');
+      const feed = getJobsFeedContainer();
       if (feed) {
         const visibleCards = feed.querySelectorAll('[data-job-id]:not([style*="display: none"]):not(.hidden)');
         count = visibleCards.length;
@@ -300,12 +389,26 @@
   window.updateActiveJobsCount = updateActiveJobsCount;
 
   /**
-   * Main loadOpportunities function with silent background refresh support.
+   * Main loadOpportunities function with synchronous state re-hydration + background refresh support.
    * @param {boolean} isSilent - If true, runs in background without UI flicker or scroll reset.
    */
   window.loadOpportunities = async function loadOpportunities(isSilent = false) {
-    const feed = document.getElementById('opportunities-feed');
+    const feed = getJobsFeedContainer();
     if (!feed) return;
+
+    // Synchronously hydrate the container immediately if it is currently empty!
+    // This guarantees the user NEVER sees a blank screen on initial load or tab switch.
+    if (feed.querySelectorAll('[data-job-id]').length === 0) {
+      renderJobsInstant(true);
+    }
+
+    // Mark Job Matcher milestone as explored when user visits Jobs view
+    try {
+      localStorage.setItem('northstar_jobs_explored', 'true');
+      if (typeof window.updateMilestone === 'function') {
+        window.updateMilestone('jobMatcher', true);
+      }
+    } catch (e) {}
 
     if (isFetchInProgress) return;
     isFetchInProgress = true;
@@ -341,11 +444,15 @@
       }
       const standardJobs = filterOutSurveys(deduplicate(jobsRes.jobs || []));
 
+      // Re-acquire feed reference in case DOM swapped during async fetch
+      const currentFeed = getJobsFeedContainer();
+      if (!currentFeed) return;
+
       // If volunteer with 0 jobs, display empty state
       if (currentRole === 'volunteer' && standardJobs.length === 0) {
         window._currentJobsFingerprint = 'empty-volunteer';
         updateActiveJobsCount(0);
-        feed.innerHTML = `
+        currentFeed.innerHTML = `
           <div class="backdrop-blur-md bg-white/[0.04] border border-white/10 p-8 rounded-2xl text-center space-y-3">
             <span class="material-symbols-outlined text-4xl text-amber-400">post_add</span>
             <h4 class="text-sm font-extrabold text-white">No Opportunities Posted Yet</h4>
@@ -381,34 +488,41 @@
         });
       });
 
+      // Persist latest items list to cache so tab switches are instant
+      saveCachedJobsItems(itemsList);
+
       // Dynamically reflect real-time count of visible rendered jobs
       updateActiveJobsCount(itemsList.length);
 
       // Fingerprint to check whether anything changed
       const newFingerprint = itemsList.map(item => item.key).join(':::');
 
-      if (isSilent && window._currentJobsFingerprint === newFingerprint) {
-        // Silent poll: zero changes detected.
+      if (isSilent && window._currentJobsFingerprint === newFingerprint && currentFeed.querySelectorAll('[data-job-id]').length > 0) {
         updateActiveJobsCount(itemsList.length);
         return;
       }
 
-      if (!feed.children.length || !window._currentJobsFingerprint) {
-        // Initial render
-        feed.innerHTML = itemsList.map(i => i.html).join('');
+      if (!currentFeed.querySelectorAll('[data-job-id]').length || !window._currentJobsFingerprint) {
+        currentFeed.innerHTML = itemsList.map(i => i.html).join('');
       } else {
-        // Incremental, silent DOM reconciliation preserving scroll and user interactions
-        reconcileFeedDOM(feed, itemsList);
+        reconcileFeedDOM(currentFeed, itemsList);
       }
 
       updateActiveJobsCount(itemsList.length);
       window._currentJobsFingerprint = newFingerprint;
     } catch (e) {
       console.error('Error loading opportunities:', e);
+      // Ensure fallback cache is displayed if fetch failed
+      renderJobsInstant();
     } finally {
       isFetchInProgress = false;
     }
   };
+
+  // Expose convenient aliases expected by any router or view hook
+  window.renderJobs = window.loadOpportunities;
+  window.loadJobsList = window.loadOpportunities;
+  window.populateJobs = window.loadOpportunities;
 
   /**
    * Starts silent background polling every 30 seconds.
@@ -416,8 +530,8 @@
   window.startJobsAutoRefresh = function startJobsAutoRefresh() {
     if (jobsPollingTimer) clearInterval(jobsPollingTimer);
     jobsPollingTimer = setInterval(() => {
-      if (typeof window.loadOpportunities === 'function') {
-        window.loadOpportunities(true); // Silent mode = true
+      if (typeof window.loadOpportunities === 'function' && getJobsFeedContainer()) {
+        window.loadOpportunities(true);
       }
     }, BACKGROUND_POLL_INTERVAL_MS);
   };
@@ -435,12 +549,10 @@
   window.triggerAIMatchAssistant = function triggerAIMatchAssistant() {
     const promptText = "What are the 3 best job opportunities for me based on my resume?";
 
-    // 1. Ensure global AI chatbot widget is mounted
     if (typeof window.initGlobalAIChatbot === 'function') {
       window.initGlobalAIChatbot();
     }
 
-    // 2. Open chatbot drawer if not already open
     const drawer = document.getElementById('chatbot-window-drawer');
     if (drawer && drawer.classList.contains('hidden')) {
       if (typeof window.toggleAIChatbotWindow === 'function') {
@@ -448,7 +560,6 @@
       }
     }
 
-    // 3. Inject and send initial message immediately
     const executeSend = () => {
       if (typeof window.sendQuickChatMessage === 'function') {
         window.sendQuickChatMessage(promptText);
@@ -481,14 +592,30 @@
     });
   }
 
-  // Auto-initialize background polling and AI Match trigger when DOM is ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      initAIMatchTrigger();
-      window.startJobsAutoRefresh();
-    });
-  } else {
+  /**
+   * Unified initialization hook executed on page load, DOMContentLoaded, and SPA tab switches.
+   */
+  function initializeJobsView() {
     initAIMatchTrigger();
-    window.startJobsAutoRefresh();
+    if (getJobsFeedContainer()) {
+      renderJobsInstant();
+      window.loadOpportunities();
+      window.startJobsAutoRefresh();
+    }
   }
+
+  // Warm up cache immediately on script load
+  getCachedJobsItems();
+
+  // Execute immediately if DOM is already interactive/complete, plus bind DOMContentLoaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeJobsView);
+  } else {
+    initializeJobsView();
+  }
+
+  // Listen for SPA navigation / tab switches and browser back/forward navigation
+  window.addEventListener('pageshow', initializeJobsView);
+  window.addEventListener('popstate', initializeJobsView);
+  window.addEventListener('northstar:tabSwitched', initializeJobsView);
 })();

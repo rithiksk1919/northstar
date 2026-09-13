@@ -350,6 +350,7 @@
     <script src="js/supabase.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/northstar.js"></script>
+    <script src="js/jobs.js"></script>
     <script>
         function triggerEmergencyCall() {
             openModal('call-overlay-modal');
@@ -593,69 +594,130 @@
 
                     if (_onboardingMode === 'create') {
                         // --- CREATE ACCOUNT ---
-                        // Check if username already taken
+                        const localCheck = (typeof window.validateLocalCredentials === 'function')
+                            ? window.validateLocalCredentials(name, pass)
+                            : { found: false };
+                        if (localCheck.found) {
+                            if (errDiv) { errDiv.textContent = 'That username is already registered. Please sign in instead.'; errDiv.style.display = 'block'; }
+                            if (nameInput) nameInput.style.borderColor = '#ef4444';
+                            return;
+                        }
+
+                        let newId = 'user_' + name.toLowerCase().replace(/[^a-z0-9]/g,'_') + '_' + Math.floor(Math.random()*9000+1000);
                         if (supabase) {
                             const { data: existing } = await supabase
                                 .from('profiles')
-                                .select('id')
+                                .select('id, pass_hash')
                                 .eq('username', name)
                                 .maybeSingle();
-                            if (existing) {
+                            if (existing && existing.pass_hash) {
                                 if (errDiv) { errDiv.textContent = 'That name is already taken. Try signing in instead.'; errDiv.style.display = 'block'; }
+                                if (nameInput) nameInput.style.borderColor = '#ef4444';
                                 return;
                             }
-                            const newId = 'user_' + name.toLowerCase().replace(/[^a-z0-9]/g,'_') + '_' + Math.floor(Math.random()*9000+1000);
-                            const { error: insertErr } = await supabase.from('profiles').insert({
-                                id: newId, username: name, role, pass_hash: passHash,
-                                updated_at: new Date().toISOString()
-                            });
-                            if (insertErr) throw new Error(insertErr.message);
-                            const sessionData = { id: newId, username: name, role, isGuest: false };
-                            localStorage.setItem('northstar_session', JSON.stringify(sessionData));
-                            if (typeof window.setRole === 'function') window.setRole(role);
-                        } else {
-                            // No Supabase — local-only fallback
-                            const sessionData = { id: 'local_' + Date.now(), username: name, role, isGuest: false };
-                            localStorage.setItem('northstar_session', JSON.stringify(sessionData));
+                            try {
+                                await supabase.from('profiles').upsert({
+                                    id: existing ? existing.id : newId,
+                                    username: name,
+                                    role,
+                                    pass_hash: passHash,
+                                    updated_at: new Date().toISOString()
+                                });
+                                if (existing && existing.id) newId = existing.id;
+                            } catch (dbErr) {
+                                console.warn('Supabase profile upsert fallback:', dbErr);
+                            }
                         }
+                        if (typeof window.saveRegisteredUserRecord === 'function') {
+                            window.saveRegisteredUserRecord(name, pass, role, newId);
+                        }
+                        const sessionData = { id: newId, username: name, role, isGuest: false };
+                        localStorage.setItem('northstar_session', JSON.stringify(sessionData));
+                        if (typeof window.setRole === 'function') window.setRole(role);
+                        showOnboardingStep(3);
+                        return;
 
                     } else {
-                        // --- SIGN IN ---
-                        if (!supabase) { throw new Error('Connection unavailable. Please try again.'); }
-                        const { data: profile, error: fetchErr } = await supabase
-                            .from('profiles')
-                            .select('id, username, role, pass_hash')
-                            .eq('username', name)
-                            .maybeSingle();
+                        // --- SIGN IN (STRICT PASSWORD VALIDATION) ---
+                        let authenticatedUser = null;
 
-                        if (fetchErr) throw new Error(fetchErr.message);
-                        if (!profile) {
-                            if (errDiv) { errDiv.textContent = 'No account found with that name. Create an account first.'; errDiv.style.display = 'block'; }
+                        // 1. Check persistent local credentials registry first (includes seeded demo accounts & newly created accounts)
+                        if (typeof window.validateLocalCredentials === 'function') {
+                            const localAuth = window.validateLocalCredentials(name, pass);
+                            if (localAuth.found) {
+                                if (!localAuth.valid) {
+                                    if (errDiv) { errDiv.textContent = 'Invalid username or password'; errDiv.style.display = 'block'; }
+                                    if (nameInput) nameInput.style.borderColor = '#ef4444';
+                                    if (passInput) {
+                                        passInput.style.borderColor = '#ef4444';
+                                        passInput.style.animation = 'shake 0.4s ease';
+                                        setTimeout(() => { passInput.style.animation = ''; }, 600);
+                                    }
+                                    return;
+                                }
+                                authenticatedUser = localAuth.user;
+                            }
+                        }
+
+                        // 2. If not in local registry, verify against Supabase profiles with strict pass_hash comparison
+                        if (!authenticatedUser && supabase) {
+                            const { data: profile, error: fetchErr } = await supabase
+                                .from('profiles')
+                                .select('id, username, role, pass_hash')
+                                .eq('username', name)
+                                .maybeSingle();
+
+                            if (fetchErr) {
+                                console.warn('Supabase profile fetch warning:', fetchErr.message);
+                            }
+                            if (!profile) {
+                                if (errDiv) { errDiv.textContent = 'Invalid username or password'; errDiv.style.display = 'block'; }
+                                if (nameInput) nameInput.style.borderColor = '#ef4444';
+                                if (passInput) passInput.style.borderColor = '#ef4444';
+                                return;
+                            }
+                            // Strictly require pass_hash to exist and match
+                            if (!profile.pass_hash || profile.pass_hash !== passHash) {
+                                if (errDiv) { errDiv.textContent = 'Invalid username or password'; errDiv.style.display = 'block'; }
+                                if (nameInput) nameInput.style.borderColor = '#ef4444';
+                                if (passInput) {
+                                    passInput.style.borderColor = '#ef4444';
+                                    passInput.style.animation = 'shake 0.4s ease';
+                                    setTimeout(() => { passInput.style.animation = ''; }, 600);
+                                }
+                                return;
+                            }
+                            authenticatedUser = {
+                                id: profile.id,
+                                username: profile.username,
+                                role: profile.role || role
+                            };
+                            if (typeof window.saveRegisteredUserRecord === 'function') {
+                                window.saveRegisteredUserRecord(profile.username, pass, authenticatedUser.role, profile.id);
+                            }
+                        }
+
+                        if (!authenticatedUser) {
+                            if (errDiv) { errDiv.textContent = 'Invalid username or password'; errDiv.style.display = 'block'; }
+                            if (nameInput) nameInput.style.borderColor = '#ef4444';
+                            if (passInput) passInput.style.borderColor = '#ef4444';
                             return;
                         }
-                        if (profile.pass_hash !== passHash) {
-                            if (errDiv) { errDiv.textContent = 'Incorrect password. Please try again.'; errDiv.style.display = 'block'; }
-                            // Shake the password field
-                            if (passInput) { passInput.style.borderColor='#f87171'; passInput.style.animation='shake 0.4s ease'; setTimeout(()=>{ passInput.style.animation=''; passInput.style.borderColor='rgba(255,255,255,0.1)'; }, 600); }
-                            return;
-                        }
-                        const sessionData = { id: profile.id, username: profile.username, role: profile.role || role, isGuest: false };
+
+                        const sessionData = {
+                            id: authenticatedUser.id,
+                            username: authenticatedUser.username,
+                            role: authenticatedUser.role || role,
+                            isGuest: false
+                        };
                         localStorage.setItem('northstar_session', JSON.stringify(sessionData));
                         if (typeof window.setRole === 'function') window.setRole(sessionData.role);
-                    }
-
-                    // SUCCESS
-                    if (_onboardingMode === 'create') {
-                        // Registration success -> proceed to step 3 to choose role
-                        showOnboardingStep(3);
-                    } else {
-                        // Sign-in success -> go directly to dashboard
                         window.location.href = (sessionData.role === 'volunteer') ? 'helper-dashboard.html' : 'seeker-dashboard.html';
                     }
 
                 } catch (err) {
                     console.error('Auth error:', err);
-                    if (errDiv) { errDiv.textContent = err?.message || 'An error occurred. Please try again.'; errDiv.style.display = 'block'; }
+                    if (errDiv) { errDiv.textContent = err?.message || 'Invalid username or password'; errDiv.style.display = 'block'; }
                 } finally {
                     if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = '1'; }
                     if (lbl) lbl.textContent = _onboardingMode === 'create' ? 'Create Account' : 'Sign In';
