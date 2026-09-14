@@ -693,7 +693,12 @@
                         full_name: newUser.full_name, role: newUser.role, isGuest: false
                     }));
                     if (typeof window.setRole === 'function') window.setRole(newUser.role);
-                    window.location.href = (newUser.role === 'volunteer') ? 'helper-dashboard.html' : 'seeker-dashboard.html';
+                    const dashUrl = (newUser.role === 'volunteer') ? 'helper-dashboard.html' : 'seeker-dashboard.html';
+                    if (typeof window.showNateWelcome === 'function') {
+                        window.showNateWelcome(dashUrl);
+                    } else {
+                        window.location.href = dashUrl;
+                    }
 
                 } else {
                     // --- SIGN IN ---
@@ -726,6 +731,7 @@
             document.head.appendChild(shakeStyle);
         });
     </script>
+    <script src="js/nate-welcome.js"></script>
 </body>
 
 </html>

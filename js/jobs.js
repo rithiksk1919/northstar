@@ -120,14 +120,15 @@
     });
   }
 
-  function generateGigCardHtml(g, key) {
+  function generateGigCardHtml(g, key, idx = 0) {
     const payFormatted = formatPay(g.pay || g.estPay, g.title || g.rawTitle, g.summary || g.description);
     const iconName = getCategoryIcon(g.title || g.rawTitle);
     const descriptionText = g.summary || g.description || 'Verified immediate payout daily labor gig in Seattle area.';
     const id = g.id || `gig-${encodeURIComponent(g.title || g.rawTitle || Math.random())}`;
+    const staggerClass = `stagger-${(idx % 6) + 1}`;
 
     return `
-      <div data-job-id="${id}" data-job-key="${key}" class="job-card bg-slate-800/40 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 hover:border-amber-400 dark:hover:border-amber-400 transition-colors space-y-3 relative overflow-visible group">
+      <div data-job-id="${id}" data-job-key="${key}" class="job-card spring-bounce-hover ${staggerClass} bg-slate-800/40 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 hover:border-amber-400 dark:hover:border-amber-400 transition-all space-y-3 relative overflow-visible group">
           <div class="flex items-start gap-3 min-w-0">
               <div class="w-10 h-10 rounded-[14px] bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-white/10 text-slate-800 dark:text-slate-100 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <span class="material-symbols-outlined text-xl">${iconName}</span>
@@ -165,13 +166,14 @@
     `.trim();
   }
 
-  function generateStandardJobCardHtml(j, key, currentRole) {
+  function generateStandardJobCardHtml(j, key, currentRole, idx = 0) {
     const payFormatted = formatPay(j.pay, j.title, j.description);
     const iconName = getCategoryIcon(j.title);
     const id = j.id || `job-${encodeURIComponent(j.title || Math.random())}`;
+    const staggerClass = `stagger-${(idx % 6) + 1}`;
 
     return `
-      <div data-job-id="${id}" data-job-key="${key}" class="job-card bg-slate-800/40 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 hover:border-amber-400 dark:hover:border-amber-400 transition-colors space-y-3 relative overflow-visible">
+      <div data-job-id="${id}" data-job-key="${key}" class="job-card spring-bounce-hover ${staggerClass} bg-slate-800/40 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 hover:border-amber-400 dark:hover:border-amber-400 transition-all space-y-3 relative overflow-visible">
           <div class="flex items-start gap-3 min-w-0">
               <div class="w-10 h-10 rounded-[14px] bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-white/10 text-slate-800 dark:text-slate-100 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <span class="material-symbols-outlined text-xl">${iconName}</span>
@@ -233,7 +235,7 @@
       return {
         id,
         key,
-        html: generateGigCardHtml(g, key)
+        html: generateGigCardHtml(g, key, idx)
       };
     });
   }
@@ -481,7 +483,7 @@
         itemsList.push({
           id,
           key,
-          html: generateGigCardHtml(g, key)
+          html: generateGigCardHtml(g, key, idx)
         });
       });
 
@@ -491,7 +493,7 @@
         itemsList.push({
           id,
           key,
-          html: generateStandardJobCardHtml(j, key, currentRole)
+          html: generateStandardJobCardHtml(j, key, currentRole, idx)
         });
       });
 

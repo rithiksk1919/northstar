@@ -121,22 +121,117 @@ nav a:active,
   }
 }
 
-/* Staggered Animations */
-.stagger-1 { animation: slideFadeUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.05s both; }
-.stagger-2 { animation: slideFadeUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.1s both; }
-.stagger-3 { animation: slideFadeUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.15s both; }
-.stagger-4 { animation: slideFadeUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s both; }
-.stagger-5 { animation: slideFadeUp 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.25s both; }
+/* Staggered Animations with Spring Bounce Physics */
+.stagger-1 { animation: slideFadeUp 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.05s both; }
+.stagger-2 { animation: slideFadeUp 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.1s both; }
+.stagger-3 { animation: slideFadeUp 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.15s both; }
+.stagger-4 { animation: slideFadeUp 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s both; }
+.stagger-5 { animation: slideFadeUp 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.25s both; }
+.stagger-6 { animation: slideFadeUp 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.3s both; }
+.stagger-7 { animation: slideFadeUp 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.35s both; }
+.stagger-8 { animation: slideFadeUp 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.4s both; }
+.stagger-9 { animation: slideFadeUp 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.45s both; }
+.stagger-10 { animation: slideFadeUp 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.5s both; }
 
 @keyframes slideFadeUp {
   0% {
     opacity: 0;
-    transform: translateY(24px);
+    transform: translateY(32px) scale(0.94);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-6px) scale(1.02);
+  }
+  80% {
+    transform: translateY(3px) scale(0.99);
   }
   100% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
   }
+}
+
+/* Animated Progress Bar Fill with Spring Transition & Shimmer Glow */
+.animated-progress-bar,
+#dashboard-progress-bar,
+#journey-progress-bar,
+#wizard-progress-bar,
+#donation-progress-bar,
+.progress-bar-fill {
+  transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.4s ease !important;
+  animation: progressBarBounceGlow 3s infinite ease-in-out !important;
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes progressBarBounceGlow {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(245, 158, 11, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 22px rgba(245, 158, 11, 0.85), 0 0 36px rgba(245, 158, 11, 0.45);
+  }
+}
+
+.animated-progress-bar::after,
+#dashboard-progress-bar::after,
+#journey-progress-bar::after,
+#wizard-progress-bar::after,
+#donation-progress-bar::after,
+.progress-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.55) 50%, transparent 100%);
+  animation: shimmerPass 2.4s infinite ease-in-out;
+}
+
+@keyframes shimmerPass {
+  0% { left: -100%; }
+  60%, 100% { left: 100%; }
+}
+
+/* Spring Bounce Hover & Active Scale Interactions */
+.spring-bounce-hover,
+.action-card,
+.milestone-card,
+.job-card,
+.opportunity-card,
+.chip-btn,
+.skill-chip,
+.role-chip,
+.interactive-card,
+.place-card,
+.wizard-step-card,
+.progress-card,
+.cat-pill-btn,
+.mode-tab {
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease, background-color 0.2s ease !important;
+}
+
+.spring-bounce-hover:hover,
+.action-card:hover,
+.milestone-card:hover,
+.job-card:hover,
+.opportunity-card:hover,
+.interactive-card:hover,
+.place-card:hover,
+.wizard-step-card:hover,
+.progress-card:hover {
+  transform: translateY(-4px) scale(1.018) !important;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.12) !important;
+}
+
+.spring-bounce-hover:active,
+.action-card:active,
+.milestone-card:active,
+.job-card:active,
+.opportunity-card:active,
+.interactive-card:active,
+.place-card:active,
+.wizard-step-card:active,
+.progress-card:active {
+  transform: translateY(1px) scale(0.965) !important;
 }
 
 /* Glassmorphism & Elevation */

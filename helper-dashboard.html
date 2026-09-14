@@ -109,15 +109,15 @@
     <main class="dashboard-container dashboard-content main-content flex-grow px-5 pt-3 pb-28 flex flex-col gap-4 overflow-y-auto bg-[#F4F5F7]">
 
         <!-- Greeting Header -->
-        <section class="space-y-1 pt-0.5 pb-0.5">
+        <section class="space-y-1 pt-0.5 pb-0.5 stagger-1">
             <span class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">DASHBOARD</span>
             <h2 class="text-[1.85rem] leading-tight font-extrabold text-slate-900 font-heading tracking-tight">Hello, Volunteer</h2>
             <p class="text-base font-semibold text-slate-600">Your contribution is guiding the way for 12 families this month.</p>
         </section>
 
         <!-- 2 Stat Cards Side-by-Side -->
-        <div class="grid grid-cols-2 gap-3">
-            <div class="bg-white border border-slate-200 text-slate-900 p-4 rounded-2xl shadow-sm space-y-2">
+        <div class="grid grid-cols-2 gap-3 stagger-2">
+            <div class="bg-white border border-slate-200 text-slate-900 p-4 rounded-2xl shadow-sm space-y-2 spring-bounce-hover">
                 <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-900">
                     <span class="material-symbols-outlined text-lg">pie_chart</span>
                 </div>
@@ -126,11 +126,11 @@
                     <p class="text-[1.75rem] font-extrabold text-slate-900 font-heading tracking-tight mt-0.5">84%</p>
                 </div>
                 <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden border border-slate-200/80">
-                    <div class="bg-[#FFE855] h-full rounded-full w-[84%]"></div>
+                    <div class="bg-[#FFE855] h-full rounded-full w-[84%] animated-progress-bar"></div>
                 </div>
             </div>
 
-            <div class="bg-white border border-slate-200 text-slate-900 p-4 rounded-2xl shadow-sm space-y-2">
+            <div class="bg-white border border-slate-200 text-slate-900 p-4 rounded-2xl shadow-sm space-y-2 spring-bounce-hover">
                 <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-900">
                     <span class="material-symbols-outlined text-lg">handshake</span>
                 </div>
@@ -147,8 +147,8 @@
         </div>
 
         <!-- Action Triggers -->
-        <div class="space-y-2.5">
-            <a href="opportunities.html" class="w-full py-4 px-4 bg-slate-950 hover:bg-slate-900 text-white font-extrabold rounded-2xl flex items-center justify-between shadow-md active:scale-[0.98] transition-all text-sm">
+        <div class="space-y-2.5 stagger-3">
+            <a href="opportunities.html" class="w-full py-4 px-4 bg-slate-950 hover:bg-slate-900 text-white font-extrabold rounded-2xl flex items-center justify-between shadow-md active:scale-[0.98] transition-all text-sm spring-bounce-hover">
                 <div class="flex items-center gap-2.5">
                     <span class="material-symbols-outlined text-lg text-white">add_circle</span>
                     <span>Post a Job Opportunity</span>
@@ -156,7 +156,7 @@
                 <span class="material-symbols-outlined text-base text-slate-400">chevron_right</span>
             </a>
 
-            <a href="donate.html" class="w-full py-4 px-4 bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 font-extrabold rounded-2xl flex items-center justify-between shadow-sm active:scale-[0.98] transition-all text-sm">
+            <a href="donate.html" class="w-full py-4 px-4 bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 font-extrabold rounded-2xl flex items-center justify-between shadow-md active:scale-[0.98] transition-all text-sm spring-bounce-hover">
                 <div class="flex items-center gap-2.5">
                     <span class="material-symbols-outlined text-lg text-slate-700">credit_card</span>
                     <span>Donate</span>
@@ -365,5 +365,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 </script>
 <script src="js/offline-map.js"></script>
+<script src="js/nate-welcome.js"></script>
 </html>
 

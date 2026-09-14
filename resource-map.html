@@ -141,7 +141,7 @@
         <div class="relative z-30 w-full h-full flex flex-col justify-between pointer-events-none pt-3 pb-4 px-3.5">
 
             <!-- SINGLE UNIFIED DYNAMIC FLOATING STATION (APPLE CONTROL CENTER / DYNAMIC ISLAND ARCHITECTURE) -->
-            <div id="dynamic-floating-station" class="pointer-events-auto w-full rounded-[28px] ios-glass-station p-2.5 space-y-2.5 spring-transition">
+            <div id="dynamic-floating-station" class="pointer-events-auto w-full rounded-[28px] ios-glass-station p-2.5 space-y-2.5 spring-transition stagger-1">
                 
                 <!-- TIER 1: COLLAPSED CAPSULE ROW (MODE TOGGLE + ACTION BUTTONS TIGHTLY GROUPED) -->
                 <div class="flex justify-between items-center w-full">
@@ -1538,7 +1538,7 @@
       return { ...pin, distanceMiles: dist };
     }).sort((a, b) => a.distanceMiles - b.distanceMiles);
 
-    listEl.innerHTML = sorted.map(res => {
+    listEl.innerHTML = sorted.map((res, idx) => {
       const distStr = res.distanceMiles.toFixed(1) + ' mi';
       const catColor = res.category === 'food' ? 'text-rose-600 bg-rose-50'
                      : res.category === 'shelter' ? 'text-blue-600 bg-blue-50'
@@ -1560,7 +1560,7 @@
       const saveText = isSaved ? 'Saved' : 'Save';
 
       return `
-        <div class="p-2.5 bg-slate-50 hover:bg-slate-100/90 rounded-2xl border border-slate-200/70 shadow-sm flex items-center justify-between gap-2.5 transition-all">
+        <div class="p-2.5 bg-slate-50 hover:bg-slate-100/90 rounded-2xl border border-slate-200/70 shadow-sm flex items-center justify-between gap-2.5 transition-all place-card spring-bounce-hover stagger-${(idx % 6) + 1}">
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-1.5 mb-0.5">
               <span class="text-sm flex-shrink-0">${res.icon || '📍'}</span>

@@ -120,7 +120,7 @@
         <main class="progress-scroll-container main-content flex-grow px-4 pt-4 pb-32 overflow-y-auto no-scrollbar space-y-3 bg-[#F4F5F7] dark:bg-[#0F1117]" style="padding-bottom: 120px !important; -webkit-overflow-scrolling: touch;">
 
             <!-- Journey Summary Card -->
-            <div class="progress-card dashboard-card-border bg-white dark:bg-[#1E293B] rounded-[20px] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.06)] space-y-3">
+            <div class="progress-card dashboard-card-border bg-white dark:bg-[#1E293B] rounded-[20px] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.06)] space-y-3 stagger-1">
                 <div class="flex items-center justify-between">
                     <div>
                         <div class="flex items-center gap-1.5">
@@ -134,7 +134,7 @@
 
                 <!-- Progress Bar (Yellow #EAB308 / #FACC15 Fill) -->
                 <div class="w-full bg-slate-200 dark:bg-white/10 rounded-full h-2 overflow-hidden">
-                    <div id="journey-progress-bar" class="h-full rounded-full transition-all duration-500" style="width: 20%; background-color: #EAB308 !important;"></div>
+                    <div id="journey-progress-bar" class="h-full rounded-full transition-all duration-500 animated-progress-bar" style="width: 20%; background-color: #EAB308 !important;"></div>
                 </div>
 
                 <!-- Stepper Nodes -->
@@ -153,7 +153,7 @@
             <!-- Journey Milestone List (5 Core User Actions Ordered Easiest/Onboarding -> Advanced Goals) -->
             <section class="space-y-2.5" id="journey-list-container">
                 <!-- 1. Navigating Through Northstar -->
-                <div class="relative flex gap-3.5 pb-4">
+                <div class="relative flex gap-3.5 pb-4 stagger-2">
                     <div class="timeline-connector-line absolute z-0 bg-[#EAB308]" style="left: 17px !important; top: 36px !important; bottom: 0 !important; width: 2px !important;"></div>
                     <button type="button" style="width: 36px !important; height: 36px !important; flex-shrink: 0 !important;" class="timeline-node-circle w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center z-10 bg-[#EAB308] text-slate-950 shadow-sm border border-[#EAB308]">
                         <span class="material-symbols-outlined text-[18px] leading-none flex items-center justify-center" style="font-variation-settings: 'FILL' 1;">explore</span>
@@ -178,7 +178,7 @@
                 </div>
 
                 <!-- 2. Northstar AI Assistant -->
-                <div class="relative flex gap-3.5 pb-4">
+                <div class="relative flex gap-3.5 pb-4 stagger-3">
                     <div class="timeline-connector-line absolute z-0 bg-slate-300 dark:bg-slate-700" style="left: 17px !important; top: 36px !important; bottom: 0 !important; width: 2px !important;"></div>
                     <button type="button" style="width: 36px !important; height: 36px !important; flex-shrink: 0 !important;" class="timeline-node-circle w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center z-10 bg-slate-100 dark:bg-slate-800 text-[#EAB308] dark:text-[#FACC15] border border-slate-300 dark:border-white/15">
                         <span class="material-symbols-outlined text-[18px] leading-none flex items-center justify-center">smart_toy</span>
@@ -203,7 +203,7 @@
                 </div>
 
                 <!-- 3. Saving a Place on the Map -->
-                <div class="relative flex gap-3.5 pb-4">
+                <div class="relative flex gap-3.5 pb-4 stagger-4">
                     <div class="timeline-connector-line absolute z-0 bg-slate-300 dark:bg-slate-700" style="left: 17px !important; top: 36px !important; bottom: 0 !important; width: 2px !important;"></div>
                     <button type="button" style="width: 36px !important; height: 36px !important; flex-shrink: 0 !important;" class="timeline-node-circle w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center z-10 bg-slate-100 dark:bg-slate-800 text-[#EAB308] dark:text-[#FACC15] border border-slate-300 dark:border-white/15">
                         <span class="material-symbols-outlined text-[18px] leading-none flex items-center justify-center">bookmark</span>
@@ -228,7 +228,7 @@
                 </div>
 
                 <!-- 4. Resume Creation -->
-                <div class="relative flex gap-3.5 pb-4">
+                <div class="relative flex gap-3.5 pb-4 stagger-5">
                     <div class="timeline-connector-line absolute z-0 bg-slate-300 dark:bg-slate-700" style="left: 17px !important; top: 36px !important; bottom: 0 !important; width: 2px !important;"></div>
                     <button type="button" style="width: 36px !important; height: 36px !important; flex-shrink: 0 !important;" class="timeline-node-circle w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center z-10 bg-slate-100 dark:bg-slate-800 text-[#EAB308] dark:text-[#FACC15] border border-slate-300 dark:border-white/15">
                         <span class="material-symbols-outlined text-[18px] leading-none flex items-center justify-center">description</span>
@@ -253,7 +253,7 @@
                 </div>
 
                 <!-- 5. Job Recommendation Engine -->
-                <div class="relative flex gap-3.5">
+                <div class="relative flex gap-3.5 stagger-6">
                     <button type="button" style="width: 36px !important; height: 36px !important; flex-shrink: 0 !important;" class="timeline-node-circle w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center z-10 bg-slate-100 dark:bg-slate-800 text-[#EAB308] dark:text-[#FACC15] border border-slate-300 dark:border-white/15">
                         <span class="material-symbols-outlined text-[18px] leading-none flex items-center justify-center">work</span>
                     </button>

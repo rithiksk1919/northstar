@@ -154,6 +154,7 @@ html.dark .card-description {
   height: auto !important;
   max-height: none !important;
   -webkit-line-clamp: unset !important;
+  line-clamp: unset !important;
   margin-left: 0 !important;
   padding-left: 0 !important;
 }
@@ -486,7 +487,7 @@ html.dark .job-card:hover {
           id="ai-match-trigger"
           type="button"
           onclick="event.stopPropagation(); handleMatchClick(event)"
-          class="w-full flex items-center justify-between p-4 rounded-2xl bg-amber-400/10 border border-amber-400/30 hover:border-amber-400/60 transition-all text-left cursor-pointer"
+          class="w-full flex items-center justify-between p-4 rounded-2xl bg-amber-400/10 border border-amber-400/30 hover:border-amber-400/60 transition-all text-left cursor-pointer stagger-1 spring-bounce-hover"
         >
           <div>
             <div class="flex items-center gap-1.5 text-amber-400 font-semibold text-sm">
@@ -499,7 +500,7 @@ html.dark .job-card:hover {
         </button>
 
         <!-- Opportunities List Feed -->
-        <section class="space-y-2.5 pt-1">
+        <section class="space-y-2.5 pt-1 stagger-2">
             <div class="flex justify-between items-center px-1">
                 <h3 class="text-base font-extrabold text-slate-900 font-heading tracking-tight opacity-100">Vetted Daily Gigs & Job Listings</h3>
             </div>
