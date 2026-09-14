@@ -93,7 +93,43 @@
 <!-- Mobile Frame Shell -->
 <div class="app-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-[#0B0E14] sm:rounded-[44px] shadow-[0_0_70px_rgba(0,0,0,0.85)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800/80 z-10">
 
+    <!-- Unified AppHeader (Map View) -->
+    <header class="flex items-center justify-between px-4 py-3 border-b border-slate-200/10 bg-slate-900/40 backdrop-blur-md z-40 flex-shrink-0">
+      <div>
+        <h1 class="text-lg font-bold text-white tracking-tight">Resource Map</h1>
+        <p class="text-xs text-slate-400">Verified nearby essentials &amp; safe shelters</p>
+      </div>
 
+      <!-- Right controls: Theme Toggle + Profile Avatar (AppHeader Pattern) -->
+      <div class="header-actions-right flex items-center gap-2.5">
+        <button
+          id="theme-toggle-btn"
+          type="button"
+          onclick="toggleTheme()"
+          aria-label="Toggle theme"
+          class="w-9 h-9 rounded-full bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-300 hover:text-amber-400 transition-colors cursor-pointer flex-shrink-0"
+        >
+          <svg class="theme-sun-icon hidden dark:block w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <svg class="theme-moon-icon block dark:hidden w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        </button>
+
+        <button
+          id="profile-btn"
+          data-standardized-avatar="true"
+          type="button"
+          onclick="openSettingsModal()"
+          class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700/60 flex items-center justify-center shadow-sm cursor-pointer select-none flex-shrink-0"
+          title="Signed in as Seeker - Tap for Settings"
+          aria-label="Profile & Settings"
+        >
+          <span class="text-[#FFB800] font-bold text-sm tracking-wide">S</span>
+        </button>
+      </div>
+    </header>
 
     <!-- MAIN FULL-BLEED MAP CONTAINER -->
     <div class="relative w-full h-full flex-1 overflow-hidden flex flex-col">
@@ -102,7 +138,7 @@
         <div id="map" class="absolute inset-0 w-full h-full z-0 bg-[#EBF0F5]"></div>
 
         <!-- OVERLAY LAYER: DYNAMIC FLOATING STATION LAYER (Z-INDEX 30) -->
-        <div class="relative z-30 w-full h-full flex flex-col justify-between pointer-events-none pt-11 pb-4 px-3.5">
+        <div class="relative z-30 w-full h-full flex flex-col justify-between pointer-events-none pt-3 pb-4 px-3.5">
 
             <!-- SINGLE UNIFIED DYNAMIC FLOATING STATION (APPLE CONTROL CENTER / DYNAMIC ISLAND ARCHITECTURE) -->
             <div id="dynamic-floating-station" class="pointer-events-auto w-full rounded-[28px] ios-glass-station p-2.5 space-y-2.5 spring-transition">

@@ -1172,14 +1172,16 @@ const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, '0.0.0.0', () => {
   const actualPort = server.address().port;
   console.log(`✅ Northstar App Ready at http://localhost:${actualPort}`);
-  console.log(`🚀 Server running on http://0.0.0.0:${actualPort}`);
+  console.log(`🚀 Server running on http://0.0.0.0:${actualPort} (${activeGigs.length} vetted gigs ready)`);
 
-  // Run Apify scraper asynchronously in background so server is immediately responsive
-  setTimeout(() => {
-    fetchAndVetGigs().catch((err) => {
-      console.warn('Background Apify scrape warning:', err?.message || err);
-    });
-  }, 1500);
+  // Run Apify scraper on startup only if explicitly enabled (otherwise use pre-seeded gigs & on-demand /api/trigger-scrape)
+  if (process.env.ENABLE_STARTUP_SCRAPE === 'true') {
+    setTimeout(() => {
+      fetchAndVetGigs().catch((err) => {
+        console.warn('Background Apify scrape warning:', err?.message || err);
+      });
+    }, 1500);
+  }
 
   // Daily automated refresh mechanism (every 24 hours / 86400000 ms)
   const DAILY_REFRESH_INTERVAL_MS = 24 * 60 * 60 * 1000;

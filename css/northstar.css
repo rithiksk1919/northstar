@@ -887,11 +887,14 @@ html.light nav {
   box-shadow: 0 -4px 25px rgba(15, 23, 42, 0.08) !important;
 }
 
-html.light nav a {
+html.light nav a,
+html.light nav button {
   color: #64748b !important;
+  opacity: 1 !important;
 }
 
-html.light nav a:hover {
+html.light nav a:hover,
+html.light nav button:hover {
   color: #0f172a !important;
 }
 
@@ -1290,6 +1293,7 @@ header,
   display: flex !important;
   align-items: center !important;
   justify-content: flex-end !important;
+  gap: 10px !important;
   flex-shrink: 0 !important;
 }
 
@@ -1812,15 +1816,117 @@ button[data-role].active {
   box-shadow: none !important;
 }
 
-/* Fix Top Map Banner Aspect Ratio & Height */
+/* Fix Top Map Banner Aspect Ratio, Height & Unified Background Container */
 .map-preview-card,
 .nearby-essentials-card {
-  min-height: 160px !important;
-  height: 160px !important;
+  min-height: 170px !important;
+  height: 170px !important;
   width: 100% !important;
-  object-fit: cover;
-  border-radius: 16px;
+  background-size: cover !important;
+  background-position: center !important;
+  border-radius: 20px !important;
+  overflow: hidden !important;
   flex-shrink: 0 !important;
+}
+
+#seeker-mini-map,
+.map-preview {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background-size: cover !important;
+  background-position: center !important;
+  border-radius: inherit !important;
+  overflow: hidden !important;
+}
+
+/* Dark Theme Map Styling Filter (Prevents bright map clash with dark UI frame) */
+html.dark #seeker-mini-map,
+html.dark .map-preview,
+.dark #seeker-mini-map,
+.dark .map-preview {
+  filter: brightness(0.7) contrast(1.1) invert(0.9) hue-rotate(180deg) !important;
+}
+
+/* Counter-invert Leaflet markers/overlays in dark mode so gold pins (#EAB308) stay true gold */
+html.dark #seeker-mini-map .leaflet-overlay-pane,
+html.dark #seeker-mini-map .leaflet-marker-pane,
+.dark #seeker-mini-map .leaflet-overlay-pane,
+.dark #seeker-mini-map .leaflet-marker-pane {
+  filter: invert(0.9) hue-rotate(180deg) brightness(1.3) !important;
+}
+
+/* Map Pin Occlusion Fix: Shift rendered marker pins upward so they remain fully visible above bottom text pill */
+#seeker-mini-map .leaflet-marker-pane,
+#seeker-mini-map .leaflet-overlay-pane svg,
+.map-preview .leaflet-marker-pane,
+.map-preview .leaflet-overlay-pane svg,
+#seeker-mini-map .leaflet-marker-pane,
+#seeker-mini-map .leaflet-overlay-pane svg {
+  transform: translateY(-18px) !important;
+}
+
+/* Accessible Percentage Text Contrast (WCAG AA: #D97706 amber-600 in Light Mode / #FACC15 in Dark Mode) */
+#dashboard-progress-pct,
+.progress-pct-label {
+  color: #D97706 !important;
+  font-weight: 800 !important;
+}
+
+html.dark #dashboard-progress-pct,
+html.dark .progress-pct-label {
+  color: #FACC15 !important;
+}
+
+/* Progress Bar Track Contrast (Light Mode #E2E8F0 / Dark Mode #334155) */
+.progress-track {
+  background-color: #E2E8F0 !important; /* bg-gray-200 */
+  height: 8px !important;
+  border-radius: 4px !important;
+}
+
+html.dark .progress-track {
+  background-color: rgba(51, 65, 85, 0.85) !important; /* dark:bg-slate-700/85 */
+}
+
+/* Offline Banner Wi-Fi Icon Nudge (-2px vertical optical alignment + flex self-center) */
+#download-banner,
+.offline-banner {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+}
+
+#download-banner > div,
+#download-banner .offline-banner-label {
+  display: flex !important;
+  align-items: center !important;
+  align-self: center !important;
+  margin-top: auto !important;
+  margin-bottom: auto !important;
+}
+
+#download-banner .offline-wifi-icon,
+#download-banner .material-symbols-outlined,
+.offline-banner .material-symbols-outlined {
+  display: inline-flex !important;
+  align-items: center !important;
+  align-self: center !important;
+  justify-content: center !important;
+  transform: translateY(-2px) !important;
+  line-height: 1 !important;
+}
+
+/* Squircle Icon Exact Flex Centering (40px x 40px) */
+.squircle-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
 }
 
 /* Hide In-App Offline Resource Directory List on Dashboards */
@@ -1828,66 +1934,182 @@ button[data-role].active {
   display: none !important;
 }
 
-/* Chatbot Header Button & Drawer Styling */
-#chat-fab {
+/* Standardized Top Bar Action Cluster (.top-nav-btn) - Uniform 36px Circular Token */
+.top-nav-btn,
+.header-actions-right > button,
+#theme-toggle-btn,
+#profile-btn {
   position: relative !important;
   bottom: auto !important;
   right: auto !important;
   z-index: 10 !important;
-  width: 40px !important;
-  height: 40px !important;
-  min-width: 40px !important;
-  min-height: 40px !important;
-  border-radius: 12px !important;
-  display: inline-flex !important;
+  width: 2.25rem !important;        /* w-9 (36px) */
+  height: 2.25rem !important;       /* h-9 (36px) */
+  min-width: 2.25rem !important;
+  min-height: 2.25rem !important;
+  border-radius: 9999px !important; /* rounded-full */
+  display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  flex-shrink: 0 !important;
+}
+
+:root {
+  --nav-bar-height: 64px;
+}
+
+/* Scrollable Container Clearance (padding-bottom: 96px clears both 64px bottom nav and 80px FAB) */
+main.dashboard-container,
+main.main-content {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding-bottom: 96px !important;
+}
+
+/* Floating Action Button (.chatbot-fab) Clearance Above Bottom Nav & Dark Mode Elevation */
+.chatbot-fab,
+#chat-fab,
+#chatbot-fab-btn,
+.chatbot-floating-fab {
+  position: fixed !important;
+  bottom: calc(var(--nav-bar-height, 64px) + 16px) !important; /* 80px: 16px above 64px bottom nav */
+  right: 16px !important;
+  z-index: 50 !important;
+  width: 3rem !important;               /* 48px */
+  height: 3rem !important;              /* 48px */
+  min-width: 3rem !important;
+  min-height: 3rem !important;
+  border-radius: 9999px !important;
+  background-color: #FFE855 !important;
+  color: #0F172A !important;
+  border: 1px solid rgba(234, 179, 8, 0.35) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+}
+
+html.dark .chatbot-fab,
+html.dark #chat-fab,
+html.dark #chatbot-fab-btn,
+html.dark .chatbot-floating-fab {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Hide green online status indicator dot inside FAB */
+.chatbot-fab .bg-emerald-500,
+#chat-fab .bg-emerald-500,
+#chatbot-fab-btn .bg-emerald-500,
+.chatbot-floating-fab .bg-emerald-500,
+#chat-fab .status-dot {
+  display: none !important;
+}
+
+/* Conditional AI Chatbot FAB Visibility: Hide exclusively on Map page (activeTab === 'map') */
+body[data-active-tab="map"] .chatbot-fab,
+body[data-active-tab="map"] #chat-fab,
+body[data-active-tab="map"] #chatbot-fab-btn,
+body.map-page .chatbot-fab,
+body.map-page #chat-fab,
+body.map-page #chatbot-fab-btn {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 @media (min-width: 640px) {
+  .app-frame .chatbot-fab,
+  .app-frame #chat-fab,
+  .app-frame #chatbot-fab-btn,
+  .app-frame .chatbot-floating-fab {
+    position: absolute !important;
+    bottom: calc(var(--nav-bar-height, 64px) + 16px) !important; /* 80px above frame bottom */
+    right: 16px !important;
+    z-index: 50 !important;
+  }
+
   #chatbot-window-drawer {
     right: max(16px, calc(50vw - 210px + 16px)) !important;
+    bottom: max(140px, calc(50vh - 450px + 140px)) !important;
   }
 }
 
-/* 6-Tab Responsive Bottom Navigation Bar */
+/* 6-Tab Responsive Bottom Navigation Bar (Equidistant Full-Width Grid: grid-cols-6 w-full px-2) */
+.nav-bar-wrapper,
+.nav-bar-container,
+.nav-container,
 nav.bottom-nav,
 .bottom-nav {
+  position: relative !important;
+  bottom: 0 !important;
+  height: var(--nav-bar-height, 64px) !important;
+  min-height: var(--nav-bar-height, 64px) !important;
+  flex-shrink: 0 !important;
   display: grid !important;
   grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
   align-items: center !important;
   justify-items: center !important;
   width: 100% !important;
-  padding: 6px 4px !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 6px 8px !important; /* px-2 py-1.5 */
+  overflow: visible !important;
   z-index: 40 !important;
   background-color: #ffffff !important;
   border-top: 1px solid #e2e8f0 !important;
 }
 
+html.dark .nav-bar-wrapper,
+html.dark .nav-bar-container,
+html.dark .nav-container,
 html.dark nav.bottom-nav,
 html.dark .bottom-nav {
   background-color: #12141c !important;
   border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
-.bottom-nav>a,
-.bottom-nav>button {
+.bottom-nav > a,
+.bottom-nav > button,
+.bottom-nav .nav-tab {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
   width: 100% !important;
+  max-width: 100% !important;
   min-width: 0 !important;
+  box-sizing: border-box !important;
   padding: 4px 2px !important;
   border-radius: 12px !important;
   text-decoration: none !important;
   white-space: nowrap !important;
+  overflow: visible !important;
+}
+
+/* Non-truncating 9px label typography with tight character spacing (tracking-tighter) */
+.bottom-nav .nav-tab span:last-child,
+.bottom-nav > a span:last-child,
+.bottom-nav > button span:last-child {
+  font-size: 9px !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.04em !important;
+  max-width: 100% !important;
+  width: auto !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  display: block !important;
+  padding: 0 1px !important;
 }
 
 /* Progress Scroll Container Padding (Clears Bottom Tab Bar & FAB) */
 main.progress-scroll-container,
 .progress-scroll-container {
-  padding-bottom: 120px !important;
+  padding-bottom: 96px !important;
   max-height: calc(100vh - 70px) !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
@@ -2034,32 +2256,69 @@ html.dark .level-badge {
   border-color: rgba(255, 255, 255, 0.12) !important;
 }
 
-/* Profile Header Avatar Badge (High-Contrast Circular Initial) */
-.profile-avatar-btn {
-  background: #0f172a !important;
-  color: #facc15 !important;
-  border: 1px solid #cbd5e1 !important;
+/* Profile Header Avatar Badge (Slate-800 Container with Brand-Yellow #FFB800 Letter) */
+.profile-avatar-btn,
+#profile-btn[data-standardized-avatar="true"] {
+  width: 2rem !important;
+  height: 2rem !important;
+  border-radius: 9999px !important;
+  background-color: #1e293b !important; /* bg-slate-800 */
+  border: 1px solid rgba(51, 65, 85, 0.6) !important; /* border-slate-700/60 */
+  color: #FFB800 !important; /* text-[#FFB800] */
+  font-weight: 700 !important; /* font-bold */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
-html.dark .profile-avatar-btn {
-  background: #1e293b !important;
-  color: #facc15 !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+html.dark .profile-avatar-btn,
+html.dark #profile-btn[data-standardized-avatar="true"] {
+  background-color: #1e293b !important; /* bg-slate-800 */
+  border: 1px solid rgba(51, 65, 85, 0.6) !important; /* border-slate-700/60 */
+  color: #FFB800 !important; /* text-[#FFB800] */
+  font-weight: 700 !important;
 }
 
-/* Standardized Card Borders across Light (#e2e8f0) and Dark (rgba(255,255,255,0.1)) Modes */
+/* Standardized Idle Card Outlines (Uniform across all cards, no permanent selection border) */
+.card,
 .map-preview-card,
 .action-card,
 .progress-card,
+.offline-banner,
 .dashboard-card-border {
-  border: 1px solid #e2e8f0 !important;
+  border: 1px solid #e5e7eb !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
+html.dark .card,
 html.dark .map-preview-card,
 html.dark .action-card,
 html.dark .progress-card,
+html.dark .offline-banner,
 html.dark .dashboard-card-border {
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(55, 65, 81, 0.5) !important;
+}
+
+/* Dynamic Hover & Focus States (.card:hover, .card:focus-visible) */
+.card:hover,
+.card:focus-visible,
+.action-card:hover,
+.action-card:focus-visible,
+.progress-card:hover,
+.progress-card:focus-visible,
+.map-preview-card:hover,
+.map-preview-card:focus-visible,
+html.dark .card:hover,
+html.dark .card:focus-visible,
+html.dark .action-card:hover,
+html.dark .action-card:focus-visible,
+html.dark .progress-card:hover,
+html.dark .progress-card:focus-visible,
+html.dark .map-preview-card:hover,
+html.dark .map-preview-card:focus-visible {
+  border: 1px solid #FFD028 !important;
+  cursor: pointer !important;
+  outline: none !important;
 }
 
 /* Light Mode Map Overlay Badges (Translucent White Pills) */
@@ -2087,46 +2346,92 @@ html.dark .pending-status-text {
   color: #94A3B8 !important;
 }
 
-/* Bottom Navigation Bar Solid Opaque Chrome & Soft Active Highlight */
+/* Bottom Navigation Bar Solid Opaque Chrome & Compact Active Highlight Pill */
+.nav-bar-wrapper,
+.nav-bar-container,
+.nav-container,
 .bottom-nav,
 nav.bottom-nav {
-  justify-content: space-around !important;
-  position: absolute !important;
+  display: grid !important;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  align-items: center !important;
+  justify-items: center !important;
+  position: relative !important;
   bottom: 0 !important;
   left: 0 !important;
   right: 0 !important;
   width: 100% !important;
+  max-width: 100% !important;
+  padding: 6px 8px !important; /* px-2 py-1.5 */
+  box-sizing: border-box !important;
   z-index: 40 !important;
   background-color: #ffffff !important;
   border-top: 1px solid #e2e8f0 !important;
 }
 
+html.dark .nav-bar-wrapper,
+html.dark .nav-bar-container,
+html.dark .nav-container,
 html.dark .bottom-nav,
 html.dark nav.bottom-nav {
   background-color: #12141C !important;
   border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
-.bottom-nav a:not(.active-tab),
-.bottom-nav a:not(.active-tab) span,
+/* Unified Inactive Muted Slate (#A0AEC0 / rgba(226, 232, 240, 0.7)) across all unselected navigation items */
+.nav-item-inactive,
+.nav-item-inactive span,
+.nav-item-inactive i,
+.bottom-nav a:not(.active-tab):not(.active),
+.bottom-nav button:not(.active-tab):not(.active),
+.bottom-nav a:not(.active-tab):not(.active) span,
+.bottom-nav button:not(.active-tab):not(.active) span,
 nav a.text-slate-400,
 nav button.text-slate-400 {
-  color: #4A5568 !important;
+  color: #64748B !important;
+  opacity: 1 !important;
 }
 
-html.dark .bottom-nav a:not(.active-tab),
-html.dark .bottom-nav a:not(.active-tab) span,
+html.dark .nav-item-inactive,
+html.dark .nav-item-inactive span,
+html.dark .nav-item-inactive i,
+html.dark .bottom-nav a:not(.active-tab):not(.active),
+html.dark .bottom-nav button:not(.active-tab):not(.active),
+html.dark .bottom-nav a:not(.active-tab):not(.active) span,
+html.dark .bottom-nav button:not(.active-tab):not(.active) span,
 html.dark nav a.text-slate-400,
 html.dark nav button.text-slate-400 {
-  color: #94a3b8 !important;
-  opacity: 0.85 !important;
+  color: #A0AEC0 !important;
+  opacity: 1 !important;
 }
 
-.bottom-nav .active-tab {
-  background: rgba(59, 130, 246, 0.15) !important;
-  color: #38bdf8 !important;
-  border: 1px solid rgba(56, 189, 248, 0.2) !important;
-  box-shadow: none !important;
+/* Compact Active Pill Accent: Tight rounded pill (px-2 py-1 rounded-xl bg-[#FFB800] text-slate-950) */
+.nav-tab.active,
+.nav-tab.active-tab,
+.bottom-nav .active-tab,
+html.dark .nav-tab.active,
+html.dark .nav-tab.active-tab,
+html.dark .bottom-nav .active-tab {
+  width: auto !important;
+  min-width: 48px !important;
+  max-width: 58px !important;
+  margin: 0 auto !important;
+  padding: 4px 8px !important; /* px-2 py-1 */
+  border-radius: 0.75rem !important; /* rounded-xl */
+  background-color: #FFB800 !important; /* Brand gold #FFB800 */
+  color: #0F172A !important;
+  border: none !important;
+  box-shadow: 0 2px 8px rgba(255, 184, 0, 0.25) !important;
+  font-weight: 800 !important;
+}
+
+.nav-tab.active span,
+.nav-tab.active-tab span,
+.bottom-nav .active-tab span,
+html.dark .nav-tab.active span,
+html.dark .nav-tab.active-tab span,
+html.dark .bottom-nav .active-tab span {
+  color: #0F172A !important;
 }
 
 /* Download Banner Container - Light Mode Default */
@@ -2210,4 +2515,182 @@ html.dark #download-banner .banner-subtitle {
 #download-offline-btn.download-complete {
   background-color: #22c55e !important;
   color: #ffffff !important;
+}
+
+/* ============================================================
+   OFFLINE ACCESS CONTROL MODAL & INLINE MAP PLACEHOLDER
+   Northstar Dark Aesthetic (#1A202C surface, #FFB800 gold accents)
+   ============================================================ */
+.ns-offline-modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 1rem !important;
+  background-color: rgba(2, 6, 23, 0.82) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+.ns-offline-modal-card {
+  position: relative !important;
+  width: 100% !important;
+  max-width: 24rem !important;
+  background-color: #1A202C !important;
+  color: #F8FAFC !important;
+  border-radius: 24px !important;
+  padding: 1.5rem !important;
+  border: 1px solid rgba(255, 184, 0, 0.35) !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75), 0 0 24px rgba(255, 184, 0, 0.18) !important;
+  text-align: center !important;
+}
+
+.ns-offline-modal-close {
+  position: absolute !important;
+  top: 1rem !important;
+  right: 1rem !important;
+  width: 2.25rem !important;
+  height: 2.25rem !important;
+  border-radius: 9999px !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  color: #CBD5E1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.ns-offline-modal-close:hover {
+  color: #FFFFFF !important;
+  background-color: rgba(255, 184, 0, 0.2) !important;
+  border-color: #FFB800 !important;
+}
+
+.ns-offline-map-placeholder {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 1rem !important;
+  text-align: center !important;
+  border-radius: 20px !important;
+  background-color: #1A202C !important;
+  background-image: radial-gradient(circle at center, rgba(255, 184, 0, 0.12) 0%, rgba(26, 32, 44, 0.98) 75%) !important;
+  border: 1px solid rgba(255, 184, 0, 0.28) !important;
+  z-index: 15 !important;
+  user-select: none !important;
+}
+
+/* ============================================================
+   FINAL COMPREHENSIVE UI/UX POLISH OVERRIDES
+   Header Standardization, Equidistant 6-Tab Nav, Tag Row Gaps,
+   Audio Primer Vertical Centering, and Light Mode Contrast
+   ============================================================ */
+
+/* 1. Permanently hide header action badges on Jobs / Work Opportunities */
+#active-jobs-count,
+#post-job-header-btn {
+  display: none !important;
+}
+
+/* 2. Equidistant 6-Tab Bottom Navigation & Centered Vertical Stack */
+nav.bottom-nav,
+.nav-bar-wrapper,
+.nav-container,
+.nav-bar-container {
+  display: grid !important;
+  grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  width: 100% !important;
+  align-items: center !important;
+  justify-items: center !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+  box-sizing: border-box !important;
+}
+
+nav.bottom-nav .nav-tab,
+.nav-bar-wrapper .nav-tab {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+nav.bottom-nav .nav-tab span:last-child,
+.nav-bar-wrapper .nav-tab span:last-child {
+  white-space: nowrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  font-size: 9px !important;
+  letter-spacing: -0.04em !important;
+  line-height: 1.1 !important;
+}
+
+/* Sleeker Active Tab Highlight (px-2.5 py-1 rounded-xl bg-[#FFB800]) */
+nav.bottom-nav .nav-tab.active,
+nav.bottom-nav .nav-tab.active-tab {
+  background-color: #FFB800 !important;
+  color: #020617 !important;
+  border-radius: 0.75rem !important; /* rounded-xl */
+  padding: 0.25rem 0.625rem !important; /* px-2.5 py-1 */
+  width: auto !important;
+  min-width: 48px !important;
+  max-width: 58px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* 3. Job Card Tag Wrapping Spacing (8px vertical gap / row-gap: 8px) */
+.job-tags-container,
+.tag-group {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  row-gap: 8px !important;
+  column-gap: 6px !important;
+  align-items: center !important;
+}
+
+/* 4. Audio Primer Button Vertical Centering */
+.audio-primer-btn,
+.audio-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  vertical-align: middle !important;
+}
+
+.audio-primer-btn .material-symbols-outlined,
+.audio-btn .material-symbols-outlined {
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* 5. Light Mode WCAG AA Amber Contrast (#D97706 amber-600) for Progress Percentages */
+html.light #dashboard-progress-pct,
+html.light #journey-pct-badge,
+html.light #journey-progress-text,
+html.light .milestone-pct-text,
+html.light .milestone-status-badge {
+  color: #D97706 !important;
+}
+
+html.dark #dashboard-progress-pct,
+html.dark #journey-pct-badge,
+html.dark #journey-progress-text,
+html.dark .milestone-pct-text,
+html.dark .milestone-status-badge {
+  color: #FACC15 !important;
 }

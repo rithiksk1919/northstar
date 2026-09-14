@@ -58,6 +58,14 @@
       summary: 'Digital microtasking and tagging data. Instant payout to digital wallet without ID verification.',
       safety: 'Low-barrier digital work with instant payout microtasks.',
       url: 'https://seattle.craigslist.org/search/lbg?query=microtask'
+    },
+    {
+      id: 'ure18rin8RGNNY3Ml6t41Q',
+      title: 'Can You Lift Heavy Items? Earn Daily Cash as a Helper',
+      pay: '$22.00 / hr Cash',
+      summary: 'Unloading commercial pallet boxes and heavy staging equipment.',
+      safety: 'Entry level immediate hire. Cash paid at end of shift.',
+      url: 'https://www.craigslist.org/view/d/seattle-can-you-lift-heavy-items-earn/ure18rin8RGNNY3Ml6t41Q'
     }
   ];
 
@@ -119,7 +127,7 @@
     const id = g.id || `gig-${encodeURIComponent(g.title || g.rawTitle || Math.random())}`;
 
     return `
-      <div data-job-id="${id}" data-job-key="${key}" class="job-card bg-white dark:bg-[#1E293B] p-4 rounded-[20px] border border-slate-200/80 dark:border-white/10 shadow-[0_4px_16px_rgba(0,0,0,0.04)] space-y-3 relative overflow-visible group">
+      <div data-job-id="${id}" data-job-key="${key}" class="job-card bg-slate-800/40 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 hover:border-amber-400 dark:hover:border-amber-400 transition-colors space-y-3 relative overflow-visible group">
           <div class="flex items-start gap-3 min-w-0">
               <div class="w-10 h-10 rounded-[14px] bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-white/10 text-slate-800 dark:text-slate-100 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <span class="material-symbols-outlined text-xl">${iconName}</span>
@@ -129,13 +137,11 @@
                       <div class="flex items-start justify-between gap-2 w-full min-w-0">
                           <h4 class="job-title font-bold text-xs sm:text-sm text-slate-900 dark:text-white leading-normal tracking-tight flex-1 min-w-0" style="flex: 1 1 auto; min-width: 0; white-space: normal; overflow: visible; word-break: normal; overflow-wrap: break-word; line-height: 1.35; margin: 0; padding: 0; font-size: 0.8125rem;">${cleanJobTitle(g.title || g.rawTitle)}</h4>
                       </div>
-                      <div>
-                          <span class="pay-rate-badge inline-block px-2.5 py-0.5 text-[0.7rem] font-bold rounded-[8px] shadow-none whitespace-normal break-words" style="background: #f8fafc; border: 1px solid #e2e8f0; color: #0f172a; max-width: 100%;">
-                              ${payFormatted}
-                          </span>
-                      </div>
                   </div>
-                  <div class="job-tags-container tag-group flex flex-wrap items-center gap-2" style="margin-left: 0; padding-left: 0; gap: 8px;">
+                  <div class="job-tags-container tag-group flex flex-wrap items-center gap-x-1.5 gap-y-2" style="margin-left: 0; padding-left: 0; row-gap: 8px; column-gap: 6px;">
+                      <span class="pay-rate-badge inline-flex items-center px-2.5 py-0.5 text-[0.7rem] font-bold rounded-full shadow-none whitespace-normal break-words" style="background: #f8fafc; border: 1px solid #e2e8f0; color: #0f172a; max-width: 100%;">
+                          ${payFormatted}
+                      </span>
                       ${(g.noIdRequired !== false && g.no_id_required !== false && !/ID required|W2|background check/i.test(g.safety || '')) 
                         ? `<span class="job-tag tag-pill inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200" style="border-radius: 9999px; margin-left: 0; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;">✓ No ID Required</span>`
                         : `<span class="job-tag tag-pill inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200" style="border-radius: 9999px; margin-left: 0; background: #fffbeb; color: #92400e; border: 1px solid #fde68a;">🪪 ID / Verification Required</span>`
@@ -148,10 +154,11 @@
 
           <div class="card-divider flex items-center justify-between gap-2 border-t" style="border-top: 1px solid rgba(148, 163, 184, 0.2); margin: 0.75rem 0 0 0; padding-top: 0.75rem; margin-left: 0; padding-left: 0;">
               <a href="${g.url || g.link || 'https://seattle.craigslist.org/search/lbg?query=cash'}" target="_blank" rel="noopener noreferrer" class="apply-cta-btn flex-1 py-2 rounded-[12px] text-xs text-center shadow-sm active:scale-95 transition-all flex items-center justify-center gap-1 hover:brightness-105" style="background: #facc15; color: #0f172a; font-weight: 700;">
-                  <span class="material-symbols-outlined text-sm">open_in_new</span> Apply / View Details
+                  <span class="material-symbols-outlined text-sm leading-none">open_in_new</span> Apply / View Details
               </a>
-              <button onclick="playAudioPrepPrimer('${encodeURIComponent(g.title || g.rawTitle)}')" class="audio-primer-btn btn-secondary px-3 py-2 rounded-[12px] font-bold text-xs flex items-center gap-1 active:scale-95 transition-all flex-shrink-0">
-                  <span class="material-symbols-outlined text-sm text-amber-500">graphic_eq</span> Audio Primer
+              <button onclick="playAudioPrepPrimer('${encodeURIComponent(g.title || g.rawTitle)}')" class="audio-primer-btn audio-btn btn-secondary px-3 py-2 rounded-[12px] font-bold text-xs inline-flex items-center justify-center gap-1.5 active:scale-95 transition-all flex-shrink-0">
+                  <span class="material-symbols-outlined text-sm text-amber-500 leading-none">graphic_eq</span>
+                  <span class="leading-none">Audio Primer</span>
               </button>
           </div>
       </div>
@@ -164,7 +171,7 @@
     const id = j.id || `job-${encodeURIComponent(j.title || Math.random())}`;
 
     return `
-      <div data-job-id="${id}" data-job-key="${key}" class="job-card bg-white dark:bg-[#1E293B] p-4 rounded-[20px] border border-slate-200/80 dark:border-white/10 shadow-[0_4px_16px_rgba(0,0,0,0.04)] space-y-3 relative overflow-visible">
+      <div data-job-id="${id}" data-job-key="${key}" class="job-card bg-slate-800/40 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 hover:border-amber-400 dark:hover:border-amber-400 transition-colors space-y-3 relative overflow-visible">
           <div class="flex items-start gap-3 min-w-0">
               <div class="w-10 h-10 rounded-[14px] bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-white/10 text-slate-800 dark:text-slate-100 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <span class="material-symbols-outlined text-xl">${iconName}</span>
@@ -172,17 +179,17 @@
               <div class="job-text-column min-w-0 flex-1 space-y-2">
                   <div class="job-title-container flex items-start justify-between gap-2" style="height: auto; max-height: none; overflow: visible;">
                       <h4 class="job-title font-bold text-sm text-slate-900 dark:text-white leading-snug tracking-tight flex-1" style="white-space: normal; overflow: visible; word-break: break-word; overflow-wrap: break-word; hyphens: none; -webkit-hyphens: none; height: auto; max-height: none; line-height: 1.25; margin-left: 0; padding-left: 0;">${cleanJobTitle(j.title)}</h4>
-                      <span class="pay-rate-badge px-2.5 py-1 text-xs font-bold rounded-[10px] flex-shrink-0 shadow-none whitespace-nowrap self-start" style="background: #f8fafc; border: 1px solid #e2e8f0; color: #0f172a; font-size: 0.75rem;">
+                  </div>
+                  <div class="job-tags-container tag-group flex flex-wrap items-center gap-x-1.5 gap-y-2" style="margin-left: 0; padding-left: 0; row-gap: 8px; column-gap: 6px;">
+                      <span class="pay-rate-badge inline-flex items-center px-2.5 py-0.5 text-[0.7rem] font-bold rounded-full flex-shrink-0 shadow-none whitespace-nowrap" style="background: #f8fafc; border: 1px solid #e2e8f0; color: #0f172a;">
                           ${payFormatted}
                       </span>
-                  </div>
-                  <div class="job-tags-container tag-group flex flex-wrap items-center gap-2" style="margin-left: 0; padding-left: 0; gap: 8px;">
                       <span class="job-tag tag-pill inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" style="border-radius: 9999px; margin-left: 0;">${j.company || 'Community Partner'}</span>
                       <span class="job-tag tag-pill inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" style="border-radius: 9999px; margin-left: 0;">${j.location || 'Seattle, WA'}</span>
                   </div>
                   <p class="job-description text-xs leading-relaxed font-medium" style="white-space: normal; overflow: visible; word-break: normal; overflow-wrap: break-word; hyphens: none; -webkit-hyphens: none; height: auto; max-height: none; margin-left: 0; padding-left: 0;">${j.description || 'Verified employment opportunity.'}</p>
                   ${(j.requirements || []).length > 0 ? `
-                  <div class="job-tags-container tag-group flex flex-wrap items-center gap-2 pt-0.5" style="margin-left: 0; padding-left: 0; gap: 8px;">
+                  <div class="job-tags-container tag-group flex flex-wrap items-center gap-x-1.5 gap-y-2 pt-0.5" style="margin-left: 0; padding-left: 0; row-gap: 8px; column-gap: 6px;">
                       ${(j.requirements || []).map(r => `<span class="job-tag tag-pill inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium" style="border-radius: 9999px; margin-left: 0;">${r}</span>`).join('')}
                   </div>
                   ` : ''}
@@ -202,11 +209,12 @@
                 </div>
               ` : `
                 <div class="flex items-center gap-2 flex-1 justify-end">
-                  <button onclick="playAudioPrepPrimer('${encodeURIComponent(j.title)}')" class="audio-primer-btn btn-secondary px-3 py-2 rounded-[12px] font-bold text-xs flex items-center gap-1 active:scale-95 transition-all flex-shrink-0">
-                      <span class="material-symbols-outlined text-sm text-amber-500">graphic_eq</span> Audio Primer
+                  <button onclick="playAudioPrepPrimer('${encodeURIComponent(j.title)}')" class="audio-primer-btn audio-btn btn-secondary px-3 py-2 rounded-[12px] font-bold text-xs inline-flex items-center justify-center gap-1.5 active:scale-95 transition-all flex-shrink-0">
+                      <span class="material-symbols-outlined text-sm text-amber-500 leading-none">graphic_eq</span>
+                      <span class="leading-none">Audio Primer</span>
                   </button>
                   <button onclick="handleJobContactClick('${encodeURIComponent(j.contact)}')" class="apply-cta-btn px-4 py-2 rounded-[12px] text-xs active:scale-95 transition-all flex items-center justify-center gap-1 shadow-sm hover:brightness-105" style="background: #facc15; color: #0f172a; font-weight: 700;">
-                      <span class="material-symbols-outlined text-sm">open_in_new</span> Apply / View Details
+                      <span class="material-symbols-outlined text-sm leading-none">open_in_new</span> Apply / View Details
                   </button>
                 </div>
               `}
@@ -421,13 +429,12 @@
     const userId = session.id || session.email || '';
 
     const postBtn = document.getElementById('post-job-header-btn');
+    if (postBtn) { postBtn.classList.add('hidden'); postBtn.classList.remove('flex'); }
     const postBanner = document.getElementById('post-job-volunteer-banner');
 
     if (currentRole === 'volunteer') {
-      if (postBtn) { postBtn.classList.remove('hidden'); postBtn.classList.add('flex'); }
       if (postBanner) { postBanner.classList.remove('hidden'); }
     } else {
-      if (postBtn) { postBtn.classList.add('hidden'); postBtn.classList.remove('flex'); }
       if (postBanner) { postBanner.classList.add('hidden'); }
     }
 
@@ -544,38 +551,45 @@
   };
 
   /**
-   * Triggers the floating AI Assistant chat drawer and auto-submits the job match prompt.
+   * Direct Match Action: Opens persistent chatbot drawer and appends match action
+   * directly into chat log without setting or polluting text input state.
    */
-  window.triggerAIMatchAssistant = function triggerAIMatchAssistant() {
-    const promptText = "What are the 3 best job opportunities for me based on my resume?";
+  window.handleMatchClick = function handleMatchClick(event) {
+    if (event && typeof event.stopPropagation === 'function') {
+      event.stopPropagation();
+    }
 
     if (typeof window.initGlobalAIChatbot === 'function') {
       window.initGlobalAIChatbot();
     }
 
-    const drawer = document.getElementById('chatbot-window-drawer');
-    if (drawer && drawer.classList.contains('hidden')) {
-      if (typeof window.toggleAIChatbotWindow === 'function') {
+    window.isChatOpen = true;
+    if (typeof window.openAIChatbotWindow === 'function') {
+      window.openAIChatbotWindow();
+    } else if (typeof window.toggleAIChatbotWindow === 'function') {
+      const drawer = document.getElementById('chatbot-window-drawer');
+      if (drawer && drawer.classList.contains('hidden')) {
         window.toggleAIChatbotWindow();
       }
     }
 
+    // Directly append action/message to chat history without touching input box state
     const executeSend = () => {
-      if (typeof window.sendQuickChatMessage === 'function') {
-        window.sendQuickChatMessage(promptText);
-      } else {
-        const input = document.getElementById('chatbot-input-field');
-        if (input) {
-          input.value = promptText;
-          if (typeof window.handleAIChatSubmit === 'function') {
-            window.handleAIChatSubmit(new Event('submit'));
-          }
-        }
+      window.isChatOpen = true;
+      if (typeof window.appendChatMessage === 'function') {
+        window.appendChatMessage({
+          role: 'user',
+          text: 'Find my perfect job match against my resume'
+        });
+      } else if (typeof window.dispatchChatMessage === 'function') {
+        window.dispatchChatMessage('Find my perfect job match against my resume');
       }
     };
 
-    setTimeout(executeSend, 80);
+    setTimeout(executeSend, 60);
   };
+
+  window.triggerAIMatchAssistant = window.handleMatchClick;
 
   /**
    * Binds click listener to #ai-match-trigger button.
@@ -588,7 +602,8 @@
 
     triggerBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      window.triggerAIMatchAssistant();
+      e.stopPropagation();
+      window.triggerAIMatchAssistant(e);
     });
   }
 

@@ -102,44 +102,74 @@ function renderAccountHeaderAvatar() {
     // If explicit #profile-btn exists in markup, populate it dynamically with the user's first initial
     const profileBtn = container.querySelector('#profile-btn') || header.querySelector('#profile-btn');
     if (profileBtn) {
-      profileBtn.textContent = initial;
+      profileBtn.innerHTML = `<span class="text-[#FFB800] font-bold text-xs tracking-wide">${initial}</span>`;
       profileBtn.title = `Signed in as ${userName} - Tap for Settings`;
       profileBtn.onclick = window.openSettingsModal;
-      profileBtn.className = 'profile-avatar-btn w-10 h-10 rounded-full flex items-center justify-center font-black text-sm bg-slate-800 text-amber-400 border border-slate-700 hover:brightness-110 transition-all active:scale-95 cursor-pointer select-none shadow-sm';
+      const pathLower = (window.location.pathname || '').toLowerCase();
+      const isLockedScreen = pathLower.includes('dashboard') || pathLower.includes('progress') || pathLower.includes('login') || pathLower.includes('signup');
+      if (!isLockedScreen) {
+        profileBtn.className = 'w-8 h-8 rounded-full bg-slate-800 border border-slate-700/60 flex items-center justify-center shadow-sm cursor-pointer select-none';
+      }
       return;
     }
 
-    const avatarBtn = document.createElement('button');
-    avatarBtn.type = 'button';
+    const avatarBtn = document.createElement('div');
     avatarBtn.id = 'header-user-avatar';
     avatarBtn.onclick = window.openSettingsModal;
-    avatarBtn.className = 'header-account-avatar flex-shrink-0 transition-transform active:scale-95 cursor-pointer select-none';
-
-    avatarBtn.innerHTML = `
-      <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-400 to-amber-500 text-slate-950 font-black text-xs flex items-center justify-center shadow-[0_0_12px_rgba(245,158,11,0.4)] border border-amber-300 hover:brightness-110 transition-all" title="Signed in as ${userName} - Tap for Settings">
-        ${initial}
-      </div>
-    `;
+    avatarBtn.className = 'w-8 h-8 rounded-full bg-slate-800 border border-slate-700/60 flex items-center justify-center shadow-sm cursor-pointer select-none';
+    avatarBtn.title = `Signed in as ${userName} - Tap for Settings`;
+    avatarBtn.innerHTML = `<span class="text-[#FFB800] font-bold text-xs tracking-wide">${initial}</span>`;
 
     container.appendChild(avatarBtn);
   });
 }
 
+function syncHeaderThemeIcons(mode) {
+  const pathLower = (window.location.pathname || '').toLowerCase();
+  const isLockedScreen = pathLower.includes('dashboard') || pathLower.includes('progress') || pathLower.includes('login') || pathLower.includes('signup');
+  if (isLockedScreen) return;
+
+  const saved = localStorage.getItem('ns_theme') || localStorage.getItem('northstar_theme');
+  const resolvedMode = mode || (saved ? saved : (document.documentElement.classList.contains('dark') ? 'dark' : 'dark'));
+  const darkActive = Boolean(resolvedMode === 'dark');
+
+  const themeBtns = document.querySelectorAll('#theme-toggle-btn');
+  themeBtns.forEach(btn => {
+    btn.className = 'w-8 h-8 rounded-full bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-300 hover:text-amber-400 transition-colors';
+    btn.setAttribute('aria-label', 'Toggle theme');
+    btn.setAttribute('title', darkActive ? 'Switch to Light Mode' : 'Switch to Dark Mode');
+    btn.innerHTML = darkActive
+      ? `<svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" /></svg>`
+      : `<svg class="w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>`;
+  });
+}
+
 // Theme Mode Storage & Management Engine with Dynamic Device Theme Detection
 function initThemeToggle() {
-  const savedTheme = localStorage.getItem('northstar_theme');
-  const systemTheme = (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
-  const themeToApply = (savedTheme === 'light' || savedTheme === 'dark') ? savedTheme : systemTheme;
+  const savedTheme = localStorage.getItem('ns_theme') || localStorage.getItem('northstar_theme');
+  const themeToApply = (savedTheme === 'light' || savedTheme === 'dark') ? savedTheme : 'dark';
   document.documentElement.classList.remove('light', 'dark');
   document.documentElement.classList.add(themeToApply);
+  localStorage.setItem('ns_theme', themeToApply);
+  localStorage.setItem('northstar_theme', themeToApply);
+
+  if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => syncHeaderThemeIcons(themeToApply));
+    } else {
+      syncHeaderThemeIcons(themeToApply);
+    }
+  }
 
   if (typeof window !== 'undefined' && window.matchMedia) {
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     const onChange = (e) => {
       const explicit = localStorage.getItem('northstar_theme_override');
       if (!explicit) {
+        const nextMode = e.matches ? 'dark' : 'light';
         document.documentElement.classList.remove('light', 'dark');
-        document.documentElement.classList.add(e.matches ? 'dark' : 'light');
+        document.documentElement.classList.add(nextMode);
+        syncHeaderThemeIcons(nextMode);
       }
     };
     if (media.addEventListener) media.addEventListener('change', onChange);
@@ -149,10 +179,13 @@ function initThemeToggle() {
 initThemeToggle();
 
 window.setThemeMode = function (mode) {
+  const safeMode = Boolean(mode === 'dark') ? 'dark' : 'light';
   document.documentElement.classList.remove('light', 'dark');
-  document.documentElement.classList.add(mode);
-  localStorage.setItem('northstar_theme', mode);
-  updateSettingsThemeUI(mode);
+  document.documentElement.classList.add(safeMode);
+  localStorage.setItem('ns_theme', safeMode);
+  localStorage.setItem('northstar_theme', safeMode);
+  updateSettingsThemeUI(safeMode);
+  syncHeaderThemeIcons(safeMode);
   // Sync theme to Supabase (best-effort, non-blocking)
   if (window.supabaseClient) {
     try {
@@ -161,7 +194,7 @@ window.setThemeMode = function (mode) {
       if (session?.id && !session.id.startsWith('user-')) {
         window.supabaseClient
           .from('profiles')
-          .upsert({ id: session.id, theme: mode }, { onConflict: 'id' })
+          .upsert({ id: session.id, theme: safeMode }, { onConflict: 'id' })
           .then(() => { })
           .catch(() => { });
       }
@@ -170,7 +203,7 @@ window.setThemeMode = function (mode) {
 };
 
 window.toggleTheme = function () {
-  const current = localStorage.getItem('northstar_theme') || 'light';
+  const current = localStorage.getItem('ns_theme') || localStorage.getItem('northstar_theme') || 'dark';
   const newTheme = current === 'dark' ? 'light' : 'dark';
   window.setThemeMode(newTheme);
 };
@@ -262,11 +295,104 @@ window.signOutUser = async function () {
   window.location.href = 'index.html';
 };
 
+// Active Tab State & Routing Controller (Map Routing Fix + Conditional FAB Visibility)
+const TAB_ROUTES = {
+  dashboard: 'seeker-dashboard.html',
+  progress: 'progress.html',
+  jobs: 'opportunities.html',
+  map: 'resource-map.html',
+  resume: 'resume-builder.html'
+};
+
+function isMapActiveView(tabOverride) {
+  if (tabOverride) return tabOverride === 'map';
+  if (window.activeTab === 'map') return true;
+  const path = (window.location.pathname || '').toLowerCase();
+  return path.includes('resource-map') || path.endsWith('/map.html') || path.endsWith('map');
+}
+
+function syncChatbotFABVisibility(tabOverride) {
+  const isMap = isMapActiveView(tabOverride);
+  const fab = document.getElementById('chat-fab') || document.querySelector('.chatbot-fab');
+  const drawer = document.getElementById('chatbot-window-drawer');
+  const backdrop = document.getElementById('chatbot-backdrop-overlay');
+
+  if (isMap) {
+    document.body.setAttribute('data-active-tab', 'map');
+    document.body.classList.add('map-page');
+    if (fab) {
+      fab.classList.add('hidden');
+      fab.style.setProperty('display', 'none', 'important');
+    }
+    if (drawer) {
+      drawer.classList.add('hidden');
+      drawer.style.setProperty('display', 'none', 'important');
+    }
+    if (backdrop) {
+      backdrop.classList.add('chatbot-backdrop-hidden', 'pointer-events-none');
+    }
+  } else {
+    const active = tabOverride || window.activeTab || 'dashboard';
+    document.body.setAttribute('data-active-tab', active);
+    document.body.classList.remove('map-page');
+    if (fab) {
+      fab.classList.remove('hidden');
+      fab.style.setProperty('display', 'flex', 'important');
+    } else if (typeof initGlobalAIChatbot === 'function') {
+      initGlobalAIChatbot();
+    }
+  }
+}
+window.syncChatbotFABVisibility = syncChatbotFABVisibility;
+
+window.setActiveTab = function (tabId) {
+  const cleanTab = (tabId || 'dashboard').toLowerCase();
+  window.activeTab = cleanTab;
+  syncChatbotFABVisibility(cleanTab);
+
+  // Synchronize active/inactive tab classes on bottom navigation bar
+  document.querySelectorAll('.bottom-nav [data-nav-tab], .bottom-nav a, .bottom-nav button').forEach(el => {
+    const elTab = el.getAttribute('data-nav-tab') || (el.getAttribute('href') || '').replace('.html', '');
+    const isMatch = elTab === cleanTab || (cleanTab === 'map' && (el.getAttribute('href') || '').includes('map'));
+    const activeClasses = 'nav-tab active active-tab mx-auto w-auto min-w-[48px] max-w-[58px] px-2 py-1 rounded-xl bg-[#FFB800] text-slate-950 font-extrabold shadow-sm flex flex-col items-center justify-center transition-all box-border';
+    const inactiveClasses = 'nav-tab nav-item-inactive w-full flex flex-col items-center justify-center py-1 px-0.5 text-slate-500 dark:text-[#A0AEC0] hover:text-slate-900 dark:hover:text-white font-medium transition-all box-border';
+    el.className = isMatch ? activeClasses : inactiveClasses;
+    const icon = el.querySelector('.material-symbols-outlined');
+    if (icon) icon.style.fontVariationSettings = isMatch ? "'FILL' 1" : "'FILL' 0";
+  });
+};
+
+window.navigateTo = function (tabOrUrl) {
+  const key = (tabOrUrl || '').toLowerCase().replace('.html', '');
+  const targetUrl = TAB_ROUTES[key] || (tabOrUrl.endsWith('.html') ? tabOrUrl : `${tabOrUrl}.html`);
+  const resolvedTab = Object.keys(TAB_ROUTES).find(k => TAB_ROUTES[k] === targetUrl) || (targetUrl.includes('map') ? 'map' : key);
+
+  window.setActiveTab(resolvedTab);
+
+  if (resolvedTab === 'map' || targetUrl.includes('resource-map.html') || targetUrl === 'map.html') {
+    window.location.href = 'resource-map.html';
+    return;
+  }
+
+  if (typeof navigateToPageInstant === 'function') {
+    navigateToPageInstant(targetUrl);
+  } else {
+    window.location.href = targetUrl;
+  }
+};
+
 // Instant Zero-Lag Page Swapping Engine (SPA Router)
 let isPageTransitioning = false;
 
 function initInstantPageTransitions() {
   document.addEventListener('click', (e) => {
+    const mapTrigger = e.target.closest('[data-nav-target="map"], a[href="map.html"], a[href="resource-map.html"]');
+    if (mapTrigger) {
+      e.preventDefault();
+      window.navigateTo('map');
+      return;
+    }
+
     const link = e.target.closest('a[href$=".html"]');
     if (!link) return;
 
@@ -425,6 +551,12 @@ async function navigateToPageInstant(url, pushState = true) {
           renderDynamicNav();
           if (typeof window.updateProgressUI === 'function') {
             window.updateProgressUI();
+          }
+          if (typeof syncDashboardProgressWidget === 'function') {
+            syncDashboardProgressWidget();
+          }
+          if (typeof renderProgressPage === 'function') {
+            renderProgressPage();
           }
           if (typeof window.checkGuestLockAccess === 'function') {
             window.checkGuestLockAccess();
@@ -1196,9 +1328,9 @@ const defaultUserData = {
   progress: {
     appExplorer: true,
     aiCompanion: false,
-    savedLocation: false,
+    savedLocation: true,
     resumeBuilder: false,
-    jobMatcher: false
+    jobMatcher: true
   }
 };
 
@@ -1212,7 +1344,7 @@ function getUserData() {
   // Ensure all 5 core milestone keys exist
   CORE_MILESTONES.forEach(m => {
     if (typeof data.progress[m.id] !== 'boolean') {
-      data.progress[m.id] = m.id === 'appExplorer';
+      data.progress[m.id] = defaultUserData.progress[m.id] === true;
     }
   });
 
@@ -1246,7 +1378,18 @@ function saveUserData(userData) {
 function syncDashboardProgressWidget() {
   const userData = getUserData();
   const state = userData.progress || {};
-  const completedCount = CORE_MILESTONES.filter(m => state[m.id] === true).length;
+  const totalMilestones = CORE_MILESTONES.length; // 5
+  let completedCount = CORE_MILESTONES.filter(m => state[m.id] === true).length;
+
+  // Migrate legacy 1/5 uncustomized guest state to match the default 60% (3 of 5 milestones) state
+  if (completedCount === 1 && !localStorage.getItem('northstar_progress_customized')) {
+    state.appExplorer = true;
+    state.savedLocation = true;
+    state.jobMatcher = true;
+    completedCount = 3;
+    saveUserData(userData);
+  }
+
   const percentage = completedCount * 20;
   const nextPending = CORE_MILESTONES.find(m => !state[m.id]);
 
@@ -1279,8 +1422,14 @@ function syncDashboardProgressWidget() {
     levelBadgeEl.textContent = `Level ${level}`;
   }
 }
+window.syncDashboardProgressWidget = syncDashboardProgressWidget;
+window.updateProgressUI = function () {
+  renderProgressPage();
+  syncDashboardProgressWidget();
+};
 
 function updateMilestone(milestoneKey, isCompleted) {
+  localStorage.setItem('northstar_progress_customized', 'true');
   const userData = getUserData();
   if (!userData.progress) userData.progress = {};
   userData.progress[milestoneKey] = isCompleted;
@@ -1291,12 +1440,8 @@ function updateMilestone(milestoneKey, isCompleted) {
 
 window.toggleMilestoneCompletion = function (milestoneKey, event) {
   if (event) event.stopPropagation();
-  const userData = getUserData();
-  const current = !!userData.progress[milestoneKey];
-  userData.progress[milestoneKey] = !current;
-  saveUserData(userData);
-  renderProgressPage();
-  syncDashboardProgressWidget();
+  // Manual milestone toggling is locked; milestones update exclusively via system completion events (updateMilestone).
+  return false;
 };
 
 function saveResumeData(data) {
@@ -1343,22 +1488,24 @@ function renderProgressPage() {
   const accountLabel = document.getElementById('progress-account-label');
   if (accountLabel) {
     accountLabel.textContent = session.isGuest
-      ? 'Browsing as Guest • Tap any milestone to mark complete'
+      ? 'Browsing as Guest • Milestones unlock automatically as you explore'
       : `Signed in as ${session.full_name || session.username}`;
   }
 
-  // Update header text (X of 5 milestones completed) in yellow (#EAB308 / #FACC15)
+  // Update header text (X of 5 milestones completed) - amber-600 (#D97706) in light mode, #FACC15 in dark mode
   const progressText = document.getElementById('journey-progress-text');
   if (progressText) {
     progressText.innerText = `${completedCount} of 5 milestones completed`;
-    progressText.style.setProperty('color', '#EAB308', 'important');
+    progressText.style.removeProperty('color');
+    progressText.className = 'text-xs font-semibold text-[#D97706] dark:text-[#FACC15] milestone-pct-text';
   }
 
-  // Update percentage badge (0% to 100%, 20% per completed task) in yellow (#EAB308 / #FACC15)
+  // Update percentage badge (0% to 100%, 20% per completed task) - amber-600 (#D97706) in light mode, #FACC15 in dark mode
   const pctBadge = document.getElementById('journey-pct-badge');
   if (pctBadge) {
     pctBadge.innerText = `${percentage}%`;
-    pctBadge.style.setProperty('color', '#EAB308', 'important');
+    pctBadge.style.removeProperty('color');
+    pctBadge.className = 'text-xs font-extrabold px-2.5 py-1 rounded-full border border-amber-500/30 text-[#D97706] dark:text-[#FACC15] bg-amber-500/15 milestone-pct-text';
   }
 
   // Update progress bar fill in yellow (#EAB308 / #FACC15)
@@ -1368,17 +1515,17 @@ function renderProgressPage() {
     progressBar.style.setProperty('background-color', '#EAB308', 'important');
   }
 
-  // Render Stepper Nodes with yellow (#EAB308 / #FACC15) fill when completed
+  // Render Stepper Nodes (Read-only indicator nodes - manual click toggling locked)
   stepperContainer.innerHTML = CORE_MILESTONES.map(m => {
     const isCompleted = !!state[m.id];
     return `
-      <button type="button" onclick="toggleMilestoneCompletion('${m.id}', event)" title="${m.title} (${isCompleted ? 'Completed' : 'Tap to complete'})" class="w-6 h-6 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 z-10 text-xs ${isCompleted ? 'bg-[#EAB308] text-slate-950 shadow-[0_0_10px_rgba(234,179,8,0.5)] border-2 border-[#EAB308]' : 'bg-slate-200 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400'}">
+      <div title="${m.title} (${isCompleted ? 'Completed' : 'In Progress'})" class="w-6 h-6 rounded-full flex items-center justify-center pointer-events-none select-none transition-all duration-300 z-10 text-xs ${isCompleted ? 'bg-[#EAB308] text-slate-950 shadow-[0_0_10px_rgba(234,179,8,0.5)] border-2 border-[#EAB308]' : 'bg-slate-200 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400'}">
           <span class="material-symbols-outlined text-[14px] font-bold">${isCompleted ? 'check' : 'radio_button_unchecked'}</span>
-      </button>
+      </div>
     `;
   }).join('');
 
-  // Render 5 Core Action Milestone Cards (36x36px Timeline Nodes + Centered 2px Connector Line at left: 17px)
+  // Render 5 Core Action Milestone Cards (Read-only timeline nodes + strictly "+20%" badge without inline checkmarks)
   listContainer.innerHTML = CORE_MILESTONES.map((m, index) => {
     const isCompleted = !!state[m.id];
     const isLast = index === CORE_MILESTONES.length - 1;
@@ -1387,19 +1534,19 @@ function renderProgressPage() {
       <div class="relative flex gap-3.5 ${!isLast ? 'pb-4' : ''}">
         ${!isLast ? `<div class="timeline-connector-line absolute z-0 ${isCompleted ? 'bg-[#EAB308]' : 'bg-slate-300 dark:bg-slate-700'}" style="left: 17px !important; top: 36px !important; bottom: 0 !important; width: 2px !important;"></div>` : ''}
         
-        <button type="button" onclick="toggleMilestoneCompletion('${m.id}', event)" title="Tap to toggle milestone" style="width: 36px !important; height: 36px !important; flex-shrink: 0 !important;" class="timeline-node-circle w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center z-10 cursor-pointer transition-all active:scale-95 ${isCompleted ? 'bg-[#EAB308] text-slate-950 shadow-sm border border-[#EAB308]' : 'bg-slate-100 dark:bg-slate-800 text-[#EAB308] dark:text-[#FACC15] border border-slate-300 dark:border-white/15'}">
+        <div title="${m.title}" style="width: 36px !important; height: 36px !important; flex-shrink: 0 !important;" class="timeline-node-circle w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center z-10 pointer-events-none select-none transition-all ${isCompleted ? 'bg-[#EAB308] text-slate-950 shadow-sm border border-[#EAB308]' : 'bg-slate-100 dark:bg-slate-800 text-[#D97706] dark:text-[#FACC15] border border-slate-300 dark:border-white/15'}">
             <span class="material-symbols-outlined text-[18px] leading-none flex items-center justify-center" style="font-variation-settings: 'FILL' ${isCompleted ? '1' : '0'};">${m.icon}</span>
-        </button>
+        </div>
         
-        <div onclick="toggleMilestoneCompletion('${m.id}', event)" class="milestone-card dashboard-card-border bg-white dark:bg-[#1E293B] p-4 rounded-[18px] shadow-sm flex-1 cursor-pointer hover:brightness-98 transition-all">
+        <div class="milestone-card dashboard-card-border bg-white dark:bg-[#1E293B] p-4 rounded-[18px] shadow-sm flex-1 transition-all">
             <div class="flex justify-between items-start gap-2">
                 <div>
                     <h4 class="font-extrabold text-sm text-slate-900 dark:text-white font-heading">${m.title}</h4>
-                    <p class="dashboard-subtext text-xs text-[#4A5568] dark:text-[#94A3B8] mt-1 leading-snug font-medium" style="color: #4A5568;">${m.desc}</p>
+                    <p class="dashboard-subtext text-xs text-[#4A5568] dark:text-[#94A3B8] mt-1 leading-snug font-medium">${m.desc}</p>
                 </div>
                 <div class="flex flex-col items-end flex-shrink-0 gap-1">
-                    <span class="milestone-status-badge inline-flex items-center gap-1 rounded-full text-[11px]" style="background: rgba(234, 179, 8, 0.15) !important; color: #EAB308 !important; border-radius: 9999px !important; font-weight: 600 !important; padding: 2px 8px !important; border: none !important; box-shadow: none !important;">
-                        ${isCompleted ? '<span class="material-symbols-outlined text-xs">check_circle</span> +20%' : '+20%'}
+                    <span class="milestone-status-badge milestone-pct-text inline-flex items-center justify-center rounded-full text-[11px] font-semibold px-2 py-0.5 bg-amber-500/15 text-[#D97706] dark:text-[#FACC15]">
+                        +20%
                     </span>
                 </div>
             </div>
@@ -1407,7 +1554,7 @@ function renderProgressPage() {
                 <span class="pending-status-text text-[11px] font-bold ${isCompleted ? 'completed-status-pill' : 'text-[#4A5568] dark:text-[#94A3B8]'}" style="${isCompleted ? 'background: #EDF2F7; border: 1px solid #CBD5E1; color: #4A5568; padding: 2px 8px; border-radius: 6px; font-weight: 600;' : 'color: #4A5568;'}">
                     ${isCompleted ? 'Completed ✓' : 'Pending action'}
                 </span>
-                <a href="${m.actionUrl}" onclick="event.stopPropagation();" class="action-btn milestone-cta-btn inline-flex items-center gap-1 text-xs font-medium px-3.5 py-1.5 rounded-full transition-all active:scale-95" style="background: #1A202C !important; color: #FFFFFF !important; border-radius: 9999px !important; font-weight: 500 !important; border: 1px solid #1A202C !important;">
+                <a href="${m.actionUrl}" class="action-btn milestone-cta-btn inline-flex items-center gap-1 text-xs font-medium px-3.5 py-1.5 rounded-full transition-all active:scale-95" style="background: #1A202C !important; color: #FFFFFF !important; border-radius: 9999px !important; font-weight: 500 !important; border: 1px solid #1A202C !important;">
                     ${m.actionLabel} <span class="material-symbols-outlined text-xs">arrow_forward</span>
                 </a>
             </div>
@@ -1436,13 +1583,18 @@ function renderBottomNav() {
     appFrame.appendChild(nav);
   }
 
-  nav.className = 'bottom-nav absolute bottom-0 left-0 w-full z-40 grid grid-cols-6 items-center justify-items-center px-1.5 py-2 bg-white dark:bg-[#12141C] shadow-[0px_-4px_25px_rgba(0,0,0,0.2)] border-t border-slate-200 dark:border-white/10';
+  // Equidistant full-width 6-column grid (grid grid-cols-6 w-full px-2)
+  nav.className = 'bottom-nav nav-bar-wrapper nav-container nav-bar-container flex-shrink-0 relative w-full max-w-full box-border z-40 grid grid-cols-6 items-center justify-items-center px-2 py-1.5 bg-white dark:bg-[#12141C] shadow-[0px_-4px_25px_rgba(0,0,0,0.2)] border-t border-slate-200 dark:border-white/10';
 
   const isDashboard = path.includes('dashboard');
   const isProgress = path.includes('progress') || path.includes('profile');
   const isJobs = path.includes('opportunities') || path.includes('jobs');
   const isMap = path.includes('map');
   const isResume = path.includes('resume');
+
+  const currentActiveTab = isMap ? 'map' : isProgress ? 'progress' : isJobs ? 'jobs' : isResume ? 'resume' : 'dashboard';
+  window.activeTab = currentActiveTab;
+  syncChatbotFABVisibility(currentActiveTab);
 
   const tabs = [
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', href: 'seeker-dashboard.html', active: isDashboard },
@@ -1454,23 +1606,23 @@ function renderBottomNav() {
   ];
 
   nav.innerHTML = tabs.map(tab => {
-    const activeClasses = 'active-tab bg-amber-400/15 text-amber-500 dark:text-amber-400 border border-amber-400/30 rounded-xl shadow-[0_0_12px_rgba(245,158,11,0.2)] font-extrabold';
-    const inactiveClasses = 'text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium';
+    const activeClasses = 'nav-tab active active-tab mx-auto w-auto min-w-[48px] max-w-[58px] px-2.5 py-1 rounded-xl bg-[#FFB800] text-slate-950 font-extrabold shadow-sm flex flex-col items-center justify-center transition-all box-border';
+    const inactiveClasses = 'nav-tab nav-item-inactive w-full flex flex-col items-center justify-center py-1 px-0.5 text-slate-500 dark:text-[#A0AEC0] hover:text-slate-900 dark:hover:text-white font-medium transition-all box-border';
     const iconFill = tab.active ? "font-variation-settings: 'FILL' 1;" : '';
 
     if (tab.action) {
       return `
-        <button type="button" onclick="${tab.action}" class="flex flex-col items-center justify-center w-full py-1 px-0.5 transition-all ${inactiveClasses}">
+        <button type="button" onclick="${tab.action}" data-nav-tab="${tab.id}" class="${inactiveClasses}">
           <span class="material-symbols-outlined text-[20px] leading-none">${tab.icon}</span>
-          <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">${tab.label}</span>
+          <span class="text-[9px] leading-none mt-1 tracking-tighter whitespace-nowrap text-center">${tab.label}</span>
         </button>
       `;
     }
 
     return `
-      <a href="${tab.href}" data-nav-tab="${tab.id}" class="flex flex-col items-center justify-center w-full py-1 px-0.5 transition-all ${tab.active ? activeClasses : inactiveClasses}">
+      <a href="${tab.href}" onclick="event.preventDefault(); navigateTo('${tab.id}');" data-nav-tab="${tab.id}" class="${tab.active ? activeClasses : inactiveClasses}">
         <span class="material-symbols-outlined text-[20px] leading-none" style="${iconFill}">${tab.icon}</span>
-        <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">${tab.label}</span>
+        <span class="text-[9px] leading-none mt-1 tracking-tighter whitespace-nowrap text-center">${tab.label}</span>
       </a>
     `;
   }).join('');
@@ -1594,59 +1746,66 @@ function checkDashboardJobMatchLock() {
 // GLOBAL AI CHATBOT WIDGET (SEEKER & HELPER / VOLUNTEER)
 // ============================================================
 function initGlobalAIChatbot() {
-  // ── 1. Inject the FAB into every page header (left of dark-mode btn) ──
-  function injectHeaderBtn() {
-    document.querySelectorAll('header').forEach(header => {
-      if (header.querySelector('#chat-fab')) return; // already injected
+  const path = (window.location.pathname || '').toLowerCase();
+  if (path.includes('login') || path.includes('signup')) return;
 
-      // Find or create the right-side actions container
-      let container = header.querySelector('.header-actions-right') || header.querySelector('.header-actions');
-      if (!container) {
-        container = document.createElement('div');
-        container.className = 'header-actions-right flex items-center gap-2 flex-shrink-0';
-        header.appendChild(container);
+  // ── 1. Mount the floating AI Chatbot FAB (.chatbot-fab) at bottom: calc(var(--nav-bar-height, 64px) + 16px); right: 16px; z-index: 50; ──
+  function mountGlobalFloatingFAB() {
+    // Remove any legacy #chat-fab inside <header> so it never duplicates
+    document.querySelectorAll('header #chat-fab').forEach(el => el.remove());
+
+    const appFrame = document.querySelector('.app-frame') || document.querySelector('.phone-frame');
+    if (appFrame) {
+      const mainEl = appFrame.querySelector('main');
+      if (mainEl) {
+        mainEl.style.setProperty('padding-bottom', '96px', 'important');
       }
+    }
 
-      // Build the chatbot icon button — same size/radius as theme-toggle-btn
-      const btn = document.createElement('button');
-      btn.id = 'chat-fab';
-      btn.setAttribute('data-fab-alias', 'chatbot-fab-btn');
-      btn.type = 'button';
-      btn.onclick = toggleAIChatbotWindow;
-      btn.setAttribute('aria-label', 'Open AI Assistant');
-      btn.title = 'NorthStar AI Assistant';
-      btn.className = 'icon-btn w-11 h-11 min-w-[44px] min-h-[44px] rounded-[12px] bg-[#FFE855] text-slate-950 border border-amber-300 flex items-center justify-center font-bold transition-all active:scale-95 hover:brightness-105 cursor-pointer relative select-none flex-shrink-0';
-      btn.innerHTML = `
-        <span id="chatbot-fab-icon" class="material-symbols-outlined" style="font-size:20px;line-height:1;">smart_toy</span>
-        <span class="absolute top-1 right-1 w-2 h-2 bg-emerald-500 border border-white rounded-full"></span>
-      `;
-
-      // Insert BEFORE the first existing button in the container (dark mode, etc.)
-      const firstBtn = container.querySelector('button, a');
-      if (firstBtn) {
-        container.insertBefore(btn, firstBtn);
-      } else {
-        container.appendChild(btn);
+    const existingFab = document.getElementById('chat-fab');
+    if (existingFab) {
+      existingFab.className = 'chatbot-fab chatbot-floating-fab w-12 h-12 rounded-full bg-[#FFE855] text-slate-950 border border-amber-400/40 shadow-[0_4px_12px_rgba(0,0,0,0.18)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.25)] flex items-center justify-center font-bold transition-all active:scale-95 hover:brightness-105 cursor-pointer select-none';
+      existingFab.style.cssText = 'bottom: calc(var(--nav-bar-height, 64px) + 16px); right: 16px; z-index: 50;';
+      if (appFrame && existingFab.parentElement !== appFrame) {
+        appFrame.appendChild(existingFab);
       }
-    });
+      return;
+    }
+
+    const btn = document.createElement('button');
+    btn.id = 'chat-fab';
+    btn.setAttribute('data-fab-alias', 'chatbot-fab-btn');
+    btn.type = 'button';
+    btn.onclick = toggleAIChatbotWindow;
+    btn.setAttribute('aria-label', 'Open AI Assistant');
+    btn.title = 'NorthStar AI Assistant';
+    btn.className = 'chatbot-fab chatbot-floating-fab w-12 h-12 rounded-full bg-[#FFE855] text-slate-950 border border-amber-400/40 shadow-[0_4px_12px_rgba(0,0,0,0.18)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.25)] flex items-center justify-center font-bold transition-all active:scale-95 hover:brightness-105 cursor-pointer select-none';
+    btn.style.cssText = 'bottom: calc(var(--nav-bar-height, 64px) + 16px); right: 16px; z-index: 50;';
+    btn.innerHTML = `
+      <span id="chatbot-fab-icon" class="material-symbols-outlined leading-none" style="font-size:22px;line-height:1;">smart_toy</span>
+    `;
+
+    const host = appFrame || document.body;
+    host.appendChild(btn);
   }
-  injectHeaderBtn();
+  mountGlobalFloatingFAB();
 
   // ── 2. Backdrop overlay ──
   if (!document.getElementById('chatbot-backdrop-overlay')) {
     const backdrop = document.createElement('div');
     backdrop.id = 'chatbot-backdrop-overlay';
     backdrop.className = 'fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-[90] chatbot-backdrop-hidden transition-opacity pointer-events-none';
-    backdrop.onclick = (e) => { e.stopPropagation(); toggleAIChatbotWindow(); };
+    backdrop.onclick = (e) => { e.stopPropagation(); closeAIChatbotWindow(); };
     document.body.appendChild(backdrop);
   }
 
-  // ── 3. Drawer panel (fixed, opens below the header) ──
+  // ── 3. Drawer panel (fixed, opens directly above the floating FAB) ──
   if (!document.getElementById('chatbot-window-drawer')) {
     const drawer = document.createElement('div');
     drawer.id = 'chatbot-window-drawer';
-    drawer.style.cssText = 'position: fixed; top: 72px; right: 16px; z-index: 9001;';
+    drawer.style.cssText = 'position: fixed; bottom: 156px; right: 16px; z-index: 9001;';
     drawer.className = 'hidden w-[330px] sm:w-[360px] bg-white rounded-[24px] shadow-2xl border border-slate-200/80 overflow-hidden flex-col pointer-events-auto';
+    drawer.onclick = (e) => e.stopPropagation();
     drawer.innerHTML = `
       <!-- Header -->
       <div class="bg-slate-900 text-white px-4 py-3 flex items-center justify-between select-none">
@@ -1659,7 +1818,7 @@ function initGlobalAIChatbot() {
             <span id="chatbot-role-tag" class="text-[10px] font-semibold text-amber-400">Ask anything • Instant help</span>
           </div>
         </div>
-        <button onclick="toggleAIChatbotWindow()" class="text-slate-400 hover:text-white transition-colors p-1 cursor-pointer" aria-label="Close chatbot">
+        <button id="chatbot-close-btn" type="button" onclick="closeAIChatbotWindow()" class="text-slate-400 hover:text-white transition-colors p-1 cursor-pointer" aria-label="Close chatbot">
           <span class="material-symbols-outlined text-lg">close</span>
         </button>
       </div>
@@ -1701,73 +1860,86 @@ function initGlobalAIChatbot() {
   }
 
   updateChatbotSuggestionChips();
-
-  // Document-level outside click handler
-  if (!window._chatbotOutsideClickListenerAttached) {
-    window._chatbotOutsideClickListenerAttached = true;
-    document.addEventListener('click', (e) => {
-      const drawer = document.getElementById('chatbot-window-drawer');
-      if (drawer && !drawer.classList.contains('hidden') && !drawer.classList.contains('chatbot-drawer-close')) {
-        if (e.target.closest('#chat-fab') || e.target.closest('#chatbot-window-drawer')) return;
-        toggleAIChatbotWindow();
-      }
-    });
-  }
 }
 
-function toggleAIChatbotWindow() {
+window.isChatOpen = false;
+
+function openAIChatbotWindow() {
   const drawer = document.getElementById('chatbot-window-drawer');
   const backdrop = document.getElementById('chatbot-backdrop-overlay');
   const fabBtn = document.getElementById('chat-fab') || document.getElementById('chatbot-fab-btn');
   const fabIcon = document.getElementById('chatbot-fab-icon');
   if (!drawer) return;
 
-  const isHidden = drawer.classList.contains('hidden');
+  window.isChatOpen = true;
 
+  // OPEN ANIMATION
+  drawer.classList.remove('hidden', 'chatbot-drawer-close');
+  drawer.classList.add('flex', 'chatbot-drawer-open');
+
+  if (fabBtn) fabBtn.classList.add('fab-active');
+  if (fabIcon) fabIcon.innerText = 'close';
+
+  if (backdrop) {
+    backdrop.classList.remove('chatbot-backdrop-hidden', 'pointer-events-none');
+    backdrop.classList.add('chatbot-backdrop-visible', 'pointer-events-auto');
+  }
+
+  // Track AI Companion milestone
+  localStorage.setItem('northstar_ai_used', 'true');
+  if (typeof updateMilestone === 'function') {
+    updateMilestone('aiCompanion', true);
+  }
+
+  updateChatbotSuggestionChips();
+  const input = document.getElementById('chatbot-input-field');
+  if (input) setTimeout(() => input.focus(), 150);
+}
+
+function closeAIChatbotWindow() {
+  const drawer = document.getElementById('chatbot-window-drawer');
+  const backdrop = document.getElementById('chatbot-backdrop-overlay');
+  const fabBtn = document.getElementById('chat-fab') || document.getElementById('chatbot-fab-btn');
+  const fabIcon = document.getElementById('chatbot-fab-icon');
+  if (!drawer) return;
+
+  window.isChatOpen = false;
+
+  // CLOSE ANIMATION
+  drawer.classList.remove('chatbot-drawer-open');
+  drawer.classList.add('chatbot-drawer-close');
+
+  if (fabBtn) fabBtn.classList.remove('fab-active');
+  if (fabIcon) fabIcon.innerText = 'smart_toy';
+
+  if (backdrop) {
+    backdrop.classList.remove('chatbot-backdrop-visible', 'pointer-events-auto');
+    backdrop.classList.add('chatbot-backdrop-hidden', 'pointer-events-none');
+  }
+
+  // Hide display after collapse animation finishes (~200ms)
+  setTimeout(() => {
+    if (drawer.classList.contains('chatbot-drawer-close')) {
+      drawer.classList.add('hidden');
+      drawer.classList.remove('flex', 'chatbot-drawer-close');
+    }
+  }, 200);
+}
+
+function toggleAIChatbotWindow() {
+  const drawer = document.getElementById('chatbot-window-drawer');
+  if (!drawer) return;
+  const isHidden = drawer.classList.contains('hidden') || !window.isChatOpen;
   if (isHidden) {
-    // OPEN ANIMATION
-    drawer.classList.remove('hidden', 'chatbot-drawer-close');
-    drawer.classList.add('flex', 'chatbot-drawer-open');
-
-    if (fabBtn) fabBtn.classList.add('fab-active');
-    if (fabIcon) fabIcon.innerText = 'close';
-
-    if (backdrop) {
-      backdrop.classList.remove('chatbot-backdrop-hidden');
-      backdrop.classList.add('chatbot-backdrop-visible');
-    }
-
-    // Track AI Companion milestone
-    localStorage.setItem('northstar_ai_used', 'true');
-    if (typeof updateMilestone === 'function') {
-      updateMilestone('aiCompanion', true);
-    }
-
-    updateChatbotSuggestionChips();
-    const input = document.getElementById('chatbot-input-field');
-    if (input) setTimeout(() => input.focus(), 150);
+    openAIChatbotWindow();
   } else {
-    // CLOSE ANIMATION
-    drawer.classList.remove('chatbot-drawer-open');
-    drawer.classList.add('chatbot-drawer-close');
-
-    if (fabBtn) fabBtn.classList.remove('fab-active');
-    if (fabIcon) fabIcon.innerText = 'smart_toy';
-
-    if (backdrop) {
-      backdrop.classList.remove('chatbot-backdrop-visible');
-      backdrop.classList.add('chatbot-backdrop-hidden');
-    }
-
-    // Hide display after collapse animation finishes (~200ms)
-    setTimeout(() => {
-      if (drawer.classList.contains('chatbot-drawer-close')) {
-        drawer.classList.add('hidden');
-        drawer.classList.remove('flex', 'chatbot-drawer-close');
-      }
-    }, 200);
+    closeAIChatbotWindow();
   }
 }
+window.openAIChatbotWindow = openAIChatbotWindow;
+window.closeAIChatbotWindow = closeAIChatbotWindow;
+window.openChatDrawer = openAIChatbotWindow;
+window.closeChatDrawer = closeAIChatbotWindow;
 
 function updateChatbotSuggestionChips() {
   const container = document.getElementById('chatbot-suggestion-chips');
@@ -1780,17 +1952,17 @@ function updateChatbotSuggestionChips() {
   if (isHelperRole) {
     if (roleTag) roleTag.innerText = 'Helper Assistant • Community Support';
     container.innerHTML = `
-      <button type="button" onclick="sendQuickChatMessage('How do I post a new job opportunity?')" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">💼 Post Job</button>
-      <button type="button" onclick="sendQuickChatMessage('How do food pickup claims work?')" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">📦 Food Pickups</button>
-      <button type="button" onclick="sendQuickChatMessage('How can I volunteer today?')" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">🤝 Volunteer</button>
+      <button type="button" onclick="event.stopPropagation(); sendQuickChatMessage('How do I post a new job opportunity?', event)" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">💼 Post Job</button>
+      <button type="button" onclick="event.stopPropagation(); sendQuickChatMessage('How do food pickup claims work?', event)" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">📦 Food Pickups</button>
+      <button type="button" onclick="event.stopPropagation(); sendQuickChatMessage('How can I volunteer today?', event)" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">🤝 Volunteer</button>
     `;
   } else {
     if (roleTag) roleTag.innerText = 'Seeker Navigator • Daily Resources';
     container.innerHTML = `
-      <button type="button" onclick="sendQuickChatMessage('Find the best job for me based on my resume.')" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">💼 Best Jobs for Me</button>
-      <button type="button" onclick="sendQuickChatMessage('Where can I find $20/hr cash gigs?')" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">💰 Cash Gigs</button>
-      <button type="button" onclick="sendQuickChatMessage('Where is the nearest shelter?')" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">🏠 Shelters</button>
-      <button type="button" onclick="sendQuickChatMessage('How do I make an AI resume?')" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">📄 AI Resume</button>
+      <button type="button" onclick="event.stopPropagation(); sendQuickChatMessage('Find the best job for me based on my resume.', event)" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">💼 Best Jobs for Me</button>
+      <button type="button" onclick="event.stopPropagation(); sendQuickChatMessage('Where can I find $20/hr cash gigs?', event)" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">💰 Cash Gigs</button>
+      <button type="button" onclick="event.stopPropagation(); sendQuickChatMessage('Where is the nearest shelter?', event)" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">🏠 Shelters</button>
+      <button type="button" onclick="event.stopPropagation(); sendQuickChatMessage('How do I make an AI resume?', event)" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">📄 AI Resume</button>
     `;
   }
 }
@@ -1798,11 +1970,19 @@ function updateChatbotSuggestionChips() {
 // Canonical in-memory history array for NorthStar AI chatbot
 window.northstarChatHistory = window.northstarChatHistory || [];
 
-function sendQuickChatMessage(msg) {
-  const input = document.getElementById('chatbot-input-field');
-  if (input) {
-    input.value = msg;
-    handleAIChatSubmit(new Event('submit'));
+function sendQuickChatMessage(msg, event) {
+  if (event && typeof event.stopPropagation === 'function') {
+    event.stopPropagation();
+  }
+  openAIChatbotWindow();
+  dispatchChatMessage(msg);
+}
+
+function appendChatMessage(msgObj) {
+  openAIChatbotWindow();
+  const text = typeof msgObj === 'string' ? msgObj : (msgObj && msgObj.text ? msgObj.text : '');
+  if (text) {
+    dispatchChatMessage(text);
   }
 }
 
@@ -2140,17 +2320,25 @@ function getNorthStarChatContext() {
 async function handleAIChatSubmit(e) {
   if (e) e.preventDefault();
   const input = document.getElementById('chatbot-input-field');
-  const messagesList = document.getElementById('chatbot-messages-list');
-  const sendBtn = document.getElementById('chatbot-send-btn');
-  if (!input || !messagesList) return;
-
-  // Prevent multiple simultaneous requests
-  if (window._chatPending) return;
+  if (!input) return;
 
   const text = input.value.trim();
   if (!text) return;
 
   input.value = '';
+  await dispatchChatMessage(text);
+}
+
+async function dispatchChatMessage(rawText) {
+  const text = String(rawText || '').trim();
+  if (!text) return;
+
+  const messagesList = document.getElementById('chatbot-messages-list');
+  const sendBtn = document.getElementById('chatbot-send-btn');
+  if (!messagesList) return;
+
+  // Prevent multiple simultaneous requests
+  if (window._chatPending) return;
 
   // 1. Capture the CURRENT history snapshot BEFORE adding the new user message
   const previousHistory = (window.northstarChatHistory || []).slice(-10);
@@ -2299,6 +2487,8 @@ async function handleAIChatSubmit(e) {
 window.initGlobalAIChatbot = initGlobalAIChatbot;
 window.toggleAIChatbotWindow = toggleAIChatbotWindow;
 window.sendQuickChatMessage = sendQuickChatMessage;
+window.appendChatMessage = appendChatMessage;
+window.dispatchChatMessage = dispatchChatMessage;
 window.handleAIChatSubmit = handleAIChatSubmit;
 
 // Auto-initialize Global Chatbot on DOM Ready
@@ -2346,4 +2536,134 @@ document.addEventListener('mousedown', function(e) {
     }
   }, 600); // Matches the 0.6s animation duration in CSS
 });
+
+// ============================================================
+// OFFLINE NETWORK STATUS TRACKING & FEATURE ACCESS CONTROL
+// Allowed Offline: Dashboard & Settings
+// Restricted Offline: AI Tools, Map Views, Jobs, Resume Builder
+// ============================================================
+(function initOfflineAccessControl() {
+  function isAllowedOfflineHref(href) {
+    if (!href) return true;
+    const lower = href.toLowerCase();
+    if (
+      lower.includes('seeker-dashboard') ||
+      lower.includes('helper-dashboard') ||
+      lower.includes('settings') ||
+      lower === '#' ||
+      lower.startsWith('javascript:')
+    ) {
+      return true;
+    }
+    return false;
+  }
+
+  function showOfflineModal() {
+    let modal = document.getElementById('ns-global-offline-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'ns-global-offline-modal';
+      modal.className = 'ns-offline-modal-backdrop';
+      modal.setAttribute('role', 'dialog');
+      modal.setAttribute('aria-modal', 'true');
+      modal.innerHTML = `
+        <div class="ns-offline-modal-card" onclick="event.stopPropagation()">
+          <button type="button" class="ns-offline-modal-close" aria-label="Close" onclick="document.getElementById('ns-global-offline-modal').style.display='none'">
+            <span class="material-symbols-outlined text-lg leading-none">close</span>
+          </button>
+          <div class="mx-auto mb-4 w-14 h-14 rounded-2xl flex items-center justify-center shadow-md" style="background-color: rgba(255, 184, 0, 0.15); border: 1px solid rgba(255, 184, 0, 0.4); color: #FFB800;">
+            <span class="material-symbols-outlined text-3xl leading-none">wifi_off</span>
+          </div>
+          <h3 class="text-lg font-extrabold text-white tracking-tight mb-2 font-heading">Connection Required</h3>
+          <p class="text-sm font-medium text-slate-200 leading-relaxed mb-6">
+            You are offline. Please connect to the internet to use this feature.
+          </p>
+          <button type="button" onclick="document.getElementById('ns-global-offline-modal').style.display='none'" class="w-full py-3 rounded-xl font-extrabold text-sm text-slate-950 transition-all active:scale-95 cursor-pointer shadow-md" style="background-color: #FFB800; box-shadow: 0 4px 16px rgba(255, 184, 0, 0.3);">
+            Stay on Current Screen
+          </button>
+        </div>
+      `;
+      modal.onclick = () => {
+        modal.style.display = 'none';
+      };
+      document.body.appendChild(modal);
+    }
+    modal.style.display = 'flex';
+  }
+
+  function syncInlineMapPlaceholder(isOnline) {
+    const mapCard = document.querySelector('.map-preview-card');
+    if (!mapCard) return;
+
+    let placeholder = mapCard.querySelector('.ns-offline-map-placeholder');
+    if (!isOnline) {
+      if (!placeholder) {
+        placeholder = document.createElement('div');
+        placeholder.className = 'ns-offline-map-placeholder';
+        placeholder.innerHTML = `
+          <div class="w-10 h-10 rounded-full flex items-center justify-center mb-2 shadow-sm" style="background-color: rgba(255, 184, 0, 0.15); border: 1px solid rgba(255, 184, 0, 0.35); color: #FFB800;">
+            <span class="material-symbols-outlined text-xl leading-none">wifi_off</span>
+          </div>
+          <span class="text-xs font-extrabold tracking-wide uppercase" style="color: #FFB800;">
+            Map is unavailable offline
+          </span>
+          <span class="text-[11px] text-slate-400 font-medium mt-0.5">
+            Reconnect to view live verified essentials
+          </span>
+        `;
+        mapCard.appendChild(placeholder);
+      }
+      placeholder.style.display = 'flex';
+    } else if (placeholder) {
+      placeholder.style.display = 'none';
+    }
+  }
+
+  function handleNetworkChange() {
+    const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+    syncInlineMapPlaceholder(isOnline);
+  }
+
+  // Intercept clicks on restricted links and AI tools when offline
+  document.addEventListener(
+    'click',
+    function (e) {
+      const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+      if (isOnline) return;
+
+      // Guard AI Assistant button / drawer trigger when offline
+      const aiTrigger = e.target.closest('#chat-fab, #chatbot-fab-btn, [data-fab-alias="chatbot-fab-btn"]');
+      if (aiTrigger) {
+        e.preventDefault();
+        e.stopPropagation();
+        showOfflineModal();
+        return;
+      }
+
+      // Guard restricted page navigation links when offline
+      const link = e.target.closest('a[href]');
+      if (link) {
+        const href = link.getAttribute('href');
+        if (!isAllowedOfflineHref(href)) {
+          e.preventDefault();
+          e.stopPropagation();
+          showOfflineModal();
+        }
+      }
+    },
+    true
+  );
+
+  window.addEventListener('online', handleNetworkChange);
+  window.addEventListener('offline', handleNetworkChange);
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', handleNetworkChange);
+  } else {
+    handleNetworkChange();
+  }
+
+  window.showOfflineModal = showOfflineModal;
+})();
+
 

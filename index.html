@@ -108,16 +108,12 @@
                     <h1 class="text-lg font-bold text-slate-900 font-heading tracking-tight">Northstar</h1>
                 </div>
                 <div class="header-actions-right flex items-center gap-2">
-                    <button id="chat-fab" data-fab-alias="chatbot-fab-btn" onclick="toggleAIChatbotWindow()" class="icon-btn w-8 h-8 rounded-[10px] bg-[#FFE855] text-slate-950 border border-amber-300 flex items-center justify-center font-bold transition-all active:scale-95 hover:brightness-105 cursor-pointer relative select-none flex-shrink-0" aria-label="Open AI Assistant" title="NorthStar AI Assistant">
-                        <span id="chatbot-fab-icon" class="material-symbols-outlined" style="font-size:18px;line-height:1;">smart_toy</span>
-                        <span class="absolute top-0.5 right-0.5 w-1.5 h-1.5 bg-emerald-500 border border-white rounded-full"></span>
+                    <button id="theme-toggle-btn" onclick="toggleTheme()" class="top-nav-btn icon-btn w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-amber-400 text-xs font-bold transition-all active:scale-95 cursor-pointer flex-shrink-0" title="Toggle Light / Dark Mode">
+                        <span class="material-symbols-outlined text-base leading-none">brightness_4</span>
                     </button>
-                    <button onclick="toggleTheme()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-amber-400 text-xs font-bold transition-all active:scale-95 cursor-pointer" title="Toggle Light / Dark Mode">
-                        <span class="material-symbols-outlined text-sm">brightness_4</span>
+                    <button id="profile-btn" type="button" onclick="openSettingsModal()" class="top-nav-btn profile-avatar-btn w-9 h-9 rounded-full bg-slate-900 text-[#facc15] dark:bg-[#facc15] dark:text-slate-950 border border-slate-300 dark:border-amber-300 flex items-center justify-center font-extrabold text-sm shadow-sm transition-all active:scale-95 cursor-pointer select-none flex-shrink-0" title="Settings">
+                        S
                     </button>
-                    <div onclick="openSettingsModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 text-xs font-bold cursor-pointer" title="Settings">
-                        👤
-                    </div>
                 </div>
             </header>
 
