@@ -53,7 +53,16 @@
       tabSelector: 'button[onclick*="openSettings"], button[onclick*="settings"], button[onclick*="Settings"]',
       image: 'images/Firefly%20(27).png',
       message: 'Settings lets you manage your profile, notifications, and account preferences anytime.',
-      nextLabel: "Got it! Let's Go"
+      nextLabel: "Next • AI Assistant",
+      isNavTab: true
+    },
+    {
+      label: 'AI Assistant',
+      tabSelector: '#chat-fab, [data-fab-alias="chatbot-fab-btn"]',
+      image: 'images/Firefly%20(28).png',
+      message: "Meet your NorthStar AI Assistant! Ask me anything — find resources, get support, or just say hi. I'm here 24/7 to help.",
+      nextLabel: "Got it! Let's Go",
+      isNavTab: false
     }
   ];
 
@@ -217,14 +226,21 @@
       el.classList.add('nate-tab-spotlight');
     }
 
-    // --- Helper: find a tab by a step's selector (searches bottomNav) ---
-    function findTab(selector) {
-      if (!bottomNav || !selector) return null;
-      // Try multiple comma-separated selectors
+    // --- Helper: find a tab by a step's selector ---
+    // Searches bottomNav first for nav tabs, then falls back to document-wide
+    function findTab(selector, isNavTab) {
       var parts = selector.split(',');
-      for (var i = 0; i < parts.length; i++) {
-        var el = bottomNav.querySelector(parts[i].trim());
-        if (el) return el;
+      // Try bottomNav first for nav items
+      if (isNavTab !== false && bottomNav) {
+        for (var i = 0; i < parts.length; i++) {
+          var el = bottomNav.querySelector(parts[i].trim());
+          if (el) return el;
+        }
+      }
+      // Fall back to document-wide search (for header buttons etc.)
+      for (var j = 0; j < parts.length; j++) {
+        var docEl = document.querySelector(parts[j].trim());
+        if (docEl) return docEl;
       }
       return null;
     }
@@ -262,7 +278,8 @@
     let activeTypeInterval = null;
 
     // --- Spotlight first tab ---
-    var firstTab = findTab(TOUR_STEPS[0].tabSelector) || (bottomNav && bottomNav.firstElementChild);
+    var firstStep = TOUR_STEPS[0];
+    var firstTab = findTab(firstStep.tabSelector, firstStep.isNavTab) || (bottomNav && bottomNav.firstElementChild);
     // Force deselect all first
     if (bottomNav) {
       bottomNav.querySelectorAll('a, button').forEach(forceTabDeselected);
@@ -338,7 +355,7 @@
         currentSpotlitTab.classList.remove('nate-tab-spotlight');
         forceTabDeselected(currentSpotlitTab);
       }
-      var newTab = findTab(step.tabSelector);
+      var newTab = findTab(step.tabSelector, step.isNavTab);
       if (newTab) {
         spotlightTab(newTab);
         currentSpotlitTab = newTab;
@@ -460,6 +477,9 @@
       '.nate-tab-spotlight{position:relative !important;z-index:9999 !important;box-shadow:0 0 0 3px #f59e0b,0 0 28px rgba(245,158,11,0.95) !important;border-radius:14px !important;background:#facc15 !important;color:#020617 !important;transform:scale(1.12) translateY(-6px) !important;transition:all .4s cubic-bezier(.34,1.56,.64,1);animation:ntePulseSpot 2s infinite ease-in-out}',
       '.nate-tab-spotlight *{color:#020617 !important}',
       '@keyframes ntePulseSpot{0%,100%{box-shadow:0 0 0 3px #f59e0b,0 0 24px rgba(245,158,11,.8)}50%{box-shadow:0 0 0 5px #fbbf24,0 0 36px rgba(245,158,11,1)}}',
+      '/* Upward arrow for header-positioned mascot */',
+      '.nte-pointing-wrapper--top .nte-arrow-pointer{border-top:none;border-bottom:14px solid #f59e0b;margin-bottom:0;margin-top:-10px;order:-1}',
+      '.nte-pointing-wrapper--top{flex-direction:column-reverse}',
 
       '#nate-tour-overlay{position:absolute;inset:0;z-index:9990;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:1.25rem;box-sizing:border-box;opacity:0;transition:opacity .5s ease;pointer-events:none}',
       '#nate-tour-overlay.nv{opacity:1}',
@@ -483,13 +503,17 @@
     document.head.appendChild(css);
   }
 
-  // Helper: dynamically position the pointing wrapper over the spotlit tab
+  // Helper: dynamically position the pointing wrapper over the spotlit tab or element
   function positionPointingWrapper() {
     const wrapper = document.getElementById('nate-tour-wrapper');
     const bottomNav = document.querySelector('.bottom-nav');
+    // Check bottom nav first, then document-wide
     let targetTab = null;
     if (bottomNav) {
       targetTab = bottomNav.querySelector('a.nate-tab-spotlight, button.nate-tab-spotlight');
+    }
+    if (!targetTab) {
+      targetTab = document.querySelector('.nate-tab-spotlight');
     }
 
     if (wrapper && targetTab) {
@@ -502,14 +526,33 @@
       const wrapperWidth = wrapper.offsetWidth || 135;
       wrapper.style.left = (tabCenter - (wrapperWidth / 2)) + 'px';
 
-      // Distance from the bottom of the frame to the top of the tab
-      const bottomDist = frameRect.bottom - tabRect.top;
-      wrapper.style.bottom = (bottomDist + 5) + 'px';
+      // Is this a bottom-nav tab or a top header element?
+      const isTopElement = tabRect.top < frameRect.top + (frameRect.height / 2);
 
-      // Speech bubble just above the mascot
-      const content = document.querySelector('.nte-content');
-      if (content) {
-        content.style.bottom = (bottomDist + 190) + 'px';
+      if (isTopElement) {
+        // For header elements: position mascot BELOW the target, arrow pointing UP
+        const topDist = tabRect.bottom - frameRect.top;
+        wrapper.style.bottom = 'auto';
+        wrapper.style.top = (topDist + 10) + 'px';
+        // Flip arrow to point up
+        wrapper.classList.add('nte-pointing-wrapper--top');
+        // Speech bubble below mascot
+        const content = document.querySelector('.nte-content');
+        if (content) {
+          content.style.bottom = 'auto';
+          content.style.top = (topDist + 185) + 'px';
+        }
+      } else {
+        // For bottom-nav tabs: position mascot above the tab, arrow pointing down
+        const bottomDist = frameRect.bottom - tabRect.top;
+        wrapper.style.top = 'auto';
+        wrapper.style.bottom = (bottomDist + 5) + 'px';
+        wrapper.classList.remove('nte-pointing-wrapper--top');
+        const content = document.querySelector('.nte-content');
+        if (content) {
+          content.style.top = 'auto';
+          content.style.bottom = (bottomDist + 190) + 'px';
+        }
       }
     }
   }
