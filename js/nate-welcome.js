@@ -392,20 +392,42 @@
           currentStepIndex = nextIndex;
           goToStep(currentStepIndex);
         } else {
-          // Tour complete — clean up and redirect to dashboard home
+          // Tour complete — trigger final bounce out with Firefly 29
           finishBtn.disabled = true;
-          dimOverlay.classList.remove('nv');
-          tourOverlay.classList.remove('nv');
-          tourOverlay.classList.add('nx');
-          window.removeEventListener('resize', positionPointingWrapper);
-
-          setTimeout(function () {
-            if (bottomNav) bottomNav.classList.remove('nate-nav-elevated');
-            if (currentSpotlitTab) currentSpotlitTab.classList.remove('nate-tab-spotlight');
-            dimOverlay.remove();
-            tourOverlay.remove();
-            window.location.href = 'seeker-dashboard.html';
-          }, 500);
+          
+          if (tourBubble) tourBubble.classList.remove('nbv');
+          if (pointingImg) pointingImg.style.opacity = '0';
+          
+          // Create final bounce element
+          let finalMascot = document.createElement('img');
+          finalMascot.src = 'images/Firefly%20(29).png';
+          finalMascot.className = 'nwchar-final-bounce';
+          phoneFrame.appendChild(finalMascot);
+          
+          // Animate in, wait, animate out, then redirect
+          setTimeout(function() {
+            finalMascot.classList.add('bounce-in');
+            
+            setTimeout(function() {
+              finalMascot.classList.replace('bounce-in', 'bounce-out');
+              
+              setTimeout(function () {
+                dimOverlay.classList.remove('nv');
+                tourOverlay.classList.remove('nv');
+                tourOverlay.classList.add('nx');
+                window.removeEventListener('resize', positionPointingWrapper);
+                
+                setTimeout(function () {
+                  if (bottomNav) bottomNav.classList.remove('nate-nav-elevated');
+                  if (currentSpotlitTab) currentSpotlitTab.classList.remove('nate-tab-spotlight');
+                  dimOverlay.remove();
+                  tourOverlay.remove();
+                  finalMascot.remove();
+                  window.location.href = 'seeker-dashboard.html';
+                }, 500);
+              }, 600); // Wait for bounce out
+            }, 1200); // Hang time
+          }, 300); // Wait for previous elements to hide
         }
       });
     }
@@ -480,6 +502,13 @@
       '/* Upward arrow for header-positioned mascot */',
       '.nte-pointing-wrapper--top .nte-arrow-pointer{border-top:none;border-bottom:14px solid #f59e0b;margin-bottom:0;margin-top:-10px;order:-1}',
       '.nte-pointing-wrapper--top{flex-direction:column-reverse}',
+
+      '/* Final Bounce Animation */',
+      '.nwchar-final-bounce{position:absolute;top:50%;left:50%;transform:translate(-50%, -50%) scale(0);width:220px;height:auto;object-fit:contain;filter:drop-shadow(0 15px 40px rgba(245,158,11,.6));z-index:9999;opacity:0}',
+      '.nwchar-final-bounce.bounce-in{animation:nteFinalBounceIn .8s cubic-bezier(.34,1.56,.64,1) forwards;opacity:1}',
+      '.nwchar-final-bounce.bounce-out{animation:nteFinalBounceOut .6s cubic-bezier(.6,-0.28,.735,.045) forwards}',
+      '@keyframes nteFinalBounceIn{0%{transform:translate(-50%, -50%) scale(0) translateY(50px);opacity:0}60%{transform:translate(-50%, -50%) scale(1.1) translateY(-10px);opacity:1}80%{transform:translate(-50%, -50%) scale(.95) translateY(5px);opacity:1}100%{transform:translate(-50%, -50%) scale(1) translateY(0);opacity:1}}',
+      '@keyframes nteFinalBounceOut{0%{transform:translate(-50%, -50%) scale(1) translateY(0);opacity:1}20%{transform:translate(-50%, -50%) scale(1.1) translateY(-15px);opacity:1}100%{transform:translate(-50%, -50%) scale(0) translateY(-100px);opacity:0}}',
 
       '#nate-tour-overlay{position:absolute;inset:0;z-index:9990;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:1.25rem;box-sizing:border-box;opacity:0;transition:opacity .5s ease;pointer-events:none}',
       '#nate-tour-overlay.nv{opacity:1}',
