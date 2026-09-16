@@ -139,6 +139,14 @@
 
     if (bottomNav) {
       bottomNav.classList.add('nate-nav-elevated');
+      // Strip native active states so only spotlight applies colors
+      const allTabs = bottomNav.querySelectorAll('a');
+      allTabs.forEach(tab => {
+        tab.classList.remove('bg-secondary-container', 'text-on-secondary-container', 'active-tab', 'bg-amber-400/15', 'text-amber-500', 'dark:text-amber-400', 'border', 'border-amber-400/30', 'shadow-[0_0_12px_rgba(245,158,11,0.2)]');
+        if (!tab.classList.contains('text-on-surface-variant')) {
+          tab.classList.add('text-on-surface-variant');
+        }
+      });
     }
     if (dashTab) {
       dashTab.classList.add('nate-tab-spotlight');
@@ -153,23 +161,27 @@
     tourOverlay.innerHTML =
       '<div class="nte-content">' +
         '<div class="nwbub nwbub-tour" id="nate-tour-bubble">' +
-          '<div class="nte-badge">Step 1 of 1 • Dashboard</div>' +
+          '<div class="nte-badge">Step 1 of 2 • Dashboard</div>' +
           '<div class="nwt-body">' +
             '<span class="nwt" id="nate-tour-text"></span>' +
             '<span class="nwcur" id="nate-tour-cursor">|</span>' +
           '</div>' +
           '<button class="nwbtn nwbtn-tour" id="nate-tour-finish">' +
-            'Got it! Explore Dashboard' +
-            '<span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-left:4px;">check_circle</span>' +
+            'Next • Progress' +
+            '<span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-left:4px;">arrow_forward</span>' +
           '</button>' +
         '</div>' +
-        '<div class="nte-pointing-wrapper">' +
-          '<img src="images/Firefly%20(24).png" alt="Nate pointing" class="nwchar nwchar-pointing" id="nate-pointing-img" />' +
-          '<div class="nte-arrow-pointer"></div>' +
-        '</div>' +
+      '</div>' +
+      '<div class="nte-pointing-wrapper" id="nate-tour-wrapper">' +
+        '<img src="images/Firefly%20(24).png" alt="Nate pointing" class="nwchar nwchar-pointing" id="nate-pointing-img" />' +
+        '<div class="nte-arrow-pointer"></div>' +
       '</div>';
 
     phoneFrame.appendChild(tourOverlay);
+    
+    // Dynamically position the mascot wrapper over the dashboard tab
+    positionPointingWrapper();
+    window.addEventListener('resize', positionPointingWrapper);
 
     // Animate in dim backdrop & tour overlay
     requestAnimationFrame(function () {
@@ -212,20 +224,74 @@
       }, 400);
     }, 800);
 
-    // Finish button event listener
+    // Finish button event listener (Multi-step logic)
+    let currentStep = 1;
     if (finishBtn) {
       finishBtn.addEventListener('click', function () {
-        finishBtn.disabled = true;
-        dimOverlay.classList.remove('nv');
-        tourOverlay.classList.remove('nv');
-        tourOverlay.classList.add('nx');
-        
-        setTimeout(function () {
-          if (bottomNav) bottomNav.classList.remove('nate-nav-elevated');
+        if (currentStep === 1) {
+          // Transition to Step 2: Progress
+          currentStep = 2;
+          
+          // Clear current text and hide button
+          tourTextEl.textContent = '';
+          if (tourCursor) tourCursor.classList.remove('nh');
+          finishBtn.classList.remove('nbvis');
+          
+          // Update Badge
+          const badgeEl = tourBubble.querySelector('.nte-badge');
+          if (badgeEl) badgeEl.textContent = 'Step 2 of 2 • Progress';
+          
+          // Change Button Text
+          finishBtn.innerHTML = 'Got it! Explore Progress' +
+            '<span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-left:4px;">arrow_forward</span>';
+            
+          // Shift Spotlight to Progress Tab
           if (dashTab) dashTab.classList.remove('nate-tab-spotlight');
-          dimOverlay.remove();
-          tourOverlay.remove();
-        }, 500);
+          
+          let progressTab = bottomNav ? bottomNav.querySelector('a[href*="progress"]') : null;
+          if (progressTab) {
+            progressTab.classList.add('nate-tab-spotlight');
+          }
+          
+          // Reposition Mascot over new tab
+          positionPointingWrapper();
+          
+          // Type new message
+          const msg2 = "The Progress tab tracks your journey! Check off milestones here to level up your NorthStar experience.";
+          let charIdx = 0;
+          const typeInterval2 = setInterval(function () {
+            if (charIdx < msg2.length) {
+              tourTextEl.textContent += msg2[charIdx];
+              charIdx++;
+            } else {
+              clearInterval(typeInterval2);
+              setTimeout(function () {
+                if (tourCursor) tourCursor.classList.add('nh');
+                finishBtn.classList.add('nbvis');
+                finishBtn.disabled = false;
+              }, 400);
+            }
+          }, 35);
+          
+        } else {
+          // Finish Step 2: Redirect to Progress Page
+          finishBtn.disabled = true;
+          dimOverlay.classList.remove('nv');
+          tourOverlay.classList.remove('nv');
+          tourOverlay.classList.add('nx');
+          window.removeEventListener('resize', positionPointingWrapper);
+          
+          setTimeout(function () {
+            if (bottomNav) bottomNav.classList.remove('nate-nav-elevated');
+            let progressTab = bottomNav ? bottomNav.querySelector('a[href*="progress"]') : null;
+            if (progressTab) progressTab.classList.remove('nate-tab-spotlight');
+            dimOverlay.remove();
+            tourOverlay.remove();
+            
+            // Redirect to Progress page
+            window.location.href = 'progress.html';
+          }, 500);
+        }
       });
     }
   };
@@ -291,29 +357,69 @@
       '.nate-dim-backdrop.nv{opacity:1}',
 
       '.nate-nav-elevated{z-index:9995 !important}',
-      '.nate-tab-spotlight{position:relative !important;z-index:9999 !important;box-shadow:0 0 0 3px #f59e0b, 0 0 28px rgba(245,158,11,0.95) !important;border-radius:14px !important;background:rgba(245,158,11,0.2) !important;transform:scale(1.12) translateY(-6px);transition:all .4s cubic-bezier(.34,1.56,.64,1);animation:ntePulseSpot 2s infinite ease-in-out}',
+      '.bottom-nav a:not(.nate-tab-spotlight){background:transparent !important; color:#94a3b8 !important; border-color:transparent !important; box-shadow:none !important}',
+      '.bottom-nav a:not(.nate-tab-spotlight) *{color:#94a3b8 !important}',
+      '.nate-tab-spotlight{position:relative !important;z-index:9999 !important;box-shadow:0 0 0 3px #f59e0b, 0 0 28px rgba(245,158,11,0.95) !important;border-radius:14px !important;background:#facc15 !important;color:#020617 !important;transform:scale(1.12) translateY(-6px);transition:all .4s cubic-bezier(.34,1.56,.64,1);animation:ntePulseSpot 2s infinite ease-in-out}',
+      '.nate-tab-spotlight *{color:#020617 !important}',
       '@keyframes ntePulseSpot{0%,100%{box-shadow:0 0 0 3px #f59e0b,0 0 24px rgba(245,158,11,.8)}50%{box-shadow:0 0 0 5px #fbbf24,0 0 36px rgba(245,158,11,1)}}',
 
-      '#nate-tour-overlay{position:absolute;inset:0;z-index:9990;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;padding:1.25rem;padding-bottom:70px;box-sizing:border-box;opacity:0;transition:opacity .5s ease;pointer-events:none}',
+      '#nate-tour-overlay{position:absolute;inset:0;z-index:9990;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:1.25rem;box-sizing:border-box;opacity:0;transition:opacity .5s ease;pointer-events:none}',
       '#nate-tour-overlay.nv{opacity:1}',
       '#nate-tour-overlay.nx{opacity:0}',
 
-      '.nte-content{width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center;pointer-events:auto}',
+      '.nte-content{position:absolute;bottom:260px;width:calc(100% - 2.5rem);max-width:340px;display:flex;flex-direction:column;align-items:center;pointer-events:auto}',
 
-      '.nte-pointing-wrapper{position:relative;display:flex;flex-direction:column;align-items:flex-start;margin-top:6px;margin-bottom:0;width:100%;padding-left:0;box-sizing:border-box}',
-      '.nwchar-pointing{width:135px;height:auto;object-fit:contain;filter:drop-shadow(0 10px 30px rgba(245,158,11,.4));opacity:0;margin-left:-18px;transform:translateY(20px) scale(.9);transition:all .5s cubic-bezier(.34,1.56,.64,1)}',
+      '.nte-pointing-wrapper{position:absolute;display:flex;flex-direction:column;align-items:center;width:135px;padding-left:0;box-sizing:border-box;pointer-events:none;z-index:9999}',
+      '.nwchar-pointing{width:135px;height:auto;object-fit:contain;filter:drop-shadow(0 10px 30px rgba(245,158,11,.4));opacity:0;transform:translateY(20px) scale(.9);transition:all .5s cubic-bezier(.34,1.56,.64,1);margin-bottom:-10px}',
       '.nwchar-pointing.nidle-bounce{opacity:1;animation:nteBounce 2.5s ease-in-out infinite}',
       '@keyframes nteBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}',
 
-      '.nte-arrow-pointer{width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-top:14px solid #f59e0b;margin-top:2px;margin-left:18px;filter:drop-shadow(0 4px 12px rgba(245,158,11,.8));animation:nteArrowPulse 1.2s infinite ease-in-out}',
-      '@keyframes nteArrowPulse{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(8px) scale(1.25)}}',
+      '.nte-arrow-pointer{width:0;height:0;border-left:10px solid transparent;border-right:10px solid transparent;border-top:14px solid #f59e0b;filter:drop-shadow(0 4px 12px rgba(245,158,11,.8));animation:nteArrowPulse 1.2s infinite ease-in-out}',
+      '@keyframes nteArrowPulse{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(6px) scale(1.1)}}',
 
       '.nwbub-tour{margin-top:0;width:100%;border-color:rgba(245,158,11,.4);background:rgba(15,23,42,.96);box-shadow:0 16px 40px rgba(0,0,0,.6);padding:18px 20px}',
       '.nwbtn-tour{margin-top:16px;width:100%;justify-content:center;padding:12px 20px;font-size:.9rem}',
 
-      '@media(max-width:380px){#nate-tour-overlay{padding-bottom:60px}.nwchar{width:140px}.nwchar-pointing{width:120px}.nwt{font-size:.92rem}.nwbub{padding:14px 16px}}'
+      '@media(max-width:380px){#nate-tour-overlay{padding-bottom:100px}.nwchar{width:140px}.nwchar-pointing{width:120px}.nte-pointing-wrapper{width:120px}.nwt{font-size:.92rem}.nwbub{padding:14px 16px}}'
     ].join('\n');
     document.head.appendChild(css);
+  }
+
+  // Helper to dynamically position the wrapper
+  function positionPointingWrapper() {
+    const wrapper = document.getElementById('nate-tour-wrapper');
+    const bottomNav = document.querySelector('.bottom-nav');
+    let targetTab = null;
+    if (bottomNav) {
+      targetTab = bottomNav.querySelector('a.nate-tab-spotlight') ||
+                  bottomNav.querySelector('a.active-tab') ||
+                  bottomNav.querySelector('a[href*="dashboard"]') ||
+                  bottomNav.firstElementChild;
+    }
+    
+    if (wrapper && targetTab) {
+      const tabRect = targetTab.getBoundingClientRect();
+      const phoneFrame = document.querySelector('.app-frame.phone-frame');
+      const frameRect = phoneFrame ? phoneFrame.getBoundingClientRect() : document.body.getBoundingClientRect();
+      
+      // Calculate tab center relative to the frame
+      const tabCenter = (tabRect.left - frameRect.left) + (tabRect.width / 2);
+      // Wrapper width is 135px (or 120px on small screens), so offset by half width
+      const wrapperWidth = wrapper.offsetWidth || 135;
+      wrapper.style.left = (tabCenter - (wrapperWidth / 2)) + 'px';
+      
+      // Distance from the bottom of the frame to the top of the tab
+      const bottomDist = frameRect.bottom - tabRect.top;
+      // Hover the arrow just above the tab (e.g., 5px gap)
+      wrapper.style.bottom = (bottomDist + 5) + 'px';
+      
+      // Position the speech bubble just above the mascot
+      const content = document.querySelector('.nte-content');
+      if (content) {
+        // Mascot image is ~140px tall + arrow is 14px + gap = ~160px
+        content.style.bottom = (bottomDist + 190) + 'px';
+      }
+    }
   }
 
 })();
