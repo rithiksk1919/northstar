@@ -1,19 +1,68 @@
 /**
  * Nate Welcome Screen & Dashboard Tour — NorthStar Onboarding Mascot
- * 
+ *
  * Step 1: Welcome Overlay after account creation (Firefly 22 mascot)
- * Step 2: Dashboard Feature Highlight (Firefly 23 pointing mascot, dimmed backdrop, taskbar spotlight)
+ * Step 2+: Feature tour — Dashboard, Progress, Jobs, Map, Resume, Settings
+ *          (Firefly 24 for Dashboard step, Firefly 27 for all others)
  */
 
 (function () {
   'use strict';
 
   // =========================================================================
+  // TOUR STEP DEFINITIONS
+  // =========================================================================
+  var TOUR_STEPS = [
+    {
+      label: 'Dashboard',
+      tabSelector: 'a[href*="dashboard"], a.active-tab',
+      image: 'images/Firefly%20(24).png',
+      message: 'This is your Dashboard! Here you can view active updates, track your progress, access quick services, and easily navigate around NorthStar.',
+      nextLabel: 'Next • Progress'
+    },
+    {
+      label: 'Progress',
+      tabSelector: 'a[href*="progress"]',
+      image: 'images/Firefly%20(27).png',
+      message: 'The Progress tab tracks your journey! Check off milestones here to level up your NorthStar experience.',
+      nextLabel: 'Next • Jobs'
+    },
+    {
+      label: 'Jobs',
+      tabSelector: 'a[href*="opportunit"]',
+      image: 'images/Firefly%20(27).png',
+      message: 'Browse Jobs to find vetted gig work and employment opportunities nearby. Apply directly from the app!',
+      nextLabel: 'Next • Map'
+    },
+    {
+      label: 'Map',
+      tabSelector: 'a[href*="resource-map"], a[href*="map"]',
+      image: 'images/Firefly%20(27).png',
+      message: 'The Map shows shelters, food banks, clinics, and services near you — all in one place.',
+      nextLabel: 'Next • Resume'
+    },
+    {
+      label: 'Resume',
+      tabSelector: 'a[href*="resume"]',
+      image: 'images/Firefly%20(27).png',
+      message: 'Build and export a professional resume with our guided Resume Builder. Employers are waiting for you!',
+      nextLabel: 'Next • Settings'
+    },
+    {
+      label: 'Settings',
+      tabSelector: 'button[onclick*="openSettings"], button[onclick*="settings"], button[onclick*="Settings"]',
+      image: 'images/Firefly%20(27).png',
+      message: 'Settings lets you manage your profile, notifications, and account preferences anytime.',
+      nextLabel: "Got it! Let's Go"
+    }
+  ];
+
+  // =========================================================================
   // STEP 1: WELCOME OVERLAY (inside phone frame)
   // =========================================================================
   window.showNateWelcome = function (redirectUrl) {
     const phoneFrame = document.querySelector('.app-frame.phone-frame') || document.body;
-    
+
     // Hide existing children inside phone frame
     const existingChildren = Array.from(phoneFrame.children);
     existingChildren.forEach(function (child) {
@@ -111,62 +160,76 @@
   };
 
   // =========================================================================
-  // STEP 2: DASHBOARD TOUR (Firefly 23 pointing mascot + spotlight)
+  // STEP 2+: FEATURE TOUR (multi-step, data-driven)
   // =========================================================================
   window.showNateDashboardTour = function () {
     const phoneFrame = document.querySelector('.app-frame.phone-frame') || document.body;
-    
-    // Inject CSS
     injectStyles();
 
-    // 1. Create Dim Backdrop inside container
+    // --- Dim Backdrop ---
     let dimOverlay = document.getElementById('nate-tour-dim');
     if (dimOverlay) dimOverlay.remove();
-
     dimOverlay = document.createElement('div');
     dimOverlay.id = 'nate-tour-dim';
     dimOverlay.className = 'nate-dim-backdrop';
     phoneFrame.appendChild(dimOverlay);
 
-    // 2. Find Dashboard Nav Target in Bottom Navigation Bar
+    // --- Elevate bottom nav ---
     const bottomNav = document.querySelector('.bottom-nav');
-    let dashTab = null;
-    if (bottomNav) {
-      dashTab = bottomNav.querySelector('a.active-tab') ||
-                bottomNav.querySelector('a[href*="dashboard"]') ||
-                bottomNav.firstElementChild;
-    }
-
     if (bottomNav) {
       bottomNav.classList.add('nate-nav-elevated');
-      // Strip native active states so only spotlight applies colors
-      const allTabs = bottomNav.querySelectorAll('a');
-      allTabs.forEach(tab => {
-        tab.classList.remove('bg-secondary-container', 'text-on-secondary-container', 'active-tab', 'bg-amber-400/15', 'text-amber-500', 'dark:text-amber-400', 'border', 'border-amber-400/30', 'shadow-[0_0_12px_rgba(245,158,11,0.2)]');
-        if (!tab.classList.contains('text-on-surface-variant')) {
-          tab.classList.add('text-on-surface-variant');
-        }
-      });
-    }
-    if (dashTab) {
-      dashTab.classList.add('nate-tab-spotlight');
-    }
-    
-    // Helper: force a tab to look fully deselected via inline styles
-    function forceTabDeselected(tab) {
-      tab.style.setProperty('background', 'transparent', 'important');
-      tab.style.setProperty('background-color', 'transparent', 'important');
-      tab.style.setProperty('border-color', 'transparent', 'important');
-      tab.style.setProperty('box-shadow', 'none', 'important');
-      tab.style.setProperty('color', '#94a3b8', 'important');
-      tab.style.setProperty('transform', 'none', 'important');
-      // Also force child text colors
-      tab.querySelectorAll('*').forEach(el => {
-        el.style.setProperty('color', '#94a3b8', 'important');
+      // Strip all native active styling from every tab
+      bottomNav.querySelectorAll('a, button').forEach(function (tab) {
+        tab.classList.remove(
+          'bg-secondary-container', 'text-on-secondary-container', 'active-tab',
+          'bg-amber-400/15', 'text-amber-500', 'dark:text-amber-400',
+          'border', 'border-amber-400/30', 'shadow-[0_0_12px_rgba(245,158,11,0.2)]'
+        );
       });
     }
 
-    // 3. Create Tour Step Overlay Container
+    // --- Helper: force a tab/button fully deselected ---
+    function forceTabDeselected(el) {
+      if (!el) return;
+      el.style.setProperty('background', 'transparent', 'important');
+      el.style.setProperty('background-color', 'transparent', 'important');
+      el.style.setProperty('border-color', 'transparent', 'important');
+      el.style.setProperty('box-shadow', 'none', 'important');
+      el.style.setProperty('color', '#94a3b8', 'important');
+      el.style.setProperty('transform', 'none', 'important');
+      el.querySelectorAll('*').forEach(function (child) {
+        child.style.setProperty('color', '#94a3b8', 'important');
+      });
+    }
+
+    // --- Helper: clear forced styles and spotlight an element ---
+    function spotlightTab(el) {
+      if (!el) return;
+      el.style.removeProperty('background');
+      el.style.removeProperty('background-color');
+      el.style.removeProperty('color');
+      el.style.removeProperty('border-color');
+      el.style.removeProperty('box-shadow');
+      el.style.removeProperty('transform');
+      el.querySelectorAll('*').forEach(function (child) {
+        child.style.removeProperty('color');
+      });
+      el.classList.add('nate-tab-spotlight');
+    }
+
+    // --- Helper: find a tab by a step's selector (searches bottomNav) ---
+    function findTab(selector) {
+      if (!bottomNav || !selector) return null;
+      // Try multiple comma-separated selectors
+      var parts = selector.split(',');
+      for (var i = 0; i < parts.length; i++) {
+        var el = bottomNav.querySelector(parts[i].trim());
+        if (el) return el;
+      }
+      return null;
+    }
+
+    // --- Build tour overlay ---
     let tourOverlay = document.getElementById('nate-tour-overlay');
     if (tourOverlay) tourOverlay.remove();
 
@@ -175,29 +238,42 @@
     tourOverlay.innerHTML =
       '<div class="nte-content">' +
         '<div class="nwbub nwbub-tour" id="nate-tour-bubble">' +
-          '<div class="nte-badge">Step 1 of 2 • Dashboard</div>' +
+          '<div class="nte-badge" id="nate-tour-badge">Step 1 of ' + TOUR_STEPS.length + ' • ' + TOUR_STEPS[0].label + '</div>' +
           '<div class="nwt-body">' +
             '<span class="nwt" id="nate-tour-text"></span>' +
             '<span class="nwcur" id="nate-tour-cursor">|</span>' +
           '</div>' +
           '<button class="nwbtn nwbtn-tour" id="nate-tour-finish">' +
-            'Next • Progress' +
+            TOUR_STEPS[0].nextLabel +
             '<span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-left:4px;">arrow_forward</span>' +
           '</button>' +
         '</div>' +
       '</div>' +
       '<div class="nte-pointing-wrapper" id="nate-tour-wrapper">' +
-        '<img src="images/Firefly%20(24).png" alt="Nate pointing" class="nwchar nwchar-pointing" id="nate-pointing-img" />' +
+        '<img src="' + TOUR_STEPS[0].image + '" alt="Nate pointing" class="nwchar nwchar-pointing" id="nate-pointing-img" />' +
         '<div class="nte-arrow-pointer"></div>' +
       '</div>';
 
     phoneFrame.appendChild(tourOverlay);
-    
-    // Dynamically position the mascot wrapper over the dashboard tab
+
+    // --- State ---
+    let currentStepIndex = 0;
+    let currentSpotlitTab = null;
+    let activeTypeInterval = null;
+
+    // --- Spotlight first tab ---
+    var firstTab = findTab(TOUR_STEPS[0].tabSelector) || (bottomNav && bottomNav.firstElementChild);
+    // Force deselect all first
+    if (bottomNav) {
+      bottomNav.querySelectorAll('a, button').forEach(forceTabDeselected);
+    }
+    spotlightTab(firstTab);
+    currentSpotlitTab = firstTab;
+
     positionPointingWrapper();
     window.addEventListener('resize', positionPointingWrapper);
 
-    // Animate in dim backdrop & tour overlay
+    // Animate in
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {
         dimOverlay.classList.add('nv');
@@ -210,9 +286,72 @@
     const tourTextEl = document.getElementById('nate-tour-text');
     const tourCursor = document.getElementById('nate-tour-cursor');
     const finishBtn = document.getElementById('nate-tour-finish');
+    const badgeEl = document.getElementById('nate-tour-badge');
 
-    const message = "This is your Dashboard! Here you can view active updates, track your progress, access quick services, and easily navigate around NorthStar.";
+    // --- Type a message ---
+    function typeMessage(msg, onDone) {
+      if (activeTypeInterval) clearInterval(activeTypeInterval);
+      tourTextEl.textContent = '';
+      if (tourCursor) tourCursor.classList.remove('nh');
+      finishBtn.classList.remove('nbvis');
+      finishBtn.disabled = true;
 
+      let idx = 0;
+      activeTypeInterval = setInterval(function () {
+        if (idx < msg.length) {
+          tourTextEl.textContent += msg[idx];
+          idx++;
+        } else {
+          clearInterval(activeTypeInterval);
+          activeTypeInterval = null;
+          setTimeout(function () {
+            if (tourCursor) tourCursor.classList.add('nh');
+            finishBtn.disabled = false;
+            finishBtn.classList.add('nbvis');
+            if (onDone) onDone();
+          }, 400);
+        }
+      }, 35);
+    }
+
+    // --- Transition to a given step index ---
+    function goToStep(stepIndex) {
+      const step = TOUR_STEPS[stepIndex];
+
+      // Update badge
+      if (badgeEl) {
+        badgeEl.textContent = 'Step ' + (stepIndex + 1) + ' of ' + TOUR_STEPS.length + ' • ' + step.label;
+      }
+
+      // Update mascot image
+      if (pointingImg) {
+        pointingImg.src = step.image;
+      }
+
+      // Update button label
+      finishBtn.innerHTML =
+        step.nextLabel +
+        '<span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-left:4px;">arrow_forward</span>';
+
+      // Deselect previous tab, spotlight new one
+      if (currentSpotlitTab) {
+        currentSpotlitTab.classList.remove('nate-tab-spotlight');
+        forceTabDeselected(currentSpotlitTab);
+      }
+      var newTab = findTab(step.tabSelector);
+      if (newTab) {
+        spotlightTab(newTab);
+        currentSpotlitTab = newTab;
+      }
+
+      // Reposition mascot
+      positionPointingWrapper();
+
+      // Type message
+      typeMessage(step.message);
+    }
+
+    // --- Initial animation then type step 1 ---
     setTimeout(function () {
       if (pointingImg) {
         pointingImg.style.opacity = '1';
@@ -222,99 +361,33 @@
       if (tourBubble) tourBubble.classList.add('nbv');
 
       setTimeout(function () {
-        let charIndex = 0;
-        const typeInterval = setInterval(function () {
-          if (charIndex < message.length) {
-            tourTextEl.textContent += message[charIndex];
-            charIndex++;
-          } else {
-            clearInterval(typeInterval);
-            setTimeout(function () {
-              if (tourCursor) tourCursor.classList.add('nh');
-              if (finishBtn) finishBtn.classList.add('nbvis');
-            }, 400);
-          }
-        }, 35);
+        typeMessage(TOUR_STEPS[0].message);
       }, 400);
     }, 800);
 
-    // Finish button event listener (Multi-step logic)
-    let currentStep = 1;
+    // --- Button click handler ---
     if (finishBtn) {
       finishBtn.addEventListener('click', function () {
-        if (currentStep === 1) {
-          // Transition to Step 2: Progress
-          currentStep = 2;
-          
-          // Clear current text and hide button
-          tourTextEl.textContent = '';
-          if (tourCursor) tourCursor.classList.remove('nh');
-          finishBtn.classList.remove('nbvis');
-          
-          // Update Badge
-          const badgeEl = tourBubble.querySelector('.nte-badge');
-          if (badgeEl) badgeEl.textContent = 'Step 2 of 2 • Progress';
-          
-          // Change Button Text
-          finishBtn.innerHTML = 'Got it! Explore Progress' +
-            '<span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-left:4px;">arrow_forward</span>';
-            
-          // Shift Spotlight to Progress Tab
-          if (dashTab) {
-            dashTab.classList.remove('nate-tab-spotlight');
-            forceTabDeselected(dashTab);
-          }
-          
-          let progressTab = bottomNav ? bottomNav.querySelector('a[href*="progress"]') : null;
-          if (progressTab) {
-            // Clear any deselected inline styles from progressTab before spotlighting
-            progressTab.style.removeProperty('background');
-            progressTab.style.removeProperty('background-color');
-            progressTab.style.removeProperty('color');
-            progressTab.style.removeProperty('border-color');
-            progressTab.style.removeProperty('box-shadow');
-            progressTab.style.removeProperty('transform');
-            progressTab.querySelectorAll('*').forEach(el => el.style.removeProperty('color'));
-            progressTab.classList.add('nate-tab-spotlight');
-          }
-          
-          // Reposition Mascot over new tab
-          positionPointingWrapper();
-          
-          // Type new message
-          const msg2 = "The Progress tab tracks your journey! Check off milestones here to level up your NorthStar experience.";
-          let charIdx = 0;
-          const typeInterval2 = setInterval(function () {
-            if (charIdx < msg2.length) {
-              tourTextEl.textContent += msg2[charIdx];
-              charIdx++;
-            } else {
-              clearInterval(typeInterval2);
-              setTimeout(function () {
-                if (tourCursor) tourCursor.classList.add('nh');
-                finishBtn.classList.add('nbvis');
-                finishBtn.disabled = false;
-              }, 400);
-            }
-          }, 35);
-          
+        const nextIndex = currentStepIndex + 1;
+
+        if (nextIndex < TOUR_STEPS.length) {
+          // Advance to next step
+          currentStepIndex = nextIndex;
+          goToStep(currentStepIndex);
         } else {
-          // Finish Step 2: Redirect to Progress Page
+          // Tour complete — clean up and redirect to dashboard home
           finishBtn.disabled = true;
           dimOverlay.classList.remove('nv');
           tourOverlay.classList.remove('nv');
           tourOverlay.classList.add('nx');
           window.removeEventListener('resize', positionPointingWrapper);
-          
+
           setTimeout(function () {
             if (bottomNav) bottomNav.classList.remove('nate-nav-elevated');
-            let progressTab = bottomNav ? bottomNav.querySelector('a[href*="progress"]') : null;
-            if (progressTab) progressTab.classList.remove('nate-tab-spotlight');
+            if (currentSpotlitTab) currentSpotlitTab.classList.remove('nate-tab-spotlight');
             dimOverlay.remove();
             tourOverlay.remove();
-            
-            // Redirect to Progress page
-            window.location.href = 'progress.html';
+            window.location.href = 'seeker-dashboard.html';
           }, 500);
         }
       });
@@ -377,14 +450,14 @@
       '.nwbtn:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 8px 32px rgba(245,158,11,.5)}',
       '.nwbtn:active{transform:translateY(0) scale(.98)}',
 
-      '/* Step 2 Tour Styles (NO BLUR) */',
+      '/* Feature Tour Styles */',
       '.nate-dim-backdrop{position:absolute;inset:0;background:rgba(8,12,22,.72);z-index:9980;opacity:0;transition:opacity .5s ease;pointer-events:all}',
       '.nate-dim-backdrop.nv{opacity:1}',
 
       '.nate-nav-elevated{z-index:9995 !important}',
-      '.bottom-nav a:not(.nate-tab-spotlight){background:transparent !important; background-color:transparent !important; color:#94a3b8 !important; border-color:transparent !important; box-shadow:none !important; transform:none !important}',
-      '.bottom-nav a:not(.nate-tab-spotlight) *{color:#94a3b8 !important}',
-      '.nate-tab-spotlight{position:relative !important;z-index:9999 !important;box-shadow:0 0 0 3px #f59e0b, 0 0 28px rgba(245,158,11,0.95) !important;border-radius:14px !important;background:#facc15 !important;color:#020617 !important;transform:scale(1.12) translateY(-6px);transition:all .4s cubic-bezier(.34,1.56,.64,1);animation:ntePulseSpot 2s infinite ease-in-out}',
+      '.bottom-nav a:not(.nate-tab-spotlight),.bottom-nav button:not(.nate-tab-spotlight){background:transparent !important;background-color:transparent !important;color:#94a3b8 !important;border-color:transparent !important;box-shadow:none !important;transform:none !important}',
+      '.bottom-nav a:not(.nate-tab-spotlight) *,.bottom-nav button:not(.nate-tab-spotlight) *{color:#94a3b8 !important}',
+      '.nate-tab-spotlight{position:relative !important;z-index:9999 !important;box-shadow:0 0 0 3px #f59e0b,0 0 28px rgba(245,158,11,0.95) !important;border-radius:14px !important;background:#facc15 !important;color:#020617 !important;transform:scale(1.12) translateY(-6px) !important;transition:all .4s cubic-bezier(.34,1.56,.64,1);animation:ntePulseSpot 2s infinite ease-in-out}',
       '.nate-tab-spotlight *{color:#020617 !important}',
       '@keyframes ntePulseSpot{0%,100%{box-shadow:0 0 0 3px #f59e0b,0 0 24px rgba(245,158,11,.8)}50%{box-shadow:0 0 0 5px #fbbf24,0 0 36px rgba(245,158,11,1)}}',
 
@@ -410,38 +483,32 @@
     document.head.appendChild(css);
   }
 
-  // Helper to dynamically position the wrapper
+  // Helper: dynamically position the pointing wrapper over the spotlit tab
   function positionPointingWrapper() {
     const wrapper = document.getElementById('nate-tour-wrapper');
     const bottomNav = document.querySelector('.bottom-nav');
     let targetTab = null;
     if (bottomNav) {
-      targetTab = bottomNav.querySelector('a.nate-tab-spotlight') ||
-                  bottomNav.querySelector('a.active-tab') ||
-                  bottomNav.querySelector('a[href*="dashboard"]') ||
-                  bottomNav.firstElementChild;
+      targetTab = bottomNav.querySelector('a.nate-tab-spotlight, button.nate-tab-spotlight');
     }
-    
+
     if (wrapper && targetTab) {
       const tabRect = targetTab.getBoundingClientRect();
       const phoneFrame = document.querySelector('.app-frame.phone-frame');
       const frameRect = phoneFrame ? phoneFrame.getBoundingClientRect() : document.body.getBoundingClientRect();
-      
-      // Calculate tab center relative to the frame
+
+      // Tab center relative to frame
       const tabCenter = (tabRect.left - frameRect.left) + (tabRect.width / 2);
-      // Wrapper width is 135px (or 120px on small screens), so offset by half width
       const wrapperWidth = wrapper.offsetWidth || 135;
       wrapper.style.left = (tabCenter - (wrapperWidth / 2)) + 'px';
-      
+
       // Distance from the bottom of the frame to the top of the tab
       const bottomDist = frameRect.bottom - tabRect.top;
-      // Hover the arrow just above the tab (e.g., 5px gap)
       wrapper.style.bottom = (bottomDist + 5) + 'px';
-      
-      // Position the speech bubble just above the mascot
+
+      // Speech bubble just above the mascot
       const content = document.querySelector('.nte-content');
       if (content) {
-        // Mascot image is ~140px tall + arrow is 14px + gap = ~160px
         content.style.bottom = (bottomDist + 190) + 'px';
       }
     }
