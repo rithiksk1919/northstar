@@ -23,14 +23,14 @@
     {
       label: 'Progress',
       tabSelector: 'a[href*="progress"]',
-      image: 'images/Firefly%20(27).png',
+      image: 'images/Firefly%20(24).png',
       message: 'The Progress tab tracks your journey! Check off milestones here to level up your NorthStar experience.',
       nextLabel: 'Next • Jobs'
     },
     {
       label: 'Jobs',
       tabSelector: 'a[href*="opportunit"]',
-      image: 'images/Firefly%20(27).png',
+      image: 'images/Firefly%20(24).png',
       message: 'Browse Jobs to find vetted gig work and employment opportunities nearby. Apply directly from the app!',
       nextLabel: 'Next • Map'
     },
