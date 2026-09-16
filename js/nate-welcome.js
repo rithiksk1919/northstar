@@ -151,6 +151,20 @@
     if (dashTab) {
       dashTab.classList.add('nate-tab-spotlight');
     }
+    
+    // Helper: force a tab to look fully deselected via inline styles
+    function forceTabDeselected(tab) {
+      tab.style.setProperty('background', 'transparent', 'important');
+      tab.style.setProperty('background-color', 'transparent', 'important');
+      tab.style.setProperty('border-color', 'transparent', 'important');
+      tab.style.setProperty('box-shadow', 'none', 'important');
+      tab.style.setProperty('color', '#94a3b8', 'important');
+      tab.style.setProperty('transform', 'none', 'important');
+      // Also force child text colors
+      tab.querySelectorAll('*').forEach(el => {
+        el.style.setProperty('color', '#94a3b8', 'important');
+      });
+    }
 
     // 3. Create Tour Step Overlay Container
     let tourOverlay = document.getElementById('nate-tour-overlay');
@@ -246,10 +260,21 @@
             '<span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-left:4px;">arrow_forward</span>';
             
           // Shift Spotlight to Progress Tab
-          if (dashTab) dashTab.classList.remove('nate-tab-spotlight');
+          if (dashTab) {
+            dashTab.classList.remove('nate-tab-spotlight');
+            forceTabDeselected(dashTab);
+          }
           
           let progressTab = bottomNav ? bottomNav.querySelector('a[href*="progress"]') : null;
           if (progressTab) {
+            // Clear any deselected inline styles from progressTab before spotlighting
+            progressTab.style.removeProperty('background');
+            progressTab.style.removeProperty('background-color');
+            progressTab.style.removeProperty('color');
+            progressTab.style.removeProperty('border-color');
+            progressTab.style.removeProperty('box-shadow');
+            progressTab.style.removeProperty('transform');
+            progressTab.querySelectorAll('*').forEach(el => el.style.removeProperty('color'));
             progressTab.classList.add('nate-tab-spotlight');
           }
           
@@ -357,7 +382,7 @@
       '.nate-dim-backdrop.nv{opacity:1}',
 
       '.nate-nav-elevated{z-index:9995 !important}',
-      '.bottom-nav a:not(.nate-tab-spotlight){background:transparent !important; color:#94a3b8 !important; border-color:transparent !important; box-shadow:none !important}',
+      '.bottom-nav a:not(.nate-tab-spotlight){background:transparent !important; background-color:transparent !important; color:#94a3b8 !important; border-color:transparent !important; box-shadow:none !important; transform:none !important}',
       '.bottom-nav a:not(.nate-tab-spotlight) *{color:#94a3b8 !important}',
       '.nate-tab-spotlight{position:relative !important;z-index:9999 !important;box-shadow:0 0 0 3px #f59e0b, 0 0 28px rgba(245,158,11,0.95) !important;border-radius:14px !important;background:#facc15 !important;color:#020617 !important;transform:scale(1.12) translateY(-6px);transition:all .4s cubic-bezier(.34,1.56,.64,1);animation:ntePulseSpot 2s infinite ease-in-out}',
       '.nate-tab-spotlight *{color:#020617 !important}',
