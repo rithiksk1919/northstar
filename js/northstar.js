@@ -91,13 +91,15 @@ function renderAccountHeaderAvatar() {
     const redundantBtns = container.querySelectorAll('.header-account-avatar');
     redundantBtns.forEach(btn => btn.remove());
 
-    const userName = (session && session.full_name)
+    const userName = (session && session.user_metadata && session.user_metadata.full_name)
+      || (session && session.full_name)
       || (session && session.username && session.username !== 'Guest' ? session.username : null)
+      || (session && session.email)
       || localStorage.getItem('northstar_full_name')
       || localStorage.getItem('northstar_username')
       || localStorage.getItem('northstar_user_name')
       || (session && session.role ? (session.role.charAt(0).toUpperCase() + session.role.slice(1)) : (localStorage.getItem('northstar_user_role') === 'volunteer' ? 'Volunteer' : 'Seeker'));
-    const initial = userName.charAt(0).toUpperCase();
+    const initial = (userName.charAt(0) || 'V').toUpperCase();
 
     // If explicit #profile-btn exists in markup, populate it dynamically with the user's first initial
     const profileBtn = container.querySelector('#profile-btn') || header.querySelector('#profile-btn');
@@ -301,7 +303,10 @@ const TAB_ROUTES = {
   progress: 'progress.html',
   jobs: 'opportunities.html',
   map: 'resource-map.html',
-  resume: 'resume-builder.html'
+  resume: 'resume-builder.html',
+  v_dashboard: 'helper-dashboard.html',
+  v_jobs: 'opportunities.html',
+  v_donate: 'donate.html'
 };
 
 function isMapActiveView(tabOverride) {
@@ -350,11 +355,14 @@ window.setActiveTab = function (tabId) {
   window.activeTab = cleanTab;
   syncChatbotFABVisibility(cleanTab);
 
+  const isVolunteer = (typeof getRole === 'function' ? getRole() : (localStorage.getItem('northstar_user_role') || 'seeker')) === 'volunteer';
   // Synchronize active/inactive tab classes on bottom navigation bar
   document.querySelectorAll('.bottom-nav [data-nav-tab], .bottom-nav a, .bottom-nav button').forEach(el => {
     const elTab = el.getAttribute('data-nav-tab') || (el.getAttribute('href') || '').replace('.html', '');
     const isMatch = elTab === cleanTab || (cleanTab === 'map' && (el.getAttribute('href') || '').includes('map'));
-    const activeClasses = 'nav-tab active active-tab mx-auto w-auto min-w-[48px] max-w-[58px] px-2 py-1 rounded-xl bg-[#FFB800] text-slate-950 font-extrabold shadow-sm flex flex-col items-center justify-center transition-all box-border';
+    const activeClasses = isVolunteer
+      ? 'nav-tab active active-tab w-full flex flex-col items-center justify-center py-1 px-0.5 text-amber-500 dark:text-[#FFB800] font-bold transition-all box-border'
+      : 'nav-tab active active-tab mx-auto w-auto min-w-[48px] max-w-[58px] px-2 py-1 rounded-xl bg-[#FFB800] text-slate-950 font-extrabold shadow-sm flex flex-col items-center justify-center transition-all box-border';
     const inactiveClasses = 'nav-tab nav-item-inactive w-full flex flex-col items-center justify-center py-1 px-0.5 text-slate-500 dark:text-[#A0AEC0] hover:text-slate-900 dark:hover:text-white font-medium transition-all box-border';
     el.className = isMatch ? activeClasses : inactiveClasses;
     const icon = el.querySelector('.material-symbols-outlined');
@@ -588,6 +596,7 @@ async function navigateToPageInstant(url, pushState = true) {
 
           renderBottomNav();
           renderProgressPage();
+          if (typeof renderVolunteerFoodDonationsQueue === 'function') renderVolunteerFoodDonationsQueue();
           if (typeof initGlobalAIChatbot === 'function') initGlobalAIChatbot();
           window.scrollTo(0, 0);
         } finally {
@@ -667,7 +676,8 @@ function setRole(role) {
     } catch (_) { }
   }
 
-  renderDynamicNav();
+  window.userRole = role;
+  renderBottomNav();
   renderRoleHeaderToggle();
   enforceFeatureGate();
   if (typeof window.updateLandingRoleCards === 'function') {
@@ -706,7 +716,7 @@ function enforceFeatureGate() {
 // Dynamic Navigation Engine based on Funnel Architecture
 function initRoleNavigation() {
   renderRoleHeaderToggle();
-  renderDynamicNav();
+  renderBottomNav();
   enforceFeatureGate();
 }
 
@@ -719,28 +729,33 @@ function renderRoleHeaderToggle() {
 }
 
 function switchUserRole(role) {
+  window.userRole = role;
+  window.activeTab = role === 'volunteer' ? 'v_dashboard' : 'dashboard';
   setRole(role);
+  renderBottomNav();
   showNotification(`Switched mode to: ${role === 'seeker' ? 'Seeker (I Need Help)' : 'Volunteer (I Want to Help)'}`, 'info');
 
   const currentPath = window.location.pathname.split('/').pop() || 'index.html';
-  if (role === 'seeker' && (currentPath === 'helper-dashboard.html' || currentPath === 'donate.html')) {
+  if (role === 'volunteer') {
+    if (currentPath !== 'helper-dashboard.html') {
+      if (typeof navigateToPageInstant === 'function') {
+        navigateToPageInstant('helper-dashboard.html');
+      } else {
+        window.location.href = 'helper-dashboard.html';
+      }
+    }
+  } else if (role === 'seeker' && (currentPath === 'helper-dashboard.html' || currentPath === 'donate.html')) {
     if (typeof navigateToPageInstant === 'function') {
       navigateToPageInstant('seeker-dashboard.html');
     } else {
       window.location.href = 'seeker-dashboard.html';
     }
-  } else if (role === 'volunteer' && (currentPath === 'seeker-dashboard.html' || currentPath === 'progress.html' || currentPath === 'resume-builder.html')) {
-    if (typeof navigateToPageInstant === 'function') {
-      navigateToPageInstant('helper-dashboard.html');
-    } else {
-      window.location.href = 'helper-dashboard.html';
-    }
   }
 }
 
 function renderDynamicNav() {
-  const nav = document.querySelector('nav');
-  if (!nav) return;
+  renderBottomNav();
+  return;
 
   nav.className = "absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-2 py-2 bg-white border-t border-slate-200 shadow-sm";
   nav.style.display = 'flex';
@@ -1566,7 +1581,7 @@ function renderProgressPage() {
 window.renderProgress = renderProgressPage;
 window.renderProgressPage = renderProgressPage;
 
-// 6-Tab Bottom Navigation Bar Renderer (Dashboard, Progress, Jobs, Map, Resume, Settings)
+// Dynamic Bottom Navigation Bar Renderer (Seeker 6-Grid vs Volunteer 4-Grid)
 function renderBottomNav() {
   const path = (window.location.pathname || '').toLowerCase();
   const isLanding = (path.endsWith('/index.html') || path.endsWith('/login.html') || path.endsWith('/signup.html') || path === '/');
@@ -1583,38 +1598,66 @@ function renderBottomNav() {
     appFrame.appendChild(nav);
   }
 
-  // Equidistant full-width 6-column grid (grid grid-cols-6 w-full px-2)
-  nav.className = 'bottom-nav nav-bar-wrapper nav-container nav-bar-container flex-shrink-0 relative w-full max-w-full box-border z-40 grid grid-cols-6 items-center justify-items-center px-2 py-1.5 bg-white dark:bg-[#12141C] shadow-[0px_-4px_25px_rgba(0,0,0,0.2)] border-t border-slate-200 dark:border-white/10';
+  const userRole = (typeof getRole === 'function' ? getRole() : (localStorage.getItem('northstar_user_role') || 'seeker'));
+  const isVolunteer = userRole === 'volunteer';
+
+  // Responsive 4-Grid (Volunteer) / 6-Grid (Seeker)
+  nav.className = `bottom-nav nav-bar-wrapper nav-container nav-bar-container flex-shrink-0 relative w-full max-w-full box-border z-40 grid ${isVolunteer ? 'grid-cols-4 volunteer-bottom-nav' : 'grid-cols-6'} items-center justify-items-center px-2 py-1.5 bg-white dark:bg-[#12141C] shadow-[0px_-4px_25px_rgba(0,0,0,0.2)] border-t border-slate-200 dark:border-white/10`;
+  if (isVolunteer) {
+    nav.style.setProperty('grid-template-columns', 'repeat(4, minmax(0, 1fr))', 'important');
+  } else {
+    nav.style.removeProperty('grid-template-columns');
+  }
 
   const isDashboard = path.includes('dashboard');
   const isProgress = path.includes('progress') || path.includes('profile');
   const isJobs = path.includes('opportunities') || path.includes('jobs');
   const isMap = path.includes('map');
   const isResume = path.includes('resume');
+  const isDonate = path.includes('donate');
 
-  const currentActiveTab = isMap ? 'map' : isProgress ? 'progress' : isJobs ? 'jobs' : isResume ? 'resume' : 'dashboard';
+  const currentActiveTab = isVolunteer
+    ? (isDonate ? 'v_donate' : isJobs ? 'v_jobs' : 'v_dashboard')
+    : (isMap ? 'map' : isProgress ? 'progress' : isJobs ? 'jobs' : isResume ? 'resume' : 'dashboard');
+
   window.activeTab = currentActiveTab;
   syncChatbotFABVisibility(currentActiveTab);
 
-  const tabs = [
-    { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', href: 'seeker-dashboard.html', active: isDashboard },
-    { id: 'progress', label: 'Progress', icon: 'trending_up', href: 'progress.html', active: isProgress },
-    { id: 'jobs', label: 'Jobs', icon: 'work', href: 'opportunities.html', active: isJobs },
-    { id: 'map', label: 'Map', icon: 'map', href: 'resource-map.html', active: isMap },
-    { id: 'resume', label: 'Resume', icon: 'description', href: 'resume-builder.html', active: isResume },
-    { id: 'settings', label: 'Settings', icon: 'settings', action: 'openSettingsModal()', active: false }
-  ];
+  const NAV_CONFIG = {
+    seeker: [
+      { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', href: 'seeker-dashboard.html', active: isDashboard },
+      { id: 'progress', label: 'Progress', icon: 'trending_up', href: 'progress.html', active: isProgress },
+      { id: 'jobs', label: 'Jobs', icon: 'work', href: 'opportunities.html', active: isJobs },
+      { id: 'map', label: 'Map', icon: 'map', href: 'resource-map.html', active: isMap },
+      { id: 'resume', label: 'Resume', icon: 'description', href: 'resume-builder.html', active: isResume },
+      { id: 'settings', label: 'Settings', icon: 'settings', action: 'openSettingsModal()', active: false }
+    ],
+    // Exact 4-tab Volunteer Navigation Bar matching Image 1
+    volunteer: [
+      { id: 'v_dashboard', label: 'Dashboard', icon: 'dashboard', href: 'helper-dashboard.html', active: isDashboard },
+      { id: 'v_jobs', label: 'Jobs', icon: 'work', href: 'opportunities.html', active: isJobs },
+      { id: 'v_donate', label: 'Donate Food', icon: 'restaurant', href: 'donate.html', active: isDonate },
+      { id: 'v_settings', label: 'Settings', icon: 'settings', action: 'openSettingsModal()', active: false }
+    ]
+  };
+
+  const tabs = NAV_CONFIG[userRole] || NAV_CONFIG.seeker;
 
   nav.innerHTML = tabs.map(tab => {
-    const activeClasses = 'nav-tab active active-tab mx-auto w-auto min-w-[48px] max-w-[58px] px-2.5 py-1 rounded-xl bg-[#FFB800] text-slate-950 font-extrabold shadow-sm flex flex-col items-center justify-center transition-all box-border';
-    const inactiveClasses = 'nav-tab nav-item-inactive w-full flex flex-col items-center justify-center py-1 px-0.5 text-slate-500 dark:text-[#A0AEC0] hover:text-slate-900 dark:hover:text-white font-medium transition-all box-border';
+    const activeClasses = isVolunteer
+      ? 'nav-tab active active-tab w-full flex flex-col items-center justify-center py-1 px-0.5 text-amber-500 dark:text-[#FFB800] font-bold transition-all box-border'
+      : 'nav-tab active active-tab mx-auto w-auto min-w-[48px] max-w-[58px] px-2.5 py-1 rounded-xl bg-[#FFB800] text-slate-950 font-extrabold shadow-sm flex flex-col items-center justify-center transition-all box-border';
+    const inactiveClasses = 'nav-tab nav-item-inactive w-full flex flex-col items-center justify-center py-1 px-0.5 text-slate-400 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium transition-all box-border';
     const iconFill = tab.active ? "font-variation-settings: 'FILL' 1;" : '';
+    const labelClass = isVolunteer
+      ? 'text-[10px] leading-none mt-0.5 tracking-tight whitespace-nowrap text-center'
+      : 'text-[9px] leading-none mt-1 tracking-tighter whitespace-nowrap text-center';
 
     if (tab.action) {
       return `
         <button type="button" onclick="${tab.action}" data-nav-tab="${tab.id}" class="${inactiveClasses}">
           <span class="material-symbols-outlined text-[20px] leading-none">${tab.icon}</span>
-          <span class="text-[9px] leading-none mt-1 tracking-tighter whitespace-nowrap text-center">${tab.label}</span>
+          <span class="${labelClass}">${tab.label}</span>
         </button>
       `;
     }
@@ -1622,12 +1665,89 @@ function renderBottomNav() {
     return `
       <a href="${tab.href}" onclick="event.preventDefault(); navigateTo('${tab.id}');" data-nav-tab="${tab.id}" class="${tab.active ? activeClasses : inactiveClasses}">
         <span class="material-symbols-outlined text-[20px] leading-none" style="${iconFill}">${tab.icon}</span>
-        <span class="text-[9px] leading-none mt-1 tracking-tighter whitespace-nowrap text-center">${tab.label}</span>
+        <span class="${labelClass}">${tab.label}</span>
       </a>
     `;
   }).join('');
 }
 window.renderBottomNav = renderBottomNav;
+
+async function renderVolunteerFoodDonationsQueue() {
+  const container = document.getElementById('dashboard-deliveries-queue');
+  const viewAllLink = document.getElementById('volunteer-view-all-pickups');
+  const totalDonationsEl = document.getElementById('volunteer-total-donations');
+
+  // Dynamically calculate monetary donations total (defaults to $0 when no donations exist)
+  if (totalDonationsEl) {
+    try {
+      const storedDonations = JSON.parse(localStorage.getItem('northstar_donations') || '[]');
+      const sum = Array.isArray(storedDonations)
+        ? storedDonations.reduce((acc, item) => acc + (Number(item?.amount) || 0), 0)
+        : 0;
+      totalDonationsEl.textContent = sum > 0 ? `$${sum.toLocaleString()}` : '$0';
+    } catch (_) {
+      totalDonationsEl.textContent = '$0';
+    }
+  }
+
+  if (!container) return;
+
+  const emptyStateHTML = `
+    <div class="py-5 px-4 rounded-2xl bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-800 text-center space-y-1.5">
+      <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto text-sm">
+        📦
+      </div>
+      <p class="text-xs font-bold text-slate-700 dark:text-slate-300">No active pickup requests</p>
+      <p class="text-[11px] text-slate-400">New food donation requests will appear here when posted.</p>
+    </div>
+  `;
+
+  try {
+    const res = await fetch('/api/deliveries');
+    if (!res.ok) {
+      if (viewAllLink) viewAllLink.classList.add('hidden');
+      container.innerHTML = emptyStateHTML;
+      return;
+    }
+    const data = await res.json();
+    const deliveries = (data.deliveries || []).filter(d => d.status !== 'claimed' && d.status !== 'delivered');
+
+    if (deliveries.length === 0) {
+      if (viewAllLink) viewAllLink.classList.add('hidden');
+      container.innerHTML = emptyStateHTML;
+      return;
+    }
+
+    if (viewAllLink) viewAllLink.classList.remove('hidden');
+
+    container.innerHTML = deliveries.slice(0, 5).map(d => {
+      const itemLabel = Array.isArray(d.items) ? d.items.join(', ') : (d.items || 'Food Donation');
+      const bagLabel = d.bags ? `${d.bags} ${Number(d.bags) === 1 ? 'Crate/Bag' : 'Crates/Bags'} of ${itemLabel}` : itemLabel;
+      return `
+        <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3 min-w-0 flex-1 pr-1">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-[#FFB800] shrink-0">
+              <span class="material-symbols-outlined text-xl">local_shipping</span>
+            </div>
+            <div class="min-w-0 flex-1">
+              <h4 class="text-xs font-extrabold text-slate-900 dark:text-white font-heading truncate">${itemLabel}</h4>
+              <p class="text-[11px] text-slate-600 dark:text-slate-300 font-medium truncate mt-0.5">${d.donorArea || 'Local Donor'} → ${d.destination || 'Community Shelter'}</p>
+              <p class="text-[10px] text-slate-400 truncate mt-0.5">${bagLabel} • Ready for Pickup</p>
+            </div>
+          </div>
+          <a href="opportunities.html" class="shrink-0 px-3.5 py-1.5 rounded-xl bg-[#FFB800] text-slate-950 text-xs font-bold shadow-sm hover:brightness-95 transition-all" style="background-color: #FFB800 !important; color: #020617 !important;">
+            Claim
+          </a>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    console.error('Error fetching dashboard deliveries:', err);
+    if (viewAllLink) viewAllLink.classList.add('hidden');
+    container.innerHTML = emptyStateHTML;
+  }
+}
+window.renderVolunteerFoodDonationsQueue = renderVolunteerFoodDonationsQueue;
 
 window.matchAndRenderJobs = async function (resumeData) {
   const container = document.getElementById('matched-jobs-container');

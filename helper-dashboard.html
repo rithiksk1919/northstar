@@ -99,75 +99,61 @@
             </button>
 
             <!-- Dynamic First-Initial Profile / Settings Avatar Button -->
-            <button id="profile-btn" class="top-nav-btn profile-avatar-btn w-9 h-9 rounded-full bg-slate-900 text-[#facc15] dark:bg-[#facc15] dark:text-slate-950 border border-slate-300 dark:border-amber-300 flex items-center justify-center font-extrabold text-sm shadow-sm transition-all active:scale-95 cursor-pointer select-none flex-shrink-0" aria-label="Settings & Profile" title="Open Settings" onclick="openSettingsModal()">
+            <button id="profile-btn" class="top-nav-btn profile-avatar-btn w-8 h-8 rounded-full bg-slate-900 dark:bg-slate-800 text-amber-400 font-bold flex items-center justify-center text-xs border border-amber-500/30 shadow-sm transition-all active:scale-95 cursor-pointer select-none flex-shrink-0" aria-label="Settings & Profile" title="Open Settings" onclick="openSettingsModal()">
                 V
             </button>
         </div>
     </header>
 
     <!-- Main Scrollable Canvas -->
-    <main class="dashboard-container dashboard-content main-content flex-grow px-5 pt-3 pb-28 flex flex-col gap-4 overflow-y-auto bg-[#F4F5F7]">
+    <main class="dashboard-container dashboard-content main-content volunteer-dashboard-main flex-grow px-5 pt-3 pb-20 flex flex-col gap-4 overflow-y-auto bg-[#F4F5F7]">
 
-        <!-- Greeting Header -->
-        <section class="space-y-1 pt-0.5 pb-0.5 stagger-1">
-            <span class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">DASHBOARD</span>
-            <h2 class="text-[1.85rem] leading-tight font-extrabold text-slate-900 font-heading tracking-tight">Hello, Volunteer</h2>
-            <p class="text-base font-semibold text-slate-600">Your contribution is guiding the way for 12 families this month.</p>
+        <!-- Hero Welcome Header -->
+        <section class="space-y-1 pt-1 stagger-1">
+            <h2 id="dashboard-greeting-title" class="text-[2rem] font-extrabold tracking-tight text-slate-900 font-heading leading-tight">Hello, <span class="text-amber-500">Volunteer</span></h2>
+            <p class="text-xs font-medium text-slate-500 dark:text-slate-400">Thank you for making a difference in our community today.</p>
         </section>
 
-        <!-- 2 Stat Cards Side-by-Side -->
-        <div class="grid grid-cols-2 gap-3 stagger-2">
-            <div class="bg-white border border-slate-200 text-slate-900 p-4 rounded-2xl shadow-sm space-y-2 spring-bounce-hover">
-                <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-900">
-                    <span class="material-symbols-outlined text-lg">pie_chart</span>
-                </div>
-                <div>
-                    <p class="text-xs text-slate-600 font-semibold">Impact Stats</p>
-                    <p class="text-[1.75rem] font-extrabold text-slate-900 font-heading tracking-tight mt-0.5">84%</p>
-                </div>
-                <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden border border-slate-200/80">
-                    <div class="bg-[#FFE855] h-full rounded-full w-[84%] animated-progress-bar"></div>
-                </div>
+        <!-- Dynamic Live Donations Card (Standardized w-10 h-10 rounded-xl Icon) -->
+        <div class="w-full bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-slate-900 p-4 rounded-2xl shadow-sm flex items-center justify-between stagger-2 spring-bounce-hover">
+            <div>
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">DONATIONS</p>
+                <p id="volunteer-total-donations" class="text-2xl font-extrabold text-slate-900 dark:text-slate-100 font-heading tracking-tight mt-0.5">$0</p>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Directly supporting meals, shelter &amp; transport</p>
             </div>
-
-            <div class="bg-white border border-slate-200 text-slate-900 p-4 rounded-2xl shadow-sm space-y-2 spring-bounce-hover">
-                <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-900">
-                    <span class="material-symbols-outlined text-lg">handshake</span>
-                </div>
-                <div>
-                    <div class="flex justify-between items-center">
-                        <p class="text-xs text-slate-600 font-semibold">Donations</p>
-                    </div>
-                    <div class="flex items-baseline gap-1.5 mt-0.5">
-                        <p class="text-[1.75rem] font-extrabold text-slate-900 font-heading tracking-tight">$2.4k</p>
-                        <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-200">+12% total</span>
-                    </div>
-                </div>
+            <div class="w-10 h-10 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center text-lg shrink-0">
+                🤝
             </div>
         </div>
 
-        <!-- Action Triggers -->
-        <div class="space-y-2.5 stagger-3">
-            <a href="opportunities.html" class="w-full py-4 px-4 bg-slate-950 hover:bg-slate-900 text-white font-extrabold rounded-2xl flex items-center justify-between shadow-md active:scale-[0.98] transition-all text-sm spring-bounce-hover">
-                <div class="flex items-center gap-2.5">
-                    <span class="material-symbols-outlined text-lg text-white">add_circle</span>
-                    <span>Post a Job Opportunity</span>
+        <!-- 2-Column Action Cards with Standardized w-10 h-10 rounded-xl Icon Containers -->
+        <div class="grid grid-cols-2 gap-3 stagger-3">
+            <!-- Post a Job Button -->
+            <a id="volunteer-post-job-card" href="opportunities.html" class="flex flex-col justify-between p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-all text-left h-32 group active:scale-[0.98] spring-bounce-hover">
+                <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 flex items-center justify-center font-bold text-base">
+                    +
                 </div>
-                <span class="material-symbols-outlined text-base text-slate-400">chevron_right</span>
+                <div>
+                    <p class="text-xs font-bold leading-tight text-slate-900 dark:text-slate-100">Post a Job</p>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Create new listing</p>
+                </div>
             </a>
 
-            <a href="donate.html" class="w-full py-4 px-4 bg-white hover:bg-slate-50 text-slate-900 border border-slate-300 font-extrabold rounded-2xl flex items-center justify-between shadow-md active:scale-[0.98] transition-all text-sm spring-bounce-hover">
-                <div class="flex items-center gap-2.5">
-                    <span class="material-symbols-outlined text-lg text-slate-700">credit_card</span>
-                    <span>Donate</span>
+            <!-- Donate Button (Dark Mode Icon Contrast Fix: bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400) -->
+            <a id="volunteer-donate-card" href="donate.html" class="flex flex-col justify-between p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-all text-left h-32 group active:scale-[0.98] spring-bounce-hover">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-base">
+                    💳
                 </div>
-                <span class="material-symbols-outlined text-base text-slate-400">chevron_right</span>
+                <div>
+                    <p class="text-xs font-bold leading-tight text-slate-900 dark:text-slate-100">Donate</p>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Support local causes</p>
+                </div>
             </a>
         </div>
 
-        <!-- Active Delivery Status Card (Injected dynamically) -->
+        <!-- Active Delivery Status Card (Injected dynamically when a pickup is in progress) -->
         <div id="volunteer-active-delivery-container" class="hidden pt-1 space-y-2">
-            <h3 class="text-[1.15rem] font-extrabold text-slate-900 font-heading">Active Job Status</h3>
+            <h3 class="text-[1.15rem] font-extrabold text-slate-900 font-heading">Active Transport Route</h3>
             <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 shadow-sm relative overflow-hidden">
                 <div class="absolute right-0 top-0 w-32 h-32 bg-emerald-100 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
                 <div class="relative z-10 space-y-3">
@@ -188,107 +174,49 @@
             </div>
         </div>
 
-        <!-- Smart Insights / AI Match Suggestions Card -->
-        <section class="space-y-2 pt-1">
-            <div class="flex justify-between items-center">
-                <h3 class="text-[1.15rem] font-extrabold text-slate-900 font-heading">Smart Insights</h3>
-                <a href="#" class="text-xs text-slate-600 hover:text-slate-900 font-semibold">See all</a>
-            </div>
-
-            <div class="bg-gradient-to-b from-[#1C2538] to-[#0D1424] text-white rounded-2xl p-4 border border-slate-800 shadow-md space-y-3">
-                <div class="flex items-center gap-1.5 text-[10px] font-bold text-[#FFE855] uppercase tracking-wider">
-                    <span class="material-symbols-outlined text-xs">auto_awesome</span> AI MATCH SUGGESTIONS
-                </div>
-                <p class="text-sm text-slate-200 font-medium leading-snug">
-                    3 candidates match your 'Community Lead' posting perfectly.
-                </p>
-                <button onclick="window.location.href='opportunities.html'" class="px-4 py-2 bg-[#FFE855] hover:bg-amber-300 text-slate-950 font-bold text-xs rounded-xl shadow-sm active:scale-95 transition-all">
-                    View Resumes
-                </button>
-            </div>
-        </section>
-
-        <!-- Volunteer Food Pickups Queue Section -->
-        <section class="space-y-2 pt-1">
+        <!-- Food Pickups & Drop-offs (Dynamically Sourced from User-Submitted Food Donations) -->
+        <section class="space-y-3 pt-1">
             <div class="flex justify-between items-center">
                 <h3 class="text-[1.15rem] font-extrabold text-slate-900 font-heading flex items-center gap-2">
-                    <span class="material-symbols-outlined text-amber-500 text-xl">local_shipping</span> Food Pickups Needing Drivers
+                    <span role="img" aria-label="Truck" class="text-lg">🚚</span>
+                    <span>Food Pickups &amp; Drop-offs</span>
                 </h3>
-                <a href="opportunities.html" class="text-xs text-amber-600 font-bold hover:underline">View All</a>
+                <!-- Conditionally hidden when no pickup posts exist -->
+                <a id="volunteer-view-all-pickups" href="opportunities.html" class="hidden text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline">View All</a>
             </div>
 
-            <div id="dashboard-deliveries-queue" class="space-y-2.5">
-                <!-- Dynamically populated via JS -->
+            <!-- Unified Dynamic User Food Donations Queue (Proportional Empty State Box with 📦 Icon) -->
+            <div id="dashboard-deliveries-queue" class="space-y-3">
+                <div class="py-5 px-4 rounded-2xl bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-800 text-center space-y-1.5">
+                    <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto text-sm">
+                        📦
+                    </div>
+                    <p class="text-xs font-bold text-slate-700 dark:text-slate-300">No active pickup requests</p>
+                    <p class="text-[11px] text-slate-400">New food donation requests will appear here when posted.</p>
+                </div>
             </div>
         </section>
-
-        <!-- Active Job Postings List -->
-        <section class="space-y-2 pt-1">
-            <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700">
-                        <span class="material-symbols-outlined text-lg">work</span>
-                    </div>
-                    <div>
-                        <h4 class="text-xs font-bold text-slate-900 font-heading">Food Logistics Manager</h4>
-                        <p class="text-[11px] text-slate-500">42 Active Job Postings</p>
-                    </div>
-                </div>
-                <button class="text-slate-400 hover:text-slate-700 p-1">
-                    <span class="material-symbols-outlined text-base">more_vert</span>
-                </button>
-            </div>
-
-            <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-9 h-9 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700">
-                        <span class="material-symbols-outlined text-lg">shield</span>
-                    </div>
-                    <div>
-                        <h4 class="text-xs font-bold text-slate-900 font-heading">Volunteer Nurse</h4>
-                        <p class="text-[11px] text-slate-500">12 Active Job Postings</p>
-                    </div>
-                </div>
-                <button class="text-slate-400 hover:text-slate-700 p-1">
-                    <span class="material-symbols-outlined text-base">more_vert</span>
-                </button>
-            </div>
-        </section>
-
-        <!-- OFFLINE RESOURCES BANNER -->
-        <div id="download-banner" class="offline-banner offline-download-banner p-4 rounded-[20px] flex items-center justify-between shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
-            <div class="flex items-center gap-2.5">
-                <span class="material-symbols-outlined text-xl text-[#EAB308] dark:text-[#FACC15]">wifi_off</span>
-                <span class="offline-banner-label text-xs font-bold leading-tight">Download resources for offline use</span>
-            </div>
-            <button id="download-offline-btn" class="download-default px-4 py-2.5 min-h-[40px] min-w-[110px] rounded-[10px] text-[13px] font-bold whitespace-nowrap active:scale-95 transition-all shadow-sm inline-flex items-center justify-center cursor-pointer flex-shrink-0" style="background: #facc15 !important; color: #000000 !important; font-weight: 700 !important;">
-                Download
-            </button>
-        </div>
-
-        <!-- Offline Directory List Component (Hidden per UI cleanup rule) -->
-        <div id="offline-directory-container" class="hidden" style="display: none !important;"></div>
 
     </main>
 
-    <!-- Floating Dock Bottom Navigation Bar (4 Core Tabs) -->
-    <nav class="bottom-nav absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-3 py-2 bg-[#12141C]/95 backdrop-blur-xl shadow-[0px_-4px_25px_rgba(0,0,0,0.5)] border-t border-white/10" style="justify-content: space-around !important;">
-        <a class="bottom-nav-tab active-tab flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center rounded-[14px] px-2 py-1 transition-colors" href="helper-dashboard.html">
-            <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">dashboard</span>
-            <span class="text-[10px] font-extrabold mt-0.5">Dashboard</span>
+    <!-- Exact 4-Tab Volunteer Bottom Navigation Bar (Filled Active Icon, No Background Block) -->
+    <nav class="bottom-nav volunteer-bottom-nav absolute bottom-0 left-0 w-full z-40 grid grid-cols-4 items-center justify-items-center px-2 py-1.5 bg-white dark:bg-[#12141C] shadow-[0px_-4px_25px_rgba(0,0,0,0.2)] border-t border-slate-200 dark:border-white/10" style="grid-template-columns: repeat(4, minmax(0, 1fr)) !important;">
+        <a href="helper-dashboard.html" data-nav-tab="v_dashboard" class="nav-tab active active-tab w-full flex flex-col items-center justify-center py-1 px-0.5 text-amber-500 dark:text-[#FFB800] font-bold transition-all box-border">
+            <span class="material-symbols-outlined text-[20px] leading-none" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+            <span class="text-[10px] leading-none mt-0.5 tracking-tight whitespace-nowrap text-center font-bold">Dashboard</span>
         </a>
-        <a class="bottom-nav-tab flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center text-slate-400 hover:text-white px-2 py-1 transition-colors" href="opportunities.html">
-            <span class="material-symbols-outlined text-xl">work</span>
-            <span class="text-[10px] font-medium mt-0.5">Opportunities</span>
+        <a href="opportunities.html" data-nav-tab="v_jobs" class="nav-tab nav-item-inactive w-full flex flex-col items-center justify-center py-1 px-0.5 text-slate-400 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium transition-all box-border">
+            <span class="material-symbols-outlined text-[20px] leading-none">work</span>
+            <span class="text-[10px] leading-none mt-0.5 tracking-tight whitespace-nowrap text-center">Jobs</span>
         </a>
-        <a class="bottom-nav-tab flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center text-slate-400 hover:text-white px-2 py-1 transition-colors" href="donate.html">
-            <span class="material-symbols-outlined text-xl">volunteer_activism</span>
-            <span class="text-[10px] font-medium mt-0.5">Donate</span>
+        <a href="donate.html" data-nav-tab="v_donate" class="nav-tab nav-item-inactive w-full flex flex-col items-center justify-center py-1 px-0.5 text-slate-400 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium transition-all box-border">
+            <span class="material-symbols-outlined text-[20px] leading-none">restaurant</span>
+            <span class="text-[10px] leading-none mt-0.5 tracking-tight whitespace-nowrap text-center">Donate Food</span>
         </a>
-        <a class="bottom-nav-tab flex-1 min-h-[48px] min-w-[48px] flex flex-col items-center justify-center text-slate-400 hover:text-white px-2 py-1 transition-colors" href="map.html">
-            <span class="material-symbols-outlined text-xl">map</span>
-            <span class="text-[10px] font-medium mt-0.5">Map</span>
-        </a>
+        <button type="button" onclick="openSettingsModal()" data-nav-tab="v_settings" class="nav-tab nav-item-inactive w-full flex flex-col items-center justify-center py-1 px-0.5 text-slate-400 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium transition-all box-border">
+            <span class="material-symbols-outlined text-[20px] leading-none">settings</span>
+            <span class="text-[10px] leading-none mt-0.5 tracking-tight whitespace-nowrap text-center">Settings</span>
+        </button>
     </nav>
 
 </div>
@@ -318,7 +246,7 @@ window.initVolunteerActiveDelivery = async function() {
 
             window._openLastDeliveryTracker = () => {
                 if (typeof openUberTrackingModal === 'function') {
-                    openUberTrackingModal(deliveryId);
+                    openUberTrackingModal(activeJob.id);
                 }
             };
         }
@@ -331,37 +259,55 @@ document.addEventListener('DOMContentLoaded', () => { setTimeout(initVolunteerAc
 <script src="js/northstar.js"></script>
 <script src="js/jobs.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', async () => {
+window.renderVolunteerFoodDonationsQueue = async function () {
   const container = document.getElementById('dashboard-deliveries-queue');
   if (!container) return;
+
+  const emptyStateHTML = `
+    <div class="p-6 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/40 text-center space-y-1">
+      <p class="text-xs font-bold text-slate-700 dark:text-slate-200">No active pickup requests</p>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400">New food donation requests will appear here when posted.</p>
+    </div>
+  `;
 
   try {
     const res = await fetch('/api/deliveries');
     const data = await res.json();
-    const deliveries = (data.deliveries || []).filter(d => d.status !== 'claimed');
+    const deliveries = (data.deliveries || []).filter(d => d.status !== 'claimed' && d.status !== 'delivered');
 
     if (deliveries.length === 0) {
-      container.innerHTML = `<div class="bg-white border border-slate-200 rounded-xl p-3 text-center text-xs text-slate-500">All food pickup requests claimed!</div>`;
+      container.innerHTML = emptyStateHTML;
       return;
     }
 
-    container.innerHTML = deliveries.slice(0, 3).map(d => `
-      <div class="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm space-y-2">
-        <div class="flex justify-between items-start">
-          <div>
-            <h4 class="text-xs font-bold text-slate-900 font-heading">${Array.isArray(d.items) ? d.items.join(', ') : d.items}</h4>
-            <p class="text-[11px] text-slate-500">Pickup: <strong>${d.donorArea}</strong> → ${d.destination}</p>
+    container.innerHTML = deliveries.slice(0, 5).map(d => {
+      const itemLabel = Array.isArray(d.items) ? d.items.join(', ') : (d.items || 'Food Donation');
+      const bagLabel = d.bags ? `${d.bags} ${Number(d.bags) === 1 ? 'Crate/Bag' : 'Crates/Bags'} of ${itemLabel}` : itemLabel;
+      return `
+        <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3 min-w-0 flex-1 pr-1">
+            <div class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-[#FFB800] shrink-0">
+              <span class="material-symbols-outlined text-xl">local_shipping</span>
+            </div>
+            <div class="min-w-0 flex-1">
+              <h4 class="text-xs font-extrabold text-slate-900 dark:text-white font-heading truncate">${itemLabel}</h4>
+              <p class="text-[11px] text-slate-600 dark:text-slate-300 font-medium truncate mt-0.5">${d.donorArea || 'Local Donor'} → ${d.destination || 'Community Shelter'}</p>
+              <p class="text-[10px] text-slate-400 truncate mt-0.5">${bagLabel} • Ready for Pickup</p>
+            </div>
           </div>
-          <span class="bg-amber-100 text-amber-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full border border-amber-200">Needs Driver</span>
+          <a href="opportunities.html" class="shrink-0 px-3.5 py-1.5 rounded-xl bg-[#FFB800] text-slate-950 text-xs font-bold shadow-sm hover:brightness-95 transition-all" style="background-color: #FFB800 !important; color: #020617 !important;">
+            Claim
+          </a>
         </div>
-        <button onclick="window.location.href='opportunities.html'" class="w-full py-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 rounded-xl text-xs font-bold transition-all shadow-sm">
-          Claim Route in Opportunities
-        </button>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   } catch (err) {
     console.error('Error fetching dashboard deliveries:', err);
+    container.innerHTML = emptyStateHTML;
   }
+};
+document.addEventListener('DOMContentLoaded', () => {
+  window.renderVolunteerFoodDonationsQueue();
 });
 </script>
 <script src="js/offline-map.js"></script>

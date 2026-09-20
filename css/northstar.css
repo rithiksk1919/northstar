@@ -2746,6 +2746,112 @@ nav.bottom-nav .nav-tab.active-tab {
   margin-right: auto !important;
 }
 
+/* Volunteer 4-Tab Bottom Navigation Bar Override (4 Equal 25% Columns) */
+nav.bottom-nav.grid-cols-4,
+nav.bottom-nav.volunteer-bottom-nav,
+.bottom-nav.grid-cols-4,
+.bottom-nav.volunteer-bottom-nav {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  width: 100% !important;
+  align-items: center !important;
+  justify-items: center !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+
+nav.bottom-nav.grid-cols-4 > a,
+nav.bottom-nav.grid-cols-4 > button,
+nav.bottom-nav.volunteer-bottom-nav > a,
+nav.bottom-nav.volunteer-bottom-nav > button,
+nav.bottom-nav.volunteer-bottom-nav .nav-tab {
+  width: 100% !important;
+  max-width: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+nav.bottom-nav.grid-cols-4 .nav-tab.active,
+nav.bottom-nav.grid-cols-4 .nav-tab.active-tab,
+nav.bottom-nav.volunteer-bottom-nav .nav-tab.active,
+nav.bottom-nav.volunteer-bottom-nav .nav-tab.active-tab,
+nav.bottom-nav.volunteer-bottom-nav .nav-tab.active span,
+nav.bottom-nav.volunteer-bottom-nav .nav-tab.active-tab span {
+  background-color: transparent !important;
+  color: #D97706 !important;
+  border-radius: 0.75rem !important;
+  box-shadow: none !important;
+}
+
+html.dark nav.bottom-nav.grid-cols-4 .nav-tab.active,
+html.dark nav.bottom-nav.grid-cols-4 .nav-tab.active-tab,
+html.dark nav.bottom-nav.volunteer-bottom-nav .nav-tab.active,
+html.dark nav.bottom-nav.volunteer-bottom-nav .nav-tab.active-tab,
+html.dark nav.bottom-nav.volunteer-bottom-nav .nav-tab.active span,
+html.dark nav.bottom-nav.volunteer-bottom-nav .nav-tab.active-tab span {
+  background-color: transparent !important;
+  color: #FFB800 !important;
+}
+
+nav.bottom-nav.volunteer-bottom-nav .nav-tab.active .material-symbols-outlined,
+nav.bottom-nav.volunteer-bottom-nav .nav-tab.active-tab .material-symbols-outlined {
+  font-variation-settings: 'FILL' 1 !important;
+}
+
+nav.bottom-nav.grid-cols-4 .nav-tab span:last-child,
+nav.bottom-nav.volunteer-bottom-nav .nav-tab span:last-child {
+  font-size: 10px !important;
+  letter-spacing: -0.025em !important;
+  white-space: nowrap !important;
+}
+
+/* Inactive Tab Contrast in Dark Mode (text-slate-400 hover:text-slate-200) */
+nav.bottom-nav.volunteer-bottom-nav .nav-tab:not(.active):not(.active-tab),
+nav.bottom-nav.volunteer-bottom-nav .nav-tab:not(.active):not(.active-tab) span,
+html.dark nav.bottom-nav.volunteer-bottom-nav .nav-tab:not(.active):not(.active-tab),
+html.dark nav.bottom-nav.volunteer-bottom-nav .nav-tab:not(.active):not(.active-tab) span {
+  color: #94A3B8 !important; /* text-slate-400 */
+}
+
+html.dark nav.bottom-nav.volunteer-bottom-nav .nav-tab:not(.active):not(.active-tab):hover,
+html.dark nav.bottom-nav.volunteer-bottom-nav .nav-tab:not(.active):not(.active-tab):hover span {
+  color: #E2E8F0 !important; /* hover:text-slate-200 */
+}
+
+/* Action Card Icon Containers (w-10 h-10 rounded-xl with high-contrast Donate icon) */
+#volunteer-post-job-card > div:first-child {
+  background-color: #F1F5F9 !important; /* bg-slate-100 */
+  color: #0F172A !important; /* text-slate-900 */
+}
+
+html.dark #volunteer-post-job-card > div:first-child {
+  background-color: #1E293B !important; /* dark:bg-slate-800 */
+  color: #F8FAFC !important; /* dark:text-slate-100 */
+}
+
+#volunteer-donate-card > div:first-child {
+  background-color: rgba(245, 158, 11, 0.12) !important; /* bg-amber-500/10 */
+  color: #D97706 !important; /* text-amber-600 */
+}
+
+html.dark #volunteer-donate-card > div:first-child {
+  background-color: rgba(245, 158, 11, 0.2) !important; /* dark:bg-amber-500/20 */
+  color: #FBBF24 !important; /* dark:text-amber-400 */
+}
+
+/* Volunteer Dashboard FAB (bottom-16 right-4) & BottomNav Clearance (pb-20) */
+main.dashboard-container.volunteer-dashboard-main,
+.volunteer-dashboard-main {
+  padding-bottom: 96px !important;
+}
+
+#ns-ai-chatbot-fab {
+  bottom: 64px !important; /* bottom-16 */
+  right: 16px !important; /* right-4 */
+}
+
 /* 3. Job Card Tag Wrapping Spacing (8px vertical gap / row-gap: 8px) */
 .job-tags-container,
 .tag-group {
