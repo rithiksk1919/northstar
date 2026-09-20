@@ -1672,6 +1672,63 @@ function renderBottomNav() {
 }
 window.renderBottomNav = renderBottomNav;
 
+window.fetchUnifiedDeliveries = async function() {
+  let deliveries = [];
+  try {
+    const res = await fetch('/api/deliveries');
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.deliveries) && data.deliveries.length > 0) {
+        deliveries = data.deliveries;
+        try { localStorage.setItem('northstar_cached_deliveries', JSON.stringify(deliveries)); } catch(_) {}
+      }
+    }
+  } catch (err) {
+    console.warn('API fetch error, using cached fallback:', err);
+  }
+
+  if (!deliveries || deliveries.length === 0) {
+    try {
+      const local = localStorage.getItem('northstar_cached_deliveries');
+      if (local) deliveries = JSON.parse(local);
+    } catch (_) {}
+  }
+
+  if (!deliveries || deliveries.length === 0) {
+    deliveries = [
+      { id: 'del_101', items: ['4x Care Packages'], bags: 4, donorArea: 'Capitol Hill, Seattle', destination: 'St. Jude Community Refuge', status: 'pending_driver', timeWindow: 'Today 2:00 PM - 5:00 PM' },
+      { id: 'del_102', items: ['1x Warm Blanket & Jacket'], bags: 1, donorArea: 'Ballard, Seattle', destination: 'St. Jude Community Refuge', status: 'pending_driver', timeWindow: 'ASAP' },
+      { id: 'del_103', items: ['1x Sleeping Bag & Hygiene Kit'], bags: 1, donorArea: 'University District, Seattle', destination: 'St. Jude Community Refuge', status: 'pending_driver', timeWindow: 'Today 4:00 PM - 7:00 PM' }
+    ];
+  }
+
+  return deliveries;
+};
+
+window.notifyDeliveriesChanged = function() {
+  if (typeof window.renderVolunteerFoodDonationsQueue === 'function') {
+    window.renderVolunteerFoodDonationsQueue();
+  }
+  if (typeof window.renderAvailableDeliveriesModalContent === 'function') {
+    window.renderAvailableDeliveriesModalContent();
+  }
+  try { window.dispatchEvent(new CustomEvent('northstar_deliveries_updated')); } catch(_) {}
+};
+
+window.addEventListener('northstar_deliveries_updated', () => {
+  if (typeof window.renderVolunteerFoodDonationsQueue === 'function') {
+    window.renderVolunteerFoodDonationsQueue();
+  }
+  if (typeof window.renderAvailableDeliveriesModalContent === 'function') {
+    window.renderAvailableDeliveriesModalContent();
+  }
+});
+window.addEventListener('storage', (e) => {
+  if (e.key === 'northstar_cached_deliveries' || e.key === 'northstar_last_delivery_id') {
+    window.notifyDeliveriesChanged();
+  }
+});
+
 async function renderVolunteerFoodDonationsQueue() {
   const container = document.getElementById('dashboard-deliveries-queue');
   const viewAllLink = document.getElementById('volunteer-view-all-pickups');
@@ -1703,14 +1760,8 @@ async function renderVolunteerFoodDonationsQueue() {
   `;
 
   try {
-    const res = await fetch('/api/deliveries');
-    if (!res.ok) {
-      if (viewAllLink) viewAllLink.classList.add('hidden');
-      container.innerHTML = emptyStateHTML;
-      return;
-    }
-    const data = await res.json();
-    const deliveries = (data.deliveries || []).filter(d => d.status !== 'claimed' && d.status !== 'delivered');
+    const allDeliveries = await window.fetchUnifiedDeliveries();
+    const deliveries = (allDeliveries || []).filter(d => d.status !== 'claimed' && d.status !== 'driver_assigned' && d.status !== 'in_transit' && d.status !== 'delivered');
 
     if (deliveries.length === 0) {
       if (viewAllLink) viewAllLink.classList.add('hidden');
@@ -1721,23 +1772,23 @@ async function renderVolunteerFoodDonationsQueue() {
     if (viewAllLink) viewAllLink.classList.remove('hidden');
 
     container.innerHTML = deliveries.slice(0, 5).map(d => {
-      const itemLabel = Array.isArray(d.items) ? d.items.join(', ') : (d.items || 'Food Donation');
+      const itemLabel = Array.isArray(d.items) ? d.items.join(', ') : (d.items || 'Care Package');
       const bagLabel = d.bags ? `${d.bags} ${Number(d.bags) === 1 ? 'Crate/Bag' : 'Crates/Bags'} of ${itemLabel}` : itemLabel;
       return `
-        <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between gap-3">
-          <div class="flex items-center gap-3 min-w-0 flex-1 pr-1">
+        <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between gap-3 cursor-pointer hover:border-slate-300 dark:hover:border-slate-700 transition-all card-spring-click" onclick="window.claimAndTrackDelivery('${d.id}')">
+          <div class="flex items-center gap-3 min-w-0 flex-1 pr-1 pointer-events-none">
             <div class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-[#FFB800] shrink-0">
               <span class="material-symbols-outlined text-xl">local_shipping</span>
             </div>
             <div class="min-w-0 flex-1">
               <h4 class="text-xs font-extrabold text-slate-900 dark:text-white font-heading truncate">${itemLabel}</h4>
-              <p class="text-[11px] text-slate-600 dark:text-slate-300 font-medium truncate mt-0.5">${d.donorArea || 'Local Donor'} → ${d.destination || 'Community Shelter'}</p>
+              <p class="text-[11px] text-slate-600 dark:text-slate-300 font-medium truncate mt-0.5">${d.donorArea || 'Capitol Hill, Seattle'} → ${d.destination || 'St. Jude Refuge'}</p>
               <p class="text-[10px] text-slate-400 truncate mt-0.5">${bagLabel} • Ready for Pickup</p>
             </div>
           </div>
-          <a href="opportunities.html" class="shrink-0 px-3.5 py-1.5 rounded-xl bg-[#FFB800] text-slate-950 text-xs font-bold shadow-sm hover:brightness-95 transition-all" style="background-color: #FFB800 !important; color: #020617 !important;">
+          <button onclick="event.stopPropagation(); window.claimAndTrackDelivery('${d.id}')" class="shrink-0 px-3.5 py-1.5 rounded-xl bg-[#FFB800] hover:bg-amber-400 text-slate-950 text-xs font-bold shadow-sm active:scale-95 transition-all cursor-pointer" style="background-color: #FFB800 !important; color: #020617 !important;">
             Claim
-          </a>
+          </button>
         </div>
       `;
     }).join('');
@@ -1748,6 +1799,301 @@ async function renderVolunteerFoodDonationsQueue() {
   }
 }
 window.renderVolunteerFoodDonationsQueue = renderVolunteerFoodDonationsQueue;
+
+// ── Global Interactive Delivery Tracking & Claiming Modal ─────────────────────
+window.claimAndTrackDelivery = async function(id) {
+  try {
+    const sessionRaw = localStorage.getItem('northstar_session');
+    const sessionObj = sessionRaw ? JSON.parse(sessionRaw) : {};
+    const driverId = sessionObj.id || null;
+    const driverName = sessionObj.username || sessionObj.name || 'Volunteer (You)';
+    
+    await fetch(`/api/deliveries/${id}/claim`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ driverName: driverName, driver_id: driverId })
+    });
+    
+    try { localStorage.setItem('northstar_last_delivery_id', id); } catch(_) {}
+
+    // Update local cache status
+    try {
+      const cached = JSON.parse(localStorage.getItem('northstar_cached_deliveries') || '[]');
+      const target = cached.find(d => d.id === id);
+      if (target) {
+        target.status = 'driver_assigned';
+        target.driverName = driverName;
+        localStorage.setItem('northstar_cached_deliveries', JSON.stringify(cached));
+      }
+    } catch(_) {}
+    
+    if (typeof showNotification === 'function') {
+      showNotification('🚚 Pickup claimed! Opening interactive delivery tracker...', 'success');
+    }
+    
+    window.openUberTrackingModal(id);
+    window.notifyDeliveriesChanged();
+  } catch (err) {
+    console.error('Error claiming delivery:', err);
+    window.openUberTrackingModal(id);
+    window.notifyDeliveriesChanged();
+  }
+};
+
+window.updateDeliveryStatusDirect = async function(id, status) {
+  try {
+    await fetch(`/api/deliveries/${id}/status`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: status })
+    });
+    const res = await fetch(`/api/deliveries/${id}`);
+    const data = await res.json();
+    if (data.delivery) {
+      window.updateUberTrackingUI(data.delivery);
+    }
+    // Update local cache
+    try {
+      const cached = JSON.parse(localStorage.getItem('northstar_cached_deliveries') || '[]');
+      const target = cached.find(d => d.id === id);
+      if (target) {
+        target.status = status;
+        localStorage.setItem('northstar_cached_deliveries', JSON.stringify(cached));
+      }
+    } catch(_) {}
+
+    if (typeof showNotification === 'function') {
+      const msg = status === 'delivered' ? '🎉 Delivery marked as completed!' : '🚚 Status updated: Food on the way!';
+      showNotification(msg, 'success');
+    }
+    window.notifyDeliveriesChanged();
+  } catch (err) {
+    console.warn('Status update notice:', err);
+  }
+};
+
+window.openUberTrackingModal = function(deliveryId) {
+  const existing = document.getElementById('uber-tracking-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'uber-tracking-modal';
+  modal.className = 'fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-0 sm:p-4 animate-fade-in';
+  modal.innerHTML = `
+    <div class="w-full sm:max-w-md bg-white border border-slate-200 rounded-t-2xl sm:rounded-2xl p-6 text-slate-900 space-y-4 shadow-xl relative overflow-hidden animate-slide-up">
+      <!-- Top Bar -->
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="relative flex h-2.5 w-2.5">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+          </span>
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-700 font-heading">LIVE DELIVERY TRACKER</span>
+        </div>
+        <button onclick="clearInterval(window._uberTrackingInterval); document.getElementById('uber-tracking-modal').remove()" class="text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:scale-[0.98] p-1.5 rounded-lg transition-all duration-150 ease-in-out cursor-pointer flex items-center justify-center">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+      </div>
+
+      <!-- ETA Banner -->
+      <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center justify-between">
+        <div>
+          <p class="text-[11px] text-slate-500 font-semibold uppercase tracking-wider">Estimated Drop-off</p>
+          <h3 id="uber-eta-text" class="text-xl font-bold text-slate-900 font-heading">~15-20 Mins</h3>
+        </div>
+        <div class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 font-bold transition-all">
+          <span class="material-symbols-outlined text-xl animate-pulse text-slate-700">local_shipping</span>
+        </div>
+      </div>
+
+      <!-- 4-Step Visual Progress Bar -->
+      <div class="space-y-3 py-1">
+        <div class="flex justify-between items-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+          <span>PROGRESS TIMELINE</span>
+          <span id="uber-status-badge" class="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full uppercase tracking-wide">Request Received</span>
+        </div>
+
+        <div class="relative flex items-center justify-between px-2">
+          <div class="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-1 bg-slate-200 rounded-full z-0"></div>
+          <div id="uber-progress-bar-fill" class="absolute left-4 top-1/2 -translate-y-1/2 h-1 bg-emerald-500 rounded-full z-0 transition-all duration-500" style="width: 25%;"></div>
+
+          <!-- Step 1 -->
+          <div id="step-node-1" class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs z-10 border-2 border-white ring-4 ring-slate-900/20 animate-pulse shadow-none">
+            1
+          </div>
+          <!-- Step 2 -->
+          <div id="step-node-2" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-xs z-10 border-2 border-slate-200 shadow-none">
+            2
+          </div>
+          <!-- Step 3 -->
+          <div id="step-node-3" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-xs z-10 border-2 border-slate-200 shadow-none">
+            3
+          </div>
+          <!-- Step 4 -->
+          <div id="step-node-4" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-xs z-10 border-2 border-slate-200 shadow-none">
+            4
+          </div>
+        </div>
+
+        <div class="grid grid-cols-4 text-center text-[10px] font-bold text-slate-500 pt-1">
+          <span id="step-label-1" class="text-slate-900 font-bold">Request</span>
+          <span id="step-label-2" class="text-slate-400 font-normal">Assigned</span>
+          <span id="step-label-3" class="text-slate-400 font-normal">On the Way</span>
+          <span id="step-label-4" class="text-slate-400 font-normal">Delivered</span>
+        </div>
+      </div>
+
+      <!-- Live Details Card -->
+      <div id="uber-details-card" class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2 text-xs">
+        <div class="flex justify-between text-slate-600">
+          <span class="font-medium">Package:</span>
+          <strong id="uber-items-text" class="text-slate-900 font-semibold">1x Care Package</strong>
+        </div>
+        <div class="flex justify-between text-slate-600">
+          <span class="font-medium">Pickup Neighborhood:</span>
+          <strong id="uber-area-text" class="text-slate-900 font-semibold">Seattle Area</strong>
+        </div>
+        <div class="flex justify-between text-slate-600">
+          <span class="font-medium">Target Shelter:</span>
+          <strong id="uber-dest-text" class="text-slate-900 font-semibold">St. Jude Refuge</strong>
+        </div>
+      </div>
+
+      <!-- Driver Card -->
+      <div id="uber-driver-card" class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700">
+            <span class="material-symbols-outlined text-xl text-slate-700 animate-pulse">directions_car</span>
+          </div>
+          <div>
+            <h4 id="uber-driver-name" class="text-xs font-bold text-slate-900">Searching for Driver...</h4>
+            <p class="text-[10px] text-slate-500 font-medium">Volunteer Community Logistics</p>
+          </div>
+        </div>
+        <button onclick="if(typeof showNotification==='function') showNotification('Calling Volunteer Driver...', 'info')" class="px-3 py-1.5 bg-white hover:bg-slate-100 hover:text-slate-900 text-slate-700 rounded-lg text-xs font-semibold border border-slate-300 active:scale-[0.98] transition-all duration-150 ease-in-out flex items-center gap-1 shadow-sm cursor-pointer">
+          <span class="material-symbols-outlined text-sm text-slate-500">call</span> Contact
+        </button>
+      </div>
+
+      <!-- Interactive Volunteer Action Controls -->
+      <div id="uber-volunteer-controls" class="pt-1 flex gap-2">
+        <button onclick="window.updateDeliveryStatusDirect('${deliveryId}', 'in_transit')" class="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold active:scale-[0.98] transition-all flex items-center justify-center gap-1 shadow-sm cursor-pointer">
+          <span class="material-symbols-outlined text-sm">local_shipping</span> On My Way
+        </button>
+        <button onclick="window.updateDeliveryStatusDirect('${deliveryId}', 'delivered')" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold active:scale-[0.98] transition-all flex items-center justify-center gap-1 shadow-sm cursor-pointer">
+          <span class="material-symbols-outlined text-sm">check_circle</span> Mark Delivered
+        </button>
+      </div>
+    </div>
+  `;
+  modal.addEventListener('click', (e) => { if (e.target === modal) { clearInterval(window._uberTrackingInterval); modal.remove(); } });
+  const appFrame = document.querySelector('.app-frame') || document.body;
+  appFrame.appendChild(modal);
+
+  // Auto Polling Status Update
+  if (window._uberTrackingInterval) clearInterval(window._uberTrackingInterval);
+  
+  const fetchAndUpdate = async () => {
+    try {
+      const res = await fetch(`/api/deliveries/${deliveryId}`);
+      const data = await res.json();
+      if (data.delivery) {
+        window.updateUberTrackingUI(data.delivery);
+      }
+    } catch (e) {
+      console.warn('Tracking poll notice:', e);
+    }
+  };
+
+  fetchAndUpdate();
+  window._uberTrackingInterval = setInterval(fetchAndUpdate, 2500);
+};
+
+window.updateUberTrackingUI = function(d) {
+  const statusBadge = document.getElementById('uber-status-badge');
+  const barFill = document.getElementById('uber-progress-bar-fill');
+  const driverName = document.getElementById('uber-driver-name');
+  const etaText = document.getElementById('uber-eta-text');
+  const itemsText = document.getElementById('uber-items-text');
+  const areaText = document.getElementById('uber-area-text');
+  const destText = document.getElementById('uber-dest-text');
+
+  if (itemsText) {
+    if (Array.isArray(d.items) && d.items.length > 0) {
+      itemsText.innerText = d.items.join(', ');
+    } else if (typeof d.items === 'string' && d.items.trim()) {
+      itemsText.innerText = d.items;
+    } else {
+      itemsText.innerText = '1x Care Package';
+    }
+  }
+  if (areaText) areaText.innerText = d.donorArea || 'Seattle Area';
+  if (destText) destText.innerText = d.destination || 'St. Jude Refuge';
+
+  const node1 = document.getElementById('step-node-1');
+  const node2 = document.getElementById('step-node-2');
+  const node3 = document.getElementById('step-node-3');
+  const node4 = document.getElementById('step-node-4');
+
+  const label1 = document.getElementById('step-label-1');
+  const label2 = document.getElementById('step-label-2');
+  const label3 = document.getElementById('step-label-3');
+  const label4 = document.getElementById('step-label-4');
+
+  const setNodeState = (node, label, state) => {
+    if (!node) return;
+    if (state === 'done') {
+      node.className = 'w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs z-10 border-2 border-white shadow-none';
+      node.innerText = '✓';
+      if (label) label.className = 'text-slate-700 font-semibold';
+    } else if (state === 'active') {
+      node.className = 'w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs z-10 border-2 border-white ring-4 ring-slate-900/20 animate-pulse shadow-none';
+      if (label) label.className = 'text-slate-900 font-bold';
+    } else {
+      node.className = 'w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-xs z-10 border-2 border-slate-200 shadow-none';
+      if (label) label.className = 'text-slate-400 font-normal';
+    }
+  };
+
+  if (d.status === 'pending_driver' || d.status === 'pending_volunteer') {
+    if (statusBadge) statusBadge.innerText = 'Request Posted';
+    if (barFill) barFill.style.width = '10%';
+    if (driverName) driverName.innerText = 'Searching for Driver...';
+    if (etaText) etaText.innerText = '~15-20 Mins';
+    setNodeState(node1, label1, 'active');
+    setNodeState(node2, label2, 'inactive');
+    setNodeState(node3, label3, 'inactive');
+    setNodeState(node4, label4, 'inactive');
+  } else if (d.status === 'driver_assigned' || d.status === 'claimed') {
+    if (statusBadge) statusBadge.innerText = 'Driver Assigned';
+    if (barFill) barFill.style.width = '40%';
+    if (driverName) driverName.innerText = d.driverName || 'Volunteer Sarah M.';
+    if (etaText) etaText.innerText = '~10-15 Mins';
+    setNodeState(node1, label1, 'done');
+    setNodeState(node2, label2, 'active');
+    setNodeState(node3, label3, 'inactive');
+    setNodeState(node4, label4, 'inactive');
+  } else if (d.status === 'in_transit') {
+    if (statusBadge) statusBadge.innerText = 'Food On the Way';
+    if (barFill) barFill.style.width = '70%';
+    if (driverName) driverName.innerText = d.driverName || 'Volunteer Sarah M.';
+    if (etaText) etaText.innerText = '~5 Mins';
+    setNodeState(node1, label1, 'done');
+    setNodeState(node2, label2, 'done');
+    setNodeState(node3, label3, 'active');
+    setNodeState(node4, label4, 'inactive');
+    setNodeState(node4, label4, 'inactive');
+  } else if (d.status === 'delivered') {
+    if (statusBadge) statusBadge.innerText = 'Delivered to Shelter';
+    if (barFill) barFill.style.width = '100%';
+    if (driverName) driverName.innerText = d.driverName || 'Volunteer Sarah M.';
+    if (etaText) etaText.innerText = 'Delivered 🎉';
+    setNodeState(node1, label1, 'done');
+    setNodeState(node2, label2, 'done');
+    setNodeState(node3, label3, 'done');
+    setNodeState(node4, label4, 'done');
+  }
+};
 
 window.matchAndRenderJobs = async function (resumeData) {
   const container = document.getElementById('matched-jobs-container');

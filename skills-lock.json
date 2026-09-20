@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "animation-motion-design": {
+      "source": "yonatangross/orchestkit",
+      "sourceType": "github",
+      "skillPath": "plugins/ork/skills/animation-motion-design/SKILL.md",
+      "computedHash": "5b739d4cb1c6667b0721abc747503e62fd650bbfde50da25f750996d2879df8d"
+    },
     "apple-ui-designer": {
       "source": "heyman333/atelier-ui",
       "sourceType": "github",

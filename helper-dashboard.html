@@ -281,23 +281,23 @@ window.renderVolunteerFoodDonationsQueue = async function () {
     }
 
     container.innerHTML = deliveries.slice(0, 5).map(d => {
-      const itemLabel = Array.isArray(d.items) ? d.items.join(', ') : (d.items || 'Food Donation');
+      const itemLabel = Array.isArray(d.items) ? d.items.join(', ') : (d.items || 'Care Package');
       const bagLabel = d.bags ? `${d.bags} ${Number(d.bags) === 1 ? 'Crate/Bag' : 'Crates/Bags'} of ${itemLabel}` : itemLabel;
       return `
-        <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between gap-3">
-          <div class="flex items-center gap-3 min-w-0 flex-1 pr-1">
+        <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between gap-3 cursor-pointer hover:border-slate-300 dark:hover:border-slate-700 transition-all card-spring-click" onclick="window.claimAndTrackDelivery('${d.id}')">
+          <div class="flex items-center gap-3 min-w-0 flex-1 pr-1 pointer-events-none">
             <div class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-[#FFB800] shrink-0">
               <span class="material-symbols-outlined text-xl">local_shipping</span>
             </div>
             <div class="min-w-0 flex-1">
               <h4 class="text-xs font-extrabold text-slate-900 dark:text-white font-heading truncate">${itemLabel}</h4>
-              <p class="text-[11px] text-slate-600 dark:text-slate-300 font-medium truncate mt-0.5">${d.donorArea || 'Local Donor'} → ${d.destination || 'Community Shelter'}</p>
+              <p class="text-[11px] text-slate-600 dark:text-slate-300 font-medium truncate mt-0.5">${d.donorArea || 'Capitol Hill, Seattle'} → ${d.destination || 'St. Jude Refuge'}</p>
               <p class="text-[10px] text-slate-400 truncate mt-0.5">${bagLabel} • Ready for Pickup</p>
             </div>
           </div>
-          <a href="opportunities.html" class="shrink-0 px-3.5 py-1.5 rounded-xl bg-[#FFB800] text-slate-950 text-xs font-bold shadow-sm hover:brightness-95 transition-all" style="background-color: #FFB800 !important; color: #020617 !important;">
+          <button onclick="event.stopPropagation(); window.claimAndTrackDelivery('${d.id}')" class="shrink-0 px-3.5 py-1.5 rounded-xl bg-[#FFB800] hover:bg-amber-400 text-slate-950 text-xs font-bold shadow-sm active:scale-95 transition-all cursor-pointer" style="background-color: #FFB800 !important; color: #020617 !important;">
             Claim
-          </a>
+          </button>
         </div>
       `;
     }).join('');

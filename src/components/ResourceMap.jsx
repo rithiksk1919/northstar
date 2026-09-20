@@ -24,8 +24,13 @@ export default function ResourceMap() {
   const [selectedResource, setSelectedResource] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
   const [locationStatus, setLocationStatus] = useState('Detecting location...');
+  const [isMapLoading, setIsMapLoading] = useState(true);
 
   useEffect(() => {
+    const minLoadTimer = setTimeout(() => {
+      setIsMapLoading(false);
+    }, 1500);
+
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -45,6 +50,8 @@ export default function ResourceMap() {
     } else {
       setLocationStatus('Geolocation unsupported');
     }
+
+    return () => clearTimeout(minLoadTimer);
   }, []);
 
   const filteredResources = resources.filter((res) => {
@@ -162,6 +169,48 @@ export default function ResourceMap() {
 
       {/* Interactive Map */}
       <div className="w-full flex-grow relative">
+        {/* MAP LOADING ANIMATION OVERLAY */}
+        {isMapLoading && (
+          <div className="absolute inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 transition-all duration-500">
+            {/* Animated Radar & Pin Container */}
+            <div className="relative flex items-center justify-center w-36 h-36 mb-6">
+              {/* Concentric Pulsing Radar Rings */}
+              <div className="absolute inset-0 rounded-full border border-emerald-500/30 animate-ping opacity-75" style={{ animationDuration: '3s' }}></div>
+              <div className="absolute inset-3 rounded-full border border-amber-400/40 animate-pulse"></div>
+              <div className="absolute inset-6 rounded-full bg-emerald-500/10 backdrop-blur-sm border border-emerald-500/40"></div>
+              
+              {/* Rotating Scan Beam */}
+              <div className="absolute inset-0 rounded-full border-t-2 border-emerald-400 animate-spin" style={{ animationDuration: '2.5s' }}></div>
+              
+              {/* Central Animated Pin */}
+              <div className="relative z-10 flex flex-col items-center transform animate-bounce" style={{ animationDuration: '1.8s' }}>
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-amber-400 p-0.5 shadow-2xl shadow-emerald-500/40 flex items-center justify-center">
+                  <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
+                    <MapPin className="w-6 h-6 text-emerald-400" />
+                  </div>
+                </div>
+                <div className="w-4 h-1.5 bg-emerald-500/40 rounded-full blur-[2px] mt-1"></div>
+              </div>
+            </div>
+
+            {/* Loading Text & Status */}
+            <div className="text-center space-y-2 max-w-xs z-10">
+              <h3 className="text-base font-extrabold text-white tracking-tight flex items-center justify-center gap-2">
+                <Compass className="w-4 h-4 text-emerald-400 animate-spin" style={{ animationDuration: '4s' }} />
+                <span>Initializing Live Map</span>
+              </h3>
+              <p className="text-xs text-slate-400 font-medium">
+                Locating nearby safe shelters, food &amp; essential services...
+              </p>
+            </div>
+
+            {/* Progress Shimmer Bar */}
+            <div className="w-48 h-1.5 bg-slate-800 rounded-full overflow-hidden mt-6 relative z-10">
+              <div className="h-full bg-gradient-to-r from-emerald-500 via-amber-400 to-emerald-400 rounded-full animate-pulse w-full"></div>
+            </div>
+          </div>
+        )}
+
         <APIProvider apiKey={API_KEY}>
           <Map
             defaultCenter={userLocation || DEFAULT_CENTER}

@@ -211,14 +211,14 @@ export function VolunteerDashboard({
         </section>
       </main>
 
-      {/* Floating Action Button Anchored Cleanly */}
+      {/* Floating Action Button */}
       <button
         type="button"
         onClick={onOpenChatbot}
-        aria-label="AI Assistant"
-        className="fixed bottom-16 right-4 w-12 h-12 rounded-full bg-[#FFB800] text-slate-950 flex items-center justify-center shadow-lg hover:scale-105 transition-transform z-30 cursor-pointer"
+        aria-label="Support Assistant"
+        className="fixed bottom-16 right-4 w-12 h-12 rounded-full bg-[#FFB800] hover:bg-amber-400 text-slate-950 flex items-center justify-center border border-slate-900/20 transition-colors z-30 cursor-pointer"
       >
-        🤖
+        <span className="material-symbols-outlined text-xl">chat_bubble</span>
       </button>
 
       {/* 4-Tab Volunteer Bottom Navigation Bar */}

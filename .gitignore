@@ -72,3 +72,5 @@ northstar-ai/scripts/run_phase*.py
 northstar-ai/.gitignore
 
 .agents/mcp_config.json
+scratch/
+

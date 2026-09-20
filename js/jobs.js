@@ -447,11 +447,16 @@
         fetch(jobsApiUrl).then(r => r.json()).catch(() => ({ jobs: [] }))
       ]);
 
-      let approvedGigs = filterOutSurveys(deduplicate(gigsRes.gigs || []));
-      if (approvedGigs.length === 0 && currentRole === 'seeker') {
-        approvedGigs = defaultSeedGigs;
-      }
-      const standardJobs = filterOutSurveys(deduplicate(jobsRes.jobs || []));
+      let localJobs = [];
+      try {
+        localJobs = JSON.parse(localStorage.getItem('northstar_custom_posted_jobs') || '[]');
+      } catch (_) {}
+
+      const combinedJobsList = Array.isArray(localJobs) && localJobs.length > 0 
+        ? [...localJobs, ...(jobsRes.jobs || [])]
+        : (jobsRes.jobs || []);
+        
+      const standardJobs = filterOutSurveys(deduplicate(combinedJobsList));
 
       // Re-acquire feed reference in case DOM swapped during async fetch
       const currentFeed = getJobsFeedContainer();
@@ -462,11 +467,11 @@
         window._currentJobsFingerprint = 'empty-volunteer';
         updateActiveJobsCount(0);
         currentFeed.innerHTML = `
-          <div class="backdrop-blur-md bg-white/[0.04] border border-white/10 p-8 rounded-2xl text-center space-y-3">
-            <span class="material-symbols-outlined text-4xl text-amber-400">post_add</span>
-            <h4 class="text-sm font-extrabold text-white">No Opportunities Posted Yet</h4>
-            <p class="text-xs text-slate-400 max-w-xs mx-auto">You haven't published any job or task listings. Use the "Post Opportunity" button above to publish work for community members.</p>
-            <button onclick="openModal('post-job-modal')" class="px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-bold text-xs rounded-xl shadow-md">
+          <div class="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl text-center space-y-3">
+            <span class="material-symbols-outlined text-3xl text-slate-400 dark:text-slate-500">assignment</span>
+            <h4 class="text-sm font-bold text-slate-900 dark:text-slate-100">No Opportunities Posted Yet</h4>
+            <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">You haven't published any job or task listings. Use the "Post Opportunity" button above to publish work for community members.</p>
+            <button onclick="openModal('post-job-modal')" class="px-4 py-2 bg-[#FFE855] hover:bg-amber-300 text-slate-950 font-bold text-xs rounded-xl border border-amber-400 transition-colors cursor-pointer active:scale-95">
               Post Your First Job
             </button>
           </div>

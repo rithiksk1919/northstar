@@ -40,7 +40,7 @@ const NORTHSTAR_CHAT_SCRIPT =
 
 const supabaseUrl = process.env.SUPABASE_URL || '';
 const supabasePublishableKey = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || '';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabaseServiceKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || '';
 
 // Startup validation — warn clearly if Supabase credentials are missing, never print key values
 if (!supabaseUrl) {
@@ -52,13 +52,121 @@ if (!supabaseUrl) {
 }
 
 if (supabaseServiceKey) {
-  console.log('✅ [Supabase] Service role key present — server-side admin operations enabled.');
+  console.log('✅ [Supabase] Service key present — server-side admin DB operations enabled.');
 } else {
-  console.warn('⚠️  [Supabase] SUPABASE_SERVICE_ROLE_KEY not set — admin DB operations (jobs/deliveries persistence) will fall back to in-memory.');
+  console.warn('⚠️  [Supabase] SUPABASE_SECRET_KEY not set — admin DB operations will fall back to in-memory.');
 }
 
 // Admin client for server-side operations (deliveries, jobs persistence) — never exposed to browser
 const supabase = (supabaseUrl && supabaseServiceKey) ? createClient(supabaseUrl, supabaseServiceKey) : null;
+
+async function seedSupabaseTablesIfEmpty() {
+  if (!supabase) return;
+
+  try {
+    // 1. Seed Deliveries if empty
+    const { data: existingDeliveries, error: delErr } = await supabase.from('deliveries').select('id').limit(1);
+    if (!delErr && (!existingDeliveries || existingDeliveries.length === 0)) {
+      console.log('🌱 Seeding default food deliveries into Supabase...');
+      const seedDeliveries = [
+        {
+          id: 'del_101',
+          items: ['4x Care Packages'],
+          bags: 4,
+          donorArea: 'Capitol Hill, Seattle',
+          destination: 'St. Jude Community Refuge',
+          status: 'pending_driver',
+          timeWindow: 'Today 2:00 PM - 5:00 PM',
+          contactNotes: 'Contact donor upon arrival',
+          etaMinutes: 20,
+          created_at: new Date(Date.now() - 3600000).toISOString()
+        },
+        {
+          id: 'del_102',
+          items: ['1x Warm Blanket & Jacket'],
+          bags: 1,
+          donorArea: 'Ballard, Seattle',
+          destination: 'St. Jude Community Refuge',
+          status: 'pending_driver',
+          timeWindow: 'ASAP',
+          contactNotes: 'Fragile items included',
+          etaMinutes: 15,
+          created_at: new Date(Date.now() - 7200000).toISOString()
+        },
+        {
+          id: 'del_103',
+          items: ['1x Sleeping Bag & Hygiene Kit'],
+          bags: 1,
+          donorArea: 'University District, Seattle',
+          destination: 'St. Jude Community Refuge',
+          status: 'pending_driver',
+          timeWindow: 'Today 4:00 PM - 7:00 PM',
+          contactNotes: 'Call shelter before drop-off',
+          etaMinutes: 25,
+          created_at: new Date(Date.now() - 10800000).toISOString()
+        }
+      ];
+      const { error: insertDelErr } = await supabase.from('deliveries').insert(seedDeliveries);
+      if (insertDelErr) {
+        console.warn('⚠️ Seeding deliveries notice:', insertDelErr.message);
+      } else {
+        console.log('✅ Default food deliveries seeded into Supabase deliveries table!');
+      }
+    }
+
+    // 2. Seed Jobs if empty
+    const { data: existingJobs, error: jobErr } = await supabase.from('jobs').select('id').limit(1);
+    if (!jobErr && (!existingJobs || existingJobs.length === 0)) {
+      console.log('🌱 Seeding default jobs into Supabase...');
+      const seedJobs = [
+        {
+          id: 'job_201',
+          title: 'Community Center Food Prep Helper',
+          company: 'Seattle Harvest Hub',
+          location: 'Capitol Hill, Seattle',
+          type: 'Flexible Shift',
+          pay: '$20.00 / hr Cash',
+          requirements: ['No Experience Required', 'Friendly Attitude'],
+          description: 'Assist kitchen staff with washing, cutting, and packaging donated produce for emergency shelters.',
+          contact: 'volunteer@seattleharvest.org',
+          created_at: new Date().toISOString()
+        },
+        {
+          id: 'job_202',
+          title: 'Shelter Linens & Hygiene Staging Assistant',
+          company: 'St. Jude Refuge',
+          location: 'Ballard, Seattle',
+          type: 'Part-Time / Daily',
+          pay: '$22.00 / hr Cash',
+          requirements: ['Able to lift 25 lbs', 'Dependable'],
+          description: 'Help organize incoming care packages, sort clean bedding, and prepare hygiene kits for evening drop-ins.',
+          contact: 'manager@stjuderefuge.org',
+          created_at: new Date().toISOString()
+        },
+        {
+          id: 'job_203',
+          title: 'Neighborhood Mobile Pantry Driver & Helper',
+          company: 'NorthStar Mutual Aid',
+          location: 'Rainier Valley, Seattle',
+          type: 'Daily Gig',
+          pay: '$24.00 / hr Cash',
+          requirements: ['Valid Driver License', 'Punctual'],
+          description: 'Drive or ride along with our meal distribution van to hand out warm meals and hygiene kits.',
+          contact: 'coordinator@northstarseattle.org',
+          created_at: new Date().toISOString()
+        }
+      ];
+      const { error: insertJobErr } = await supabase.from('jobs').insert(seedJobs);
+      if (insertJobErr) {
+        console.warn('⚠️ Seeding jobs notice:', insertJobErr.message);
+      } else {
+        console.log('✅ Default jobs seeded into Supabase jobs table!');
+      }
+    }
+  } catch (err) {
+    console.warn('⚠️ seedSupabaseTablesIfEmpty error:', err.message);
+  }
+}
 
 
 const app = express();
@@ -96,7 +204,38 @@ const model = genAI.getGenerativeModel({ model: 'gemini-3.6-flash' });
 const stripeKey = process.env.STRIPE_SECRET_KEY || '';
 const stripe = stripeKey ? new Stripe(stripeKey) : null;
 
-let activeDeliveries = [];
+let activeDeliveries = [
+  {
+    id: 'del_101',
+    items: ['4x Care Packages'],
+    bags: 4,
+    donorArea: 'Capitol Hill, Seattle',
+    destination: 'St. Jude Community Refuge',
+    status: 'pending_driver',
+    timeWindow: 'Today 2:00 PM - 5:00 PM',
+    created_at: new Date(Date.now() - 3600000).toISOString()
+  },
+  {
+    id: 'del_102',
+    items: ['1x Warm Blanket & Jacket'],
+    bags: 1,
+    donorArea: 'Ballard, Seattle',
+    destination: 'St. Jude Community Refuge',
+    status: 'pending_driver',
+    timeWindow: 'ASAP',
+    created_at: new Date(Date.now() - 7200000).toISOString()
+  },
+  {
+    id: 'del_103',
+    items: ['1x Sleeping Bag & Hygiene Kit'],
+    bags: 1,
+    donorArea: 'University District, Seattle',
+    destination: 'St. Jude Community Refuge',
+    status: 'pending_driver',
+    timeWindow: 'Today 4:00 PM - 7:00 PM',
+    created_at: new Date(Date.now() - 10800000).toISOString()
+  }
+];
 
 let activeGigs = [
   {
@@ -441,9 +580,9 @@ app.get('/api/jobs', async (req, res) => {
   const userId = req.query.userId || req.query.user_id;
   const isVolunteer = req.query.role === 'volunteer';
 
-  try {
-    if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY && typeof globalThis.window !== 'undefined' && globalThis.window.supabaseClient) {
-      let query = globalThis.window.supabaseClient.from('jobs').select('*').order('created_at', { ascending: false });
+  if (supabase) {
+    try {
+      let query = supabase.from('jobs').select('*').order('created_at', { ascending: false });
       if (isVolunteer) {
         if (!userId) {
           return res.json({ success: true, jobs: [] });
@@ -451,12 +590,25 @@ app.get('/api/jobs', async (req, res) => {
         query = query.eq('author_id', userId);
       }
       const { data, error } = await query;
-      if (!error && data) {
-        return res.json({ success: true, jobs: data });
+      if (!error && data && data.length > 0) {
+        const formattedJobs = data.map(j => ({
+          id: j.id,
+          title: j.title,
+          company: j.company || 'Community Partner',
+          location: j.location || 'Seattle, WA',
+          type: j.type || 'Flexible Shift',
+          pay: j.pay || '$20.00 / hr Cash',
+          requirements: typeof j.requirements === 'string' ? JSON.parse(j.requirements) : (Array.isArray(j.requirements) ? j.requirements : []),
+          description: j.description || 'Verified community job opportunity.',
+          contact: j.contact || 'Contact Coordinator',
+          authorId: j.author_id,
+          postedAt: j.created_at
+        }));
+        return res.json({ success: true, jobs: formattedJobs });
       }
+    } catch (err) {
+      console.warn('Supabase fetch jobs error, falling back to memory:', err.message);
     }
-  } catch (err) {
-    console.warn('Supabase fetch error, falling back to memory/filtered state:', err.message);
   }
 
   let filteredJobs = inMemoryJobs;
@@ -659,12 +811,10 @@ app.post('/api/jobs', async (req, res) => {
 
     inMemoryJobs.unshift(newJob);
 
-    // Persist to Supabase if client / credentials configured
-    try {
-      if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        const { createClient } = await import('@supabase/supabase-js');
-        const supabaseAdmin = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-        await supabaseAdmin.from('jobs').insert([{
+    if (supabase) {
+      try {
+        const { error: sbErr } = await supabase.from('jobs').insert([{
+          id: newJob.id,
           title: newJob.title,
           company: newJob.company,
           location: newJob.location,
@@ -673,12 +823,17 @@ app.post('/api/jobs', async (req, res) => {
           requirements: newJob.requirements,
           description: newJob.description,
           contact: newJob.contact,
-          author_id: authorId || null
+          author_id: newJob.authorId || null,
+          created_at: newJob.postedAt
         }]);
-        console.log('⚡ Saved new job to Supabase database table!');
+        if (!sbErr) {
+          console.log('⚡ Saved new job to Supabase database table!');
+        } else {
+          console.warn('Supabase DB insertion notice:', sbErr.message);
+        }
+      } catch (sbErr) {
+        console.warn('Supabase DB insertion notice:', sbErr.message);
       }
-    } catch (sbErr) {
-      console.warn('Supabase DB insertion notice:', sbErr.message);
     }
 
     console.log('✅ New Job Posted:', newJob.title);
@@ -698,14 +853,13 @@ app.delete('/api/jobs/:id', async (req, res) => {
       inMemoryJobs.splice(index, 1);
     }
 
-    try {
-      if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-        const { createClient } = await import('@supabase/supabase-js');
-        const supabaseAdmin = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-        await supabaseAdmin.from('jobs').delete().eq('id', id);
+    if (supabase) {
+      try {
+        await supabase.from('jobs').delete().eq('id', id);
+        console.log('⚡ Deleted job from Supabase:', id);
+      } catch (sbErr) {
+        console.warn('Supabase DB delete notice:', sbErr.message);
       }
-    } catch (sbErr) {
-      console.warn('Supabase DB delete notice:', sbErr.message);
     }
 
     res.json({ success: true, message: 'Job deleted successfully.' });
@@ -713,6 +867,44 @@ app.delete('/api/jobs/:id', async (req, res) => {
     console.error('Error deleting job:', err);
     res.status(500).json({ error: 'Failed to delete job.' });
   }
+});
+
+// User Profiles API Endpoints for Cross-Account Synchronization
+app.get('/api/profiles/:id', async (req, res) => {
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', req.params.id).single();
+      if (!error && data) {
+        return res.json({ success: true, profile: data });
+      }
+    } catch (err) {
+      console.warn('Supabase fetch profile notice:', err.message);
+    }
+  }
+  res.status(404).json({ success: false, error: 'Profile not found' });
+});
+
+app.post('/api/profiles', async (req, res) => {
+  const { id, username, full_name, role, theme } = req.body || {};
+  if (!id) return res.status(400).json({ error: 'User id is required' });
+
+  if (supabase) {
+    try {
+      const payload = { id, updated_at: new Date().toISOString() };
+      if (username) payload.username = username;
+      if (role) payload.role = role;
+      if (theme) payload.theme = theme;
+      
+      const { data, error } = await supabase.from('profiles').upsert(payload, { onConflict: 'id' }).select('*').single();
+      if (!error) {
+        return res.json({ success: true, profile: data });
+      }
+      console.warn('Supabase profile upsert warning:', error.message);
+    } catch (err) {
+      console.warn('Supabase profile error:', err.message);
+    }
+  }
+  res.json({ success: true, profile: { id, username, role, theme } });
 });
 
 // API Endpoint: Create Stripe Checkout Session for Donations
@@ -772,8 +964,26 @@ app.get('/api/deliveries', async (req, res) => {
   if (supabase) {
     try {
       const { data, error } = await supabase.from('deliveries').select('*').order('created_at', { ascending: false });
-      if (!error && data) {
-        return res.json({ success: true, deliveries: data });
+      if (!error && data && data.length > 0) {
+        const formatted = data.map(d => ({
+          id: d.id,
+          items: typeof d.items === 'string' ? (d.items.startsWith('[') ? JSON.parse(d.items) : [d.items]) : (Array.isArray(d.items) ? d.items : [d.items]),
+          bags: d.bags || 1,
+          donorArea: d.donorArea || 'Seattle Area',
+          destination: d.destination || 'St. Jude Community Refuge',
+          timeWindow: d.timeWindow || 'ASAP',
+          status: d.status || 'pending_driver',
+          driverName: d.driverName || null,
+          driver_id: d.driver_id || null,
+          donor_id: d.donor_id || null,
+          etaMinutes: d.etaMinutes || 20,
+          contactNotes: d.contactNotes || 'Contact donor upon arrival',
+          created_at: d.created_at,
+          claimed_at: d.claimed_at,
+          updated_at: d.updated_at
+        }));
+        activeDeliveries = formatted;
+        return res.json({ success: true, deliveries: formatted });
       }
     } catch (err) {
       console.warn('Supabase fetch deliveries failed, falling back to memory', err);
@@ -787,7 +997,25 @@ app.get('/api/deliveries/:id', async (req, res) => {
     try {
       const { data, error } = await supabase.from('deliveries').select('*').eq('id', req.params.id).single();
       if (!error && data) {
-        return res.json({ success: true, delivery: data });
+        const d = data;
+        const formatted = {
+          id: d.id,
+          items: typeof d.items === 'string' ? (d.items.startsWith('[') ? JSON.parse(d.items) : [d.items]) : (Array.isArray(d.items) ? d.items : [d.items]),
+          bags: d.bags || 1,
+          donorArea: d.donorArea || 'Seattle Area',
+          destination: d.destination || 'St. Jude Community Refuge',
+          timeWindow: d.timeWindow || 'ASAP',
+          status: d.status || 'pending_driver',
+          driverName: d.driverName || null,
+          driver_id: d.driver_id || null,
+          donor_id: d.donor_id || null,
+          etaMinutes: d.etaMinutes || 20,
+          contactNotes: d.contactNotes || 'Contact donor upon arrival',
+          created_at: d.created_at,
+          claimed_at: d.claimed_at,
+          updated_at: d.updated_at
+        };
+        return res.json({ success: true, delivery: formatted });
       }
     } catch (err) {
       console.warn('Supabase fetch delivery failed, falling back to memory', err);
@@ -810,24 +1038,36 @@ app.post('/api/deliveries', async (req, res) => {
       donorArea: donorArea || 'Seattle Area',
       destination: destination || 'St. Jude Community Refuge',
       timeWindow: timeWindow || 'Morning (9am - 12pm)',
-      status: 'pending_driver', // pending_driver -> driver_assigned -> in_transit -> delivered
+      status: 'pending_driver',
       driverName: null,
       etaMinutes: 20,
       contactNotes: contactNotes || 'Contact donor upon arrival',
       created_at: new Date().toISOString()
     };
     
-    // For Supabase, map items array to a JSON-compatible format or comma-separated string if arrays aren't supported.
-    // Assuming JSON is supported or we just store as string.
-    const supabaseDelivery = { ...newDelivery, donor_id: donor_id || null, items: JSON.stringify(newDelivery.items) };
-
     if (supabase) {
+      const supabaseDelivery = { 
+        id: newDelivery.id,
+        items: newDelivery.items,
+        bags: newDelivery.bags,
+        donorArea: newDelivery.donorArea,
+        destination: newDelivery.destination,
+        timeWindow: newDelivery.timeWindow,
+        status: newDelivery.status,
+        driverName: null,
+        driver_id: null,
+        donor_id: donor_id || null,
+        etaMinutes: newDelivery.etaMinutes,
+        contactNotes: newDelivery.contactNotes,
+        created_at: newDelivery.created_at
+      };
       const { error } = await supabase.from('deliveries').insert(supabaseDelivery);
       if (!error) {
         console.log('📦 New Real Food Pickup Request Added to Supabase:', newDelivery.id);
+        activeDeliveries.unshift(newDelivery);
         return res.json({ success: true, delivery: newDelivery });
       }
-      console.warn('Supabase insert delivery failed, falling back to memory', error);
+      console.warn('Supabase insert delivery error:', error.message);
     }
     
     activeDeliveries.unshift(newDelivery);
@@ -849,14 +1089,27 @@ app.post('/api/deliveries/:id/claim', async (req, res) => {
       if (!getErr && existing) {
         const updates = { 
           status: 'driver_assigned', 
-          driverName: driverName || 'Volunteer Driver (Sarah M.)', 
+          driverName: driverName || 'Volunteer Driver', 
           driver_id: driver_id || null,
           claimed_at: new Date().toISOString()
         };
         const { error: updErr } = await supabase.from('deliveries').update(updates).eq('id', id);
         if (!updErr) {
           console.log('🚚 Volunteer Claimed Delivery Route in Supabase:', id);
-          return res.json({ success: true, delivery: { ...existing, ...updates, items: JSON.parse(existing.items || '[]') } });
+          const rawItems = existing.items;
+          const parsedItems = typeof rawItems === 'string' ? (rawItems.startsWith('[') ? JSON.parse(rawItems) : [rawItems]) : (Array.isArray(rawItems) ? rawItems : [rawItems]);
+          const updatedDel = {
+            ...existing,
+            ...updates,
+            items: parsedItems
+          };
+          const idx = activeDeliveries.findIndex(d => d.id === id);
+          if (idx !== -1) {
+            activeDeliveries[idx] = { ...activeDeliveries[idx], ...updates };
+          }
+          return res.json({ success: true, delivery: updatedDel });
+        } else {
+          console.warn('Supabase update delivery claim error:', updErr.message);
         }
       }
     }
@@ -866,7 +1119,7 @@ app.post('/api/deliveries/:id/claim', async (req, res) => {
       return res.status(404).json({ error: 'Delivery request not found.' });
     }
     delivery.status = 'driver_assigned';
-    delivery.driverName = driverName || 'Volunteer Driver (Sarah M.)';
+    delivery.driverName = driverName || 'Volunteer Driver';
     delivery.claimedAt = new Date().toISOString();
     console.log('🚚 Volunteer Claimed Delivery Route in memory:', id);
     res.json({ success: true, delivery });
@@ -885,6 +1138,10 @@ app.post('/api/deliveries/:id/status', async (req, res) => {
       const { error } = await supabase.from('deliveries').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
       if (!error) {
         console.log(`📦 Delivery ${id} status updated to: ${status} in Supabase`);
+        const idx = activeDeliveries.findIndex(d => d.id === id);
+        if (idx !== -1) {
+          activeDeliveries[idx].status = status;
+        }
         return res.json({ success: true, delivery: { id, status } });
       }
     }
@@ -1173,6 +1430,11 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   const actualPort = server.address().port;
   console.log(`✅ Northstar App Ready at http://localhost:${actualPort}`);
   console.log(`🚀 Server running on http://0.0.0.0:${actualPort} (${activeGigs.length} vetted gigs ready)`);
+
+  // Seed Supabase database tables if empty
+  seedSupabaseTablesIfEmpty().catch(err => {
+    console.warn('Startup seed warning:', err?.message || err);
+  });
 
   // Run Apify scraper on startup only if explicitly enabled (otherwise use pre-seeded gigs & on-demand /api/trigger-scrape)
   if (process.env.ENABLE_STARTUP_SCRAPE === 'true') {
