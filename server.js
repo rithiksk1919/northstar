@@ -272,17 +272,6 @@ let activeGigs = [
     isCash: true
   },
   {
-    id: 't2MJV7LmjTGLBA9nd1sHgd',
-    title: 'General Labor -- $18/hr Misc. Work (NO TAXES)',
-    category: 'Local & Immediate',
-    pay: '$18.00 / hr Cash',
-    summary: 'Local daily gig work assisting with yard work and equipment setup.',
-    safety: 'Cash in hand jobs near me. Drop-in daily labor.',
-    url: 'https://www.craigslist.org/view/d/general-labor-18hr-misc-stuff-no-taxes/t2MJV7LmjTGLBA9nd1sHgd',
-    postedAt: new Date().toISOString(),
-    isCash: true
-  },
-  {
     id: '4fKDdW5GyK3edG4E4MKvch',
     title: 'Home Office & Storage Organizing Helper',
     category: 'Local & Immediate',
@@ -439,6 +428,8 @@ app.get('/api/trigger-scrape', async (req, res) => {
 // Google Transit Directions Proxy API
 app.get('/api/transit-directions', async (req, res) => {
   const { origin, destination } = req.query;
+  // mode=walking for "Walk only"; anything else asks for bus + walk
+  const wantWalking = String(req.query.mode || '').toLowerCase() === 'walking';
   const apiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY;
 
   if (!origin || !destination) {
@@ -451,16 +442,20 @@ app.get('/api/transit-directions', async (req, res) => {
 
   try {
     const axios = (await import('axios')).default;
-    const response = await axios.get('https://maps.googleapis.com/maps/api/directions/json', {
-      params: {
-        origin,
-        destination,
-        mode: 'transit',
-        transit_mode: 'bus',
-        departure_time: 'now',
-        key: apiKey
-      }
+    const ask = (mode) => axios.get('https://maps.googleapis.com/maps/api/directions/json', {
+      timeout: 12000,
+      params: mode === 'walking'
+        ? { origin, destination, mode: 'walking', key: apiKey }
+        : { origin, destination, mode: 'transit', transit_mode: 'bus', departure_time: 'now', key: apiKey }
     });
+
+    let modeUsed = wantWalking ? 'walking' : 'transit';
+    let response = await ask(modeUsed);
+    // No bus route (late at night, or too close for a bus): fall back to walking directions
+    if (modeUsed === 'transit' && response.data.status === 'ZERO_RESULTS') {
+      modeUsed = 'walking';
+      response = await ask('walking');
+    }
 
     if (response.data.status === 'OK' && response.data.routes.length > 0) {
       const route = response.data.routes[0];
@@ -471,7 +466,8 @@ app.get('/api/transit-directions', async (req, res) => {
           travel_mode: step.travel_mode,
           duration: step.duration.text,
           distance: step.distance.text,
-          instructions: step.html_instructions.replace(/<[^>]*>?/gm, ''),
+          // Google puts extra notes in <div>s ("Pass by Chase Bank"); keep them as separate sentences
+          instructions: step.html_instructions.replace(/<div[^>]*>/gi, '. ').replace(/<[^>]*>?/gm, '').replace(/\s+\./g, '.').replace(/\s+/g, ' ').trim(),
           polyline: step.polyline ? step.polyline.points : '',
           start_location: step.start_location,
           end_location: step.end_location
@@ -497,6 +493,7 @@ app.get('/api/transit-directions', async (req, res) => {
 
       return res.json({
         success: true,
+        mode_used: modeUsed,
         summary: {
           departure_time: leg.departure_time ? leg.departure_time.text : 'Now',
           arrival_time: leg.arrival_time ? leg.arrival_time.text : '',
@@ -1084,8 +1081,13 @@ app.post('/api/deliveries/:id/claim', async (req, res) => {
     const { id } = req.params;
     const { driverName, driver_id } = req.body;
     
+    const takenByOther = (d) => d && d.status !== 'pending_driver' && !(driver_id && d.driver_id === driver_id);
+
     if (supabase) {
       const { data: existing, error: getErr } = await supabase.from('deliveries').select('*').eq('id', id).single();
+      if (!getErr && existing && takenByOther(existing)) {
+        return res.status(409).json({ success: false, error: 'This pickup was already claimed by another volunteer.' });
+      }
       if (!getErr && existing) {
         const updates = { 
           status: 'driver_assigned', 
@@ -1118,8 +1120,12 @@ app.post('/api/deliveries/:id/claim', async (req, res) => {
     if (!delivery) {
       return res.status(404).json({ error: 'Delivery request not found.' });
     }
+    if (takenByOther(delivery)) {
+      return res.status(409).json({ success: false, error: 'This pickup was already claimed by another volunteer.' });
+    }
     delivery.status = 'driver_assigned';
     delivery.driverName = driverName || 'Volunteer Driver';
+    delivery.driver_id = driver_id || null;
     delivery.claimedAt = new Date().toISOString();
     console.log('🚚 Volunteer Claimed Delivery Route in memory:', id);
     res.json({ success: true, delivery });
@@ -1133,6 +1139,10 @@ app.post('/api/deliveries/:id/status', async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
+    const VALID_DELIVERY_STATUSES = ['pending_driver', 'driver_assigned', 'in_transit', 'delivered', 'completed'];
+    if (status && !VALID_DELIVERY_STATUSES.includes(status)) {
+      return res.status(400).json({ success: false, error: `Invalid status. Use one of: ${VALID_DELIVERY_STATUSES.join(', ')}` });
+    }
     
     if (supabase && status) {
       const { error } = await supabase.from('deliveries').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
@@ -1161,73 +1171,212 @@ app.post('/api/deliveries/:id/status', async (req, res) => {
     res.status(500).json({ error: 'Failed to update delivery status.' });
   }
 });
-// --- NorthStar V5 AI Chatbot Endpoint ---
+// --- Companion chat (NorthStar V5 model, with a Gemini backup) ---
+//
+// Order: Gemini answers first (about 1-2 s, grounded in the verified places and jobs
+// below). If Gemini is unavailable or out of free quota, the NorthStar V5 model
+// (remote NORTHSTAR_AI_URL, or the local Python script) answers instead, so Companion
+// always replies. Set COMPANION_PROVIDER=northstar to ask the NorthStar model first.
+
+// Verified places (same list and ids as the Map) used to ground place questions
+let VERIFIED_PLACES = [];
+try {
+  const raw = JSON.parse(fs.readFileSync(path.join(__dirname, 'src', 'data', 'resources.json'), 'utf8'));
+  VERIFIED_PLACES = Array.isArray(raw) ? raw : (Array.isArray(raw.resources) ? raw.resources : []);
+} catch (err) {
+  console.warn('Companion: could not load src/data/resources.json:', err.message);
+}
+
+app.get('/api/resources', (req, res) => {
+  res.json({ success: true, resources: VERIFIED_PLACES });
+});
+
+function detectPlaceCategory(lower) {
+  if (/\b(shelter|bed|beds|place to stay|sleep|sleeping|stay tonight)\b/.test(lower)) return 'shelter';
+  if (/\b(food|meal|meals|eat|hungry|pantry|food bank|lunch|dinner|breakfast)\b/.test(lower)) return 'food';
+  if (/\b(shower|showers|restroom|bathroom|toilet|hygiene|laundry)\b/.test(lower)) return 'restroom';
+  if (/\b(wifi|wi-fi|internet|charge|charging|library)\b/.test(lower)) return 'wifi';
+  return null;
+}
+
+const COMPANION_REMOTE_TIMEOUT_MS = Number(process.env.COMPANION_REMOTE_TIMEOUT_MS) || 45000;
+const COMPANION_GEMINI_MODELS = (process.env.GEMINI_CHAT_MODELS ||
+  'gemini-3.5-flash-lite,gemini-flash-lite-latest,gemini-3.5-flash,gemini-flash-latest')
+  .split(',').map(s => s.trim()).filter(Boolean);
+
+async function askNorthstarRemote(chatPayload) {
+  const url = process.env.NORTHSTAR_AI_URL;
+  if (!url || !process.env.NORTHSTAR_AI_KEY) throw new Error('remote NorthStar AI not configured');
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), COMPANION_REMOTE_TIMEOUT_MS);
+  try {
+    const aiResponse = await fetch(`${url}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-NorthStar-AI-Key': process.env.NORTHSTAR_AI_KEY },
+      body: JSON.stringify(chatPayload),
+      signal: controller.signal
+    });
+    const type = aiResponse.headers.get('content-type') || '';
+    if (!aiResponse.ok || !type.includes('json')) throw new Error(`remote NorthStar AI returned HTTP ${aiResponse.status}`);
+    const result = await aiResponse.json();
+    if (!result.success || !result.reply) throw new Error(result.error || 'remote NorthStar AI returned no reply');
+    return { reply: result.reply, mode: result.mode || 'northstar_v5' };
+  } catch (err) {
+    if (err.name === 'AbortError') throw new Error(`remote NorthStar AI took longer than ${COMPANION_REMOTE_TIMEOUT_MS / 1000}s`);
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function askNorthstarLocal(chatPayload) {
+  return new Promise((resolve, reject) => {
+    if (!fs.existsSync(NORTHSTAR_CHAT_SCRIPT)) return reject(new Error('local NorthStar AI script not found'));
+    const child = spawn(NORTHSTAR_AI_PYTHON, [NORTHSTAR_CHAT_SCRIPT], { cwd: NORTHSTAR_AI_DIR, stdio: ['pipe', 'pipe', 'pipe'] });
+    let stdout = '';
+    let stderr = '';
+    const timer = setTimeout(() => { child.kill('SIGTERM'); reject(new Error('local NorthStar AI timed out')); }, 120000);
+    child.stdout.on('data', c => { stdout += c.toString(); });
+    child.stderr.on('data', c => { stderr += c.toString(); });
+    child.on('error', err => { clearTimeout(timer); reject(err); });
+    child.on('close', code => {
+      clearTimeout(timer);
+      if (code !== 0) return reject(new Error(`local NorthStar AI exited with code ${code}: ${stderr.slice(-300)}`));
+      try {
+        const result = JSON.parse(stdout.trim());
+        if (!result.success || !result.reply) return reject(new Error(result.error || 'local NorthStar AI returned no reply'));
+        resolve({ reply: result.reply, mode: 'northstar_v5' });
+      } catch (e) {
+        reject(new Error('local NorthStar AI output was not valid JSON'));
+      }
+    });
+    child.stdin.write(JSON.stringify(chatPayload));
+    child.stdin.end();
+  });
+}
+
+function companionSystemPrompt(role) {
+  const who = role === 'volunteer'
+    ? 'The person is a volunteer who wants to help (donate money or food, deliver food pickups, post jobs).'
+    : 'The person may be experiencing homelessness and is looking for help.';
+  // So "is it open today?" can be answered against the hours in the verified data
+  const now = new Date();
+  const seattleNow = now.toLocaleString('en-US', {
+    timeZone: 'America/Los_Angeles', weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit'
+  });
+  return [
+    `Right now it is ${seattleNow} in Seattle. Use this when someone asks what is open today or now, and compare it with the hours in VERIFIED APP DATA.`,
+    'You are Companion, the assistant inside Northstar, a free app for the Seattle area. Northstar helps people experiencing homelessness find shelter, food, showers and work and build a resume, and helps volunteers give food, money and time.',
+    who,
+    'How to reply:',
+    '- Plain, warm, respectful and short: 2 to 5 sentences, under 90 words. Use simple words. No markdown headings, no bold, no emojis. A short list with "- " is fine.',
+    '- Only mention places, addresses, phone numbers, hours, jobs or pay that appear in VERIFIED APP DATA. Never invent them. If the data does not cover it, say so and point to the right part of the app.',
+    '- Places: if verified places are given, name the best 1 to 3 with address and hours. If the user location is not known, say these are verified places in the area and suggest the Map tab to see which is closest and get directions.',
+    '- A bed tonight: they can also call 211 (free, confidential, connects to local shelters and services). Danger right now: call 911. If someone mentions suicide or hurting themselves: call or text 988.',
+    '- Jobs: use VERIFIED APP DATA current_jobs. If a resume is provided, match their real skills and experience to those jobs. Never promise they will be hired.',
+    '- App tabs you can point to: Home (a shelter open tonight, nearby places, call 211), Map (shelters, food, showers, wifi, saving places, directions), Gigs (day gigs and jobs posted by volunteers), Companion (this chat) and Me (their resume, first steps and settings). The resume builder opens from Me: answer a few questions, then print or copy the resume. Volunteers also have a Donate tab (donate money, post a food donation, claim and deliver food pickups) and can post jobs from the Gigs tab.',
+    '- You cannot book beds, call anyone, send applications or see their location unless it is in the data. Do not pretend to.'
+  ].join('\n');
+}
+
+async function askGemini(chatPayload) {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) throw new Error('GEMINI_API_KEY not set');
+
+  const contents = (chatPayload.history || [])
+    .filter(t => t && typeof t.content === 'string' && t.content.trim())
+    .slice(-10)
+    .map(t => ({ role: t.role === 'assistant' ? 'model' : 'user', parts: [{ text: t.content.slice(0, 2000) }] }));
+  let userText = chatPayload.message;
+  if (chatPayload.context) {
+    userText += `\n\nVERIFIED APP DATA (JSON):\n${JSON.stringify(chatPayload.context).slice(0, 14000)}`;
+  }
+  contents.push({ role: 'user', parts: [{ text: userText }] });
+
+  const body = JSON.stringify({
+    systemInstruction: { parts: [{ text: companionSystemPrompt(chatPayload.role) }] },
+    contents,
+    generationConfig: { temperature: 0.4, maxOutputTokens: 500 }
+  });
+
+  const failures = [];
+  for (const model of COMPANION_GEMINI_MODELS) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 12000);
+    try {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${key}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body,
+        signal: controller.signal
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(`HTTP ${r.status} ${(data.error && data.error.message || '').slice(0, 80)}`);
+      const text = (data.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('').trim();
+      if (!text) throw new Error('empty reply');
+      return { reply: text.replace(/\*\*(.+?)\*\*/g, '$1'), mode: `gemini:${model}` };
+    } catch (err) {
+      failures.push(`${model}: ${err.name === 'AbortError' ? 'timed out' : err.message}`);
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  throw new Error(`all Gemini models failed (${failures.join(' | ')})`);
+}
+
 app.post('/api/chat', async (req, res) => {
   try {
     const { message, role, context, history } = req.body || {};
 
     if (!message || typeof message !== 'string' || !message.trim()) {
-      return res.status(400).json({
-        success: false,
-        error: 'Message is required.'
-      });
+      return res.status(400).json({ success: false, error: 'Message is required.' });
     }
 
-    const userRole = role || 'seeker';
-
-    console.log(`🤖 [NorthStar V5 Chat] ${userRole}: "${message}"`);
-
-    // --------------------------------------------------------
-    // Add current verified job listings only when the question
-    // actually needs job-search / job-matching information.
-    // --------------------------------------------------------
+    const userRole = role === 'volunteer' ? 'volunteer' : 'seeker';
     const lowerMessage = message.toLowerCase();
+    console.log(`🤖 [Companion] ${userRole}: "${message.slice(0, 200)}"`);
 
+    // Current listings when the question (or the conversation just before it) is about jobs,
+    // so follow-ups like "which one pays the most?" still have the listings
+    const jobWords = /\b(job|jobs|gig|gigs|work|hiring|employ|pay|pays|paid|wage|shift)/;
+    const recentUserTurns = (Array.isArray(history) ? history : [])
+      .filter(t => t && t.role === 'user' && typeof t.content === 'string')
+      .slice(-2)
+      .map(t => t.content.toLowerCase());
     const needsJobContext =
-      (
-        lowerMessage.includes('job') ||
-        lowerMessage.includes('jobs') ||
-        lowerMessage.includes('work opportunity') ||
-        lowerMessage.includes('work opportunities')
-      ) &&
-      (
-        lowerMessage.includes('best') ||
-        lowerMessage.includes('match') ||
-        lowerMessage.includes('fit') ||
-        lowerMessage.includes('find') ||
-        lowerMessage.includes('which') ||
-        lowerMessage.includes('recommend') ||
-        lowerMessage.includes('current') ||
-        lowerMessage.includes('available') ||
-        lowerMessage.includes('for me') ||
-        lowerMessage.includes('apply')
-      );
+      (jobWords.test(lowerMessage) &&
+        /\b(best|match|fit|find|which|recommend|current|available|for me|apply|near|today|open|any|most|pay|pays)\b/.test(lowerMessage)) ||
+      (recentUserTurns.some(t => /\b(job|jobs|gig|gigs|hiring)\b/.test(t)) &&
+        /\b(which|what|how much|pay|pays|most|best|that|it|one)\b/.test(lowerMessage));
 
-    const verifiedContext =
-      context && typeof context === 'object'
-        ? { ...context }
-        : {};
+    const verifiedContext = context && typeof context === 'object' ? { ...context } : {};
 
     if (needsJobContext) {
       verifiedContext.current_jobs = activeGigs.slice(0, 20).map(gig => ({
         id: gig.id || '',
         title: gig.title || '',
-        company: '',
-        location: '',
         pay: gig.pay || '',
-        requirements: [],
         description: gig.summary || '',
         safety: gig.safety || '',
         url: gig.url || '',
-        postedAt: gig.postedAt || '',
         source: 'vetted_gig'
       }));
-
       verifiedContext.jobs_source = 'northstar_current_vetted_gigs';
+    }
 
-      console.log(
-        `💼 [NorthStar V5 Chat] Added ${verifiedContext.current_jobs.length} current jobs to verified context`
-      );
+    // Place questions: when the phone couldn't give a nearest place, include the verified list
+    const category = detectPlaceCategory(lowerMessage);
+    const lookup = verifiedContext.resource_lookup;
+    const lookupOk = lookup && lookup.resource_lookup_status === 'success';
+    let fallbackPlaces = [];
+    if (category && !lookupOk) {
+      fallbackPlaces = VERIFIED_PLACES.filter(p => p.category === category).slice(0, 5).map(p => ({
+        id: p.id, name: p.name, address: p.address, hours: p.hours, status: p.status, phone: p.phone, description: p.description
+      }));
+      if (fallbackPlaces.length) {
+        verifiedContext.verified_places = fallbackPlaces;
+        verifiedContext.user_location_known = false;
+      }
     }
 
     const chatPayload = {
@@ -1237,191 +1386,42 @@ app.post('/api/chat', async (req, res) => {
       history: Array.isArray(history) ? history.slice(-10) : []
     };
 
-    const northstarAiUrl = process.env.NORTHSTAR_AI_URL;
+    const northstar = () => (process.env.NORTHSTAR_AI_URL ? askNorthstarRemote(chatPayload) : askNorthstarLocal(chatPayload));
+    const providers = (process.env.COMPANION_PROVIDER || '').toLowerCase() === 'northstar'
+      ? [['northstar', northstar], ['gemini', () => askGemini(chatPayload)]]
+      : [['gemini', () => askGemini(chatPayload)], ['northstar', northstar]];
 
-    // ── Remote HTTP path ──────────────────────────────────────────────────
-    if (northstarAiUrl) {
-      if (!process.env.NORTHSTAR_AI_KEY) {
-        console.error('Error: NORTHSTAR_AI_URL is set but NORTHSTAR_AI_KEY is missing.');
-        return res.status(500).json({ success: false, error: 'Remote AI service is not configured correctly.' });
-      }
-
-      console.log(`🌐 [NorthStar V5 Chat] Forwarding to remote AI service: ${northstarAiUrl}/chat`);
-
-      const controller = new AbortController();
-      const chatTimeout = setTimeout(() => controller.abort(), 180000); // 180 s
-
-      let aiResponse;
+    let result = null;
+    for (const [name, ask] of providers) {
+      const started = Date.now();
       try {
-        aiResponse = await fetch(`${northstarAiUrl}/chat`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'X-NorthStar-AI-Key': process.env.NORTHSTAR_AI_KEY
-          },
-          body: JSON.stringify(chatPayload),
-          signal: controller.signal
-        });
-      } catch (fetchErr) {
-        clearTimeout(chatTimeout);
-        if (fetchErr.name === 'AbortError') {
-          return res.status(504).json({
-            success: false,
-            error: 'NorthStar AI took too long to respond.'
-          });
-        }
-        throw fetchErr;
+        result = await ask();
+        console.log(`✅ [Companion] answered by ${result.mode} in ${((Date.now() - started) / 1000).toFixed(1)}s`);
+        break;
+      } catch (err) {
+        console.warn(`⚠️ [Companion] ${name} unavailable after ${((Date.now() - started) / 1000).toFixed(1)}s: ${err.message}`);
       }
-      clearTimeout(chatTimeout);
-
-      const result = await aiResponse.json();
-
-      if (!result.success || !result.reply) {
-        return res.status(500).json({
-          success: false,
-          error: result.error || 'NorthStar AI returned no response.'
-        });
-      }
-
-      console.log('✅ [NorthStar V5 Chat] Response generated (remote)');
-
-      const responsePayload = {
-        success: true,
-        reply: result.reply,
-        mode: result.mode || 'northstar_v5'
-      };
-
-      if (needsJobContext) {
-        responsePayload.action = {
-          type: 'navigate',
-          destination: 'jobs',
-          label: 'View Jobs'
-        };
-      }
-
-      return res.json(responsePayload);
     }
 
-    // ── Local Python spawn fallback ────────────────────────────────────────
-    const pythonPath = NORTHSTAR_AI_PYTHON;
-    const chatScript = NORTHSTAR_CHAT_SCRIPT;
+    if (!result) {
+      return res.status(503).json({ success: false, error: 'Companion is unavailable right now.' });
+    }
 
-    const child = spawn(
-      pythonPath,
-      [chatScript],
-      {
-        cwd: NORTHSTAR_AI_DIR,
-        stdio: ['pipe', 'pipe', 'pipe']
-      }
-    );
-
-    let stdout = '';
-    let stderr = '';
-    let responded = false;
-
-    const timeout = setTimeout(() => {
-      if (!responded) {
-        child.kill('SIGTERM');
-        responded = true;
-
-        return res.status(504).json({
-          success: false,
-          error: 'NorthStar AI took too long to respond.'
-        });
-      }
-    }, 180000);
-
-    child.stdout.on('data', chunk => {
-      stdout += chunk.toString();
-    });
-
-    child.stderr.on('data', chunk => {
-      stderr += chunk.toString();
-      console.log('[NorthStar AI]', chunk.toString().trim());
-    });
-
-    child.on('error', err => {
-      clearTimeout(timeout);
-
-      if (responded) return;
-      responded = true;
-
-      console.error('Failed to start NorthStar AI:', err);
-
-      return res.status(500).json({
-        success: false,
-        error: 'Could not start NorthStar AI.'
-      });
-    });
-
-    child.on('close', code => {
-      clearTimeout(timeout);
-
-      if (responded) return;
-      responded = true;
-
-      if (code !== 0) {
-        console.error('NorthStar AI exited with code:', code);
-        console.error(stderr);
-
-        return res.status(500).json({
-          success: false,
-          error: 'NorthStar AI generation failed.'
-        });
-      }
-
-      try {
-        const result = JSON.parse(stdout.trim());
-
-        if (!result.success || !result.reply) {
-          return res.status(500).json({
-            success: false,
-            error: result.error || 'NorthStar AI returned no response.'
-          });
-        }
-
-        console.log('✅ [NorthStar V5 Chat] Response generated');
-
-        const responsePayload = {
-          success: true,
-          reply: result.reply,
-          mode: 'northstar_v5'
-        };
-
-        // Give the UI a deterministic navigation action when
-        // NorthStar used current job data for this answer.
-        if (needsJobContext) {
-          responsePayload.action = {
-            type: 'navigate',
-            destination: 'jobs',
-            label: 'View Jobs'
-          };
-        }
-
-        return res.json(responsePayload);
-
-      } catch (parseErr) {
-        console.error('Could not parse NorthStar AI output.');
-        console.error('STDOUT:', stdout);
-        console.error('STDERR:', stderr);
-
-        return res.status(500).json({
-          success: false,
-          error: 'Invalid response from NorthStar AI.'
-        });
-      }
-    });
-
-    child.stdin.write(JSON.stringify(chatPayload));
-    child.stdin.end();
-
+    const responsePayload = { success: true, reply: result.reply, mode: result.mode };
+    if (needsJobContext) {
+      responsePayload.action = { type: 'navigate', destination: 'jobs', label: 'See jobs' };
+    } else if (fallbackPlaces.length) {
+      // Link the place the answer is actually about (named in the question or the reply)
+      const text = `${message} ${result.reply}`.toLowerCase();
+      const key = name => String(name || '').toLowerCase().replace(/\([^)]*\)/g, '').split(/[^a-z0-9']+/).filter(w => w.length > 2).slice(0, 2).join(' ');
+      const named = fallbackPlaces.find(p => key(p.name) && text.includes(key(p.name)));
+      const target = named || fallbackPlaces[0];
+      responsePayload.action = { type: 'navigate', destination: 'map', resourceId: target.id, label: 'Show on map' };
+    }
+    return res.json(responsePayload);
   } catch (err) {
-    console.error('NorthStar chatbot error:', err);
-
-    return res.status(500).json({
-      success: false,
-      error: 'NorthStar AI is temporarily unavailable.'
-    });
+    console.error('Companion chat error:', err);
+    return res.status(500).json({ success: false, error: 'Companion is unavailable right now.' });
   }
 });
 

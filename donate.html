@@ -1,232 +1,300 @@
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html class="light" lang="en">
 <head>
 <meta charset="utf-8">
-<meta content="width=device-width, initial-scale=1.0" name="viewport">
-<title>Northstar | Donate Food</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link rel="stylesheet" href="css/northstar.css">
-<script id="tailwind-config">
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            "colors": {
-                    "error": "#ba1a1a",
-                    "surface": "#0f1117",
-                    "tertiary-container": "#0d1c2f",
-                    "surface-variant": "#1a1d27",
-                    "on-primary-container": "#7c839b",
-                    "surface-container-lowest": "#12141c",
-                    "primary-fixed-dim": "#bec6e0",
-                    "on-surface": "#f8fafc",
-                    "surface-tint": "#565e74",
-                    "on-background": "#f8fafc",
-                    "tertiary": "#000000",
-                    "secondary": "#f59e0b",
-                    "primary-fixed": "#dae2fd",
-                    "on-primary": "#ffffff",
-                    "surface-container-low": "#161922",
-                    "tertiary-fixed": "#d5e3fd",
-                    "on-error-container": "#93000a",
-                    "on-primary-fixed": "#131b2e",
-                    "secondary-fixed-dim": "#e2c62d",
-                    "background": "#0f1117",
-                    "on-tertiary-fixed-variant": "#3a485c",
-                    "primary-container": "#131b2e",
-                    "tertiary-fixed-dim": "#b9c7e0",
-                    "outline": "#475569",
-                    "surface-container": "#1e2230",
-                    "on-tertiary-container": "#76859b",
-                    "on-surface-variant": "#94a3b8",
-                    "on-secondary": "#ffffff",
-                    "on-secondary-fixed": "#211b00",
-                    "outline-variant": "#334155",
-                    "surface-container-highest": "#282d3f",
-                    "on-error": "#ffffff",
-                    "surface-container-high": "#222737",
-                    "on-tertiary-fixed": "#0d1c2f",
-                    "primary": "#0d1c2f",
-                    "surface-dim": "#0b0c10",
-                    "surface-bright": "#161922",
-                    "secondary-fixed": "#ffe24c",
-                    "on-tertiary": "#ffffff",
-                    "on-secondary-fixed-variant": "#524600",
-                    "inverse-on-surface": "#eff1f3",
-                    "secondary-container": "#fcdf46",
-                    "inverse-surface": "#2d3133",
-                    "error-container": "#ffdad6",
-                    "on-secondary-container": "#726200",
-                    "inverse-primary": "#bec6e0",
-                    "on-primary-fixed-variant": "#3f465c"
-            },
-            "borderRadius": {
-                    "DEFAULT": "0.25rem",
-                    "lg": "0.5rem",
-                    "xl": "0.75rem",
-                    "2xl": "1rem",
-                    "3xl": "1.5rem",
-                    "full": "9999px"
-            }
-          },
-        },
-      }
-</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#FFFFFF">
+<title>Donate · Northstar</title>
+<link rel="icon" href="favicon.png">
+<script src="js/ns-boot.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=container-queries"></script>
+<script src="js/tailwind-config.js"></script>
+<link rel="stylesheet" href="css/app.css">
+<style>
+  .ns-amount-field { position: relative; }
+  .ns-amount-field > span {
+    position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+    font-size: 16px; font-weight: 600; color: var(--muted); pointer-events: none;
+  }
+  .ns-amount-field .ns-input { padding-left: 34px; }
+  .ns-amount-grid .ns-chip { justify-content: center; padding: 0 8px; }
+  .ns-form-error {
+    margin-top: 12px; padding: 12px 14px; border-radius: 14px;
+    background: var(--danger-wash); border: 1px solid var(--danger-line);
+    color: var(--danger); font-size: 14px; font-weight: 600; line-height: 1.4;
+  }
+</style>
 </head>
-<body class="bg-[#0F1117] min-h-screen flex items-center justify-center p-0 sm:py-6 text-slate-100 selection:bg-amber-500/30 selection:text-amber-300">
+<body>
 
-<!-- Atmospheric Background Glows -->
-<div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
-    <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl"></div>
-    <div class="absolute top-1/3 -right-40 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
-    <div class="absolute -bottom-40 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
-</div>
+<div class="app-frame">
 
-<!-- Mobile Frame Shell -->
-<div class="app-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-[#0F1117] sm:rounded-[44px] shadow-[0_0_70px_rgba(0,0,0,0.85)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800/80 z-10">
-
-
-
-    <!-- App Header -->
-    <header class="bg-white sticky top-0 z-40 flex justify-between items-center w-full px-5 pt-5 pb-3 border-b border-slate-200">
-        <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-slate-800 text-xl font-bold cursor-pointer">menu</span>
-            <h1 class="text-xl font-extrabold text-slate-900 font-heading tracking-tight">Northstar</h1>
+    <header class="ns-header">
+        <div class="min-w-0">
+            <h1 class="ns-header__title">Donate</h1>
+            <p class="ns-header__meta">Choose how you want to help today.</p>
         </div>
-        <div class="header-actions-right flex items-center gap-2">
-            <button onclick="toggleTheme()" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-amber-400 text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-sm" title="Toggle Light / Dark Mode">
-                <span class="material-symbols-outlined text-base">brightness_4</span>
-            </button>
-            <div onclick="openSettingsModal()" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-slate-200 text-sm font-bold cursor-pointer shadow-sm" title="Settings">
-                👤
-            </div>
+        <div class="ns-header__actions">
+            <button id="profile-btn" type="button" class="ns-icon-btn ns-avatar-btn" aria-label="Open settings" onclick="openSettingsModal()">S</button>
         </div>
     </header>
 
-    <!-- Main Scrollable Canvas -->
-    <main class="flex-grow px-5 pt-4 pb-28 flex flex-col gap-4 overflow-y-auto bg-[#F4F5F7]">
+    <main class="ns-main">
 
-        <!-- Page Header Text -->
-        <section class="space-y-1.5 pt-1 stagger-1">
-            <h2 class="text-2xl font-extrabold text-slate-900 font-heading leading-tight tracking-tight">Your guidance matters.</h2>
-            <p class="text-sm font-semibold text-slate-600 leading-relaxed">
-                Every contribution creates a path forward for someone in need. Choose how you'd like to help today.
-            </p>
-        </section>
+        <!-- Result after coming back from checkout (?status=success|cancel) -->
+        <div id="donation-return-notice" class="hidden mb-4" role="status"></div>
 
-        <!-- 3 White Option Cards -->
-        <div id="donation-cards-container" class="space-y-3 pt-1">
-
-            <!-- Card 1: Donate Money -->
-            <button data-action="money" class="cursor-pointer w-full bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-center justify-between text-left group hover:border-slate-300 transition-all stagger-2 spring-bounce-hover card-spring-click">
-                <div class="flex items-start gap-3 pointer-events-none">
-                    <div class="w-10 h-10 rounded-full bg-[#FFE855] text-slate-950 flex items-center justify-center font-bold flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
-                        <span class="material-symbols-outlined text-xl">payments</span>
-                    </div>
-                    <div class="space-y-1">
-                        <h3 class="font-extrabold text-sm text-slate-900 font-heading">Donate Money ($)</h3>
-                        <p class="text-xs text-slate-500 font-normal leading-normal max-w-[240px]">
-                            Immediate financial support for local shelters and community initiatives. Tax deductible and fully transparent.
-                        </p>
-                    </div>
-                </div>
-                <span class="material-symbols-outlined text-base text-slate-400 group-hover:text-slate-700 group-hover:translate-x-1 transition-transform pointer-events-none">arrow_forward</span>
+        <!-- Active delivery (shown when you have one) -->
+        <div id="donation-status-bar" class="hidden mb-4">
+            <button id="donation-status-chip" type="button" class="ns-card ns-card--amber w-full flex items-center gap-4 p-4"
+                onclick="window._openLastDeliveryTracker && window._openLastDeliveryTracker()">
+                <span id="dsb-tile" class="ns-tile !bg-paper"><span id="dsb-icon" class="material-symbols-outlined">local_shipping</span></span>
+                <span class="flex-1 min-w-0">
+                    <span id="dsb-label" class="ns-card-title block truncate">Your delivery</span>
+                    <span id="dsb-sub" class="ns-card-sub block truncate">Tap to see its status</span>
+                </span>
+                <span class="material-symbols-outlined ns-chevron">chevron_right</span>
             </button>
-
-            <!-- Card 2: Donate Food -->
-            <button data-action="food" class="cursor-pointer w-full bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-center justify-between text-left group hover:border-slate-300 transition-all stagger-3 spring-bounce-hover card-spring-click">
-                <div class="flex items-start gap-3 pointer-events-none">
-                    <div class="w-10 h-10 rounded-full bg-[#FFE855] text-slate-950 flex items-center justify-center font-bold flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
-                        <span class="material-symbols-outlined text-xl">restaurant</span>
-                    </div>
-                    <div class="space-y-1">
-                        <h3 class="font-extrabold text-sm text-slate-900 font-heading">Donate Food</h3>
-                        <p class="text-xs text-slate-500 font-normal leading-normal max-w-[240px]">
-                            Drop off non-perishable items at our local hubs for distribution to families in need.
-                        </p>
-                    </div>
-                </div>
-                <span class="material-symbols-outlined text-base text-slate-400 group-hover:text-slate-700 group-hover:translate-x-1 transition-transform pointer-events-none">arrow_forward</span>
-            </button>
-
-            <!-- Card 3: Deliver Food Directly -->
-            <button data-action="deliver" class="cursor-pointer w-full bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-center justify-between text-left group hover:border-slate-300 transition-all stagger-4 spring-bounce-hover card-spring-click">
-                <div class="flex items-start gap-3 pointer-events-none">
-                    <div class="w-10 h-10 rounded-full bg-[#FFE855] text-slate-950 flex items-center justify-center font-bold flex-shrink-0 group-hover:scale-110 transition-transform duration-200">
-                        <span class="material-symbols-outlined text-xl">volunteer_activism</span>
-                    </div>
-                    <div class="space-y-1">
-                        <h3 class="font-extrabold text-sm text-slate-900 font-heading">Deliver Food Directly</h3>
-                        <p class="text-xs text-slate-500 font-normal leading-normal max-w-[240px]">
-                            Active volunteering. Pick up prepared meals and deliver them to designated homes.
-                        </p>
-                    </div>
-                </div>
-                <span class="material-symbols-outlined text-base text-slate-400 group-hover:text-slate-700 group-hover:translate-x-1 transition-transform pointer-events-none">arrow_forward</span>
-            </button>
-
         </div>
 
-        <!-- Dark Bottom Card -->
-        <div class="bg-gradient-to-b from-[#1C2538] to-[#0D1424] text-white rounded-2xl p-4 shadow-md border border-slate-800 space-y-1.5 mt-2 stagger-5 spring-bounce-hover">
-            <div class="flex items-center gap-1.5 text-[10px] font-bold text-[#FFE855] uppercase tracking-wider">
-                <span class="material-symbols-outlined text-xs">verified_user</span> SECURE & TRANSPARENT
-            </div>
-            <p class="text-xs text-slate-200 font-medium leading-relaxed">
-                100% of your contributions go directly to community impact. Track your impact in the "Guide" tab.
-            </p>
+        <!-- Ways to help -->
+        <div id="donation-cards-container" class="ns-card px-4">
+            <button type="button" data-action="money" class="ns-row">
+                <span class="ns-tile"><span class="material-symbols-outlined">payments</span></span>
+                <span class="ns-row__body">
+                    <span class="ns-row__title block">Donate money</span>
+                    <span class="ns-row__sub block">Pay by card on a secure page</span>
+                </span>
+                <span class="material-symbols-outlined ns-chevron">chevron_right</span>
+            </button>
+            <button type="button" data-action="food" class="ns-row">
+                <span class="ns-tile"><span class="material-symbols-outlined">restaurant</span></span>
+                <span class="ns-row__body">
+                    <span class="ns-row__title block">Donate food</span>
+                    <span class="ns-row__sub block">Drop it off or get a pickup</span>
+                </span>
+                <span class="material-symbols-outlined ns-chevron">chevron_right</span>
+            </button>
+            <button type="button" data-action="deliver" class="ns-row">
+                <span class="ns-tile"><span class="material-symbols-outlined">local_shipping</span></span>
+                <span class="ns-row__body">
+                    <span class="ns-row__title block">Deliver food</span>
+                    <span class="ns-row__sub block">Take a pickup to a shelter</span>
+                </span>
+                <span class="material-symbols-outlined ns-chevron">chevron_right</span>
+            </button>
         </div>
 
+        <a href="helper-dashboard.html" class="ns-card ns-card--sand flex items-center gap-4 p-4 mt-4">
+            <span class="ns-tile ns-tile--plain ns-tile--sm"><span class="material-symbols-outlined">dashboard</span></span>
+            <span class="flex-1 min-w-0">
+                <span class="text-[15px] font-bold block">See what you’ve given</span>
+                <span class="ns-card-sub block">On your dashboard</span>
+            </span>
+            <span class="material-symbols-outlined ns-chevron">chevron_right</span>
+        </a>
     </main>
 
-    <!-- ── Donation Status Bar (appears when user has an active delivery) ── -->
-    <div id="donation-status-bar" class="hidden absolute bottom-[72px] left-0 w-full px-4 z-30 pointer-events-none">
-      <button id="donation-status-chip"
-        class="w-full flex items-center gap-3 bg-[#12141C]/95 backdrop-blur-md border border-amber-400/40 rounded-2xl px-4 py-3 shadow-[0_4px_24px_rgba(245,158,11,0.18)] pointer-events-auto active:scale-[0.98] transition-all"
-        onclick="window._openLastDeliveryTracker && window._openLastDeliveryTracker()">
-        <span id="dsb-icon" class="material-symbols-outlined text-amber-400 text-xl flex-shrink-0">local_shipping</span>
-        <div class="flex-1 min-w-0 text-left">
-          <p id="dsb-label" class="text-xs font-bold text-white truncate">Food Donation — Pending Pickup</p>
-          <p id="dsb-sub" class="text-[10px] text-slate-400 truncate">Tap to view live tracker</p>
+    <nav class="bottom-nav ns-nav" aria-label="Main"></nav>
+
+    <!-- ── Donate money ─────────────────────────────────────────────── -->
+    <div id="donate-money-modal" class="ns-sheet-wrap hidden" role="dialog" aria-modal="true" aria-labelledby="donate-money-title">
+        <div class="ns-sheet-backdrop" onclick="closeModal('donate-money-modal')"></div>
+        <div class="modal-drawer ns-sheet translate-y-full">
+            <div class="ns-sheet__handle"></div>
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <h2 id="donate-money-title" class="ns-sheet__title">Donate money</h2>
+                    <p class="ns-card-sub mt-1">Supports local shelters and meal programs.</p>
+                </div>
+                <button type="button" class="ns-icon-btn ns-icon-btn--sm" onclick="closeModal('donate-money-modal')" aria-label="Close">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <p class="ns-label mt-6">Amount</p>
+            <div class="ns-amount-grid grid grid-cols-4 gap-2">
+                <button type="button" id="stripe-amt-10" onclick="selectPresetAmount(10)" class="stripe-amt-btn ns-chip">$10</button>
+                <button type="button" id="stripe-amt-25" onclick="selectPresetAmount(25)" class="stripe-amt-btn ns-chip is-active">$25</button>
+                <button type="button" id="stripe-amt-50" onclick="selectPresetAmount(50)" class="stripe-amt-btn ns-chip">$50</button>
+                <button type="button" id="stripe-amt-100" onclick="selectPresetAmount(100)" class="stripe-amt-btn ns-chip">$100</button>
+            </div>
+
+            <label for="stripe-custom-amt" class="ns-label mt-5">Or type an amount</label>
+            <div class="ns-amount-field">
+                <span>$</span>
+                <input type="number" id="stripe-custom-amt" class="ns-input" inputmode="decimal" placeholder="Other amount" min="1" step="1" oninput="handleCustomAmountInput(this.value)">
+            </div>
+            <p class="ns-hint">You’ll finish paying on a secure checkout page. Nothing is charged until you confirm there.</p>
+
+            <div id="donate-money-error" class="ns-form-error hidden" role="alert"></div>
+
+            <button type="button" id="stripe-pay-btn" onclick="processStripeDonation()" class="ns-btn ns-btn--primary mt-6">Continue to pay $25</button>
         </div>
-        <span class="material-symbols-outlined text-slate-500 text-base flex-shrink-0">chevron_right</span>
-      </button>
     </div>
 
-    <!-- Floating Dock Bottom Navigation Bar -->
-    <nav class="absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-3 py-2.5 bg-[#12141C]/80 backdrop-blur-xl shadow-[0px_-4px_25px_rgba(0,0,0,0.5)] border-t border-white/10">
-        <a class="flex-1 flex flex-col items-center justify-center text-slate-400 hover:text-white px-2 py-1 transition-colors" href="helper-dashboard.html">
-            <span class="material-symbols-outlined text-xl">dashboard</span>
-            <span class="text-[10px] font-medium mt-0.5">Dashboard</span>
-        </a>
-        <a class="flex-1 flex flex-col items-center justify-center text-slate-400 hover:text-white px-2 py-1 transition-colors" href="opportunities.html">
-            <span class="material-symbols-outlined text-xl">work</span>
-            <span class="text-[10px] font-medium mt-0.5">Jobs</span>
-        </a>
-        <a class="flex-1 flex flex-col items-center justify-center bg-amber-400/15 text-amber-400 border border-amber-400/30 rounded-2xl px-2 py-1 shadow-[0_0_15px_rgba(245,158,11,0.25)]" href="donate.html">
-            <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">restaurant</span>
-            <span class="text-[10px] font-extrabold mt-0.5 leading-none">Food</span>
-        </a>
-        <button onclick="openSettingsModal()" class="flex-1 flex flex-col items-center justify-center text-slate-400 hover:text-white px-2 py-1 transition-colors">
-            <span class="material-symbols-outlined text-xl">settings</span>
-            <span class="text-[10px] font-medium mt-0.5">Settings</span>
-        </button>
-    </nav>
+    <!-- ── Donate food (2 steps) ────────────────────────────────────── -->
+    <div id="food-intake-modal" class="ns-sheet-wrap hidden" role="dialog" aria-modal="true" aria-labelledby="food-intake-title">
+        <div class="ns-sheet-backdrop" onclick="closeModal('food-intake-modal')"></div>
+        <div id="food-intake-container" class="modal-drawer ns-sheet translate-y-full">
+            <div class="ns-sheet__handle"></div>
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <p id="food-intake-step-text" class="ns-card-sub">Step 1 of 2</p>
+                    <h2 id="food-intake-title" class="ns-sheet__title mt-1">What are you giving?</h2>
+                </div>
+                <button type="button" class="ns-icon-btn ns-icon-btn--sm" onclick="closeModal('food-intake-modal')" aria-label="Close">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div class="ns-progress mt-4"><span id="food-intake-progress" style="width: 50%"></span></div>
 
+            <!-- Step 1: items -->
+            <div id="food-intake-step-1" class="mt-6">
+                <label for="food-item-name" class="ns-label">Item</label>
+                <input type="text" id="food-item-name" class="ns-input" placeholder="For example, canned beans" autocomplete="off"
+                    onkeydown="if(event.key==='Enter'){ event.preventDefault(); addFoodItem(); }">
+
+                <div class="grid grid-cols-[96px_1fr] gap-3 mt-4">
+                    <div>
+                        <label for="food-item-qty" class="ns-label">How many</label>
+                        <input type="number" id="food-item-qty" class="ns-input" placeholder="1" min="1" inputmode="numeric"
+                            onkeydown="if(event.key==='Enter'){ event.preventDefault(); addFoodItem(); }">
+                    </div>
+                    <div>
+                        <label for="food-item-category" class="ns-label">Type</label>
+                        <select id="food-item-category" class="ns-select">
+                            <option value="Canned Goods">Canned goods</option>
+                            <option value="Fresh Produce">Fresh produce</option>
+                            <option value="Hot Food">Hot food</option>
+                            <option value="Packaged Snacks">Packaged snacks</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="button" onclick="addFoodItem()" class="ns-btn ns-btn--ghost ns-btn--sm w-full mt-4">
+                    <span class="material-symbols-outlined">add</span> Add item
+                </button>
+
+                <ul id="food-items-list" class="ns-list mt-4 empty:hidden"></ul>
+
+                <div id="food-intake-error" class="ns-form-error hidden" role="alert"></div>
+
+                <button type="button" onclick="finishFoodItems()" class="ns-btn ns-btn--primary mt-6">Next</button>
+            </div>
+
+            <!-- Step 2: packaging, drop-off or pickup -->
+            <div id="food-intake-step-2" class="mt-6 hidden">
+                <label for="food-bag-count" class="ns-label">How many bags or boxes?</label>
+                <input type="number" id="food-bag-count" class="ns-input" placeholder="1" min="1" value="1" inputmode="numeric">
+
+                <p class="ns-label mt-5">Can you drop it off yourself?</p>
+                <div class="ns-segment" role="group" aria-label="Drop-off or pickup">
+                    <button type="button" id="dropoff-yes-btn" class="dropoff-opt-btn is-active" aria-pressed="true" onclick="toggleDropoffMethod('yes')">I’ll drop it off</button>
+                    <button type="button" id="dropoff-no-btn" class="dropoff-opt-btn" aria-pressed="false" onclick="toggleDropoffMethod('no')">I need a pickup</button>
+                </div>
+
+                <!-- Self drop-off -->
+                <div id="self-dropoff-fields" class="mt-5">
+                    <label for="food-dropoff-location" class="ns-label">Where will you drop it off?</label>
+                    <select id="food-dropoff-location" class="ns-select">
+                        <option value="Ballard Food Bank">Ballard Food Bank</option>
+                        <option value="Pike Market Food Bank">Pike Market Food Bank</option>
+                        <option value="University District Food Bank">University District Food Bank</option>
+                        <option value="Rainier Valley Food Bank">Rainier Valley Food Bank</option>
+                        <option value="Northwest Harvest SODO Community Market">Northwest Harvest SODO Community Market</option>
+                    </select>
+                    <p class="ns-hint">We’ll open the map so you can find it.</p>
+                </div>
+
+                <!-- Volunteer pickup -->
+                <div id="volunteer-pickup-fields" class="mt-5 hidden">
+                    <label for="food-pickup-area" class="ns-label">Pickup area</label>
+                    <input type="text" id="food-pickup-area" class="ns-input" placeholder="For example, Capitol Hill (12th and Pine)">
+
+                    <label for="food-target-destination" class="ns-label mt-4">Which shelter should it go to?</label>
+                    <select id="food-target-destination" class="ns-select">
+                        <option value="Ballard Food Bank">Ballard Food Bank</option>
+                        <option value="Pike Market Food Bank">Pike Market Food Bank</option>
+                        <option value="University District Food Bank">University District Food Bank</option>
+                        <option value="Rainier Valley Food Bank">Rainier Valley Food Bank</option>
+                        <option value="Northwest Harvest SODO Community Market">Northwest Harvest SODO Community Market</option>
+                    </select>
+
+                    <label for="food-pickup-time" class="ns-label mt-4">Best time for pickup</label>
+                    <select id="food-pickup-time" class="ns-select">
+                        <option value="Morning (9am - 12pm)">Morning (9am–12pm)</option>
+                        <option value="Afternoon (12pm - 4pm)">Afternoon (12pm–4pm)</option>
+                        <option value="Evening (4pm - 8pm)">Evening (4pm–8pm)</option>
+                    </select>
+
+                    <label for="food-pickup-notes" class="ns-label mt-4">Notes for the volunteer</label>
+                    <input type="text" id="food-pickup-notes" class="ns-input" placeholder="For example, box on the front porch">
+                </div>
+
+                <div id="food-submit-error" class="ns-form-error hidden" role="alert"></div>
+
+                <div class="grid grid-cols-[auto_1fr] gap-3 mt-6">
+                    <button type="button" onclick="foodIntakeBack()" class="ns-icon-btn" style="width:56px;height:56px" aria-label="Back to items">
+                        <span class="material-symbols-outlined">arrow_back</span>
+                    </button>
+                    <button type="button" id="food-submit-btn" onclick="submitFoodDonation()" class="ns-btn ns-btn--primary">Open map to drop off</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Deliver food: open pickup requests ───────────────────────── -->
+    <div id="deliver-food-modal" class="ns-sheet-wrap hidden" role="dialog" aria-modal="true" aria-labelledby="deliver-food-title">
+        <div class="ns-sheet-backdrop" onclick="closeModal('deliver-food-modal')"></div>
+        <div class="modal-drawer ns-sheet translate-y-full">
+            <div class="ns-sheet__handle"></div>
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <h2 id="deliver-food-title" class="ns-sheet__title">Deliver food</h2>
+                    <p class="ns-card-sub mt-1">Claim a pickup request to start a delivery.</p>
+                </div>
+                <button type="button" class="ns-icon-btn ns-icon-btn--sm" onclick="closeModal('deliver-food-modal')" aria-label="Close">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <div id="deliver-food-jobs-container" class="mt-6"></div>
+        </div>
+    </div>
+
+    <!-- ── Item donate (used by openDonateItemModal) ────────────────── -->
+    <div id="donate-item-modal" class="ns-sheet-wrap hidden" role="dialog" aria-modal="true" aria-labelledby="donate-item-title">
+        <div class="ns-sheet-backdrop" onclick="closeModal('donate-item-modal')"></div>
+        <div class="modal-drawer ns-sheet translate-y-full">
+            <div class="ns-sheet__handle"></div>
+            <div class="flex items-start justify-between gap-3">
+                <h2 id="donate-item-title" class="ns-sheet__title">Donate</h2>
+                <button type="button" class="ns-icon-btn ns-icon-btn--sm" onclick="closeModal('donate-item-modal')" aria-label="Close">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <p class="ns-card-sub mt-1">How do you want to get it there?</p>
+            <div class="grid gap-3 mt-6">
+                <button type="button" id="donate-item-dropoff-btn" class="ns-btn ns-btn--primary">Drop it off</button>
+                <button type="button" id="donate-item-pickup-btn" class="ns-btn ns-btn--ghost">Ask for a pickup</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="js/northstar.js"></script>
 <script>
-// ── Global Event Delegation for Donation Cards ──────────────────────────────
+// ── Option rows open their sheets ───────────────────────────────────────────
 if (!window._donationDelegationSetup) {
     window._donationDelegationSetup = true;
-    
+
     const initDelegation = function() {
         document.addEventListener('click', function(e) {
             const btn = e.target.closest('button[data-action]');
             if (!btn) return;
-            
+
             const action = btn.getAttribute('data-action');
             if (action === 'money' && window.openDonateMoneyModal) {
                 e.preventDefault();
@@ -248,30 +316,23 @@ if (!window._donationDelegationSetup) {
     }
 }
 
-// ── Food Type Selection Toggle ──────────────────────────────────────────────
-const foodTypeConfig = {
-  canned: { activeClass: 'bg-emerald-500/20 border-emerald-400/60 text-emerald-300', msg: 'Canned goods selected! Drop-off locations are highlighted on your map.' },
-  meal:   { activeClass: 'bg-amber-500/20 border-amber-400/60 text-amber-300',   msg: 'Meal kits selected! Nearest drop-off locations added to your map.' },
-  hot:    { activeClass: 'bg-orange-500/20 border-orange-400/60 text-orange-300', msg: 'Hot food drop-off window: 11am–2pm daily. Location sent to your map!' },
-  drive:  { activeClass: 'bg-indigo-500/20 border-indigo-400/60 text-indigo-300', msg: 'Food drive selected! A coordinator will contact you to set up your drive.' }
-};
+function nsShowError(id, message) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (message) { el.textContent = message; el.classList.remove('hidden'); }
+  else { el.textContent = ''; el.classList.add('hidden'); }
+}
+
+// ── Food type (kept for callers; no page UI uses it right now) ──────────────
 let selectedFoodType = null;
-
 window.selectFoodType = function(type) {
-  const allBtns = document.querySelectorAll('.food-type-card');
-  allBtns.forEach(btn => {
-    btn.className = 'food-type-card py-3.5 px-3 rounded-xl border border-white/10 bg-white/[0.04] active:scale-95 transition-all flex flex-col items-center gap-1.5 text-white';
-  });
+  document.querySelectorAll('.food-type-card').forEach(btn => btn.classList.remove('is-active'));
   const btn = document.getElementById('food-btn-' + type);
-  if (btn) {
-    const cfg = foodTypeConfig[type];
-    btn.className = `food-type-card py-3.5 px-3 rounded-xl border ${cfg.activeClass} active:scale-95 transition-all flex flex-col items-center gap-1.5`;
-  }
+  if (btn) btn.classList.add('is-active');
   selectedFoodType = type;
-  if (typeof showNotification === 'function') showNotification(foodTypeConfig[type].msg, 'success');
 };
 
-// ── Map Navigation ──────────────────────────────────────────────────────────
+// ── Map navigation ──────────────────────────────────────────────────────────
 window.navigateToFoodMap = function() {
   if (typeof navigateToPageInstant === 'function') {
     navigateToPageInstant('resource-map.html?filter=food_dropoff');
@@ -280,36 +341,45 @@ window.navigateToFoodMap = function() {
   }
 };
 
+// ── Donate money ────────────────────────────────────────────────────────────
 let selectedDonationAmount = 25;
+
+function formatAmount(n) {
+  return Number.isInteger(n) ? String(n) : n.toFixed(2);
+}
+
+function refreshPayButton() {
+  const btn = document.getElementById('stripe-pay-btn');
+  if (btn && !btn.disabled) btn.textContent = `Continue to pay $${formatAmount(selectedDonationAmount)}`;
+}
 
 window.selectPresetAmount = function(amt) {
   selectedDonationAmount = amt;
-  document.querySelectorAll('.stripe-amt-btn').forEach(btn => {
-    btn.className = 'stripe-amt-btn py-2.5 rounded-xl border text-xs font-semibold transition-all bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-400 font-sans';
-  });
+  document.querySelectorAll('.stripe-amt-btn').forEach(btn => btn.classList.remove('is-active'));
   const activeBtn = document.getElementById(`stripe-amt-${amt}`);
-  if (activeBtn) {
-    activeBtn.className = 'stripe-amt-btn py-2.5 rounded-xl border text-xs font-semibold transition-all bg-[#635BFF] text-white border-[#635BFF] shadow-none font-sans';
-  }
+  if (activeBtn) activeBtn.classList.add('is-active');
   const customInput = document.getElementById('stripe-custom-amt');
   if (customInput) customInput.value = '';
+  nsShowError('donate-money-error', '');
+  refreshPayButton();
 };
 
 window.handleCustomAmountInput = function(val) {
   const parsed = parseFloat(val);
   if (!isNaN(parsed) && parsed > 0) {
     selectedDonationAmount = parsed;
-    document.querySelectorAll('.stripe-amt-btn').forEach(btn => {
-      btn.className = 'stripe-amt-btn py-2.5 rounded-xl border text-xs font-semibold transition-all bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-400 font-sans';
-    });
+    document.querySelectorAll('.stripe-amt-btn').forEach(btn => btn.classList.remove('is-active'));
+    nsShowError('donate-money-error', '');
+    refreshPayButton();
   }
 };
 
 window.processStripeDonation = async function() {
   const btn = document.getElementById('stripe-pay-btn');
+  nsShowError('donate-money-error', '');
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = `<span class="inline-block animate-spin mr-2">⏳</span> Redirecting to Stripe Checkout...`;
+    btn.textContent = 'Opening checkout…';
   }
 
   try {
@@ -328,274 +398,82 @@ window.processStripeDonation = async function() {
       throw new Error(data.error || 'Could not initiate checkout');
     }
   } catch (err) {
-    console.error('Stripe Checkout Error:', err);
-    if (typeof showNotification === 'function') {
-      showNotification('Thank you! Processing your test donation of $' + selectedDonationAmount, 'success');
-    }
-    const modal = document.getElementById('donate-money-modal');
-    if (modal) modal.remove();
+    console.warn('Checkout could not start:', err);
+    nsShowError('donate-money-error', 'We couldn’t open checkout. Nothing was charged. Check your connection and try again.');
+    if (btn) btn.disabled = false;
+    refreshPayButton();
   }
 };
 
 window.openDonateMoneyModal = function(e) {
   if (e) e.preventDefault();
-  selectedDonationAmount = 25;
-  const existing = document.getElementById('donate-money-modal');
-  if (existing) existing.remove();
-
-  const modal = document.createElement('div');
-  modal.id = 'donate-money-modal';
-  modal.className = 'fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-slate-950/70 backdrop-blur-sm p-0 sm:p-4 animate-fade-in font-sans';
-  modal.innerHTML = `
-    <div class="w-full sm:max-w-md bg-white dark:bg-[#12141C] border border-slate-200 dark:border-white/10 rounded-t-3xl sm:rounded-3xl p-6 text-slate-900 dark:text-white space-y-4 shadow-xl font-sans animate-slide-up" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;">
-      <div class="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto sm:hidden"></div>
-      
-      <!-- Modal Header -->
-      <div class="flex justify-between items-center border-b border-slate-200 dark:border-white/10 pb-3">
-        <div class="flex items-center gap-2.5">
-          <div class="w-9 h-9 rounded-xl bg-[#635BFF]/10 dark:bg-[#635BFF]/20 border border-[#635BFF]/30 flex items-center justify-center text-[#635BFF] dark:text-[#7a73ff]">
-            <span class="material-symbols-outlined text-xl">credit_card</span>
-          </div>
-          <div>
-            <h3 class="text-base font-semibold text-slate-900 dark:text-white leading-tight" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important; letter-spacing: normal !important;">Donate via Stripe</h3>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400 font-normal">Support local shelters &amp; meal programs</p>
-          </div>
-        </div>
-        <button onclick="document.getElementById('donate-money-modal').remove()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors p-1">
-          <span class="material-symbols-outlined">close</span>
-        </button>
-      </div>
-
-      <!-- Preset Amount Selector -->
-      <div class="space-y-2">
-        <label class="text-xs font-medium text-slate-700 dark:text-slate-300">Select Donation Amount:</label>
-        <div class="grid grid-cols-4 gap-2">
-          <button id="stripe-amt-10" onclick="selectPresetAmount(10)" class="stripe-amt-btn py-2.5 rounded-xl border text-xs font-semibold transition-all bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-400 font-sans">$10</button>
-          <button id="stripe-amt-25" onclick="selectPresetAmount(25)" class="stripe-amt-btn py-2.5 rounded-xl border text-xs font-semibold transition-all bg-[#635BFF] text-white border-[#635BFF] shadow-none font-sans">$25</button>
-          <button id="stripe-amt-50" onclick="selectPresetAmount(50)" class="stripe-amt-btn py-2.5 rounded-xl border text-xs font-semibold transition-all bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-400 font-sans">$50</button>
-          <button id="stripe-amt-100" onclick="selectPresetAmount(100)" class="stripe-amt-btn py-2.5 rounded-xl border text-xs font-semibold transition-all bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-400 font-sans">$100</button>
-        </div>
-      </div>
-
-      <!-- Custom Amount Input -->
-      <div class="space-y-1">
-        <label class="text-xs font-medium text-slate-700 dark:text-slate-300">Or Custom Amount ($ USD):</label>
-        <div class="relative">
-          <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-medium">$</span>
-          <input type="number" id="stripe-custom-amt" placeholder="Other amount..." min="1" step="1" oninput="handleCustomAmountInput(this.value)" class="w-full py-2.5 pl-8 pr-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#635BFF] transition-colors font-sans">
-        </div>
-      </div>
-
-      <!-- Impact Statement Container -->
-      <div class="bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 rounded-xl p-3 text-xs text-slate-600 dark:text-slate-300 flex items-center gap-2 font-sans">
-        <span class="material-symbols-outlined text-slate-500 dark:text-slate-400 text-base flex-shrink-0">favorite</span>
-        <span class="font-normal">Your gift directly funds hot meals and shelter resources across Seattle.</span>
-      </div>
-
-      <!-- Stripe Pay Button (Purple, Clean Native System Font) -->
-      <button id="stripe-pay-btn" onclick="processStripeDonation()" class="w-full py-3.5 bg-[#635BFF] hover:bg-[#534bae] text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-none active:scale-[0.99] transition-colors cursor-pointer border border-transparent font-sans" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important; letter-spacing: normal !important;">
-        <span class="material-symbols-outlined text-base">lock</span> Complete Donation
-      </button>
-
-      <!-- Minimalist Stripe Logo Footer -->
-      <div class="flex items-center justify-center gap-1.5 text-xs text-slate-400 pt-1 font-sans">
-        <span class="font-normal">Powered by</span>
-        <svg class="h-4 w-auto text-slate-500 dark:text-slate-400 fill-current" viewBox="0 0 60 25" xmlns="http://www.w3.org/2000/svg" aria-label="Stripe">
-          <path d="M59.64 14.28h-8.06c.19 1.93 1.6 2.55 3.2 2.55 1.64 0 2.96-.37 4.05-.95v3.32a8.33 8.33 0 0 1-4.56 1.1c-4.01 0-6.83-2.5-6.83-7.48 0-4.19 2.39-7.52 6.3-7.52 3.92 0 5.9 3.23 5.9 7.37 0 .69-.03 1.25-.06 1.61zm-4.03-3.07c0-1.58-.78-2.67-2.1-2.67-1.32 0-2.13 1.09-2.2 2.67h4.3zM38.86 5.57v3.36c.86-.68 2.07-1.07 3.32-1.07 3.4 0 5.4 2.56 5.4 6.83v5.6h-4.17v-4.9c0-2.31-.97-3.7-2.8-3.7-1.4 0-2.41 1.03-2.66 2.3v6.3h-4.17V5.57h4.08zM28.45 2.12v3.45h4.17v3.36h-4.17v6.62c0 1.54.91 2.05 2.1 2.05.65 0 1.34-.12 1.87-.33v3.32a9.1 9.1 0 0 1-3.05.5c-3.23 0-5.09-1.63-5.09-5.03V8.93h-2.52V5.57h2.52V3.41l4.17-1.29zM19.16 8.93c.84-.7 2.02-1.07 3.22-1.07 1.25 0 2.24.4 2.9 1.07v-3.36h4.17v14.72h-4.08v-1.12c-.75.76-1.87 1.2-3.1 1.2-3.32 0-5.74-2.5-5.74-6.81 0-4.48 2.45-6.93 5.63-6.93h-.01zm2.3 8.35c1.46 0 2.44-1.07 2.67-2.38v-3.83c-.26-1.28-1.24-2.27-2.67-2.27-1.52 0-2.67 1.4-2.67 4.24 0 2.82 1.15 4.24 2.67 4.24zM8.13 11.23c-1.95-.57-2.73-1.07-2.73-1.96 0-.85.83-1.42 2.21-1.42 1.83 0 3.39.73 4.54 1.55V5.88A10.7 10.7 0 0 0 7.37 5.3c-3.9 0-6.38 2.03-6.38 5.16 0 3.1 2.37 4.41 5.38 5.25 2.03.58 2.7 1.17 2.7 2.07 0 .96-.92 1.57-2.48 1.57-2.12 0-3.99-.9-5.18-1.89v3.63a11.9 11.9 0 0 0 5.48 1.25c4.14 0 6.64-1.96 6.64-5.32 0-3.21-2.27-4.48-5.4-5.4z"/>
-        </svg>
-      </div>
-    </div>
-  `;
-  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
-  const appFrame = document.querySelector('.app-frame') || document.body;
-  appFrame.appendChild(modal);
+  const btn = document.getElementById('stripe-pay-btn');
+  if (btn) btn.disabled = false;
+  window.selectPresetAmount(25);
+  openModal('donate-money-modal');
 };
 
-
-// ── Item-Level Donate Modal ─────────────────────────────────────────────────
+// ── Item-level donate ───────────────────────────────────────────────────────
 window.openDonateItemModal = function(itemName) {
-  // Remove stale modal if present
-  const existing = document.getElementById('donate-item-modal');
-  if (existing) existing.remove();
-
-  const modal = document.createElement('div');
-  modal.id = 'donate-item-modal';
-  modal.className = 'fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-slate-950/85 backdrop-blur-md p-0 sm:p-4';
-  modal.innerHTML = `
-    <div class="w-full sm:max-w-md bg-[#12141C] border border-white/10 rounded-t-3xl sm:rounded-3xl p-6 text-white space-y-4 shadow-2xl animate-slide-up">
-      <div class="w-12 h-1.5 bg-slate-700 rounded-full mx-auto sm:hidden"></div>
-      <div class="flex justify-between items-center">
-        <h3 class="text-base font-extrabold text-white flex items-center gap-2">
-          <span class="material-symbols-outlined text-emerald-400">volunteer_activism</span> Donate ${itemName}
-        </h3>
-        <button onclick="document.getElementById('donate-item-modal').remove()" class="text-slate-400 hover:text-white transition-colors">
-          <span class="material-symbols-outlined">close</span>
-        </button>
-      </div>
-      <p class="text-xs text-slate-300 leading-relaxed">Choose how you'd like to contribute <strong class="text-white">${itemName}</strong>:</p>
-      <div class="space-y-2.5">
-        <button onclick="confirmItemDonation('drop-off', '${itemName}')" class="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 active:scale-95 transition-all">
-          <span class="material-symbols-outlined text-sm">location_on</span> Drop Off at Nearest Location
-        </button>
-        <button onclick="confirmItemDonation('pickup', '${itemName}')" class="w-full py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 border border-white/10 active:scale-95 transition-all">
-          <span class="material-symbols-outlined text-sm">local_shipping</span> Schedule a Pickup
-        </button>
-      </div>
-    </div>
-  `;
-  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
-  const appFrame = document.querySelector('.app-frame') || document.body;
-  appFrame.appendChild(modal);
+  const name = String(itemName || 'food');
+  const title = document.getElementById('donate-item-title');
+  if (title) title.textContent = `Donate ${name}`;
+  document.getElementById('donate-item-dropoff-btn').onclick = () => window.confirmItemDonation('drop-off', name);
+  document.getElementById('donate-item-pickup-btn').onclick = () => window.confirmItemDonation('pickup', name);
+  openModal('donate-item-modal');
 };
 
 window.confirmItemDonation = function(method, itemName) {
-  const modal = document.getElementById('donate-item-modal');
-  if (modal) modal.remove();
+  closeModal('donate-item-modal');
   if (method === 'drop-off') {
-    showNotification(`📍 Drop-off location for "${itemName}" added to your map!`, 'success');
-    setTimeout(() => { window.navigateToFoodMap(); }, 1200);
+    setTimeout(() => { window.navigateToFoodMap(); }, 300);
   } else {
-    showNotification(`🚚 Pickup scheduled for "${itemName}"! We'll confirm via notification.`, 'success');
+    // A pickup needs the full request form so a volunteer knows where to go
+    setTimeout(() => {
+      window.openFoodIntakeModal();
+      const nameEl = document.getElementById('food-item-name');
+      if (nameEl) nameEl.value = itemName || '';
+    }, 320);
   }
 };
 
-window.openFoodIntakeModal = function(e) {
-  if (e) e.preventDefault();
-  const existing = document.getElementById('food-intake-modal');
-  if (existing) existing.remove();
-  window.foodItemsArray = [];
-
-  const modal = document.createElement('div');
-  modal.id = 'food-intake-modal';
-  modal.className = 'fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-slate-950/60 backdrop-blur-sm p-0 sm:p-4';
-  modal.innerHTML = `
-    <div class="w-full sm:max-w-md bg-white border border-slate-200 rounded-t-2xl sm:rounded-2xl p-6 text-slate-900 space-y-4 shadow-xl transition-all duration-300 animate-slide-up" id="food-intake-container">
-      <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto sm:hidden"></div>
-      
-      <!-- Step 1: Item Logging -->
-      <div id="food-intake-step-1" class="space-y-4">
-          <div class="flex justify-between items-center">
-            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-              <span class="material-symbols-outlined text-amber-500">restaurant</span> Add Items
-            </h3>
-            <button onclick="document.getElementById('food-intake-modal').remove()" class="text-slate-400 hover:text-slate-700 transition-colors p-1 cursor-pointer">
-              <span class="material-symbols-outlined">close</span>
-            </button>
-          </div>
-          
-          <div class="space-y-3">
-              <input type="text" id="food-item-name" placeholder="Item Name (e.g. Canned Beans)" onkeydown="if(event.key==='Enter'){ event.preventDefault(); addFoodItem(); }" class="w-full py-2.5 px-3 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors duration-150">
-              <div class="flex gap-2">
-                  <input type="number" id="food-item-qty" placeholder="Qty" min="1" onkeydown="if(event.key==='Enter'){ event.preventDefault(); addFoodItem(); }" class="w-1/3 py-2.5 px-3 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors duration-150">
-
-                  <select id="food-item-category" class="w-2/3 py-2.5 px-3 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors duration-150 cursor-pointer">
-                      <option value="Canned Goods">Canned Goods</option>
-                      <option value="Fresh Produce">Fresh Produce</option>
-                      <option value="Hot Food">Hot Food</option>
-                      <option value="Packaged Snacks">Packaged Snacks</option>
-                  </select>
-              </div>
-              <button onclick="addFoodItem()" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-amber-400 rounded-lg text-xs font-semibold border border-slate-900 transition-all duration-150 ease-in-out active:scale-[0.98] cursor-pointer flex items-center justify-center text-center gap-1.5 shadow-sm">
-                  <span class="material-symbols-outlined text-sm">add</span> Add Item
-              </button>
-          </div>
-          
-          <!-- Item List -->
-          <ul id="food-items-list" class="space-y-2 max-h-32 overflow-y-auto empty:hidden"></ul>
-          
-          <button onclick="finishFoodItems()" class="w-full mt-2 py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-lg text-xs font-bold transition-all duration-150 ease-in-out active:scale-[0.98] cursor-pointer flex items-center justify-center text-center shadow-sm">
-              Done Adding Items
-          </button>
-      </div>
-      
-      <!-- Step 2: Packaging, Drop-off Availability & Submission -->
-      <div id="food-intake-step-2" class="space-y-4 hidden">
-          <div class="flex justify-between items-center">
-            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-              <span class="material-symbols-outlined text-amber-500">local_shipping</span> Delivery Method
-            </h3>
-            <button onclick="document.getElementById('food-intake-modal').remove()" class="text-slate-400 hover:text-slate-700 transition-colors p-1 cursor-pointer">
-              <span class="material-symbols-outlined">close</span>
-            </button>
-          </div>
-          
-          <div class="space-y-1">
-            <label class="text-xs font-semibold text-slate-700">How many bags/boxes are you donating?</label>
-            <input type="number" id="food-bag-count" placeholder="e.g. 2" min="1" value="1" class="w-full py-2.5 px-3 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors duration-150">
-          </div>
-
-          <!-- Drop Off Question -->
-          <div class="space-y-2">
-            <label class="text-xs font-semibold text-slate-800 flex items-center gap-1">
-              <span class="material-symbols-outlined text-sm text-amber-500">help</span> Do you have a way to drop off this donation?
-            </label>
-            <div class="grid grid-cols-2 gap-2">
-              <button type="button" id="dropoff-yes-btn" onclick="toggleDropoffMethod('yes')" class="dropoff-opt-btn py-2.5 px-3 rounded-lg border-2 border-amber-500 bg-amber-50 text-amber-900 text-xs font-bold transition-all duration-150 ease-in-out active:scale-[0.98] flex flex-col items-center justify-center text-center gap-1 cursor-pointer shadow-sm">
-                <span class="material-symbols-outlined text-base">directions_car</span> Yes, I can drop off
-              </button>
-              <button type="button" id="dropoff-no-btn" onclick="toggleDropoffMethod('no')" class="dropoff-opt-btn py-2.5 px-3 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-all duration-150 ease-in-out active:scale-[0.98] flex flex-col items-center justify-center text-center gap-1 cursor-pointer">
-                <span class="material-symbols-outlined text-base">volunteer_activism</span> No, need volunteer driver
-              </button>
-            </div>
-          </div>
-
-          <!-- Conditional Fields for Self Drop-off -->
-          <div id="self-dropoff-fields" class="space-y-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200 animate-fade-in">
-            <div class="space-y-1">
-              <label class="text-[11px] font-semibold text-slate-700">Select Nearest Drop-off Location:</label>
-              <select id="food-dropoff-location" class="w-full py-2 px-3 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors duration-150 cursor-pointer">
-                <option value="St. Jude Community Refuge">St. Jude Community Refuge — 1.2 miles away</option>
-                <option value="Downtown Hope Center">Downtown Hope Center — 2.4 miles away</option>
-                <option value="Eastside Youth Shelter">Eastside Youth Shelter — 3.1 miles away</option>
-                <option value="Pioneer Square Food Bank">Pioneer Square Food Bank — 4.5 miles away</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Conditional Fields for Volunteer Pickup -->
-          <div id="volunteer-pickup-fields" class="space-y-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200 hidden animate-fade-in">
-            <div class="space-y-1">
-              <label class="text-[11px] font-semibold text-slate-700">Pickup Neighborhood / Location:</label>
-              <input type="text" id="food-pickup-area" placeholder="e.g. Capitol Hill (12th & Pine)" class="w-full py-2 px-3 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors duration-150">
-            </div>
-            <div class="space-y-1">
-              <label class="text-[11px] font-semibold text-slate-700">Target Shelter Destination:</label>
-              <select id="food-target-destination" class="w-full py-2 px-3 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors duration-150 cursor-pointer">
-                <option value="St. Jude Community Refuge">St. Jude Community Refuge</option>
-                <option value="Downtown Hope Center">Downtown Hope Center</option>
-                <option value="Eastside Youth Shelter">Eastside Youth Shelter</option>
-              </select>
-            </div>
-            <div class="space-y-1">
-              <label class="text-[11px] font-semibold text-slate-700">Preferred Pickup Time Window:</label>
-              <select id="food-pickup-time" class="w-full py-2 px-3 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors duration-150 cursor-pointer">
-                <option value="Morning (9am - 12pm)">Morning (9am - 12pm)</option>
-                <option value="Afternoon (12pm - 4pm)">Afternoon (12pm - 4pm)</option>
-                <option value="Evening (4pm - 8pm)">Evening (4pm - 8pm)</option>
-              </select>
-            </div>
-            <div class="space-y-1">
-              <label class="text-[11px] font-semibold text-slate-700">Pickup Instructions / Notes:</label>
-              <input type="text" id="food-pickup-notes" placeholder="e.g. Box left on front porch" class="w-full py-2 px-3 bg-white border border-slate-300 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors duration-150">
-            </div>
-          </div>
-          
-          <button onclick="submitFoodDonation()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-all duration-150 ease-in-out active:scale-[0.98] flex items-center justify-center text-center gap-2 mt-2 cursor-pointer shadow-sm">
-              <span class="material-symbols-outlined text-sm">check_circle</span> Submit Donation Request
-          </button>
-      </div>
-      
-    </div>
-  `;
-  modal.addEventListener('mousedown', (evt) => { 
-      if (evt.target === modal) modal.remove(); 
-  });
-  const appFrame = document.querySelector('.app-frame') || document.body;
-  appFrame.appendChild(modal);
-};
-
+// ── Donate food (2 steps) ───────────────────────────────────────────────────
 window.foodItemsArray = [];
 let selectedDropoffMethod = 'yes';
+
+function setFoodStep(step) {
+  document.getElementById('food-intake-step-1').classList.toggle('hidden', step !== 1);
+  document.getElementById('food-intake-step-2').classList.toggle('hidden', step !== 2);
+  document.getElementById('food-intake-step-text').textContent = `Step ${step} of 2`;
+  document.getElementById('food-intake-title').textContent = step === 1 ? 'What are you giving?' : 'How will it get there?';
+  document.getElementById('food-intake-progress').style.width = step === 1 ? '50%' : '100%';
+  const sheet = document.getElementById('food-intake-container');
+  if (sheet) sheet.scrollTop = 0;
+}
+
+window.openFoodIntakeModal = function(e) {
+  if (e) e.preventDefault();
+  window.foodItemsArray = [];
+  const list = document.getElementById('food-items-list');
+  if (list) list.innerHTML = '';
+  ['food-item-name', 'food-item-qty', 'food-pickup-area', 'food-pickup-notes'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const bags = document.getElementById('food-bag-count');
+  if (bags) bags.value = '1';
+  ['food-intake-error', 'food-submit-error'].forEach(id => nsShowError(id, ''));
+  const submitBtn = document.getElementById('food-submit-btn');
+  if (submitBtn) submitBtn.disabled = false;
+  window.toggleDropoffMethod('yes');
+  setFoodStep(1);
+  openModal('food-intake-modal');
+};
+
+window.foodIntakeBack = function() {
+  nsShowError('food-submit-error', '');
+  setFoodStep(1);
+};
 
 window.toggleDropoffMethod = function(method) {
   selectedDropoffMethod = method;
@@ -603,18 +481,15 @@ window.toggleDropoffMethod = function(method) {
   const noBtn = document.getElementById('dropoff-no-btn');
   const volunteerFields = document.getElementById('volunteer-pickup-fields');
   const dropoffFields = document.getElementById('self-dropoff-fields');
-  
-  if (method === 'yes') {
-    yesBtn.className = 'dropoff-opt-btn py-2.5 px-3 rounded-lg border-2 border-amber-500 bg-amber-50 text-amber-900 text-xs font-bold transition-all duration-150 ease-in-out active:scale-[0.98] flex flex-col items-center justify-center text-center gap-1 cursor-pointer shadow-sm';
-    noBtn.className = 'dropoff-opt-btn py-2.5 px-3 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-all duration-150 ease-in-out active:scale-[0.98] flex flex-col items-center justify-center text-center gap-1 cursor-pointer';
-    if (volunteerFields) volunteerFields.classList.add('hidden');
-    if (dropoffFields) dropoffFields.classList.remove('hidden');
-  } else {
-    noBtn.className = 'dropoff-opt-btn py-2.5 px-3 rounded-lg border-2 border-amber-500 bg-amber-50 text-amber-900 text-xs font-bold transition-all duration-150 ease-in-out active:scale-[0.98] flex flex-col items-center justify-center text-center gap-1 cursor-pointer shadow-sm';
-    yesBtn.className = 'dropoff-opt-btn py-2.5 px-3 rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-all duration-150 ease-in-out active:scale-[0.98] flex flex-col items-center justify-center text-center gap-1 cursor-pointer';
-    if (dropoffFields) dropoffFields.classList.add('hidden');
-    if (volunteerFields) volunteerFields.classList.remove('hidden');
-  }
+  const submitBtn = document.getElementById('food-submit-btn');
+  const isYes = method === 'yes';
+
+  if (yesBtn) { yesBtn.classList.toggle('is-active', isYes); yesBtn.setAttribute('aria-pressed', String(isYes)); }
+  if (noBtn) { noBtn.classList.toggle('is-active', !isYes); noBtn.setAttribute('aria-pressed', String(!isYes)); }
+  if (dropoffFields) dropoffFields.classList.toggle('hidden', !isYes);
+  if (volunteerFields) volunteerFields.classList.toggle('hidden', isYes);
+  if (submitBtn) submitBtn.textContent = isYes ? 'Open map to drop off' : 'Request a pickup';
+  nsShowError('food-submit-error', '');
 };
 
 window.addFoodItem = function() {
@@ -624,19 +499,31 @@ window.addFoodItem = function() {
     const name = nameEl.value.trim();
     const qty = qtyEl.value.trim();
     const cat = catEl.value;
-    
-    if (!name || !qty) return showNotification('Please enter item name and quantity.', 'error');
-    
+
+    if (!name || !qty) {
+      nsShowError('food-intake-error', !name ? 'Type what the item is.' : 'Add how many you have.');
+      (!name ? nameEl : qtyEl).focus();
+      return;
+    }
+    nsShowError('food-intake-error', '');
+
     window.foodItemsArray.push({ name, qty, cat });
-    
+
     const list = document.getElementById('food-items-list');
+    const catLabel = catEl.options[catEl.selectedIndex] ? catEl.options[catEl.selectedIndex].text : cat;
     const li = document.createElement('li');
-    li.className = 'flex justify-between items-center bg-slate-50 rounded-lg p-2.5 text-xs border border-slate-200 text-slate-900 shadow-sm animate-fade-in-up';
-    li.innerHTML = `<span><strong class="text-slate-900 font-semibold">${qty}x</strong> ${name} <span class="text-[10px] text-slate-500">(${cat})</span></span>`;
+    li.className = 'ns-row !py-3';
+    li.innerHTML = `
+      <span class="ns-tile ns-tile--plain ns-tile--sm text-[14px] font-bold">${nsEscape(qty)}</span>
+      <span class="ns-row__body">
+        <span class="text-[15px] font-bold block truncate">${nsEscape(name)}</span>
+        <span class="ns-row__sub block !mt-0">${nsEscape(catLabel)}</span>
+      </span>`;
     list.appendChild(li);
-    
+
     nameEl.value = '';
     qtyEl.value = '';
+    nameEl.focus();
 };
 
 window.finishFoodItems = function() {
@@ -648,26 +535,23 @@ window.finishFoodItems = function() {
         }
         window.addFoodItem();
     }
-    
+
     if (!window.foodItemsArray || window.foodItemsArray.length === 0) {
-        if (typeof showNotification === 'function') {
-            showNotification('Please enter an item name and click "+ Add Item" (or enter item details above).', 'error');
-        } else {
-            alert('Please enter an item name and click "+ Add Item".');
-        }
+        nsShowError('food-intake-error', 'Add at least one item first.');
         if (nameEl) nameEl.focus();
         return;
     }
-    document.getElementById('food-intake-step-1').classList.add('hidden');
-    document.getElementById('food-intake-step-2').classList.remove('hidden');
+    nsShowError('food-intake-error', '');
+    setFoodStep(2);
 };
 
 window.submitFoodDonation = async function() {
     const bags = document.getElementById('food-bag-count').value.trim();
     if (!bags || bags < 1) {
-        if (typeof showNotification === 'function') showNotification('Please enter the number of bags/boxes.', 'error');
+        nsShowError('food-submit-error', 'Enter how many bags or boxes.');
         return;
     }
+    nsShowError('food-submit-error', '');
 
     const itemsSummary = window.foodItemsArray.map(i => `${i.qty}x ${i.name}`);
 
@@ -678,6 +562,8 @@ window.submitFoodDonation = async function() {
         const notes = document.getElementById('food-pickup-notes').value.trim() || 'Contact donor upon arrival';
         const sessionRaw = localStorage.getItem('northstar_session');
         const sessionObj = sessionRaw ? JSON.parse(sessionRaw) : {};
+        const submitBtn = document.getElementById('food-submit-btn');
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Sending…'; }
 
         let createdId = null;
         try {
@@ -697,253 +583,40 @@ window.submitFoodDonation = async function() {
             const data = await res.json();
             if (data.delivery) {
                 createdId = data.delivery.id;
-                // Persist so Status Bar & Dashboard card can track this donation
+                // Persist so the status card and dashboard can track this donation
                 try { localStorage.setItem('northstar_last_delivery_id', createdId); } catch(_) {}
             }
         } catch (err) {
             console.warn('API delivery save notice:', err);
         }
 
-        const modal = document.getElementById('food-intake-modal');
-        if (modal) modal.remove();
-        
-        if (typeof showNotification === 'function') {
-            showNotification('📦 Pickup request posted! Opening Uber-style Live Tracker...', 'success');
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Request a pickup'; }
+
+        if (!createdId) {
+            nsShowError('food-submit-error', 'We couldn’t send your pickup request. Check your connection and try again.');
+            return;
         }
 
-        if (createdId) {
-            setTimeout(() => { openUberTrackingModal(createdId); }, 400);
-        }
+        closeModal('food-intake-modal');
+        window.foodItemsArray = [];
+        setTimeout(() => { openUberTrackingModal(createdId); }, 320);
+        setTimeout(() => { if (window.initDonationStatusBar) window.initDonationStatusBar(); }, 600);
     } else {
         const dropoffLoc = document.getElementById('food-dropoff-location').value;
-        // Optionally save this location locally so the map knows where to go
+        // Save the planned location locally so the map knows where to go
         try {
             localStorage.setItem('northstar_planned_dropoff', dropoffLoc);
         } catch(e) {}
-        
-        const modal = document.getElementById('food-intake-modal');
-        if (modal) modal.remove();
-        if (typeof showNotification === 'function') {
-            showNotification(`🎉 Food donation submitted! Drop-off for ${dropoffLoc} added to map.`, 'success');
-        }
-        setTimeout(() => { window.navigateToFoodMap(); }, 1000);
+
+        closeModal('food-intake-modal');
+        window.foodItemsArray = [];
+        setTimeout(() => { window.navigateToFoodMap(); }, 320);
     }
-    window.foodItemsArray = [];
 };
 
-// ── Uber-Styled Real-Time Delivery Tracking Modal ────────────────────────────
-window.openUberTrackingModal = function(deliveryId) {
-  const existing = document.getElementById('uber-tracking-modal');
-  if (existing) existing.remove();
+// Delivery tracking uses the shared openUberTrackingModal / updateUberTrackingUI in js/northstar.js
 
-  const modal = document.createElement('div');
-  modal.id = 'uber-tracking-modal';
-  modal.className = 'fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-0 sm:p-4 animate-fade-in';
-  modal.innerHTML = `
-    <div class="w-full sm:max-w-md bg-white border border-slate-200 rounded-t-2xl sm:rounded-2xl p-6 text-slate-900 space-y-4 shadow-xl relative overflow-hidden animate-slide-up">
-      <!-- Top Bar -->
-      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-        <div class="flex items-center gap-2">
-          <span class="relative flex h-2.5 w-2.5">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-          </span>
-          <span class="text-xs font-bold uppercase tracking-wider text-slate-700 font-heading">LIVE DELIVERY TRACKER</span>
-        </div>
-        <button onclick="clearInterval(window._uberTrackingInterval); document.getElementById('uber-tracking-modal').remove()" class="text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:scale-[0.98] p-1.5 rounded-lg transition-all duration-150 ease-in-out cursor-pointer flex items-center justify-center">
-          <span class="material-symbols-outlined text-xl">close</span>
-        </button>
-      </div>
-
-      <!-- ETA Banner -->
-      <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center justify-between">
-        <div>
-          <p class="text-[11px] text-slate-500 font-semibold uppercase tracking-wider">Estimated Drop-off</p>
-          <h3 id="uber-eta-text" class="text-xl font-bold text-slate-900 font-heading">~15-20 Mins</h3>
-        </div>
-        <div class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 font-bold transition-all">
-          <span class="material-symbols-outlined text-xl animate-pulse text-slate-700">local_shipping</span>
-        </div>
-      </div>
-
-      <!-- 4-Step Visual Progress Bar -->
-      <div class="space-y-3 py-1">
-        <div class="flex justify-between items-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-          <span>PROGRESS TIMELINE</span>
-          <span id="uber-status-badge" class="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full uppercase tracking-wide">Request Received</span>
-        </div>
-
-        <div class="relative flex items-center justify-between px-2">
-          <div class="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-1 bg-slate-200 rounded-full z-0"></div>
-          <div id="uber-progress-bar-fill" class="absolute left-4 top-1/2 -translate-y-1/2 h-1 bg-emerald-500 rounded-full z-0 transition-all duration-500" style="width: 25%;"></div>
-
-          <!-- Step 1 -->
-          <div id="step-node-1" class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs z-10 border-2 border-white ring-4 ring-slate-900/20 animate-pulse shadow-none">
-            1
-          </div>
-          <!-- Step 2 -->
-          <div id="step-node-2" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-xs z-10 border-2 border-slate-200 shadow-none">
-            2
-          </div>
-          <!-- Step 3 -->
-          <div id="step-node-3" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-xs z-10 border-2 border-slate-200 shadow-none">
-            3
-          </div>
-          <!-- Step 4 -->
-          <div id="step-node-4" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-xs z-10 border-2 border-slate-200 shadow-none">
-            4
-          </div>
-        </div>
-
-        <div class="grid grid-cols-4 text-center text-[10px] font-bold text-slate-500 pt-1">
-          <span id="step-label-1" class="text-slate-900 font-bold">Request</span>
-          <span id="step-label-2" class="text-slate-400 font-normal">Assigned</span>
-          <span id="step-label-3" class="text-slate-400 font-normal">On the Way</span>
-          <span id="step-label-4" class="text-slate-400 font-normal">Delivered</span>
-        </div>
-      </div>
-
-      <!-- Live Details Card -->
-      <div id="uber-details-card" class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2 text-xs">
-        <div class="flex justify-between text-slate-600">
-          <span class="font-medium">Package:</span>
-          <strong id="uber-items-text" class="text-slate-900 font-semibold">1x Care Package</strong>
-        </div>
-        <div class="flex justify-between text-slate-600">
-          <span class="font-medium">Pickup Neighborhood:</span>
-          <strong id="uber-area-text" class="text-slate-900 font-semibold">Seattle Area</strong>
-        </div>
-        <div class="flex justify-between text-slate-600">
-          <span class="font-medium">Target Shelter:</span>
-          <strong id="uber-dest-text" class="text-slate-900 font-semibold">St. Jude Refuge</strong>
-        </div>
-      </div>
-
-      <!-- Driver Card -->
-      <div id="uber-driver-card" class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700">
-            <span class="material-symbols-outlined text-xl text-slate-700 animate-pulse">directions_car</span>
-          </div>
-          <div>
-            <h4 id="uber-driver-name" class="text-xs font-bold text-slate-900">Searching for Driver...</h4>
-            <p class="text-[10px] text-slate-500 font-medium">Volunteer Community Logistics</p>
-          </div>
-        </div>
-        <button onclick="if(typeof showNotification==='function') showNotification('Calling Volunteer Driver...', 'info')" class="px-3 py-1.5 bg-white hover:bg-slate-100 hover:text-slate-900 text-slate-700 rounded-lg text-xs font-semibold border border-slate-300 active:scale-[0.98] transition-all duration-150 ease-in-out flex items-center gap-1 shadow-sm cursor-pointer">
-          <span class="material-symbols-outlined text-sm text-slate-500">call</span> Contact
-        </button>
-      </div>
-    </div>
-  `;
-  modal.addEventListener('click', (e) => { if (e.target === modal) { clearInterval(window._uberTrackingInterval); modal.remove(); } });
-  const appFrame = document.querySelector('.app-frame') || document.body;
-  appFrame.appendChild(modal);
-
-  // Auto Polling Status Update
-  if (window._uberTrackingInterval) clearInterval(window._uberTrackingInterval);
-  
-  const fetchAndUpdate = async () => {
-    try {
-      const res = await fetch(`/api/deliveries/${deliveryId}`);
-      const data = await res.json();
-      if (data.delivery) {
-        window.updateUberTrackingUI(data.delivery);
-      }
-    } catch (e) {
-      console.warn('Tracking poll notice:', e);
-    }
-  };
-
-  fetchAndUpdate();
-  window._uberTrackingInterval = setInterval(fetchAndUpdate, 2500);
-};
-
-window.updateUberTrackingUI = function(d) {
-  const statusBadge = document.getElementById('uber-status-badge');
-  const barFill = document.getElementById('uber-progress-bar-fill');
-  const driverName = document.getElementById('uber-driver-name');
-  const etaText = document.getElementById('uber-eta-text');
-  const itemsText = document.getElementById('uber-items-text');
-  const areaText = document.getElementById('uber-area-text');
-  const destText = document.getElementById('uber-dest-text');
-
-  if (itemsText) {
-    if (Array.isArray(d.items) && d.items.length > 0) {
-      itemsText.innerText = d.items.join(', ');
-    } else if (typeof d.items === 'string' && d.items.trim()) {
-      itemsText.innerText = d.items;
-    } else {
-      itemsText.innerText = '1x Care Package';
-    }
-  }
-  if (areaText) areaText.innerText = d.donorArea || 'Seattle Area';
-  if (destText) destText.innerText = d.destination || 'St. Jude Refuge';
-
-  const node1 = document.getElementById('step-node-1');
-  const node2 = document.getElementById('step-node-2');
-  const node3 = document.getElementById('step-node-3');
-  const node4 = document.getElementById('step-node-4');
-
-  const label1 = document.getElementById('step-label-1');
-  const label2 = document.getElementById('step-label-2');
-  const label3 = document.getElementById('step-label-3');
-  const label4 = document.getElementById('step-label-4');
-
-  const setNodeState = (node, label, state) => {
-    if (!node) return;
-    if (state === 'done') {
-      node.className = 'w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs z-10 border-2 border-white shadow-none';
-      node.innerText = '✓';
-      if (label) label.className = 'text-slate-700 font-semibold';
-    } else if (state === 'active') {
-      node.className = 'w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs z-10 border-2 border-white ring-4 ring-slate-900/20 animate-pulse shadow-none';
-      if (label) label.className = 'text-slate-900 font-bold';
-    } else {
-      node.className = 'w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-xs z-10 border-2 border-slate-200 shadow-none';
-      if (label) label.className = 'text-slate-400 font-normal';
-    }
-  };
-
-  if (d.status === 'pending_driver' || d.status === 'pending_volunteer') {
-    if (statusBadge) statusBadge.innerText = 'Request Posted';
-    if (barFill) barFill.style.width = '10%';
-    if (driverName) driverName.innerText = 'Searching for Driver...';
-    if (etaText) etaText.innerText = '~15-20 Mins';
-    setNodeState(node1, label1, 'active');
-    setNodeState(node2, label2, 'inactive');
-    setNodeState(node3, label3, 'inactive');
-    setNodeState(node4, label4, 'inactive');
-  } else if (d.status === 'driver_assigned' || d.status === 'claimed') {
-    if (statusBadge) statusBadge.innerText = 'Driver Assigned';
-    if (barFill) barFill.style.width = '40%';
-    if (driverName) driverName.innerText = d.driverName || 'Volunteer Sarah M.';
-    if (etaText) etaText.innerText = '~10-15 Mins';
-    setNodeState(node1, label1, 'done');
-    setNodeState(node2, label2, 'active');
-    setNodeState(node3, label3, 'inactive');
-    setNodeState(node4, label4, 'inactive');
-  } else if (d.status === 'in_transit') {
-    if (statusBadge) statusBadge.innerText = 'Food On the Way';
-    if (barFill) barFill.style.width = '70%';
-    if (driverName) driverName.innerText = d.driverName || 'Volunteer Sarah M.';
-    if (etaText) etaText.innerText = '~5 Mins';
-    setNodeState(node1, label1, 'done');
-    setNodeState(node2, label2, 'done');
-    setNodeState(node3, label3, 'active');
-    setNodeState(node4, label4, 'inactive');
-  } else if (d.status === 'delivered') {
-    if (statusBadge) statusBadge.innerText = 'Delivered to Shelter';
-    if (barFill) barFill.style.width = '100%';
-    if (driverName) driverName.innerText = d.driverName || 'Volunteer Sarah M.';
-    if (etaText) etaText.innerText = 'Delivered 🎉';
-    setNodeState(node1, label1, 'done');
-    setNodeState(node2, label2, 'done');
-    setNodeState(node3, label3, 'done');
-    setNodeState(node4, label4, 'done');
-  }
-};
-
+// ── Deliver food: open pickup requests ──────────────────────────────────────
 window.renderAvailableDeliveriesModalContent = async function() {
   const container = document.getElementById('deliver-food-jobs-container');
   if (!container) return;
@@ -953,149 +626,122 @@ window.renderAvailableDeliveriesModalContent = async function() {
 
   if (jobs.length === 0) {
     container.innerHTML = `
-      <div class="py-6 text-center text-slate-500 bg-slate-50 rounded-xl border border-slate-200 p-4">
-        <span class="material-symbols-outlined text-3xl text-slate-400 mb-2">inbox</span>
-        <p class="text-xs font-medium text-slate-600">No pending delivery requests right now.</p>
-      </div>
-    `;
+      <div class="ns-empty">
+        <p class="ns-empty__title">No pickups waiting</p>
+        <p class="ns-empty__sub">When someone asks for a food pickup, it shows up here.</p>
+      </div>`;
     return;
   }
 
-  container.innerHTML = jobs.map(job => {
-    const itemText = Array.isArray(job.items) ? job.items.join(', ') : (job.items || 'Care Package');
+  container.innerHTML = `<div class="flex flex-col gap-3">${jobs.map(job => {
+    const itemText = nsEscape(Array.isArray(job.items) ? job.items.join(', ') : (job.items || 'Food donation'));
+    const bags = Number(job.bags) || 1;
+    const id = nsEscape(String(job.id)).replace(/'/g, '&#39;');
     return `
-      <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
-        <div class="flex justify-between items-start">
-          <div class="space-y-1">
-            <div class="text-xs text-slate-700 font-bold uppercase tracking-wider flex items-center gap-1">
-              <span class="material-symbols-outlined text-[14px]">map</span> ${job.donorArea || 'Capitol Hill, Seattle'}
-            </div>
-            <div class="text-[11px] text-slate-500">Target: <span class="text-slate-900 font-semibold">${job.destination || 'St. Jude Refuge'}</span></div>
-          </div>
-          <div class="bg-slate-200 px-2 py-1 rounded text-[10px] text-slate-700 font-semibold">
-            ${job.bags || 1} Bag(s)
-          </div>
+      <div class="ns-card ns-card--pad">
+        <p class="ns-card-title">${itemText}</p>
+        <div class="mt-3 flex flex-col gap-2 text-[14px] font-medium text-ink-2">
+          <p class="flex items-start gap-2"><span class="material-symbols-outlined text-[18px] text-muted">location_on</span><span>From ${nsEscape(job.donorArea || 'Seattle area')}</span></p>
+          <p class="flex items-start gap-2"><span class="material-symbols-outlined text-[18px] text-muted">home</span><span>To ${nsEscape(job.destination || 'a shelter')}</span></p>
+          <p class="flex items-start gap-2"><span class="material-symbols-outlined text-[18px] text-muted">schedule</span><span>${nsEscape(job.timeWindow || 'Any time')}</span></p>
         </div>
-        
-        <div class="text-[11px] text-slate-600 flex items-center gap-1.5">
-          <span class="material-symbols-outlined text-[13px] text-slate-400">schedule</span>
-          Time: ${job.timeWindow || 'ASAP'}
+        <div class="mt-4 flex items-center justify-between gap-3">
+          <span class="ns-badge ns-badge--sand">${bags} ${bags === 1 ? 'bag' : 'bags'}</span>
+          <button type="button" onclick="acceptDeliveryJob('${id}')" class="ns-btn ns-btn--secondary ns-btn--sm">Claim pickup</button>
         </div>
-        <div class="text-[11px] text-slate-600 flex items-center gap-1.5">
-          <span class="material-symbols-outlined text-[13px] text-slate-400">inventory_2</span>
-          Items: ${itemText}
-        </div>
-
-        <button onclick="acceptDeliveryJob('${job.id}')" class="w-full mt-2 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold shadow-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer">
-          <span class="material-symbols-outlined text-sm">local_shipping</span> Accept Delivery
-        </button>
-      </div>
-    `;
-  }).join('');
+      </div>`;
+  }).join('')}</div>`;
 };
 
 window.openDeliverFoodModal = async function(e) {
   if (e) e.preventDefault();
-  const existing = document.getElementById('deliver-food-modal');
-  if (existing) existing.remove();
-
-  const modal = document.createElement('div');
-  modal.id = 'deliver-food-modal';
-  modal.className = 'fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-0 sm:p-4 animate-fade-in';
-  
-  modal.innerHTML = `
-    <div class="w-full sm:max-w-md bg-white border border-slate-200 rounded-t-2xl sm:rounded-2xl p-6 text-slate-900 space-y-4 shadow-xl relative overflow-hidden animate-slide-up">
-      <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto sm:hidden"></div>
-      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2 font-heading">
-          <span class="material-symbols-outlined text-slate-700">volunteer_activism</span> Available Deliveries
-        </h3>
-        <button onclick="document.getElementById('deliver-food-modal').remove()" class="text-slate-400 hover:text-slate-600 p-1 transition-colors">
-          <span class="material-symbols-outlined text-xl">close</span>
-        </button>
-      </div>
-      <p class="text-xs text-slate-500 leading-relaxed font-medium">Select a request below to claim and start driving.</p>
-      
-      <div id="deliver-food-jobs-container" class="space-y-3 max-h-80 overflow-y-auto pr-1">
-        <div class="py-8 text-center text-slate-500">
-          <span class="inline-block animate-spin material-symbols-outlined text-2xl text-slate-700 mb-2">refresh</span>
-          <p class="text-xs font-medium">Fetching nearby requests...</p>
-        </div>
-      </div>
-    </div>
-  `;
-
-  modal.addEventListener('mousedown', (evt) => { 
-      if (evt.target === modal) modal.remove(); 
-  });
-  
-  const appFrame = document.querySelector('.app-frame') || document.body;
-  appFrame.appendChild(modal);
-
+  const container = document.getElementById('deliver-food-jobs-container');
+  if (container) container.innerHTML = '<p class="ns-card-sub py-6 text-center">Looking for pickup requests…</p>';
+  openModal('deliver-food-modal');
   await window.renderAvailableDeliveriesModalContent();
 };
 
 window.acceptDeliveryJob = async function(id) {
   if (typeof window.claimAndTrackDelivery === 'function') {
-    const modal = document.getElementById('deliver-food-modal');
-    if (modal) modal.remove();
+    closeModal('deliver-food-modal');
     return window.claimAndTrackDelivery(id);
   }
   try {
     const sessionRaw = localStorage.getItem('northstar_session');
     const sessionObj = sessionRaw ? JSON.parse(sessionRaw) : {};
     const driverId = sessionObj.id || null;
-    
-    await fetch(`/api/deliveries/${id}/claim`, {
+
+    const claimRes = await fetch(`/api/deliveries/${id}/claim`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ driverName: sessionObj.username || 'Volunteer (You)', driver_id: driverId })
     });
-    
-    // Persist so Status Bar & Dashboard card can track this donation/pickup
-    try { localStorage.setItem('northstar_last_delivery_id', id); } catch(_) {}
-    
-    const modal = document.getElementById('deliver-food-modal');
-    if (modal) modal.remove();
-    
-    if (typeof showNotification === 'function') {
-      showNotification('Delivery claimed successfully! Opening live tracker...', 'success');
+    if (claimRes.status === 409) {
+      if (window.showNotification) showNotification('Another volunteer already claimed this pickup.', 'error');
+      closeModal('deliver-food-modal');
+      return;
     }
-    
-    setTimeout(() => { openUberTrackingModal(id); }, 400);
 
+    try { localStorage.setItem('northstar_last_delivery_id', id); } catch(_) {}
+
+    closeModal('deliver-food-modal');
+    setTimeout(() => { openUberTrackingModal(id); }, 320);
   } catch (err) {
-    if (typeof showNotification === 'function') {
-      showNotification('Failed to claim delivery. It may have already been taken.', 'error');
-    }
+    console.warn('Could not claim delivery:', err);
   }
 };
 
-// Check for Stripe Checkout URL return parameters
+// ── Coming back from checkout ───────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   const urlParams = new URLSearchParams(window.location.search);
   const status = urlParams.get('status');
-  const amount = urlParams.get('amount');
+  const amountRaw = parseFloat(urlParams.get('amount'));
+  const amount = !isNaN(amountRaw) && amountRaw > 0 ? `$${formatAmount(amountRaw)}` : '';
+  const isDemo = urlParams.get('demo') === 'true';
+  const box = document.getElementById('donation-return-notice');
+  if (!box || (status !== 'success' && status !== 'cancel')) return;
 
-  if (status === 'success') {
-    const msg = amount ? `🎉 Thank you! Your $${amount} Stripe donation was successful.` : '🎉 Thank you! Your Stripe donation was successful.';
-    setTimeout(() => {
-      if (typeof showNotification === 'function') {
-        showNotification(msg, 'success');
-      }
-    }, 300);
-    // Clean up URL without reloading
-    window.history.replaceState({}, document.title, window.location.pathname);
-  } else if (status === 'cancel') {
-    setTimeout(() => {
-      if (typeof showNotification === 'function') {
-        showNotification('Donation was cancelled. You can try again anytime!', 'info');
-      }
-    }, 300);
-    window.history.replaceState({}, document.title, window.location.pathname);
+  let tone = 'sand', icon = 'info', title = '', sub = '';
+  if (status === 'success' && isDemo) {
+    title = 'No payment was taken';
+    sub = 'Card payments aren’t set up yet, so this was a test checkout. Nothing was charged.';
+  } else if (status === 'success') {
+    tone = 'leaf'; icon = 'check_circle';
+    // Record the confirmed payment once (the volunteer dashboard totals northstar_donations)
+    const checkoutId = urlParams.get('session_id');
+    if (checkoutId && !isNaN(amountRaw) && amountRaw > 0) {
+      try {
+        const list = JSON.parse(localStorage.getItem('northstar_donations') || '[]');
+        const donations = Array.isArray(list) ? list : [];
+        if (!donations.some(d => d && d.id === checkoutId)) {
+          donations.push({ id: checkoutId, amount: amountRaw, date: new Date().toISOString() });
+          localStorage.setItem('northstar_donations', JSON.stringify(donations));
+        }
+      } catch (e) {}
+    }
+    title = amount ? `Thank you. Your ${amount} donation went through.` : 'Thank you. Your donation went through.';
+    sub = 'The checkout page confirmed your payment.';
+  } else {
+    title = 'Donation cancelled';
+    sub = 'Nothing was charged. You can try again any time.';
   }
+
+  box.innerHTML = `
+    <div class="ns-card ${tone === 'leaf' ? '!bg-leaf-wash !border-leaf-line !shadow-none' : 'ns-card--sand'} flex items-start gap-3 p-4">
+      <span class="material-symbols-outlined mt-0.5 ${tone === 'leaf' ? 'text-leaf' : 'text-ink-2'}">${icon}</span>
+      <div class="flex-1 min-w-0">
+        <p class="text-[15px] font-bold">${nsEscape(title)}</p>
+        <p class="ns-card-sub mt-1">${nsEscape(sub)}</p>
+      </div>
+      <button type="button" class="ns-icon-btn ns-icon-btn--sm !shadow-none !bg-transparent -mr-2 -mt-2" aria-label="Dismiss" onclick="this.closest('#donation-return-notice').classList.add('hidden')">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>`;
+  box.classList.remove('hidden');
+  window.history.replaceState({}, document.title, window.location.pathname);
 });
-// Donation / Volunteer Active Status Bar Logic
+
+// ── Active delivery card ────────────────────────────────────────────────────
 window.initDonationStatusBar = async function() {
     const role = localStorage.getItem('northstar_user_role') || 'seeker';
     const sessionRaw = localStorage.getItem('northstar_session');
@@ -1106,50 +752,60 @@ window.initDonationStatusBar = async function() {
     try {
         const res = await fetch('/api/deliveries');
         const data = await res.json();
-        
+
         let activeJob = null;
         if (role === 'volunteer') {
-            activeJob = (data.deliveries || []).find(d => 
-                d.driver_id === session.id && 
+            activeJob = (data.deliveries || []).find(d =>
+                d.driver_id === session.id &&
                 ['pending_driver', 'driver_assigned', 'in_transit', 'delivered'].includes(d.status)
             );
         } else {
-            activeJob = (data.deliveries || []).find(d => 
-                d.donor_id === session.id && 
+            activeJob = (data.deliveries || []).find(d =>
+                d.donor_id === session.id &&
                 ['pending_driver', 'driver_assigned', 'in_transit', 'delivered'].includes(d.status)
             );
         }
-        
+
         if (activeJob) {
             bar.classList.remove('hidden');
             const label = document.getElementById('dsb-label');
             const sub = document.getElementById('dsb-sub');
             const icon = document.getElementById('dsb-icon');
+            const tile = document.getElementById('dsb-tile');
+            const dest = activeJob.destination || 'the shelter';
+            let done = false;
 
             if (role === 'volunteer') {
                 if (activeJob.status === 'delivered') {
-                    label.innerText = 'Delivery Complete';
-                    sub.innerText = `Dropped off at ${activeJob.destination}`;
-                    icon.innerText = 'check_circle';
-                    icon.className = 'material-symbols-outlined text-emerald-400 text-xl flex-shrink-0';
+                    done = true;
+                    label.textContent = 'Delivery complete';
+                    sub.textContent = `Dropped off at ${dest}`;
+                    icon.textContent = 'check_circle';
+                } else if (activeJob.status === 'in_transit') {
+                    label.textContent = 'You’re delivering food';
+                    sub.textContent = `On the way to ${dest}`;
+                    icon.textContent = 'directions_car';
                 } else {
-                    label.innerText = 'Active Delivery Route';
-                    sub.innerText = `En route to ${activeJob.destination}`;
-                    icon.innerText = 'directions_car';
-                    icon.className = 'material-symbols-outlined text-amber-400 text-xl flex-shrink-0';
+                    label.textContent = 'You claimed a pickup';
+                    sub.textContent = `Take it to ${dest}`;
+                    icon.textContent = 'directions_car';
                 }
             } else {
+                icon.textContent = 'local_shipping';
                 if (activeJob.status === 'pending_driver') {
-                    label.innerText = 'Food Donation Pending';
-                    sub.innerText = 'Waiting for a volunteer driver';
+                    label.textContent = 'Your food donation';
+                    sub.textContent = 'Waiting for a volunteer to claim it';
                 } else if (activeJob.status === 'driver_assigned' || activeJob.status === 'in_transit') {
-                    label.innerText = 'Driver En Route';
-                    sub.innerText = 'Your food is on the way to the shelter';
+                    label.textContent = 'Your food donation';
+                    sub.textContent = 'A volunteer is taking it to the shelter';
                 } else if (activeJob.status === 'delivered') {
-                    label.innerText = 'Donation Delivered 🎉';
-                    sub.innerText = `Arrived at ${activeJob.destination}`;
+                    done = true;
+                    label.textContent = 'Donation delivered';
+                    sub.textContent = `Arrived at ${dest}`;
+                    icon.textContent = 'check_circle';
                 }
             }
+            if (tile) tile.className = done ? 'ns-tile ns-tile--leaf' : 'ns-tile !bg-paper';
 
             window._openLastDeliveryTracker = () => {
                 if (typeof openUberTrackingModal === 'function') {
@@ -1165,5 +821,3 @@ document.addEventListener('DOMContentLoaded', () => { setTimeout(initDonationSta
 </script>
 </body>
 </html>
-
-

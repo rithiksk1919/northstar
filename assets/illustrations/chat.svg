@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" fill="none" stroke="#111111" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <!-- your question -->
+  <path d="M40 40 H138 A14 14 0 0 1 152 54 V92 A14 14 0 0 1 138 106 H78 L58 124 V106 H40 A14 14 0 0 1 26 92 V54 A14 14 0 0 1 40 40 Z" fill="#FFFFFF"/>
+  <path d="M48 64 H126 M48 82 H104"/>
+  <!-- Companion's answer -->
+  <path d="M112 84 H198 A14 14 0 0 1 212 98 V134 A14 14 0 0 1 198 148 H184 V166 L164 148 H112 A14 14 0 0 1 98 134 V98 A14 14 0 0 1 112 84 Z" fill="#FFD43B"/>
+  <circle cx="132" cy="116" r="4" fill="#111111" stroke="none"/>
+  <circle cx="155" cy="116" r="4" fill="#111111" stroke="none"/>
+  <circle cx="178" cy="116" r="4" fill="#111111" stroke="none"/>
+  <!-- sparkles -->
+  <path d="M190 20 Q190 34 204 34 Q190 34 190 48 Q190 34 176 34 Q190 34 190 20 Z" fill="#FFFFFF" stroke-width="2.4"/>
+  <path d="M222 60 Q222 68 230 68 Q222 68 222 76 Q222 68 214 68 Q222 68 222 60 Z" fill="#111111" stroke-width="2"/>
+  <path d="M18 138 Q18 146 26 146 Q18 146 18 154 Q18 146 10 146 Q18 146 18 138 Z" fill="#FFFFFF" stroke-width="2.4"/>
+</svg>

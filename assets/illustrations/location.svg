@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" fill="none" stroke="#111111" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <!-- folded map -->
+  <path d="M48 74 L112 56 L182 74 L250 56 L250 190 L182 208 L112 190 L48 208 Z" fill="#FFFFFF"/>
+  <path d="M112 56 V190 M182 74 V208"/>
+  <!-- route -->
+  <circle cx="78" cy="176" r="7" fill="#111111"/>
+  <path d="M90 170 C120 150 128 172 150 150 C170 128 186 142 204 118" stroke-dasharray="2 9" stroke-width="3.4"/>
+  <!-- pin -->
+  <path d="M222 30 C240 30 254 44 254 62 C254 84 232 104 222 118 C212 104 190 84 190 62 C190 44 204 30 222 30 Z" fill="#FFD43B"/>
+  <circle cx="222" cy="62" r="11" fill="#FFFFFF"/>
+  <!-- sparkles -->
+  <path d="M70 26 Q70 38 82 38 Q70 38 70 50 Q70 38 58 38 Q70 38 70 26 Z" fill="#FFFFFF" stroke-width="2.4"/>
+  <path d="M150 16 Q150 24 158 24 Q150 24 150 32 Q150 24 142 24 Q150 24 150 16 Z" fill="#FFFFFF" stroke-width="2.4"/>
+  <path d="M30 124 Q30 131 37 131 Q30 131 30 138 Q30 131 23 131 Q30 131 30 124 Z" fill="#FFFFFF" stroke-width="2.4"/>
+  <path d="M286 140 Q286 150 296 150 Q286 150 286 160 Q286 150 276 150 Q286 150 286 140 Z" fill="#FFFFFF" stroke-width="2.4"/>
+</svg>

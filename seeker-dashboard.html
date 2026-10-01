@@ -1,431 +1,452 @@
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html class="light" lang="en">
 <head>
 <meta charset="utf-8">
-<meta content="width=device-width, initial-scale=1.0" name="viewport">
-<title>Northstar | Seeker Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link rel="stylesheet" href="css/northstar.css">
-<script id="tailwind-config">
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            "colors": {
-                    "error": "#ba1a1a",
-                    "surface": "#0f1117",
-                    "tertiary-container": "#0d1c2f",
-                    "surface-variant": "#1a1d27",
-                    "on-primary-container": "#7c839b",
-                    "surface-container-lowest": "#12141c",
-                    "primary-fixed-dim": "#bec6e0",
-                    "on-surface": "#f8fafc",
-                    "surface-tint": "#565e74",
-                    "on-background": "#f8fafc",
-                    "tertiary": "#000000",
-                    "secondary": "#f59e0b",
-                    "primary-fixed": "#dae2fd",
-                    "on-primary": "#ffffff",
-                    "surface-container-low": "#161922",
-                    "tertiary-fixed": "#d5e3fd",
-                    "on-error-container": "#93000a",
-                    "on-primary-fixed": "#131b2e",
-                    "secondary-fixed-dim": "#e2c62d",
-                    "background": "#0f1117",
-                    "on-tertiary-fixed-variant": "#3a485c",
-                    "primary-container": "#131b2e",
-                    "tertiary-fixed-dim": "#b9c7e0",
-                    "outline": "#475569",
-                    "surface-container": "#1e2230",
-                    "on-tertiary-container": "#76859b",
-                    "on-surface-variant": "#94a3b8",
-                    "on-secondary": "#ffffff",
-                    "on-secondary-fixed": "#211b00",
-                    "outline-variant": "#334155",
-                    "surface-container-highest": "#282d3f",
-                    "on-error": "#ffffff",
-                    "surface-container-high": "#222737",
-                    "on-tertiary-fixed": "#0d1c2f",
-                    "primary": "#0d1c2f",
-                    "surface-dim": "#0b0c10",
-                    "surface-bright": "#161922",
-                    "secondary-fixed": "#ffe24c",
-                    "on-tertiary": "#ffffff",
-                    "on-secondary-fixed-variant": "#524600",
-                    "inverse-on-surface": "#eff1f3",
-                    "secondary-container": "#fcdf46",
-                    "inverse-surface": "#2d3133",
-                    "error-container": "#ffdad6",
-                    "on-secondary-container": "#726200",
-                    "inverse-primary": "#bec6e0",
-                    "on-primary-fixed-variant": "#3f465c"
-            },
-            "borderRadius": {
-                    "DEFAULT": "0.25rem",
-                    "lg": "0.5rem",
-                    "xl": "0.75rem",
-                    "2xl": "1rem",
-                    "3xl": "1.5rem",
-                    "full": "9999px"
-            }
-          },
-        },
-      }
-</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#FFFFFF">
+<title>Home · Northstar</title>
+<link rel="icon" href="favicon.png">
+<script src="js/ns-boot.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=container-queries"></script>
+<script src="js/tailwind-config.js"></script>
+<link rel="stylesheet" href="css/app.css">
+<style>
+    .home-search {
+        display: flex; align-items: center; gap: 10px;
+        height: 46px; padding: 0 14px;
+        border-radius: 12px;
+        background: var(--sand);
+    }
+    .home-search input {
+        flex: 1; min-width: 0; height: 100%;
+        border: 0; outline: none; background: transparent;
+        font-size: 15px; font-weight: 500; color: var(--ink);
+    }
+    .home-search input::placeholder { color: #8A8A8A; }
+    .home-search:focus-within { background: #fff; box-shadow: 0 0 0 1px var(--ink); }
+    .home-search input::-webkit-search-cancel-button { display: none; }
+    .home-search-wrap { position: relative; z-index: 30; }
+    .home-results {
+        position: absolute; left: 0; right: 0; top: calc(100% + 6px);
+        max-height: min(60vh, 420px); overflow-y: auto;
+        padding: 4px 14px;
+        border-radius: 16px;
+        border: 1px solid var(--line);
+        background: #fff;
+        box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.35);
+        animation: nsRise 0.18s var(--ease) both;
+    }
+    .home-results .ns-row { cursor: pointer; }
+    .home-results .ns-row.is-kbd { background: var(--sand); margin: 0 -14px; padding-left: 14px; padding-right: 14px; }
+    .home-results mark { background: none; color: inherit; font-weight: 800; }
+    .home-chips { display: flex; gap: 8px; overflow-x: auto; margin: 10px -16px 0; padding: 0 16px; scrollbar-width: none; }
+    .home-chips::-webkit-scrollbar { display: none; }
+    .now-card {
+        position: relative; overflow: hidden;
+        margin-top: 16px; padding: 18px;
+        border-radius: 18px;
+        background: var(--amber);
+    }
+    .now-card__art { position: absolute; right: 6px; top: 14px; width: 96px; pointer-events: none; }
+    .now-card__title { font-size: 24px; line-height: 1.12; font-weight: 800; letter-spacing: -0.025em; max-width: 72%; }
+    .now-card__meta { margin-top: 8px; font-size: 13px; font-weight: 500; color: #2B2B2B; max-width: 78%; }
+    .home-row__end { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+</style>
 </head>
-<body class="bg-[#0F1117] min-h-screen flex items-center justify-center p-0 sm:py-6 text-slate-100 selection:bg-amber-500/30 selection:text-amber-300">
+<body>
 
-<!-- Atmospheric Background Glows -->
-<div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
-    <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl"></div>
-    <div class="absolute top-1/3 -right-40 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
-    <div class="absolute -bottom-40 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
-</div>
+<div class="app-frame">
 
-<!-- Mobile Frame Shell -->
-<div class="app-frame app-container w-full sm:max-w-[420px] h-screen sm:h-[900px] max-h-screen sm:max-h-[920px] bg-[#0F1117] sm:rounded-[44px] shadow-[0_0_70px_rgba(0,0,0,0.85)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800/80 z-10">
-
-    <!-- App Header -->
-    <header class="bg-white sticky top-0 z-40 flex justify-between items-center w-full px-5 pt-5 pb-3 border-b border-slate-200">
-        <div class="flex items-center gap-2.5">
-            <span class="material-symbols-outlined text-slate-800 text-2xl font-bold cursor-pointer">menu</span>
-            <h1 class="text-xl font-extrabold text-slate-900 font-heading tracking-tight">Northstar</h1>
+    <header class="ns-header">
+        <div class="min-w-0">
+            <p class="ns-header__meta !mt-0">Seattle area</p>
+            <h1 id="dashboard-greeting" class="ns-header__title break-words">Hi there</h1>
         </div>
-        <div class="header-actions header-actions-right flex items-center gap-2" style="display: flex; align-items: center; gap: 8px;">
-            <!-- AI Chatbot Header Button -->
-            <button id="chat-fab" data-fab-alias="chatbot-fab-btn" onclick="toggleAIChatbotWindow()" class="icon-btn w-10 h-10 min-w-[40px] min-h-[40px] rounded-[12px] bg-[#FFE855] text-slate-950 border border-amber-300 flex items-center justify-center font-bold transition-all active:scale-95 hover:brightness-105 cursor-pointer relative select-none flex-shrink-0" aria-label="Open AI Assistant" title="NorthStar AI Assistant">
-                <span id="chatbot-fab-icon" class="material-symbols-outlined" style="font-size:20px;line-height:1;">smart_toy</span>
-                <span class="absolute top-1 right-1 w-2 h-2 bg-emerald-500 border border-white rounded-full"></span>
-            </button>
-
-            <!-- Existing theme toggle button -->
-            <button id="theme-toggle-btn" onclick="toggleTheme()" class="icon-btn w-11 h-11 min-w-[44px] min-h-[44px] rounded-[12px] bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-amber-400 text-sm font-bold transition-all active:scale-95 cursor-pointer" aria-label="Toggle Theme" title="Toggle Light / Dark Mode">
-                <span class="material-symbols-outlined text-base">brightness_4</span>
-            </button>
-
-            <!-- Dynamic First-Initial Profile / Settings Avatar Button -->
-            <button id="profile-btn" class="profile-avatar-btn w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-slate-900 text-[#facc15] dark:bg-[#facc15] dark:text-slate-950 border border-slate-300 dark:border-amber-300 flex items-center justify-center font-extrabold text-sm shadow-sm transition-all active:scale-95 cursor-pointer select-none" aria-label="Settings & Profile" title="Open Settings" onclick="openSettingsModal()">
-                S
-            </button>
+        <div class="ns-header__actions">
+            <button id="profile-btn" type="button" class="ns-icon-btn ns-avatar-btn" aria-label="Open settings" onclick="openSettingsModal()">S</button>
         </div>
     </header>
 
-    <!-- Main Scrollable Canvas (Unified 16px Vertical Rhythm & 20px Edge Padding) -->
-    <main class="dashboard-container dashboard-content main-content flex-grow px-5 pt-4 pb-32 flex flex-col space-y-4 overflow-y-auto bg-[#F4F5F7]">
+    <main class="ns-main dashboard-container !pt-1">
 
-        <!-- Greeting Header -->
-        <section class="space-y-1 pt-0.5 pb-0.5 stagger-1">
-            <h2 id="dashboard-greeting" class="text-[1.85rem] leading-tight font-extrabold text-slate-900 dark:text-white font-heading tracking-tight">Good Morning, Seeker</h2>
-            <p class="dashboard-subtext text-base font-semibold text-[#475569] dark:text-[#94A3B8]">Find what you need today.</p>
+        <!-- Search goes to the map, filtered by what you typed -->
+        <div class="home-search-wrap">
+            <form class="home-search" role="search" onsubmit="event.preventDefault(); submitHomeSearch();">
+                <span class="material-symbols-outlined text-[22px] text-ink-2" aria-hidden="true">search</span>
+                <input id="home-search-input" name="q" type="search" placeholder="Search beds, meals, Wi-Fi" aria-label="Search places and gigs"
+                    autocomplete="off" enterkeyhint="search" role="combobox" aria-expanded="false" aria-controls="home-search-results" aria-autocomplete="list">
+                <button type="button" id="home-search-clear" class="hidden -mr-2 w-9 h-9 grid place-items-center rounded-full text-ink-2" aria-label="Clear search">
+                    <span class="material-symbols-outlined text-[20px]">close</span>
+                </button>
+            </form>
+            <div id="home-search-results" class="home-results hidden" role="listbox" aria-label="Search results"></div>
+        </div>
+
+        <div class="home-chips" role="group" aria-label="Show on the map">
+            <a href="resource-map.html" class="ns-chip is-active">All</a>
+            <a href="resource-map.html?category=shelter" class="ns-chip"><span class="material-symbols-outlined">bed</span>Beds</a>
+            <a href="resource-map.html?category=food" class="ns-chip"><span class="material-symbols-outlined">restaurant</span>Meals</a>
+            <a href="resource-map.html?category=restroom" class="ns-chip"><span class="material-symbols-outlined">shower</span>Showers</a>
+            <a href="resource-map.html?category=wifi" class="ns-chip"><span class="material-symbols-outlined">wifi</span>Wi-Fi</a>
+        </div>
+
+        <!-- Right now: the closest shelter that is open 24/7 (real data from /api/resources) -->
+        <section id="now-card" class="now-card" aria-labelledby="now-title">
+            <img class="now-card__art" src="assets/illustrations/bed.svg" alt="">
+            <p class="ns-eyebrow">Right now</p>
+            <h2 id="now-title" class="now-card__title mt-2">Shelters open all night</h2>
+            <p id="now-meta" class="now-card__meta">Finding the closest one…</p>
+            <a id="now-cta" href="resource-map.html?category=shelter" class="ns-btn ns-btn--primary ns-btn--sm !h-11 !px-5 mt-4">
+                Get directions <span class="material-symbols-outlined">keyboard_double_arrow_right</span>
+            </a>
         </section>
 
-        <!-- LIVE DATA MODULE 1: Nearby Verified Essentials Card (Light & Dark Mode Integrated) -->
-        <a href="map.html" class="action-card map-preview-card nearby-essentials-card dashboard-card-border block bg-white dark:bg-[#0F141C] text-slate-900 dark:text-white rounded-[20px] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.06)] relative overflow-hidden group transition-all flex-shrink-0 stagger-2" style="min-height: 160px !important; height: 160px !important; width: 100% !important;">
-            <!-- Background Mini Map Preview (Clean Light Tiles) -->
-            <div id="seeker-mini-map" class="map-preview absolute inset-0 w-full h-full opacity-95 z-0 pointer-events-none rounded-[20px]"></div>
-            
-            <!-- Light/Dark Theme Gradient Overlay -->
-            <div class="map-card-gradient absolute inset-0 bg-gradient-to-t from-white/90 via-white/25 to-transparent dark:from-[#0F141C]/85 dark:via-[#0F141C]/20 dark:to-transparent z-10"></div>
-            
-            <div class="h-full flex flex-col justify-between relative z-20">
-                <!-- Top Matched Badge Pair (Light Translucent Pills in Light Mode) -->
-                <div class="flex justify-between items-center">
-                    <span class="map-overlay-badge px-2.5 py-1 font-extrabold text-[10px] rounded-[12px] shadow-sm uppercase tracking-wider backdrop-blur-md">
-                        NEARBY ESSENTIALS
-                    </span>
-                    <span class="map-overlay-badge text-[10px] font-extrabold px-2.5 py-1 rounded-[12px] shadow-sm flex items-center gap-1.5 backdrop-blur-md">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> 42 Resources Near You
-                    </span>
-                </div>
-                
-                <!-- Bottom Title Bar -->
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2.5 text-slate-900 dark:text-white font-extrabold text-[1.15rem] font-heading">
-                        <span class="material-symbols-outlined text-xl text-[#EAB308] dark:text-[#FACC15]">explore</span>
-                        <span>Nearby Verified Essentials</span>
+        <!-- Food donation status (shown when this person has an active donation) -->
+        <div id="seeker-active-donation-container" class="hidden mt-4">
+            <div class="ns-card ns-card--pad">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <p class="ns-card-title">Your food donation</p>
+                        <p id="sad-details" class="ns-card-sub mt-1">Waiting for a volunteer to claim the pickup.</p>
                     </div>
-                    <span class="material-symbols-outlined text-base text-slate-700 dark:text-white group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                    <span id="sad-status-badge" class="ns-badge ns-badge--sand">Waiting</span>
                 </div>
-            </div>
-        </a>
-
-        <!-- Active Donation Status Card (Injected dynamically) -->
-        <div id="seeker-active-donation-container" class="hidden">
-            <div class="bg-amber-50 border border-amber-200 rounded-[20px] p-4 shadow-sm relative overflow-hidden space-y-3">
-                <div class="flex justify-between items-start">
-                    <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-amber-600 bg-white p-1.5 rounded-[12px] shadow-sm text-base">restaurant</span>
-                        <span class="text-xs font-bold text-amber-900 uppercase tracking-wider">Food Donation</span>
-                    </div>
-                    <span id="sad-status-badge" class="px-2.5 py-0.5 bg-amber-200 text-amber-900 font-bold text-[10px] rounded-full shadow-sm">Pending</span>
-                </div>
-                <div>
-                    <h4 class="font-extrabold text-base text-amber-950 mb-0.5">Donation Status</h4>
-                    <p id="sad-details" class="text-xs text-amber-800 font-medium">Waiting for a driver to claim your pickup.</p>
-                </div>
-                <button onclick="if(window._openLastDeliveryTracker) window._openLastDeliveryTracker()" class="w-full py-2.5 bg-amber-400 hover:bg-amber-300 text-amber-950 rounded-[14px] text-xs font-extrabold shadow-md active:scale-95 transition-all flex items-center justify-center gap-2">
-                    View Live Status
-                </button>
+                <button type="button" onclick="if (window._openLastDeliveryTracker) window._openLastDeliveryTracker()" class="ns-btn ns-btn--secondary ns-btn--sm w-full mt-4">See status</button>
             </div>
         </div>
 
-        <!-- STATIC ACTION TILES: 2 Quick Action Cards (Standardized Borders, No Yellow Border) -->
-        <div class="grid grid-cols-2 gap-3 stagger-3">
-            <a href="resume-builder.html" class="action-card dashboard-card-border bg-white dark:bg-[#1E293B] p-4 rounded-[20px] shadow-[0_8px_24px_rgba(0,0,0,0.06)] flex flex-col justify-between h-28 transition-all">
-                <div class="w-8 h-8 rounded-[12px] bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-800 dark:text-[#FACC15] shadow-sm">
-                    <span class="material-symbols-outlined text-lg">description</span>
-                </div>
-                <span class="font-extrabold text-sm text-slate-900 dark:text-white font-heading">Build My Resume</span>
+        <div class="ns-section-head">
+            <h2>Near you</h2>
+            <a href="resource-map.html" class="ns-aside">See map</a>
+        </div>
+        <div id="near-list" class="ns-list">
+            <div class="ns-row"><span class="ns-row__sub">Loading places…</span></div>
+        </div>
+
+        <div class="ns-section-head">
+            <h2>Just in case</h2>
+        </div>
+        <div class="ns-list">
+            <a href="call-shelter.html" class="ns-row">
+                <span class="ns-tile"><span class="material-symbols-outlined">call</span></span>
+                <span class="ns-row__body">
+                    <span class="ns-row__title block">Call for help</span>
+                    <span class="ns-row__sub block">211 finds a bed or a meal, free</span>
+                </span>
+                <span class="material-symbols-outlined ns-chevron">chevron_right</span>
             </a>
-
-            <a href="jobs.html" class="action-card dashboard-card-border bg-white dark:bg-[#1E293B] p-4 rounded-[20px] shadow-[0_8px_24px_rgba(0,0,0,0.06)] flex flex-col justify-between h-28 transition-all">
-                <div class="w-8 h-8 rounded-[12px] bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-800 dark:text-[#FACC15] shadow-sm">
-                    <span class="material-symbols-outlined text-lg">work</span>
-                </div>
-                <span class="font-extrabold text-sm text-slate-900 dark:text-white font-heading">Find a Job</span>
-            </a>
+            <div id="download-banner" class="ns-row">
+                <span class="ns-tile"><span class="material-symbols-outlined">download</span></span>
+                <span class="ns-row__body">
+                    <span class="ns-row__title block">Save places for offline</span>
+                    <span class="ns-row__sub block">Opens without internet</span>
+                </span>
+                <button id="download-offline-btn" type="button" class="ns-btn ns-btn--secondary ns-btn--sm">Download</button>
+            </div>
         </div>
 
-        <!-- LIVE PROGRESS MODULE: My Progress Card (Synced with Central Progress State) -->
-        <a href="progress.html" id="my-progress-card" class="progress-card dashboard-card-border block bg-white dark:bg-[#1E293B] rounded-[20px] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.06)] space-y-3 hover:brightness-98 transition-all cursor-pointer stagger-4">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <span class="material-symbols-outlined text-xl text-[#EAB308] dark:text-[#FACC15]" style="color: #EAB308 !important;">trending_up</span>
-                    <h3 class="font-extrabold text-[1.15rem] text-slate-900 dark:text-white font-heading">My Progress</h3>
-                </div>
-                <span id="dashboard-level-badge" class="level-badge px-2.5 py-0.5 font-extrabold text-xs rounded-[12px]">Level 1</span>
-            </div>
-            <p id="dashboard-progress-tasks-text" class="dashboard-subtext text-xs text-[#475569] dark:text-[#94A3B8] font-medium">You've completed 1 of 5 milestones!</p>
-            <div class="space-y-2 pt-0.5">
-                <!-- High-contrast label positioned directly above the 8px progress bar -->
-                <div class="flex justify-between items-center text-xs font-bold text-slate-900 dark:text-white">
-                    <span id="dashboard-next-milestone-label">Next Milestone: AI Companion</span>
-                    <span id="dashboard-progress-pct" class="text-[#EAB308] dark:text-[#FACC15] font-extrabold" style="color: #EAB308 !important;">20%</span>
-                </div>
-                <div class="w-full bg-slate-200 dark:bg-slate-700/80 overflow-hidden" style="height: 8px !important; border-radius: 4px !important;">
-                    <div id="dashboard-progress-bar" class="h-full transition-all duration-500 animated-progress-bar" style="width: 20%; background-color: #EAB308 !important; height: 8px !important; border-radius: 4px !important;"></div>
-                </div>
-            </div>
-        </a>
-
-        <!-- OFFLINE RESOURCES BANNER (Theme-Aligned Light Gray in Light Mode / Dark Slate in Dark Mode + High-Contrast Yellow CTA) -->
-        <div id="download-banner" class="offline-banner offline-download-banner p-4 rounded-[20px] flex items-center justify-between shadow-[0_8px_24px_rgba(0,0,0,0.06)] stagger-5">
-            <div class="flex items-center gap-2.5">
-                <span class="material-symbols-outlined text-xl text-[#EAB308] dark:text-[#FACC15]">wifi_off</span>
-                <span class="offline-banner-label text-xs font-bold leading-tight">Download resources for offline use</span>
-            </div>
-            <button id="download-offline-btn" class="download-default px-4 py-2.5 min-h-[40px] min-w-[110px] rounded-[10px] text-[13px] font-bold whitespace-nowrap active:scale-95 transition-all shadow-sm inline-flex items-center justify-center cursor-pointer flex-shrink-0" style="background: #facc15 !important; color: #000000 !important; font-weight: 700 !important;">
-                Download
-            </button>
-        </div>
-
-        <!-- Offline Directory List Component (Hidden per UI cleanup rule) -->
-        <div id="offline-directory-container" class="hidden" style="display: none !important;"></div>
-
+        <div id="offline-directory-container" class="hidden"></div>
     </main>
 
-    <!-- Full 6-Tab Bottom Navigation Bar -->
-    <nav class="bottom-nav absolute bottom-0 left-0 w-full z-40 grid grid-cols-6 items-center justify-items-center px-1.5 py-2 bg-white dark:bg-[#12141C] shadow-[0px_-4px_25px_rgba(0,0,0,0.2)] border-t border-slate-200 dark:border-white/10">
-        <a href="seeker-dashboard.html" class="active-tab flex flex-col items-center justify-center w-full py-1 px-0.5 bg-amber-400/15 text-amber-500 dark:text-amber-400 border border-amber-400/30 rounded-xl shadow-[0_0_12px_rgba(245,158,11,0.2)] font-extrabold transition-all">
-            <span class="material-symbols-outlined text-[20px] leading-none" style="font-variation-settings: 'FILL' 1;">dashboard</span>
-            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Dashboard</span>
-        </a>
-        <a href="progress.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
-            <span class="material-symbols-outlined text-[20px] leading-none">trending_up</span>
-            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Progress</span>
-        </a>
-        <a href="opportunities.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
-            <span class="material-symbols-outlined text-[20px] leading-none">work</span>
-            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Jobs</span>
-        </a>
-        <a href="resource-map.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
-            <span class="material-symbols-outlined text-[20px] leading-none">map</span>
-            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Map</span>
-        </a>
-        <a href="resume-builder.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
-            <span class="material-symbols-outlined text-[20px] leading-none">description</span>
-            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Resume</span>
-        </a>
-        <button type="button" onclick="openSettingsModal()" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
-            <span class="material-symbols-outlined text-[20px] leading-none">settings</span>
-            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Settings</span>
-        </button>
-    </nav>
-
-</div>
-
-<!-- Modal: Help Request Form -->
-<div id="help-request-modal" class="fixed inset-0 z-[100] hidden items-end sm:items-center justify-center bg-slate-950/85 backdrop-blur-md p-0 sm:p-4">
-    <div class="modal-drawer w-full sm:max-w-md bg-[#12141C] border border-white/10 rounded-t-3xl sm:rounded-3xl p-6 text-white space-y-4 shadow-2xl transform translate-y-full">
-        <div class="w-12 h-1.5 bg-slate-700 rounded-full mx-auto sm:hidden"></div>
-        <div class="flex justify-between items-center">
-            <h3 class="text-lg font-extrabold text-white flex items-center gap-2">
-                <span class="material-symbols-outlined text-amber-400" style="font-variation-settings: 'FILL' 1;">star</span> Instant Help Request
-            </h3>
-            <button onclick="closeModal('help-request-modal')" class="text-slate-400 hover:text-white transition-colors">
-                <span class="material-symbols-outlined">close</span>
-            </button>
-        </div>
-
-        <form onsubmit="event.preventDefault(); closeModal('help-request-modal'); showNotification('Your help request has been dispatched to nearby outreach teams!', 'success');" class="space-y-4 pt-1">
-            <div>
-                <label class="block text-xs font-bold text-slate-300 mb-1">What assistance do you need?</label>
-                <select class="w-full rounded-xl bg-slate-900 border border-white/10 p-3 text-sm text-white focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
-                    <option>Emergency Bed Tonight</option>
-                    <option>Hot Meal / Food Supplies</option>
-                    <option>Warm Coat / Blanket</option>
-                    <option>Medical Consultation</option>
-                    <option>Transport to Shelter</option>
-                </select>
-            </div>
-            
-            <div>
-                <label class="block text-xs font-bold text-slate-300 mb-1">Your Location / Intersection</label>
-                <input type="text" placeholder="e.g. 5th & Main St" class="w-full rounded-xl bg-slate-900 border border-white/10 p-3 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-amber-400 focus:border-amber-400" required>
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold text-slate-300 mb-1">Special Notes (Optional)</label>
-                <textarea rows="2" placeholder="Accessibility needs, family size, etc." class="w-full rounded-xl bg-slate-900 border border-white/10 p-3 text-sm text-white placeholder-slate-500 focus:ring-2 focus:ring-amber-400 focus:border-amber-400"></textarea>
-            </div>
-
-            <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-extrabold rounded-xl text-sm shadow-[0_4px_20px_rgba(245,158,11,0.35)] hover:from-amber-300 hover:to-amber-400 active:scale-95 transition-all">
-                Submit Help Request
-            </button>
-        </form>
-    </div>
+    <nav class="bottom-nav ns-nav" aria-label="Main"></nav>
 </div>
 
 <script>
-  (function () {
+(function () {
+    const SEATTLE = { lat: 47.6062, lng: -122.3321 };
+    const ICONS = { shelter: 'bed', food: 'restaurant', restroom: 'shower', wifi: 'wifi', work: 'work' };
+    const esc = s => (window.nsEscape ? nsEscape(s) : String(s == null ? '' : s));
+
+    window.goSearch = function (q) {
+        const text = String(q || '').trim();
+        nsGo(text ? `resource-map.html?q=${encodeURIComponent(text)}` : 'resource-map.html');
+    };
+
+    // ---- Live search: places (verified list) and gigs, as you type ----
+    const searchData = { places: [], gigs: [], hasLocation: false };
+    const SYNONYMS = {
+        shelter: 'bed beds shelter sleep stay night housing',
+        food: 'food meal meals eat pantry lunch dinner breakfast groceries',
+        restroom: 'shower showers restroom bathroom toilet hygiene laundry',
+        wifi: 'wifi wi-fi internet library computer charge charging',
+        work: 'work job jobs gig gigs labor'
+    };
+    const STOP = ['near', 'me', 'nearby', 'a', 'an', 'the', 'for', 'in', 'to', 'i', 'need', 'find', 'where', 'is', 'can', 'get', 'some', 'place', 'places', 'open', 'now', 'today', 'tonight'];
+    const words = q => String(q || '').toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').split(/\s+/).filter(w => w && !STOP.includes(w));
+    const hit = (hay, w) => hay.includes(w) || (w.length > 3 && w.endsWith('s') && hay.includes(w.slice(0, -1)));
+    const cleanTitle = t => String(t || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').replace(/\s+/g, ' ').trim();
+
+    function searchResults(q) {
+        const ws = words(q);
+        if (!ws.length) return { places: [], gigs: [] };
+        const places = searchData.places.filter(p => {
+            const hay = [p.name, p.category, p.status, p.description, p.hours, p.address, SYNONYMS[p.category] || ''].join(' ').toLowerCase();
+            return ws.every(w => hit(hay, w));
+        }).slice(0, 5);
+        const gigs = searchData.gigs.filter(g => {
+            const hay = [g.title, g.summary, g.pay, g.safety, SYNONYMS.work].join(' ').toLowerCase();
+            return ws.every(w => hit(hay, w));
+        }).slice(0, 2);
+        return { places, gigs };
+    }
+
+    let kbdIndex = -1;
+    function renderSearch(q) {
+        const panel = document.getElementById('home-search-results');
+        const input = document.getElementById('home-search-input');
+        const text = String(q || '').trim();
+        document.getElementById('home-search-clear').classList.toggle('hidden', !text);
+        kbdIndex = -1;
+        if (!text) { closeSearch(); return; }
+
+        const { places, gigs } = searchResults(text);
+        const rows = [];
+        places.forEach(p => rows.push(`
+            <a role="option" class="ns-row" href="resource-map.html?resource=${encodeURIComponent(p.id)}">
+              <span class="ns-tile"><span class="material-symbols-outlined">${ICONS[p.category] || 'location_on'}</span></span>
+              <span class="ns-row__body">
+                <span class="ns-row__title block truncate">${esc(shortName(p.name))}</span>
+                <span class="ns-row__sub block truncate">${esc([searchData.hasLocation ? fmtMiles(p.dist) : null, p.status].filter(Boolean).join(' · '))}</span>
+              </span>
+              ${is247(p) ? '<span class="ns-badge ns-badge--sand ns-badge--dot">Open 24/7</span>' : ''}
+            </a>`));
+        gigs.forEach(g => rows.push(`
+            <a role="option" class="ns-row" href="opportunities.html">
+              <span class="ns-tile"><span class="material-symbols-outlined">work</span></span>
+              <span class="ns-row__body">
+                <span class="ns-row__title block truncate">${esc(cleanTitle(g.title))}</span>
+                <span class="ns-row__sub block truncate">Day gig</span>
+              </span>
+              <span class="text-[14px] font-bold whitespace-nowrap">${esc(String(g.pay || '').replace(/\s*cash\s*$/i, ''))}</span>
+            </a>`));
+
+        if (!rows.length) {
+            rows.push(`
+            <div class="py-4 text-center">
+              <p class="ns-empty__title">No matches for “${esc(text)}”</p>
+              <p class="ns-empty__sub">Try bed, meal, shower or Wi-Fi.</p>
+            </div>`);
+            rows.push(`
+            <a role="option" class="ns-row" href="companion.html?q=${encodeURIComponent('Where can I find ' + text + '?')}">
+              <span class="ns-tile"><span class="material-symbols-outlined">chat_bubble</span></span>
+              <span class="ns-row__body ns-row__title">Ask Companion</span>
+              <span class="material-symbols-outlined ns-chevron">chevron_right</span>
+            </a>`);
+        }
+        rows.push(`
+            <a role="option" class="ns-row" href="resource-map.html?q=${encodeURIComponent(text)}">
+              <span class="ns-tile"><span class="material-symbols-outlined">map</span></span>
+              <span class="ns-row__body ns-row__title">Search the map for “${esc(text)}”</span>
+              <span class="material-symbols-outlined ns-chevron">chevron_right</span>
+            </a>`);
+
+        panel.innerHTML = rows.join('');
+        panel.classList.remove('hidden');
+        input.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeSearch() {
+        const panel = document.getElementById('home-search-results');
+        panel.classList.add('hidden');
+        panel.innerHTML = '';
+        document.getElementById('home-search-input').setAttribute('aria-expanded', 'false');
+    }
+
+    window.submitHomeSearch = function () {
+        const input = document.getElementById('home-search-input');
+        const options = [...document.querySelectorAll('#home-search-results a[role="option"]')];
+        if (kbdIndex >= 0 && options[kbdIndex]) { options[kbdIndex].click(); return; }
+        goSearch(input.value);
+    };
+
+    function initSearch() {
+        const input = document.getElementById('home-search-input');
+        const clear = document.getElementById('home-search-clear');
+        const wrap = document.querySelector('.home-search-wrap');
+        let timer = null;
+        input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => renderSearch(input.value), 120); });
+        input.addEventListener('focus', () => { if (input.value.trim()) renderSearch(input.value); });
+        input.addEventListener('keydown', (e) => {
+            const options = [...document.querySelectorAll('#home-search-results a[role="option"]')];
+            if (e.key === 'Escape') { closeSearch(); return; }
+            if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && options.length) {
+                e.preventDefault();
+                kbdIndex = e.key === 'ArrowDown' ? Math.min(options.length - 1, kbdIndex + 1) : Math.max(-1, kbdIndex - 1);
+                options.forEach((o, i) => o.classList.toggle('is-kbd', i === kbdIndex));
+            }
+        });
+        clear.addEventListener('click', () => { input.value = ''; renderSearch(''); input.focus(); });
+        document.addEventListener('click', (e) => { if (!wrap.contains(e.target)) closeSearch(); });
+    }
+
+    function firstName() {
+        const name = typeof window.nsDisplayName === 'function' ? window.nsDisplayName() : '';
+        return name ? name.split(/\s+/)[0] : '';
+    }
+
     function setDashboardGreeting() {
-      const el = document.getElementById('dashboard-greeting');
-      if (!el) return;
-      const hour = new Date().getHours();
-      let greeting;
-      if (hour < 12) {
-        greeting = 'Good Morning, Seeker';
-      } else if (hour < 17) {
-        greeting = 'Good Afternoon, Seeker';
-      } else {
-        greeting = 'Good Evening, Seeker';
-      }
-      el.textContent = greeting;
+        const el = document.getElementById('dashboard-greeting');
+        if (!el) return;
+        const name = firstName();
+        el.textContent = name ? `Hi, ${name}` : 'Hi there';
     }
 
-    function initSeekerMiniMap() {
-      const el = document.getElementById('seeker-mini-map');
-      if (!el || !window.L || el.getAttribute('data-map-initialized')) return;
-      el.setAttribute('data-map-initialized', 'true');
-      
-      try {
-        const map = L.map('seeker-mini-map', {
-          center: [47.6062, -122.3321],
-          zoom: 13,
-          zoomControl: false,
-          attributionControl: false,
-          dragging: false,
-          touchZoom: false,
-          scrollWheelZoom: false,
-          doubleClickZoom: false
-        });
-
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', {
-          maxZoom: 19,
-          attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-
-        const pins = [
-          [47.6062, -122.3321],
-          [47.6101, -122.3355],
-          [47.6020, -122.3280],
-          [47.6085, -122.3400]
-        ];
-
-        pins.forEach(coords => {
-          L.circleMarker(coords, {
-            radius: 6.5,
-            fillColor: '#EAB308',
-            color: '#0f172a',
-            weight: 2,
-            opacity: 1,
-            fillOpacity: 0.95
-          }).addTo(map);
-        });
-
-        setTimeout(() => {
-          map.invalidateSize();
-        }, 150);
-      } catch (err) {
-        console.warn('Mini map init error:', err);
-      }
+    // Last location the person shared (map or onboarding). Never asked for here.
+    function knownLocation() {
+        try {
+            const loc = JSON.parse(localStorage.getItem('northstar_last_location') || 'null');
+            if (loc && typeof loc.lat === 'number' && typeof loc.lng === 'number') return loc;
+        } catch (e) {}
+        return null;
     }
 
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => {
+    function miles(a, b) {
+        const R = 3958.8, rad = d => d * Math.PI / 180;
+        const dLat = rad(b.lat - a.lat), dLng = rad(b.lng - a.lng);
+        const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+        return 2 * R * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+    }
+
+    const fmtMiles = m => (m < 0.1 ? 'Under 0.1 mi' : `${m.toFixed(1)} mi`);
+    const shortName = n => String(n || '').replace(/\s*\([^)]*\)\s*/g, ' ').trim();
+    const is247 = p => /24\s*\/\s*7/.test(`${p.hours || ''} ${p.status || ''}`);
+
+    function row({ href, icon, title, sub, endTop, endBadge }) {
+        return `
+          <a href="${href}" class="ns-row">
+            <span class="ns-tile"><span class="material-symbols-outlined">${icon}</span></span>
+            <span class="ns-row__body">
+              <span class="ns-row__title block truncate">${esc(title)}</span>
+              ${sub ? `<span class="ns-row__sub block truncate">${esc(sub)}</span>` : ''}
+            </span>
+            <span class="home-row__end">
+              ${endTop ? `<span class="text-[15px] font-bold">${esc(endTop)}</span>` : ''}
+              ${endBadge || ''}
+            </span>
+          </a>`;
+    }
+
+    async function renderPlaces() {
+        const loc = knownLocation();
+        const from = loc || SEATTLE;
+        let places = [];
+        try {
+            const res = await fetch('/api/resources');
+            const data = await res.json();
+            places = (data.resources || []).filter(p => typeof p.lat === 'number' && typeof p.lng === 'number')
+                .map(p => ({ ...p, dist: miles(from, p) }))
+                .sort((a, b) => a.dist - b.dist);
+            searchData.places = places;
+            searchData.hasLocation = !!loc;
+        } catch (e) {}
+
+        // Right now: closest shelter that is open 24/7
+        const shelter = places.find(p => p.category === 'shelter' && is247(p));
+        const title = document.getElementById('now-title');
+        const meta = document.getElementById('now-meta');
+        const cta = document.getElementById('now-cta');
+        if (shelter) {
+            title.textContent = 'Shelter open all night';
+            meta.textContent = [shortName(shelter.name), loc ? fmtMiles(shelter.dist) : null, 'open 24/7'].filter(Boolean).join(' · ');
+            cta.setAttribute('href', `resource-map.html?resource=${encodeURIComponent(shelter.id)}`);
+        } else {
+            title.textContent = 'Find a bed tonight';
+            meta.textContent = 'See shelters on the map, or call 211.';
+        }
+
+        // Near you: closest meal, closest shower, and a gig
+        const food = places.find(p => p.category === 'food');
+        const shower = places.find(p => p.category === 'restroom');
+        const rows = [];
+        const openBadge = p => is247(p) ? '<span class="ns-badge ns-badge--sand ns-badge--dot">Open 24/7</span>' : '';
+        if (food) rows.push(row({
+            href: `resource-map.html?resource=${encodeURIComponent(food.id)}`,
+            icon: ICONS.food, title: shortName(food.name),
+            sub: [loc ? fmtMiles(food.dist) : null, food.status].filter(Boolean).join(' · '),
+            endBadge: openBadge(food) || '<span class="material-symbols-outlined ns-chevron">chevron_right</span>'
+        }));
+        if (shower) rows.push(row({
+            href: `resource-map.html?resource=${encodeURIComponent(shower.id)}`,
+            icon: ICONS.restroom, title: shortName(shower.name),
+            sub: [loc ? fmtMiles(shower.dist) : null, shower.status].filter(Boolean).join(' · '),
+            endBadge: openBadge(shower) || '<span class="material-symbols-outlined ns-chevron">chevron_right</span>'
+        }));
+
+        try {
+            const res = await fetch('/api/gigs');
+            const data = await res.json();
+            searchData.gigs = data.gigs || [];
+            const gig = (data.gigs || [])[0];
+            if (gig) {
+                const title = String(gig.title || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, '').replace(/\s+/g, ' ').trim();
+                const noId = /no\s*(government\s*)?id|no\s+onboarding|no\s+paperwork/i.test(`${gig.safety || ''} ${gig.title || ''}`);
+                rows.push(row({
+                    href: 'opportunities.html', icon: ICONS.work, title,
+                    sub: 'Day gig',
+                    endTop: String(gig.pay || '').replace(/\s*cash\s*$/i, ''),
+                    endBadge: noId ? '<span class="ns-badge ns-badge--amber">No ID needed</span>' : ''
+                }));
+            }
+        } catch (e) {}
+
+        document.getElementById('near-list').innerHTML = rows.join('') ||
+            '<div class="ns-empty"><p class="ns-empty__title">Couldn’t load places</p><p class="ns-empty__sub">Open the map to see what’s nearby.</p></div>';
+    }
+
+    function init() {
         setDashboardGreeting();
-        initSeekerMiniMap();
-      });
-    } else {
-      setDashboardGreeting();
-      initSeekerMiniMap();
+        initSearch();
+        renderPlaces();
     }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+    else init();
 
     window.setDashboardGreeting = setDashboardGreeting;
-    window.initSeekerMiniMap = initSeekerMiniMap;
-  })();
+})();
 
-window.initSeekerActiveDonation = async function() {
+window.initSeekerActiveDonation = async function () {
     const role = localStorage.getItem('northstar_user_role') || 'seeker';
-    const sessionRaw = localStorage.getItem('northstar_session');
-    const session = sessionRaw ? JSON.parse(sessionRaw) : null;
+    let session = null;
+    try { session = JSON.parse(localStorage.getItem('northstar_session') || 'null'); } catch (e) {}
     const container = document.getElementById('seeker-active-donation-container');
-    if (!container || role === 'volunteer' || !session) return;
+    if (!container || role === 'volunteer' || !session || !session.id) return;
 
     try {
-        const res = await fetch(`/api/deliveries`);
+        const res = await fetch('/api/deliveries');
         const data = await res.json();
-        
-        // Find a delivery belonging to this donor that is still active
-        const activeJob = (data.deliveries || []).find(d => 
-            d.donor_id === session.id && 
+        const activeJob = (data.deliveries || []).find(d =>
+            d.donor_id === session.id &&
             ['pending_driver', 'driver_assigned', 'in_transit'].includes(d.status)
         );
-        
-        if (activeJob) {
-            container.classList.remove('hidden');
-            const badge = document.getElementById('sad-status-badge');
-            const details = document.getElementById('sad-details');
+        if (!activeJob) return;
 
-            if (activeJob.status === 'pending_driver') {
-                badge.innerText = 'Pending';
-                badge.className = 'px-2 py-0.5 bg-amber-200 text-amber-900 font-bold text-[10px] rounded-full shadow-sm';
-                details.innerText = 'Waiting for a driver to claim your pickup.';
-            } else if (activeJob.status === 'driver_assigned' || activeJob.status === 'in_transit') {
-                badge.innerText = 'On the Way';
-                badge.className = 'px-2 py-0.5 bg-emerald-200 text-emerald-900 font-bold text-[10px] rounded-full shadow-sm';
-                details.innerText = 'Driver is on the way with your donation!';
-            }
-
-            window._openLastDeliveryTracker = () => {
-                if (typeof openUberTrackingModal === 'function') {
-                    openUberTrackingModal(deliveryId);
-                }
-            };
+        container.classList.remove('hidden');
+        const badge = document.getElementById('sad-status-badge');
+        const details = document.getElementById('sad-details');
+        if (activeJob.status === 'pending_driver') {
+            badge.textContent = 'Waiting';
+            badge.className = 'ns-badge ns-badge--sand';
+            details.textContent = 'Waiting for a volunteer to claim the pickup.';
+        } else {
+            badge.textContent = 'On the way';
+            badge.className = 'ns-badge ns-badge--leaf';
+            details.textContent = 'A volunteer is taking your donation to the shelter.';
         }
+
+        window._openLastDeliveryTracker = () => {
+            if (typeof openUberTrackingModal === 'function') openUberTrackingModal(activeJob.id);
+        };
     } catch (err) {
         console.warn('Could not fetch active donation status:', err);
     }
 };
-document.addEventListener('DOMContentLoaded', () => { setTimeout(initSeekerActiveDonation, 600); });
+document.addEventListener('DOMContentLoaded', () => { setTimeout(initSeekerActiveDonation, 400); });
 </script>
 <script src="js/northstar.js"></script>
-    <script src="js/jobs.js"></script>
-    <script src="js/offline-map.js"></script>
-    <script src="js/nate-welcome.js"></script>
+<script src="js/jobs.js"></script>
+<script src="js/offline-map.js"></script>
 </body>
 </html>
-

@@ -88,6 +88,10 @@
     overlay.id = 'nate-welcome-overlay';
     overlay.innerHTML =
       '<div class="nwb"></div>' +
+      '<button class="nwbtn-skip-welcome" id="nate-welcome-skip" aria-label="Skip onboarding tour">' +
+        'Skip Tour' +
+        '<span class="material-symbols-outlined" style="font-size:16px;vertical-align:middle;margin-left:2px;">close</span>' +
+      '</button>' +
       '<div class="nwc">' +
         '<div class="nws" id="nate-stars"></div>' +
         '<img src="images/Firefly%20(22).png" alt="Nate" class="nwchar" id="nate-img" />' +
@@ -127,6 +131,7 @@
     const textEl = document.getElementById('nate-text');
     const cursor = document.getElementById('nate-cursor');
     const proceedBtn = document.getElementById('nate-proceed');
+    const skipWelcomeBtn = document.getElementById('nate-welcome-skip');
 
     const message = "Welcome to Northstar! I'm Nate, let me show you around!";
 
@@ -154,6 +159,17 @@
         }, 40);
       }, 400);
     }, 1400);
+
+    if (skipWelcomeBtn) {
+      skipWelcomeBtn.addEventListener('click', function () {
+        sessionStorage.removeItem('show_nate_dashboard_tour');
+        overlay.classList.remove('nv');
+        overlay.classList.add('nx');
+        setTimeout(function () {
+          window.location.href = redirectUrl;
+        }, 400);
+      });
+    }
 
     if (proceedBtn) {
       proceedBtn.addEventListener('click', function () {
@@ -254,15 +270,25 @@
     tourOverlay.innerHTML =
       '<div class="nte-content">' +
         '<div class="nwbub nwbub-tour" id="nate-tour-bubble">' +
-          '<div class="nte-badge" id="nate-tour-badge">Step 1 of ' + TOUR_STEPS.length + ' • ' + TOUR_STEPS[0].label + '</div>' +
+          '<div class="nte-header-row">' +
+            '<div class="nte-badge" id="nate-tour-badge">Step 1 of ' + TOUR_STEPS.length + ' • ' + TOUR_STEPS[0].label + '</div>' +
+            '<button class="nte-skip-btn" id="nate-tour-skip-top" aria-label="Skip onboarding tour" title="Skip Tour">' +
+              'Skip <span class="material-symbols-outlined" style="font-size:14px;vertical-align:middle;margin-left:2px;">close</span>' +
+            '</button>' +
+          '</div>' +
           '<div class="nwt-body">' +
             '<span class="nwt" id="nate-tour-text"></span>' +
             '<span class="nwcur" id="nate-tour-cursor">|</span>' +
           '</div>' +
-          '<button class="nwbtn nwbtn-tour" id="nate-tour-finish">' +
-            TOUR_STEPS[0].nextLabel +
-            '<span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-left:4px;">arrow_forward</span>' +
-          '</button>' +
+          '<div class="nwt-actions">' +
+            '<button class="nwbtn nwbtn-tour nwbtn-tour-skip" id="nate-tour-skip-bottom" aria-label="Skip tour">' +
+              'Skip Tour' +
+            '</button>' +
+            '<button class="nwbtn nwbtn-tour nwbtn-tour-next" id="nate-tour-finish" aria-label="Next step">' +
+              '<span id="nate-tour-next-text">' + TOUR_STEPS[0].nextLabel + '</span>' +
+              '<span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-left:4px;">arrow_forward</span>' +
+            '</button>' +
+          '</div>' +
         '</div>' +
       '</div>' +
       '<div class="nte-pointing-wrapper" id="nate-tour-wrapper">' +
@@ -276,6 +302,47 @@
     let currentStepIndex = 0;
     let currentSpotlitTab = null;
     let activeTypeInterval = null;
+
+    // --- Dismiss Tour Helper ---
+    function dismissTour() {
+      if (activeTypeInterval) {
+        clearInterval(activeTypeInterval);
+        activeTypeInterval = null;
+      }
+      dimOverlay.classList.remove('nv');
+      tourOverlay.classList.remove('nv');
+      tourOverlay.classList.add('nx');
+      window.removeEventListener('resize', positionPointingWrapper);
+
+      setTimeout(function () {
+        if (bottomNav) bottomNav.classList.remove('nate-nav-elevated');
+        if (currentSpotlitTab) currentSpotlitTab.classList.remove('nate-tab-spotlight');
+        if (bottomNav) {
+          bottomNav.querySelectorAll('a, button').forEach(function (el) {
+            el.style.removeProperty('background');
+            el.style.removeProperty('background-color');
+            el.style.removeProperty('color');
+            el.style.removeProperty('border-color');
+            el.style.removeProperty('box-shadow');
+            el.style.removeProperty('transform');
+            el.querySelectorAll('*').forEach(function (child) {
+              child.style.removeProperty('color');
+            });
+          });
+        }
+        dimOverlay.remove();
+        tourOverlay.remove();
+      }, 400);
+    }
+
+    // Attach skip listeners
+    const skipTopBtn = document.getElementById('nate-tour-skip-top');
+    const skipBottomBtn = document.getElementById('nate-tour-skip-bottom');
+    if (skipTopBtn) skipTopBtn.addEventListener('click', dismissTour);
+    if (skipBottomBtn) skipBottomBtn.addEventListener('click', dismissTour);
+
+    // Also dismiss when clicking dark backdrop
+    dimOverlay.addEventListener('click', dismissTour);
 
     // --- Spotlight first tab ---
     var firstStep = TOUR_STEPS[0];
@@ -303,6 +370,7 @@
     const tourTextEl = document.getElementById('nate-tour-text');
     const tourCursor = document.getElementById('nate-tour-cursor');
     const finishBtn = document.getElementById('nate-tour-finish');
+    const nextTextSpan = document.getElementById('nate-tour-next-text');
     const badgeEl = document.getElementById('nate-tour-badge');
 
     // --- Type a message ---
@@ -346,9 +414,9 @@
       }
 
       // Update button label
-      finishBtn.innerHTML =
-        step.nextLabel +
-        '<span class="material-symbols-outlined" style="font-size:18px;vertical-align:middle;margin-left:4px;">arrow_forward</span>';
+      if (nextTextSpan) {
+        nextTextSpan.textContent = step.nextLabel;
+      }
 
       // Deselect previous tab, spotlight new one
       if (currentSpotlitTab) {
@@ -412,19 +480,8 @@
               finalMascot.classList.replace('bounce-in', 'bounce-out');
               
               setTimeout(function () {
-                dimOverlay.classList.remove('nv');
-                tourOverlay.classList.remove('nv');
-                tourOverlay.classList.add('nx');
-                window.removeEventListener('resize', positionPointingWrapper);
-                
-                setTimeout(function () {
-                  if (bottomNav) bottomNav.classList.remove('nate-nav-elevated');
-                  if (currentSpotlitTab) currentSpotlitTab.classList.remove('nate-tab-spotlight');
-                  dimOverlay.remove();
-                  tourOverlay.remove();
-                  finalMascot.remove();
-                  window.location.href = 'seeker-dashboard.html';
-                }, 500);
+                dismissTour();
+                finalMascot.remove();
               }, 600); // Wait for bounce out
             }, 1200); // Hang time
           }, 300); // Wait for previous elements to hide
@@ -475,7 +532,16 @@
       '.nwbub{margin-top:20px;background:rgba(15,23,42,.96);border:1px solid rgba(245,158,11,.35);border-radius:20px;padding:20px 24px;min-height:56px;opacity:0;transform:translateY(20px) scale(.95);transition:all .5s cubic-bezier(.4,0,.2,1);width:100%;box-sizing:border-box;box-shadow:0 12px 36px rgba(0,0,0,.5)}',
       '.nwbub.nbv{opacity:1;transform:translateY(0) scale(1)}',
 
-      '.nte-badge{display:block !important;margin-bottom:10px !important;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#f59e0b;line-height:1.2}',
+      '.nte-header-row{display:flex !important;align-items:center !important;justify-content:space-between !important;width:100% !important;margin-bottom:12px !important}',
+      '.nte-badge{display:block !important;margin-bottom:0 !important;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#f59e0b;line-height:1.2}',
+
+      '.nte-skip-btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:#cbd5e1;font-family:"Plus Jakarta Sans","Inter",sans-serif;font-size:.75rem;font-weight:600;padding:4px 10px;border-radius:9999px;cursor:pointer;display:inline-flex;align-items:center;gap:2px;transition:all .2s ease;outline:none}',
+      '.nte-skip-btn:hover,.nte-skip-btn:focus-visible{background:rgba(245,158,11,.18);border-color:rgba(245,158,11,.45);color:#fbbf24;transform:scale(1.04)}',
+      '.nte-skip-btn:active{transform:scale(.96)}',
+
+      '.nwbtn-skip-welcome{position:absolute;top:20px;right:20px;z-index:10;background:rgba(15,23,42,.75);backdrop-filter:blur(8px);border:1px solid rgba(245,158,11,.3);color:#e2e8f0;padding:7px 16px;border-radius:9999px;font-family:"Plus Jakarta Sans","Inter",sans-serif;font-size:.82rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all .25s cubic-bezier(.4,0,.2,1);box-shadow:0 4px 16px rgba(0,0,0,.4)}',
+      '.nwbtn-skip-welcome:hover,.nwbtn-skip-welcome:focus-visible{background:rgba(245,158,11,.2);border-color:rgba(245,158,11,.6);color:#fbbf24;transform:translateY(-1px) scale(1.03);box-shadow:0 6px 20px rgba(245,158,11,.25)}',
+      '.nwbtn-skip-welcome:active{transform:translateY(0) scale(.97)}',
 
       '.nwt-body{display:block;clear:both}',
       '.nwt{font-family:"Plus Jakarta Sans","Inter",sans-serif;font-size:.98rem;font-weight:600;line-height:1.55;color:#f0f4f8;letter-spacing:-.01em}',
@@ -488,6 +554,14 @@
       '.nwbtn.nbvis{opacity:1;transform:translateY(0)}',
       '.nwbtn:hover{transform:translateY(-2px) scale(1.03);box-shadow:0 8px 32px rgba(245,158,11,.5)}',
       '.nwbtn:active{transform:translateY(0) scale(.98)}',
+
+      '/* Feature Tour Action Bar Styles */',
+      '.nwt-actions{display:flex;align-items:center;gap:10px;margin-top:16px;width:100%}',
+      '.nwbtn-tour-skip{margin-top:0 !important;flex:0 0 auto;background:rgba(30,41,59,.75) !important;border:1px solid rgba(245,158,11,.3) !important;color:#e2e8f0 !important;padding:11px 18px !important;border-radius:12px !important;font-size:.85rem !important;font-weight:600 !important;box-shadow:none !important;opacity:1 !important;transform:none !important;transition:all .2s ease !important;cursor:pointer}',
+      '.nwbtn-tour-skip:hover,.nwbtn-tour-skip:focus-visible{background:rgba(245,158,11,.15) !important;border-color:rgba(245,158,11,.6) !important;color:#f59e0b !important;transform:translateY(-1px) !important;box-shadow:0 4px 14px rgba(245,158,11,.2) !important}',
+      '.nwbtn-tour-skip:active{transform:translateY(0) scale(.98) !important}',
+
+      '.nwbtn-tour-next{margin-top:0 !important;flex:1 !important;min-width:0;justify-content:center !important;padding:11px 20px !important;font-size:.88rem !important}',
 
       '/* Feature Tour Styles */',
       '.nate-dim-backdrop{position:absolute;inset:0;background:rgba(8,12,22,.72);z-index:9980;opacity:0;transition:opacity .5s ease;pointer-events:all}',

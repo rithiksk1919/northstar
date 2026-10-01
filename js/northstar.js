@@ -4,36 +4,26 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  initThemeToggle();
   const currentPath = window.location.pathname.split('/').pop() || 'index.html';
   const session = JSON.parse(localStorage.getItem('northstar_session')) || { isGuest: true };
 
   // Index launch view
   if (currentPath === 'index.html' || currentPath === '') {
     const mainLayout = document.getElementById('main-app-layout');
-    const bottomNav = document.querySelector('nav');
     if (mainLayout) { mainLayout.classList.remove('hidden'); mainLayout.style.display = 'flex'; }
-    if (bottomNav) { bottomNav.style.display = 'flex'; }
   }
 
-  // Fetch persisted role and theme from Supabase on page load for authenticated users
+  // Fetch the persisted role from Supabase for signed-in users (theme is always light for now)
   if (session && !session.isGuest && session.id && window.supabaseClient) {
     window.supabaseClient
       .from('profiles')
-      .select('role, theme')
+      .select('role')
       .eq('id', session.id)
       .single()
       .then(({ data }) => {
-        if (data) {
-          if (data.role) {
-            localStorage.setItem('northstar_user_role', data.role);
-            cachedSupabaseRole = data.role;
-          }
-          if (data.theme && (data.theme === 'light' || data.theme === 'dark')) {
-            localStorage.setItem('northstar_theme', data.theme);
-            document.documentElement.classList.remove('light', 'dark');
-            document.documentElement.classList.add(data.theme);
-          }
+        if (data && data.role) {
+          localStorage.setItem('northstar_user_role', data.role);
+          cachedSupabaseRole = data.role;
         }
       })
       .catch(err => console.warn('Supabase init fetch failed:', err));
@@ -42,6 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Automatic Trigger: Viewing Shelter Info
   if (currentPath === 'call-shelter.html') {
     setTimeout(() => updateMilestone('savedLocation', true), 500);
+  }
+  if (currentPath === 'opportunities.html' || currentPath === 'jobs.html') {
+    updateMilestone('jobMatcher', true);
   }
 
   initThemeToggle();
@@ -61,168 +54,60 @@ document.addEventListener('DOMContentLoaded', () => {
   renderAccountHeaderAvatar();
 });
 
-// Render Top Right Account Avatar Badge on EVERY Page Header
-function renderAccountHeaderAvatar() {
+// Small helpers shared by the templates below
+function nsEscape(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+window.nsEscape = nsEscape;
+
+function nsDisplayName() {
   const session = getSession();
-  const headers = document.querySelectorAll('header');
-  if (!headers || headers.length === 0) return;
+  const name = (session && session.user_metadata && session.user_metadata.full_name)
+    || (session && session.full_name)
+    || (session && session.username && session.username !== 'Guest' ? session.username : null)
+    || localStorage.getItem('northstar_full_name')
+    || localStorage.getItem('northstar_username');
+  return name ? String(name).trim() : '';
+}
+window.nsDisplayName = nsDisplayName;
 
-  headers.forEach(header => {
-    let container = header.querySelector('.header-actions-right');
-    if (!container) {
-      container = document.createElement('div');
-      container.className = 'header-actions-right flex items-center gap-2 flex-shrink-0';
-      const existingBtns = Array.from(header.children).filter(child => !child.querySelector('h1') && child.tagName !== 'H1' && !child.classList.contains('flex-1') && child.id !== 'offline-save-btn');
-
-      const offlineBtn = header.querySelector('#offline-save-btn');
-      if (offlineBtn) {
-        container.appendChild(offlineBtn);
-      } else {
-        existingBtns.forEach(btn => {
-          if (!btn.classList.contains('header-account-avatar') && btn.tagName === 'BUTTON') {
-            container.appendChild(btn);
-          }
-        });
-      }
-      header.appendChild(container);
-    }
-
-    // Remove any old dynamically injected avatars
-    const redundantBtns = container.querySelectorAll('.header-account-avatar');
-    redundantBtns.forEach(btn => btn.remove());
-
-    const userName = (session && session.user_metadata && session.user_metadata.full_name)
-      || (session && session.full_name)
-      || (session && session.username && session.username !== 'Guest' ? session.username : null)
-      || (session && session.email)
-      || localStorage.getItem('northstar_full_name')
-      || localStorage.getItem('northstar_username')
-      || localStorage.getItem('northstar_user_name')
-      || (session && session.role ? (session.role.charAt(0).toUpperCase() + session.role.slice(1)) : (localStorage.getItem('northstar_user_role') === 'volunteer' ? 'Volunteer' : 'Seeker'));
-    const initial = (userName.charAt(0) || 'V').toUpperCase();
-
-    // If explicit #profile-btn exists in markup, populate it dynamically with the user's first initial
-    const profileBtn = container.querySelector('#profile-btn') || header.querySelector('#profile-btn');
-    if (profileBtn) {
-      profileBtn.innerHTML = `<span class="text-[#FFB800] font-bold text-xs tracking-wide">${initial}</span>`;
-      profileBtn.title = `Signed in as ${userName} - Tap for Settings`;
-      profileBtn.onclick = window.openSettingsModal;
-      const pathLower = (window.location.pathname || '').toLowerCase();
-      const isLockedScreen = pathLower.includes('dashboard') || pathLower.includes('progress') || pathLower.includes('login') || pathLower.includes('signup');
-      if (!isLockedScreen) {
-        profileBtn.className = 'w-8 h-8 rounded-full bg-slate-800 border border-slate-700/60 flex items-center justify-center shadow-sm cursor-pointer select-none';
-      }
-      return;
-    }
-
-    const avatarBtn = document.createElement('div');
-    avatarBtn.id = 'header-user-avatar';
-    avatarBtn.onclick = window.openSettingsModal;
-    avatarBtn.className = 'w-8 h-8 rounded-full bg-slate-800 border border-slate-700/60 flex items-center justify-center shadow-sm cursor-pointer select-none';
-    avatarBtn.title = `Signed in as ${userName} - Tap for Settings`;
-    avatarBtn.innerHTML = `<span class="text-[#FFB800] font-bold text-xs tracking-wide">${initial}</span>`;
-
-    container.appendChild(avatarBtn);
+// Fill the round account button (#profile-btn) in the page header with the user's initial
+function renderAccountHeaderAvatar() {
+  const name = nsDisplayName();
+  const role = getRole();
+  const initial = (name.charAt(0) || (role === 'volunteer' ? 'V' : 'S')).toUpperCase();
+  document.querySelectorAll('#profile-btn').forEach(btn => {
+    btn.textContent = initial;
+    btn.title = name ? `Signed in as ${name}. Open settings` : 'Open settings';
+    btn.setAttribute('aria-label', 'Open settings');
+    btn.onclick = window.openSettingsModal;
   });
 }
 
-function syncHeaderThemeIcons(mode) {
-  const pathLower = (window.location.pathname || '').toLowerCase();
-  const isLockedScreen = pathLower.includes('dashboard') || pathLower.includes('progress') || pathLower.includes('login') || pathLower.includes('signup');
-  if (isLockedScreen) return;
+// Dark mode is switched off for now. These stay as no-op shims for older callers.
+function syncHeaderThemeIcons() {}
 
-  const saved = localStorage.getItem('ns_theme') || localStorage.getItem('northstar_theme');
-  const resolvedMode = mode || (saved ? saved : (document.documentElement.classList.contains('dark') ? 'dark' : 'dark'));
-  const darkActive = Boolean(resolvedMode === 'dark');
-
-  const themeBtns = document.querySelectorAll('#theme-toggle-btn');
-  themeBtns.forEach(btn => {
-    btn.className = 'w-8 h-8 rounded-full bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-300 hover:text-amber-400 transition-colors';
-    btn.setAttribute('aria-label', 'Toggle theme');
-    btn.setAttribute('title', darkActive ? 'Switch to Light Mode' : 'Switch to Dark Mode');
-    btn.innerHTML = darkActive
-      ? `<svg class="w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /><line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" /></svg>`
-      : `<svg class="w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" /></svg>`;
-  });
-}
-
-// Theme Mode Storage & Management Engine with Dynamic Device Theme Detection
 function initThemeToggle() {
-  const savedTheme = localStorage.getItem('ns_theme') || localStorage.getItem('northstar_theme');
-  const themeToApply = (savedTheme === 'light' || savedTheme === 'dark') ? savedTheme : 'dark';
-  document.documentElement.classList.remove('light', 'dark');
-  document.documentElement.classList.add(themeToApply);
-  localStorage.setItem('ns_theme', themeToApply);
-  localStorage.setItem('northstar_theme', themeToApply);
-
-  if (typeof document !== 'undefined') {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => syncHeaderThemeIcons(themeToApply));
-    } else {
-      syncHeaderThemeIcons(themeToApply);
-    }
-  }
-
-  if (typeof window !== 'undefined' && window.matchMedia) {
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
-    const onChange = (e) => {
-      const explicit = localStorage.getItem('northstar_theme_override');
-      if (!explicit) {
-        const nextMode = e.matches ? 'dark' : 'light';
-        document.documentElement.classList.remove('light', 'dark');
-        document.documentElement.classList.add(nextMode);
-        syncHeaderThemeIcons(nextMode);
-      }
-    };
-    if (media.addEventListener) media.addEventListener('change', onChange);
-    else if (media.addListener) media.addListener(onChange);
-  }
+  document.documentElement.classList.remove('dark');
+  document.documentElement.classList.add('light');
+  document.querySelectorAll('#theme-toggle-btn').forEach(btn => btn.remove());
 }
 initThemeToggle();
 
-window.setThemeMode = function (mode) {
-  const safeMode = Boolean(mode === 'dark') ? 'dark' : 'light';
-  document.documentElement.classList.remove('light', 'dark');
-  document.documentElement.classList.add(safeMode);
-  localStorage.setItem('ns_theme', safeMode);
-  localStorage.setItem('northstar_theme', safeMode);
-  updateSettingsThemeUI(safeMode);
-  syncHeaderThemeIcons(safeMode);
-  // Sync theme to Supabase (best-effort, non-blocking)
-  if (window.supabaseClient) {
-    try {
-      const raw = localStorage.getItem('northstar_session');
-      const session = raw ? JSON.parse(raw) : null;
-      if (session?.id && !session.id.startsWith('user-')) {
-        window.supabaseClient
-          .from('profiles')
-          .upsert({ id: session.id, theme: safeMode }, { onConflict: 'id' })
-          .then(() => { })
-          .catch(() => { });
-      }
-    } catch (_) { }
-  }
+window.setThemeMode = function () {
+  initThemeToggle();
 };
 
 window.toggleTheme = function () {
-  const current = localStorage.getItem('ns_theme') || localStorage.getItem('northstar_theme') || 'dark';
-  const newTheme = current === 'dark' ? 'light' : 'dark';
-  window.setThemeMode(newTheme);
+  initThemeToggle();
 };
 
-function updateSettingsThemeUI(mode) {
-  const lightBtn = document.getElementById('settings-theme-light');
-  const darkBtn = document.getElementById('settings-theme-dark');
-  if (!lightBtn || !darkBtn) return;
-
-  if (mode === 'light') {
-    lightBtn.className = 'py-3 px-3 text-xs font-extrabold rounded-xl border-amber-400 bg-amber-400/20 text-amber-900 transition-all flex items-center justify-center gap-2 shadow-sm border';
-    darkBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all flex items-center justify-center gap-2 border';
-  } else {
-    darkBtn.className = 'py-3 px-3 text-xs font-extrabold rounded-xl border-amber-400 bg-amber-400/20 text-amber-300 transition-all flex items-center justify-center gap-2 shadow-sm border';
-    lightBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-slate-700 bg-slate-900 text-slate-400 hover:bg-slate-800 transition-all flex items-center justify-center gap-2 border';
-  }
-}
+function updateSettingsThemeUI() {}
 
 // Initialize Supabase Client dynamically from server config
 async function initSupabaseClient() {
@@ -297,10 +182,12 @@ window.signOutUser = async function () {
   window.location.href = 'index.html';
 };
 
-// Active Tab State & Routing Controller (Map Routing Fix + Conditional FAB Visibility)
+// Active Tab State & Routing Controller
 const TAB_ROUTES = {
   dashboard: 'seeker-dashboard.html',
   progress: 'progress.html',
+  me: 'progress.html',
+  companion: 'companion.html',
   jobs: 'opportunities.html',
   map: 'resource-map.html',
   resume: 'resume-builder.html',
@@ -318,34 +205,13 @@ function isMapActiveView(tabOverride) {
 
 function syncChatbotFABVisibility(tabOverride) {
   const isMap = isMapActiveView(tabOverride);
-  const fab = document.getElementById('chat-fab') || document.querySelector('.chatbot-fab');
-  const drawer = document.getElementById('chatbot-window-drawer');
-  const backdrop = document.getElementById('chatbot-backdrop-overlay');
-
+  const fab = document.getElementById('chat-fab');
+  document.body.setAttribute('data-active-tab', isMap ? 'map' : (tabOverride || window.activeTab || 'dashboard'));
+  document.body.classList.toggle('map-page', isMap);
   if (isMap) {
-    document.body.setAttribute('data-active-tab', 'map');
-    document.body.classList.add('map-page');
-    if (fab) {
-      fab.classList.add('hidden');
-      fab.style.setProperty('display', 'none', 'important');
-    }
-    if (drawer) {
-      drawer.classList.add('hidden');
-      drawer.style.setProperty('display', 'none', 'important');
-    }
-    if (backdrop) {
-      backdrop.classList.add('chatbot-backdrop-hidden', 'pointer-events-none');
-    }
-  } else {
-    const active = tabOverride || window.activeTab || 'dashboard';
-    document.body.setAttribute('data-active-tab', active);
-    document.body.classList.remove('map-page');
-    if (fab) {
-      fab.classList.remove('hidden');
-      fab.style.setProperty('display', 'flex', 'important');
-    } else if (typeof initGlobalAIChatbot === 'function') {
-      initGlobalAIChatbot();
-    }
+    if (window.isChatOpen) closeAIChatbotWindow();
+  } else if (!fab && typeof initGlobalAIChatbot === 'function') {
+    initGlobalAIChatbot();
   }
 }
 window.syncChatbotFABVisibility = syncChatbotFABVisibility;
@@ -354,265 +220,56 @@ window.setActiveTab = function (tabId) {
   const cleanTab = (tabId || 'dashboard').toLowerCase();
   window.activeTab = cleanTab;
   syncChatbotFABVisibility(cleanTab);
-
-  const isVolunteer = (typeof getRole === 'function' ? getRole() : (localStorage.getItem('northstar_user_role') || 'seeker')) === 'volunteer';
-  // Synchronize active/inactive tab classes on bottom navigation bar
-  document.querySelectorAll('.bottom-nav [data-nav-tab], .bottom-nav a, .bottom-nav button').forEach(el => {
-    const elTab = el.getAttribute('data-nav-tab') || (el.getAttribute('href') || '').replace('.html', '');
-    const isMatch = elTab === cleanTab || (cleanTab === 'map' && (el.getAttribute('href') || '').includes('map'));
-    const activeClasses = isVolunteer
-      ? 'nav-tab active active-tab w-full flex flex-col items-center justify-center py-1 px-0.5 text-amber-500 dark:text-[#FFB800] font-bold transition-all box-border'
-      : 'nav-tab active active-tab mx-auto w-auto min-w-[48px] max-w-[58px] px-2 py-1 rounded-xl bg-[#FFB800] text-slate-950 font-extrabold shadow-sm flex flex-col items-center justify-center transition-all box-border';
-    const inactiveClasses = 'nav-tab nav-item-inactive w-full flex flex-col items-center justify-center py-1 px-0.5 text-slate-500 dark:text-[#A0AEC0] hover:text-slate-900 dark:hover:text-white font-medium transition-all box-border';
-    el.className = isMatch ? activeClasses : inactiveClasses;
-    const icon = el.querySelector('.material-symbols-outlined');
-    if (icon) icon.style.fontVariationSettings = isMatch ? "'FILL' 1" : "'FILL' 0";
+  document.querySelectorAll('.ns-nav .ns-nav__item').forEach(el => {
+    const isMatch = el.getAttribute('data-nav-tab') === cleanTab;
+    el.classList.toggle('is-active', isMatch);
+    if (isMatch) el.setAttribute('aria-current', 'page');
+    else el.removeAttribute('aria-current');
   });
 };
+
+// Every in-app page change goes through here so it gets the same short branded transition.
+function nsGo(url, opts) {
+  if (typeof window.nsNavigate === 'function') window.nsNavigate(url, opts);
+  else if (opts && opts.replace) window.location.replace(url);
+  else window.location.href = url;
+}
+window.nsGo = nsGo;
 
 window.navigateTo = function (tabOrUrl) {
   const key = (tabOrUrl || '').toLowerCase().replace('.html', '');
   const targetUrl = TAB_ROUTES[key] || (tabOrUrl.endsWith('.html') ? tabOrUrl : `${tabOrUrl}.html`);
-  const resolvedTab = Object.keys(TAB_ROUTES).find(k => TAB_ROUTES[k] === targetUrl) || (targetUrl.includes('map') ? 'map' : key);
-
-  window.setActiveTab(resolvedTab);
-
-  if (resolvedTab === 'map' || targetUrl.includes('resource-map.html') || targetUrl === 'map.html') {
-    window.location.href = 'resource-map.html';
-    return;
-  }
-
-  if (typeof navigateToPageInstant === 'function') {
-    navigateToPageInstant(targetUrl);
-  } else {
-    window.location.href = targetUrl;
-  }
+  nsGo(targetUrl);
 };
 
-// Instant Zero-Lag Page Swapping Engine (SPA Router)
-let isPageTransitioning = false;
-
+// Page transitions: intercept same-origin page links and route them through the transition.
 function initInstantPageTransitions() {
+  if (window._nsLinkTransitionsBound) return;
+  window._nsLinkTransitionsBound = true;
+
   document.addEventListener('click', (e) => {
-    const mapTrigger = e.target.closest('[data-nav-target="map"], a[href="map.html"], a[href="resource-map.html"]');
-    if (mapTrigger) {
-      e.preventDefault();
-      window.navigateTo('map');
-      return;
-    }
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const link = e.target.closest('a[href]');
+    if (!link || link.target === '_blank' || link.hasAttribute('download')) return;
 
-    const link = e.target.closest('a[href$=".html"]');
-    if (!link) return;
+    const href = link.getAttribute('href') || '';
+    if (!href || href.startsWith('#') || href.startsWith('javascript:') || href.startsWith('tel:') || href.startsWith('mailto:')) return;
 
-    const href = link.getAttribute('href');
-    if (!href || href.startsWith('http') || href.startsWith('#') || href.startsWith('tel:')) return;
+    let url;
+    try { url = new URL(href, window.location.href); } catch (_) { return; }
+    if (url.origin !== window.location.origin || !/\.html$/.test(url.pathname)) return;
 
-    // Prevent re-rendering if transition is in progress or clicking the active tab
-    const cleanHref = href.split('/').pop();
-    const currentPath = window.location.pathname.split('/').pop() || 'index.html';
-    if (isPageTransitioning || cleanHref === currentPath) {
-      e.preventDefault();
-      return;
-    }
-
+    const samePage = url.pathname === window.location.pathname && url.search === window.location.search;
     e.preventDefault();
-    navigateToPageInstant(href);
-  });
-
-  window.addEventListener('popstate', () => {
-    const targetPath = window.location.pathname.split('/').pop() || 'index.html';
-    navigateToPageInstant(targetPath, false);
+    if (!samePage) nsGo(url.pathname.split('/').pop() + url.search + url.hash);
   });
 }
 
-async function navigateToPageInstant(url, pushState = true) {
-  if (isPageTransitioning) return;
-  isPageTransitioning = true;
-
-  const resetLock = () => {
-    isPageTransitioning = false;
-  };
-
-  try {
-    // Show Swirling Loading Overlay
-    const loader = document.getElementById('swirling-loader-overlay');
-    if (loader) {
-      loader.classList.remove('hidden');
-      loader.style.display = 'flex';
-    }
-
-    // React app or dynamically mounted pages must perform full browser load to initialize React root scripts
-    if (url.includes('resource-map.html') || window.location.pathname.includes('resource-map.html')) {
-      resetLock();
-      window.location.href = url;
-      return;
-    }
-
-    const response = await fetch(url);
-    if (!response.ok) {
-      if (loader) { loader.classList.add('hidden'); loader.style.display = 'none'; }
-      resetLock();
-      window.location.href = url;
-      return;
-    }
-    const htmlText = await response.text();
-
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(htmlText, 'text/html');
-
-    const newAppFrame = doc.querySelector('.app-frame');
-    const currentAppFrame = document.querySelector('.app-frame');
-
-    if (newAppFrame && currentAppFrame) {
-      currentAppFrame.classList.add('opacity-0', 'transition-opacity', 'duration-100');
-
-      setTimeout(() => {
-        try {
-          currentAppFrame.innerHTML = newAppFrame.innerHTML;
-          // Explicitly copy CSS classes (like flex, constraints) from the newly fetched frame
-          // This ensures mobile constraints and responsive styling are preserved when swapping views
-          currentAppFrame.className = newAppFrame.className;
-
-          document.title = doc.title;
-          if (pushState) {
-            window.history.pushState({}, doc.title, url);
-          }
-
-          currentAppFrame.classList.remove('opacity-0');
-          currentAppFrame.classList.add('animate-fade-in-up');
-
-          // Hide Swirling Loader
-          if (loader) {
-            loader.classList.add('hidden');
-            loader.style.display = 'none';
-          }
-
-          // Re-initialize dynamic page handlers
-          initClock();
-          initRoleNavigation();
-          initDonationForm();
-          initResourceMapFilter();
-          if (typeof initGlobalAIChatbot === 'function') initGlobalAIChatbot();
-          initHelpModal();
-          initCallModal();
-          initTaskClaiming();
-
-          // Synchronously render cached/seed jobs immediately if switching to Jobs view
-          if (typeof window.renderJobsInstant === 'function') {
-            window.renderJobsInstant(true);
-          }
-
-          // Dynamically load any external scripts present in the target document that aren't loaded yet
-          const externalScripts = Array.from(doc.querySelectorAll('script[src]'));
-          const loadExternalScriptsPromise = Promise.all(
-            externalScripts.map(s => {
-              const src = s.getAttribute('src');
-              if (!src) return Promise.resolve();
-              const alreadyLoaded = Array.from(document.querySelectorAll('script[src]')).some(
-                existing => existing.getAttribute('src') === src || existing.src === s.src
-              );
-              if (alreadyLoaded) return Promise.resolve();
-              return new Promise(resolve => {
-                const newScript = document.createElement('script');
-                newScript.src = src;
-                newScript.onload = resolve;
-                newScript.onerror = resolve;
-                document.body.appendChild(newScript);
-              });
-            })
-          );
-
-          loadExternalScriptsPromise.then(() => {
-            // Execute inline script tags present in the loaded page document (skipping duplicate config script)
-            doc.querySelectorAll('script:not([src])').forEach(s => {
-              if (s.textContent && s.id !== 'tailwind-config') {
-                try {
-                  eval(s.textContent);
-                } catch (err) {
-                  console.warn('Script execution notice:', err);
-                }
-              }
-            });
-
-            if (typeof window.renderJobsInstant === 'function') {
-              window.renderJobsInstant();
-            }
-            if (typeof window.loadOpportunities === 'function') {
-              window.loadOpportunities();
-            } else if (typeof loadOpportunities === 'function') {
-              loadOpportunities();
-            }
-            window.dispatchEvent(new CustomEvent('northstar:tabSwitched', { detail: { url } }));
-          });
-
-          if (typeof window.updateLandingRoleCards === 'function') {
-            window.updateLandingRoleCards();
-          }
-          if (typeof window.initChipToggles === 'function') {
-            window.initChipToggles();
-          }
-          if (typeof window.loadOpportunities === 'function') {
-            window.loadOpportunities();
-          } else if (typeof loadOpportunities === 'function') {
-            loadOpportunities();
-          }
-          renderDynamicNav();
-          if (typeof window.updateProgressUI === 'function') {
-            window.updateProgressUI();
-          }
-          if (typeof syncDashboardProgressWidget === 'function') {
-            syncDashboardProgressWidget();
-          }
-          if (typeof renderProgressPage === 'function') {
-            renderProgressPage();
-          }
-          if (typeof window.checkGuestLockAccess === 'function') {
-            window.checkGuestLockAccess();
-          } else if (typeof checkGuestLockAccess === 'function') {
-            checkGuestLockAccess();
-          }
-          checkDashboardJobMatchLock();
-          if (typeof window.setDashboardGreeting === 'function') window.setDashboardGreeting();
-
-          const path = url.split('/').pop();
-          if (path === 'call-shelter.html') updateMilestone('safePlace', true);
-          if (path === 'opportunities.html' || path === 'jobs.html') {
-            updateMilestone('jobMatcher', true);
-          }
-
-          // Re-run session gate check when navigating to Home so gateway stays hidden
-          if (path === 'index.html' || path === '') {
-            const gw = document.getElementById('auth-gateway-view');
-            const layout = document.getElementById('main-app-layout');
-            const sess = JSON.parse(localStorage.getItem('northstar_session'));
-            if (sess) {
-              if (gw) gw.classList.add('hidden');
-              if (layout) layout.classList.remove('hidden');
-            } else {
-              if (gw) gw.classList.remove('hidden');
-              if (layout) layout.classList.add('hidden');
-            }
-          }
-
-          renderBottomNav();
-          renderProgressPage();
-          if (typeof renderVolunteerFoodDonationsQueue === 'function') renderVolunteerFoodDonationsQueue();
-          if (typeof initGlobalAIChatbot === 'function') initGlobalAIChatbot();
-          window.scrollTo(0, 0);
-        } finally {
-          resetLock();
-        }
-      }, 90);
-    } else {
-      resetLock();
-      window.location.href = url;
-    }
-  } catch (err) {
-    console.error('Page fetch error, falling back:', err);
-    resetLock();
-    window.location.href = url;
-  }
+// Kept for older callers: now a regular navigation with the branded transition.
+function navigateToPageInstant(url, pushState = true) {
+  nsGo(url, { replace: pushState === false });
 }
+window.navigateToPageInstant = navigateToPageInstant;
 
 // Update Status Bar Clock
 function initClock() {
@@ -666,10 +323,11 @@ function setRole(role) {
     try {
       const raw = localStorage.getItem('northstar_session');
       const session = raw ? JSON.parse(raw) : null;
-      if (session?.id && !session.id.startsWith('user-')) {
+      // profiles.username is NOT NULL, so an upsert without it is rejected for new rows
+      if (session?.id && session.username && !session.id.startsWith('user-')) {
         window.supabaseClient
           .from('profiles')
-          .upsert({ id: session.id, role: role }, { onConflict: 'id' })
+          .upsert({ id: session.id, username: session.username, role: role }, { onConflict: 'id' })
           .then(() => { })
           .catch(() => { });
       }
@@ -693,7 +351,7 @@ function enforceFeatureGate() {
   // Seeker-only routes: resume-builder.html, progress.html
   // Volunteer-only routes: helper-dashboard.html, donate.html
   // Shared / accessible routes: opportunities.html, resource-map.html, call-shelter.html
-  const seekerOnlyRoutes = ['resume-builder.html', 'progress.html'];
+  const seekerOnlyRoutes = ['resume-builder.html'];
   const volunteerOnlyRoutes = ['helper-dashboard.html', 'donate.html'];
 
   if (role === 'seeker' && volunteerOnlyRoutes.includes(currentPath)) {
@@ -867,7 +525,7 @@ function initDonationForm() {
     donateSubmitBtn.addEventListener('click', (e) => {
       e.preventDefault();
       const amount = customInput && customInput.value ? customInput.value : selectedAmount;
-      showNotification(`Thank you! Your donation of $${amount} has been processed via Stripe. You are guiding someone home today! ⭐`, 'success');
+      showNotification(`Thank you for your $${amount} donation.`, 'success');
     });
   }
 }
@@ -918,8 +576,8 @@ function initCallModal() {
   callBtns.forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
-      const shelterName = btn.dataset.shelter || 'Northstar Emergency Dispatch';
-      const phoneNum = btn.dataset.phone || '1-800-555-0199';
+      const shelterName = btn.dataset.shelter || '211';
+      const phoneNum = btn.dataset.phone || '211';
 
       const modalNameEl = document.getElementById('call-modal-name');
       const modalPhoneEl = document.getElementById('call-modal-phone');
@@ -959,6 +617,7 @@ function openModal(modalId) {
   if (modal) {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
+    modal.querySelectorAll('.ns-sheet-backdrop').forEach(b => { b.style.transition = ''; b.style.opacity = ''; });
     setTimeout(() => {
       const drawer = modal.querySelector('.modal-drawer');
       if (drawer) drawer.classList.remove('translate-y-full');
@@ -971,6 +630,7 @@ function closeModal(modalId) {
   if (modal) {
     const drawer = modal.querySelector('.modal-drawer');
     if (drawer) drawer.classList.add('translate-y-full');
+    modal.querySelectorAll('.ns-sheet-backdrop').forEach(b => { b.style.transition = 'opacity 0.25s ease'; b.style.opacity = '0'; });
     setTimeout(() => {
       modal.classList.add('hidden');
       modal.classList.remove('flex');
@@ -978,112 +638,174 @@ function closeModal(modalId) {
   }
 }
 
-// Settings Modal Generator
+// ---------------------------------------------------------------------------
+// Swipe down to close any bottom sheet (.ns-sheet). Works with touch and mouse.
+// It only takes over when the sheet's content is scrolled to the top, ignores
+// sideways swipes and form fields, and closes through the sheet's own backdrop
+// handler so each page's close logic (closeModal, closeTransitModal, …) still runs.
+// ---------------------------------------------------------------------------
+(function initSheetSwipe() {
+  let drag = null;
+
+  function scrolledAncestor(el, sheet) {
+    for (let n = el; n && n !== sheet.parentElement; n = n.parentElement) {
+      if (n.scrollTop > 0 && n.scrollHeight > n.clientHeight) return n;
+      if (n === sheet) break;
+    }
+    return null;
+  }
+
+  function start(target, x, y, isTouch) {
+    const sheet = target.closest && target.closest('.ns-sheet');
+    if (!sheet || !sheet.closest('.ns-sheet-wrap')) return;
+    if (target.closest('input, textarea, select, [contenteditable="true"], .leaflet-container, .no-sheet-drag')) return;
+    drag = {
+      sheet, isTouch, startX: x, startY: y, lastY: y, lastT: performance.now(), v: 0, dy: 0,
+      active: false, fromHandle: !!target.closest('.ns-sheet__handle'),
+      blocked: !!scrolledAncestor(target, sheet)
+    };
+  }
+
+  function move(x, y, evt) {
+    if (!drag) return;
+    const dy = y - drag.startY;
+    const dx = x - drag.startX;
+    if (!drag.active) {
+      if (Math.abs(dy) < 8 && Math.abs(dx) < 8) return;
+      // sideways, pulling up, or content that is still scrolled: leave it to the browser
+      if (Math.abs(dx) > Math.abs(dy) || dy < 0 || (drag.blocked && !drag.fromHandle)) { drag = null; return; }
+      drag.active = true;
+      drag.sheet.style.transition = 'none';
+      drag.backdrop = drag.sheet.parentElement.querySelector('.ns-sheet-backdrop');
+    }
+    drag.dy = Math.max(0, dy);
+    drag.sheet.style.transform = `translateY(${drag.dy}px)`;
+    if (drag.backdrop) drag.backdrop.style.opacity = String(Math.max(0.25, 1 - drag.dy / (drag.sheet.offsetHeight || 400)));
+    const now = performance.now();
+    drag.v = 0.8 * ((y - drag.lastY) / Math.max(1, now - drag.lastT)) + 0.2 * drag.v;
+    drag.lastY = y;
+    drag.lastT = now;
+    if (evt && evt.cancelable) evt.preventDefault();
+  }
+
+  function end() {
+    if (!drag) return;
+    const d = drag;
+    drag = null;
+    if (!d.active) return;
+    const sheet = d.sheet;
+    const shouldClose = d.dy > Math.min(140, sheet.offsetHeight * 0.3) || d.v > 0.6;
+    // a drag must not also count as a tap on whatever was under the finger
+    const swallow = (e) => { e.stopPropagation(); e.preventDefault(); };
+    sheet.addEventListener('click', swallow, { capture: true, once: true });
+    setTimeout(() => sheet.removeEventListener('click', swallow, { capture: true }), 350);
+
+    sheet.style.transition = 'transform 0.26s cubic-bezier(0.22, 0.8, 0.24, 1)';
+    if (shouldClose) {
+      sheet.style.transform = 'translateY(110%)';
+      setTimeout(() => {
+        if (d.backdrop) d.backdrop.click();
+        requestAnimationFrame(() => { sheet.style.transform = ''; sheet.style.transition = ''; });
+      }, 220);
+    } else {
+      sheet.style.transform = 'translateY(0)';
+      if (d.backdrop) { d.backdrop.style.transition = 'opacity 0.26s ease'; d.backdrop.style.opacity = ''; }
+      setTimeout(() => { sheet.style.transform = ''; sheet.style.transition = ''; }, 280);
+    }
+  }
+
+  document.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) start(e.target, e.touches[0].clientX, e.touches[0].clientY, true);
+  }, { passive: true });
+  document.addEventListener('touchmove', (e) => {
+    if (drag && drag.isTouch && e.touches.length === 1) move(e.touches[0].clientX, e.touches[0].clientY, e);
+  }, { passive: false });
+  document.addEventListener('touchend', end);
+  document.addEventListener('touchcancel', end);
+
+  document.addEventListener('mousedown', (e) => { if (e.button === 0) start(e.target, e.clientX, e.clientY, false); });
+  window.addEventListener('mousemove', (e) => { if (drag && !drag.isTouch) move(e.clientX, e.clientY, e); });
+  window.addEventListener('mouseup', () => { if (drag && !drag.isTouch) end(); });
+})();
+
+// Settings sheet
+function settingsAuthMarkup(session) {
+  if (session.isGuest) {
+    return `
+      <button type="button" onclick="redirectToAuthGateway()" class="ns-btn ns-btn--primary">
+        Sign in or create an account
+      </button>`;
+  }
+  return `
+    <button type="button" onclick="logout()" class="ns-btn ns-btn--ghost">
+      <span class="material-symbols-outlined">logout</span>
+      Sign out
+    </button>`;
+}
+
 window.openSettingsModal = function () {
   let modal = document.getElementById('settings-modal');
   const session = getSession();
+  const name = nsDisplayName();
 
   if (!modal) {
     modal = document.createElement('div');
     modal.id = 'settings-modal';
-    modal.className = 'absolute inset-0 z-[150] hidden flex-col justify-end';
+    modal.className = 'ns-sheet-wrap hidden';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-labelledby', 'settings-title');
     modal.innerHTML = `
-      <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeModal('settings-modal')"></div>
-      <div class="modal-drawer bg-surface w-full rounded-t-3xl p-6 transform translate-y-full transition-transform duration-300 ease-in-out relative flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.2)]">
-        <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-5"></div>
-        <h2 class="text-xl font-extrabold text-primary mb-6 flex items-center justify-between font-heading tracking-tight">
-          <span class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-xl text-amber-500">settings</span> Settings
-          </span>
-          <span id="settings-guest-badge" class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-400/20 text-amber-500 border border-amber-400/30">
-            ${session.isGuest ? 'Guest Mode' : 'Account Active'}
-          </span>
-        </h2>
-        
-        <div class="space-y-6">
-          <!-- Role Selector -->
+      <div class="ns-sheet-backdrop" onclick="closeModal('settings-modal')"></div>
+      <div class="modal-drawer ns-sheet translate-y-full">
+        <div class="ns-sheet__handle"></div>
+        <div class="flex items-start justify-between gap-3">
           <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-3 uppercase tracking-wider">Account Role</label>
-            <div class="grid grid-cols-2 gap-3">
-              <button onclick="switchUserRole('seeker'); setTimeout(() => openSettingsModal(), 10);" id="settings-role-seeker" class="py-3 px-3 text-xs font-bold rounded-xl border transition-all flex flex-col items-center justify-center gap-1">
-                <span class="material-symbols-outlined text-xl">search</span>
-                <span>I need help</span>
-                <span class="text-[10px] opacity-75 font-normal">(Seeker)</span>
-              </button>
-              <button onclick="switchUserRole('volunteer'); setTimeout(() => openSettingsModal(), 10);" id="settings-role-volunteer" class="py-3 px-3 text-xs font-bold rounded-xl border transition-all flex flex-col items-center justify-center gap-1">
-                <span class="material-symbols-outlined text-xl">volunteer_activism</span>
-                <span>I want to help</span>
-                <span class="text-[10px] opacity-75 font-normal">(Volunteer)</span>
-              </button>
-            </div>
+            <h2 id="settings-title" class="ns-sheet__title">Settings</h2>
+            <p id="settings-account-line" class="ns-card-sub mt-1"></p>
           </div>
-
-          <!-- Theme Appearance Selector -->
-          <div>
-            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-3 uppercase tracking-wider">Appearance</label>
-            <div class="grid grid-cols-2 gap-3">
-              <button onclick="setThemeMode('light')" id="settings-theme-light" class="py-3 px-3 text-xs font-bold rounded-xl border transition-all flex items-center justify-center gap-2">
-                <span class="material-symbols-outlined text-lg text-amber-500">light_mode</span>
-                <span>Light Mode</span>
-              </button>
-              <button onclick="setThemeMode('dark')" id="settings-theme-dark" class="py-3 px-3 text-xs font-bold rounded-xl border transition-all flex items-center justify-center gap-2">
-                <span class="material-symbols-outlined text-lg text-indigo-400">dark_mode</span>
-                <span>Dark Mode</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Auth Action Button (Sign In / Sign Up for Guest vs Sign Out for User Account) -->
-          <div class="pt-4 border-t border-slate-200 dark:border-white/10" id="settings-auth-container">
-            ${session.isGuest ? `
-              <button onclick="redirectToAuthGateway()" class="w-full py-3.5 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-extrabold rounded-xl text-sm shadow-md hover:from-amber-300 hover:to-amber-400 transition-all flex items-center justify-center gap-2">
-                <span class="material-symbols-outlined text-base">login</span> Sign in / Create Account
-              </button>
-            ` : `
-              <button onclick="logout()" class="w-full py-3.5 bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20 font-bold rounded-xl text-sm shadow-sm transition-colors border border-rose-100 flex items-center justify-center gap-2">
-                <span class="material-symbols-outlined text-sm">logout</span> Sign out (${session.username})
-              </button>
-            `}
-          </div>
+          <button type="button" class="ns-icon-btn ns-icon-btn--sm" onclick="closeModal('settings-modal')" aria-label="Close settings">
+            <span class="material-symbols-outlined">close</span>
+          </button>
         </div>
+
+        <div class="mt-6">
+          <span class="ns-label" id="settings-role-label">I’m using Northstar to</span>
+          <div class="ns-segment" role="group" aria-labelledby="settings-role-label">
+            <button type="button" id="settings-role-seeker" onclick="switchUserRole('seeker'); setTimeout(() => openSettingsModal(), 10);">Find help</button>
+            <button type="button" id="settings-role-volunteer" onclick="switchUserRole('volunteer'); setTimeout(() => openSettingsModal(), 10);">Give help</button>
+          </div>
+          <p class="ns-hint">Switching changes your home screen and tabs.</p>
+        </div>
+
+        <div class="mt-6" id="settings-auth-container"></div>
       </div>
     `;
-    const appFrame = document.querySelector('.app-frame');
-    if (appFrame) {
-      appFrame.appendChild(modal);
-    }
-  } else {
-    // Dynamic Auth Button Update if modal already created
-    const authContainer = document.getElementById('settings-auth-container');
-    if (authContainer) {
-      authContainer.innerHTML = session.isGuest ? `
-        <button onclick="redirectToAuthGateway()" class="w-full py-3.5 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-extrabold rounded-xl text-sm shadow-md hover:from-amber-300 hover:to-amber-400 transition-all flex items-center justify-center gap-2">
-          <span class="material-symbols-outlined text-base">login</span> Sign in / Create Account
-        </button>
-      ` : `
-        <button onclick="logout()" class="w-full py-3.5 bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20 font-bold rounded-xl text-sm shadow-sm transition-colors border border-rose-100 flex items-center justify-center gap-2">
-          <span class="material-symbols-outlined text-sm">logout</span> Sign out (${session.username})
-        </button>
-      `;
-    }
+    const appFrame = document.querySelector('.app-frame') || document.body;
+    appFrame.appendChild(modal);
   }
 
-  // Update role toggle UI state
+  const accountLine = document.getElementById('settings-account-line');
+  if (accountLine) {
+    accountLine.textContent = session.isGuest
+      ? 'You’re using Northstar without an account.'
+      : `Signed in as ${name || session.username}`;
+  }
+
+  const authContainer = document.getElementById('settings-auth-container');
+  if (authContainer) authContainer.innerHTML = settingsAuthMarkup(session);
+
   const role = getRole();
   const seekerBtn = document.getElementById('settings-role-seeker');
   const volunteerBtn = document.getElementById('settings-role-volunteer');
-
-  if (role === 'seeker') {
-    seekerBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-amber-400 bg-amber-50 dark:bg-amber-400/20 text-amber-900 dark:text-amber-300 transition-all flex flex-col items-center justify-center gap-1 shadow-sm';
-    volunteerBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-slate-50 transition-all flex flex-col items-center justify-center gap-1';
-  } else {
-    volunteerBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-amber-400 bg-amber-50 dark:bg-amber-400/20 text-amber-900 dark:text-amber-300 transition-all flex flex-col items-center justify-center gap-1 shadow-sm';
-    seekerBtn.className = 'py-3 px-3 text-xs font-bold rounded-xl border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-slate-50 transition-all flex flex-col items-center justify-center gap-1';
+  if (seekerBtn) {
+    seekerBtn.classList.toggle('is-active', role !== 'volunteer');
+    seekerBtn.setAttribute('aria-pressed', String(role !== 'volunteer'));
   }
-
-  // Update theme toggle UI state in Settings modal
-  const savedTheme = localStorage.getItem('northstar_theme') || 'dark';
-  updateSettingsThemeUI(savedTheme);
+  if (volunteerBtn) {
+    volunteerBtn.classList.toggle('is-active', role === 'volunteer');
+    volunteerBtn.setAttribute('aria-pressed', String(role === 'volunteer'));
+  }
 
   openModal('settings-modal');
 };
@@ -1200,42 +922,33 @@ function checkGuestLockAccess() {
 
   const path = window.location.pathname.toLowerCase();
   const currentFileName = path.split('/').pop() || 'index.html';
-  const isDashboardOrHome = currentFileName === 'index.html' || currentFileName === 'seeker-dashboard.html' || currentFileName === 'helper-dashboard.html' || currentFileName === 'resource-map.html';
+  const isDashboardOrHome = currentFileName === 'index.html' || currentFileName === 'seeker-dashboard.html' || currentFileName === 'helper-dashboard.html' || currentFileName === 'resource-map.html' || currentFileName === 'call-shelter.html' || currentFileName === 'companion.html';
 
   if (!isDashboardOrHome) {
-    // Blur main content area permanently for guests on all feature pages
+    // Soften the page behind the prompt so it reads as locked
     if (mainContent && mainContent !== appFrame) {
-      mainContent.style.filter = 'blur(14px)';
+      mainContent.style.filter = 'blur(10px)';
       mainContent.style.pointerEvents = 'none';
       mainContent.style.userSelect = 'none';
-      mainContent.style.opacity = '0.3';
+      mainContent.style.opacity = '0.45';
     }
 
     let overlay = document.getElementById('guest-lock-overlay');
     if (overlay) overlay.remove();
 
+    const homeUrl = getRole() === 'volunteer' ? 'helper-dashboard.html' : 'seeker-dashboard.html';
     overlay = document.createElement('div');
     overlay.id = 'guest-lock-overlay';
-    overlay.className = 'absolute inset-0 z-[200] flex items-center justify-center p-5 bg-slate-950/60 backdrop-blur-sm select-none';
+    overlay.className = 'absolute inset-x-0 top-0 z-[120] flex items-center justify-center px-5 animate-fade-in';
+    overlay.style.bottom = 'var(--nav-h)';
     overlay.innerHTML = `
-      <div class="bg-white max-w-xs w-full p-6 rounded-[24px] text-center space-y-4 shadow-2xl border border-slate-200/80 relative overflow-hidden animate-fade-in">
-        <div class="w-12 h-12 rounded-2xl bg-[#FFE855] text-slate-900 flex items-center justify-center mx-auto shadow-sm">
-          <span class="material-symbols-outlined text-2xl font-bold">lock</span>
-        </div>
-        <div>
-          <span class="px-3 py-1 rounded-full text-[11px] font-bold bg-[#FFE855]/30 text-slate-800 inline-block mb-2.5">Guest Account</span>
-          <h3 class="text-lg font-bold text-slate-900 tracking-tight">Unlock Feature with an Account</h3>
-          <p class="text-xs text-slate-600 mt-1.5 leading-relaxed font-medium">
-            You are browsing as a Guest. Create a free account or sign in to permanently unlock progress tracking, AI resume builder, job placements, and donations.
-          </p>
-        </div>
-        <div class="space-y-2 pt-1">
-          <button onclick="redirectToAuthGateway()" class="w-full py-3 bg-[#FFE855] hover:bg-amber-300 text-slate-950 font-extrabold text-xs rounded-xl shadow-sm transition-all flex items-center justify-center gap-2">
-            <span class="material-symbols-outlined text-base">person_add</span> Sign In / Create Account
-          </button>
-          <a href="seeker-dashboard.html" class="block w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition-colors">
-            Back to Home
-          </a>
+      <div class="ns-card ns-card--pad w-full max-w-[340px] text-center animate-fade-in-up">
+        <span class="ns-tile mx-auto"><span class="material-symbols-outlined">lock</span></span>
+        <h3 class="text-[20px] font-bold mt-4">Create a free account to use this</h3>
+        <p class="ns-card-sub mt-2">Your resume and progress are saved to your account so they’re here next time.</p>
+        <div class="mt-5 flex flex-col gap-3">
+          <button type="button" onclick="redirectToAuthGateway()" class="ns-btn ns-btn--primary">Sign in or create an account</button>
+          <a href="${homeUrl}" class="ns-btn ns-btn--ghost">Back to home</a>
         </div>
       </div>
     `;
@@ -1297,73 +1010,80 @@ const CORE_MILESTONES = [
   {
     id: 'appExplorer',
     icon: 'explore',
-    title: 'App Explorer',
-    desc: 'Navigated through key screens and features across Northstar.',
-    actionUrl: 'seeker-dashboard.html',
-    actionLabel: 'Explore App'
+    title: 'Look around',
+    desc: 'Open a few different parts of the app.',
+    actionUrl: 'resource-map.html',
+    actionLabel: 'Explore'
   },
   {
     id: 'aiCompanion',
-    icon: 'smart_toy',
-    title: 'AI Companion',
-    desc: 'Used Northstar AI to ask questions and get instant guidance.',
-    actionUrl: 'javascript:toggleAIChatbotWindow()',
-    actionLabel: 'Ask Northstar AI'
+    icon: 'chat_bubble',
+    title: 'Ask Companion a question',
+    desc: 'Get answers about shelters, food, jobs or your resume.',
+    actionUrl: 'companion.html',
+    actionLabel: 'Ask'
   },
   {
     id: 'savedLocation',
     icon: 'bookmark',
-    title: 'Saved Essential Location',
-    desc: 'Bookmarked a resource or shelter on the interactive map.',
-    actionUrl: 'map.html',
-    actionLabel: 'Open Map'
+    title: 'Save a place',
+    desc: 'Bookmark a shelter or service on the map.',
+    actionUrl: 'resource-map.html',
+    actionLabel: 'Open map'
   },
   {
     id: 'resumeBuilder',
     icon: 'description',
-    title: 'Resume Builder',
-    desc: 'Created or updated your professional resume in the app.',
+    title: 'Build your resume',
+    desc: 'Turn the work you’ve done into a resume in a few steps.',
     actionUrl: 'resume-builder.html',
-    actionLabel: 'Build Resume'
+    actionLabel: 'Start'
   },
   {
     id: 'jobMatcher',
     icon: 'work',
-    title: 'Job Matcher',
-    desc: 'Explored personalized job recommendations in the Jobs section.',
-    actionUrl: 'jobs.html',
-    actionLabel: 'View Jobs'
+    title: 'Browse jobs',
+    desc: 'See gigs and jobs that are hiring near you.',
+    actionUrl: 'opportunities.html',
+    actionLabel: 'View jobs'
   }
 ];
 
+// Nothing counts as done until the person has actually done it.
 const defaultUserData = {
   isGuest: true,
   username: 'Guest',
   resumeData: null,
   progress: {
-    appExplorer: true,
+    appExplorer: false,
     aiCompanion: false,
-    savedLocation: true,
+    savedLocation: false,
     resumeBuilder: false,
-    jobMatcher: true
+    jobMatcher: false
   }
 };
 
 function getUserData() {
   const session = getSession();
   const storageKey = session.isGuest ? 'northstar_guest_progress_data' : `northstar_data_${session.username}`;
-  const raw = localStorage.getItem(storageKey);
-  let data = raw ? JSON.parse(raw) : JSON.parse(JSON.stringify(defaultUserData));
+  let data;
+  try {
+    const raw = localStorage.getItem(storageKey);
+    data = raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    data = null;
+  }
+  if (!data || typeof data !== 'object') data = JSON.parse(JSON.stringify(defaultUserData));
   if (!data.progress) data.progress = {};
 
-  // Ensure all 5 core milestone keys exist
   CORE_MILESTONES.forEach(m => {
-    if (typeof data.progress[m.id] !== 'boolean') {
-      data.progress[m.id] = defaultUserData.progress[m.id] === true;
-    }
+    if (typeof data.progress[m.id] !== 'boolean') data.progress[m.id] = false;
   });
 
-  // Sync automatic detections from app usage if not explicitly toggled off
+  // Detections from real app usage
+  if (localStorage.getItem('northstar_app_explored') === 'true') {
+    data.progress.appExplorer = true;
+  }
   const savedRes = localStorage.getItem('northstar_saved_resources');
   if (savedRes) {
     try {
@@ -1390,52 +1110,44 @@ function saveUserData(userData) {
   localStorage.setItem(storageKey, JSON.stringify(userData));
 }
 
+function getProgressSummary() {
+  const state = getUserData().progress || {};
+  const completedCount = CORE_MILESTONES.filter(m => state[m.id] === true).length;
+  return {
+    state,
+    completedCount,
+    percentage: Math.round((completedCount / CORE_MILESTONES.length) * 100),
+    nextPending: CORE_MILESTONES.find(m => !state[m.id]) || null
+  };
+}
+window.getProgressSummary = getProgressSummary;
+
 function syncDashboardProgressWidget() {
-  const userData = getUserData();
-  const state = userData.progress || {};
-  const totalMilestones = CORE_MILESTONES.length; // 5
-  let completedCount = CORE_MILESTONES.filter(m => state[m.id] === true).length;
-
-  // Migrate legacy 1/5 uncustomized guest state to match the default 60% (3 of 5 milestones) state
-  if (completedCount === 1 && !localStorage.getItem('northstar_progress_customized')) {
-    state.appExplorer = true;
-    state.savedLocation = true;
-    state.jobMatcher = true;
-    completedCount = 3;
-    saveUserData(userData);
-  }
-
-  const percentage = completedCount * 20;
-  const nextPending = CORE_MILESTONES.find(m => !state[m.id]);
+  const { completedCount, percentage, nextPending } = getProgressSummary();
+  const total = CORE_MILESTONES.length;
 
   const tasksTextEl = document.getElementById('dashboard-progress-tasks-text');
   if (tasksTextEl) {
-    tasksTextEl.textContent = `You've completed ${completedCount} of 5 milestones!`;
+    tasksTextEl.textContent = nextPending
+      ? `${completedCount} of ${total} done`
+      : 'All done';
   }
 
   const nextMilestoneEl = document.getElementById('dashboard-next-milestone-label');
   if (nextMilestoneEl) {
-    nextMilestoneEl.textContent = nextPending
-      ? `Next Milestone: ${nextPending.title}`
-      : 'All Milestones Completed! 🎉';
+    nextMilestoneEl.textContent = nextPending ? nextPending.title : 'You’re all set up';
+  }
+
+  const nextLink = document.getElementById('dashboard-next-step-link');
+  if (nextLink) {
+    nextLink.setAttribute('href', nextPending ? nextPending.actionUrl : 'progress.html');
   }
 
   const pctEl = document.getElementById('dashboard-progress-pct');
-  if (pctEl) {
-    pctEl.textContent = `${percentage}%`;
-  }
+  if (pctEl) pctEl.textContent = `${percentage}%`;
 
   const barEl = document.getElementById('dashboard-progress-bar');
-  if (barEl) {
-    barEl.style.width = `${percentage}%`;
-    barEl.style.setProperty('background-color', '#EAB308', 'important');
-  }
-
-  const levelBadgeEl = document.getElementById('dashboard-level-badge');
-  if (levelBadgeEl) {
-    const level = Math.min(5, Math.max(1, completedCount));
-    levelBadgeEl.textContent = `Level ${level}`;
-  }
+  if (barEl) barEl.style.width = `${percentage}%`;
 }
 window.syncDashboardProgressWidget = syncDashboardProgressWidget;
 window.updateProgressUI = function () {
@@ -1455,7 +1167,7 @@ function updateMilestone(milestoneKey, isCompleted) {
 
 window.toggleMilestoneCompletion = function (milestoneKey, event) {
   if (event) event.stopPropagation();
-  // Manual milestone toggling is locked; milestones update exclusively via system completion events (updateMilestone).
+  // Milestones update only from real actions (updateMilestone), never by tapping.
   return false;
 };
 
@@ -1479,109 +1191,74 @@ function saveResumeData(data) {
       visited.push(path);
       localStorage.setItem('northstar_visited_pages', JSON.stringify(visited));
     }
-    if (visited.length >= 2) {
+    const appPages = visited.filter(p => p !== 'index.html' && p !== '');
+    if (appPages.length >= 3) {
       localStorage.setItem('northstar_app_explored', 'true');
     }
-    if (path.includes('jobs')) {
+    if (path.includes('jobs') || path.includes('opportunities')) {
       localStorage.setItem('northstar_jobs_explored', 'true');
     }
   } catch (e) { }
 })();
 
+// Progress list on the Me page (progress.html)
 function renderProgressPage() {
-  const stepperContainer = document.getElementById('stepper-nodes');
   const listContainer = document.getElementById('journey-list-container');
-  if (!stepperContainer || !listContainer) return;
+  if (!listContainer) return;
 
   const session = getSession();
-  const userData = getUserData();
-  const state = userData.progress || {};
-
-  const completedCount = CORE_MILESTONES.filter(m => state[m.id] === true).length;
-  const percentage = completedCount * 20;
+  const { state, completedCount, percentage } = getProgressSummary();
+  const total = CORE_MILESTONES.length;
 
   const accountLabel = document.getElementById('progress-account-label');
   if (accountLabel) {
     accountLabel.textContent = session.isGuest
-      ? 'Browsing as Guest • Milestones unlock automatically as you explore'
+      ? 'Using Northstar without an account'
       : `Signed in as ${session.full_name || session.username}`;
   }
 
-  // Update header text (X of 5 milestones completed) - amber-600 (#D97706) in light mode, #FACC15 in dark mode
   const progressText = document.getElementById('journey-progress-text');
-  if (progressText) {
-    progressText.innerText = `${completedCount} of 5 milestones completed`;
-    progressText.style.removeProperty('color');
-    progressText.className = 'text-xs font-semibold text-[#D97706] dark:text-[#FACC15] milestone-pct-text';
-  }
+  if (progressText) progressText.textContent = `${completedCount} of ${total} done`;
 
-  // Update percentage badge (0% to 100%, 20% per completed task) - amber-600 (#D97706) in light mode, #FACC15 in dark mode
   const pctBadge = document.getElementById('journey-pct-badge');
-  if (pctBadge) {
-    pctBadge.innerText = `${percentage}%`;
-    pctBadge.style.removeProperty('color');
-    pctBadge.className = 'text-xs font-extrabold px-2.5 py-1 rounded-full border border-amber-500/30 text-[#D97706] dark:text-[#FACC15] bg-amber-500/15 milestone-pct-text';
-  }
+  if (pctBadge) pctBadge.textContent = `${percentage}%`;
 
-  // Update progress bar fill in yellow (#EAB308 / #FACC15)
   const progressBar = document.getElementById('journey-progress-bar');
-  if (progressBar) {
-    progressBar.style.width = `${percentage}%`;
-    progressBar.style.setProperty('background-color', '#EAB308', 'important');
+  if (progressBar) progressBar.style.width = `${percentage}%`;
+
+  const stepperContainer = document.getElementById('stepper-nodes');
+  if (stepperContainer) {
+    stepperContainer.innerHTML = CORE_MILESTONES.map(m => {
+      const done = !!state[m.id];
+      return `<span title="${m.title}" class="block h-2 flex-1 rounded-full ${done ? 'bg-amber' : 'bg-sand'}"></span>`;
+    }).join('');
   }
 
-  // Render Stepper Nodes (Read-only indicator nodes - manual click toggling locked)
-  stepperContainer.innerHTML = CORE_MILESTONES.map(m => {
-    const isCompleted = !!state[m.id];
-    return `
-      <div title="${m.title} (${isCompleted ? 'Completed' : 'In Progress'})" class="w-6 h-6 rounded-full flex items-center justify-center pointer-events-none select-none transition-all duration-300 z-10 text-xs ${isCompleted ? 'bg-[#EAB308] text-slate-950 shadow-[0_0_10px_rgba(234,179,8,0.5)] border-2 border-[#EAB308]' : 'bg-slate-200 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400'}">
-          <span class="material-symbols-outlined text-[14px] font-bold">${isCompleted ? 'check' : 'radio_button_unchecked'}</span>
-      </div>
-    `;
-  }).join('');
-
-  // Render 5 Core Action Milestone Cards (Read-only timeline nodes + strictly "+20%" badge without inline checkmarks)
-  listContainer.innerHTML = CORE_MILESTONES.map((m, index) => {
-    const isCompleted = !!state[m.id];
-    const isLast = index === CORE_MILESTONES.length - 1;
-
-    return `
-      <div class="relative flex gap-3.5 ${!isLast ? 'pb-4' : ''}">
-        ${!isLast ? `<div class="timeline-connector-line absolute z-0 ${isCompleted ? 'bg-[#EAB308]' : 'bg-slate-300 dark:bg-slate-700'}" style="left: 17px !important; top: 36px !important; bottom: 0 !important; width: 2px !important;"></div>` : ''}
-        
-        <div title="${m.title}" style="width: 36px !important; height: 36px !important; flex-shrink: 0 !important;" class="timeline-node-circle w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center z-10 pointer-events-none select-none transition-all ${isCompleted ? 'bg-[#EAB308] text-slate-950 shadow-sm border border-[#EAB308]' : 'bg-slate-100 dark:bg-slate-800 text-[#D97706] dark:text-[#FACC15] border border-slate-300 dark:border-white/15'}">
-            <span class="material-symbols-outlined text-[18px] leading-none flex items-center justify-center" style="font-variation-settings: 'FILL' ${isCompleted ? '1' : '0'};">${m.icon}</span>
-        </div>
-        
-        <div class="milestone-card dashboard-card-border bg-white dark:bg-[#1E293B] p-4 rounded-[18px] shadow-sm flex-1 transition-all">
-            <div class="flex justify-between items-start gap-2">
-                <div>
-                    <h4 class="font-extrabold text-sm text-slate-900 dark:text-white font-heading">${m.title}</h4>
-                    <p class="dashboard-subtext text-xs text-[#4A5568] dark:text-[#94A3B8] mt-1 leading-snug font-medium">${m.desc}</p>
-                </div>
-                <div class="flex flex-col items-end flex-shrink-0 gap-1">
-                    <span class="milestone-status-badge milestone-pct-text inline-flex items-center justify-center rounded-full text-[11px] font-semibold px-2 py-0.5 bg-amber-500/15 text-[#D97706] dark:text-[#FACC15]">
-                        +20%
-                    </span>
-                </div>
-            </div>
-            <div class="mt-3 pt-2.5 border-t border-slate-200/80 dark:border-white/10 flex items-center justify-between gap-2">
-                <span class="pending-status-text text-[11px] font-bold ${isCompleted ? 'completed-status-pill' : 'text-[#4A5568] dark:text-[#94A3B8]'}" style="${isCompleted ? 'background: #EDF2F7; border: 1px solid #CBD5E1; color: #4A5568; padding: 2px 8px; border-radius: 6px; font-weight: 600;' : 'color: #4A5568;'}">
-                    ${isCompleted ? 'Completed ✓' : 'Pending action'}
-                </span>
-                <a href="${m.actionUrl}" class="action-btn milestone-cta-btn inline-flex items-center gap-1 text-xs font-medium px-3.5 py-1.5 rounded-full transition-all active:scale-95" style="background: #1A202C !important; color: #FFFFFF !important; border-radius: 9999px !important; font-weight: 500 !important; border: 1px solid #1A202C !important;">
-                    ${m.actionLabel} <span class="material-symbols-outlined text-xs">arrow_forward</span>
-                </a>
-            </div>
-        </div>
-      </div>
-    `;
+  listContainer.innerHTML = CORE_MILESTONES.map(m => {
+    const done = !!state[m.id];
+    const tile = done
+      ? `<span class="ns-tile ns-tile--leaf"><span class="material-symbols-outlined">check</span></span>`
+      : `<span class="ns-tile ns-tile--plain"><span class="material-symbols-outlined">${m.icon}</span></span>`;
+    const end = done
+      ? `<span class="ns-badge ns-badge--leaf">Done</span>`
+      : `<span class="material-symbols-outlined ns-chevron" aria-label="${m.actionLabel}">chevron_right</span>`;
+    const inner = `
+      ${tile}
+      <span class="ns-row__body">
+        <span class="ns-row__title block ${done ? 'text-ink-2' : ''}">${m.title}</span>
+        <span class="ns-row__sub block">${m.desc}</span>
+      </span>
+      <span class="ns-row__end">${end}</span>`;
+    return done
+      ? `<div class="ns-row" data-milestone-id="${m.id}">${inner}</div>`
+      : `<a class="ns-row" href="${m.actionUrl}" data-milestone-id="${m.id}">${inner}</a>`;
   }).join('');
 }
 window.renderProgress = renderProgressPage;
 window.renderProgressPage = renderProgressPage;
 
-// Dynamic Bottom Navigation Bar Renderer (Seeker 6-Grid vs Volunteer 4-Grid)
+// Bottom navigation. Seekers: Home, Map, Jobs, Resume, Me. Volunteers: Home, Jobs, Donate, Me.
+// Settings stay one tap away from the round account button in each header.
 function renderBottomNav() {
   const path = (window.location.pathname || '').toLowerCase();
   const isLanding = (path.endsWith('/index.html') || path.endsWith('/login.html') || path.endsWith('/signup.html') || path === '/');
@@ -1598,111 +1275,76 @@ function renderBottomNav() {
     appFrame.appendChild(nav);
   }
 
-  const userRole = (typeof getRole === 'function' ? getRole() : (localStorage.getItem('northstar_user_role') || 'seeker'));
+  const userRole = getRole();
   const isVolunteer = userRole === 'volunteer';
 
-  // Responsive 4-Grid (Volunteer) / 6-Grid (Seeker)
-  nav.className = `bottom-nav nav-bar-wrapper nav-container nav-bar-container flex-shrink-0 relative w-full max-w-full box-border z-40 grid ${isVolunteer ? 'grid-cols-4 volunteer-bottom-nav' : 'grid-cols-6'} items-center justify-items-center px-2 py-1.5 bg-white dark:bg-[#12141C] shadow-[0px_-4px_25px_rgba(0,0,0,0.2)] border-t border-slate-200 dark:border-white/10`;
-  if (isVolunteer) {
-    nav.style.setProperty('grid-template-columns', 'repeat(4, minmax(0, 1fr))', 'important');
-  } else {
-    nav.style.removeProperty('grid-template-columns');
-  }
-
-  const isDashboard = path.includes('dashboard');
-  const isProgress = path.includes('progress') || path.includes('profile');
+  const isDashboard = path.includes('dashboard') || path.includes('call-shelter');
+  // The resume builder is opened from Me, so Me stays highlighted there
+  const isMe = path.includes('progress') || path.includes('profile') || path.includes('resume');
   const isJobs = path.includes('opportunities') || path.includes('jobs');
   const isMap = path.includes('map');
-  const isResume = path.includes('resume');
+  const isCompanion = path.includes('companion');
   const isDonate = path.includes('donate');
 
   const currentActiveTab = isVolunteer
-    ? (isDonate ? 'v_donate' : isJobs ? 'v_jobs' : 'v_dashboard')
-    : (isMap ? 'map' : isProgress ? 'progress' : isJobs ? 'jobs' : isResume ? 'resume' : 'dashboard');
+    ? (isDonate ? 'v_donate' : isJobs ? 'v_jobs' : isCompanion ? 'companion' : isMe ? 'me' : 'v_dashboard')
+    : (isMap ? 'map' : isMe ? 'me' : isJobs ? 'jobs' : isCompanion ? 'companion' : 'dashboard');
 
   window.activeTab = currentActiveTab;
   syncChatbotFABVisibility(currentActiveTab);
 
   const NAV_CONFIG = {
     seeker: [
-      { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', href: 'seeker-dashboard.html', active: isDashboard },
-      { id: 'progress', label: 'Progress', icon: 'trending_up', href: 'progress.html', active: isProgress },
-      { id: 'jobs', label: 'Jobs', icon: 'work', href: 'opportunities.html', active: isJobs },
+      { id: 'dashboard', label: 'Home', icon: 'home', href: 'seeker-dashboard.html', active: isDashboard },
       { id: 'map', label: 'Map', icon: 'map', href: 'resource-map.html', active: isMap },
-      { id: 'resume', label: 'Resume', icon: 'description', href: 'resume-builder.html', active: isResume },
-      { id: 'settings', label: 'Settings', icon: 'settings', action: 'openSettingsModal()', active: false }
+      { id: 'jobs', label: 'Gigs', icon: 'work', href: 'opportunities.html', active: isJobs },
+      { id: 'companion', label: 'Companion', icon: 'chat_bubble', href: 'companion.html', active: isCompanion },
+      { id: 'me', label: 'Me', icon: 'person', href: 'progress.html', active: isMe }
     ],
-    // Exact 4-tab Volunteer Navigation Bar matching Image 1
     volunteer: [
-      { id: 'v_dashboard', label: 'Dashboard', icon: 'dashboard', href: 'helper-dashboard.html', active: isDashboard },
-      { id: 'v_jobs', label: 'Jobs', icon: 'work', href: 'opportunities.html', active: isJobs },
-      { id: 'v_donate', label: 'Donate Food', icon: 'restaurant', href: 'donate.html', active: isDonate },
-      { id: 'v_settings', label: 'Settings', icon: 'settings', action: 'openSettingsModal()', active: false }
+      { id: 'v_dashboard', label: 'Home', icon: 'home', href: 'helper-dashboard.html', active: isDashboard },
+      { id: 'v_jobs', label: 'Gigs', icon: 'work', href: 'opportunities.html', active: isJobs },
+      { id: 'v_donate', label: 'Donate', icon: 'volunteer_activism', href: 'donate.html', active: isDonate },
+      { id: 'companion', label: 'Companion', icon: 'chat_bubble', href: 'companion.html', active: isCompanion },
+      { id: 'me', label: 'Me', icon: 'person', href: 'progress.html', active: isMe }
     ]
   };
 
-  const tabs = NAV_CONFIG[userRole] || NAV_CONFIG.seeker;
+  const tabs = NAV_CONFIG[isVolunteer ? 'volunteer' : 'seeker'];
 
+  nav.className = 'bottom-nav ns-nav';
+  nav.removeAttribute('style');
+  nav.setAttribute('aria-label', 'Main');
   nav.innerHTML = tabs.map(tab => {
-    const activeClasses = isVolunteer
-      ? 'nav-tab active active-tab w-full flex flex-col items-center justify-center py-1 px-0.5 text-amber-500 dark:text-[#FFB800] font-bold transition-all box-border'
-      : 'nav-tab active active-tab mx-auto w-auto min-w-[48px] max-w-[58px] px-2.5 py-1 rounded-xl bg-[#FFB800] text-slate-950 font-extrabold shadow-sm flex flex-col items-center justify-center transition-all box-border';
-    const inactiveClasses = 'nav-tab nav-item-inactive w-full flex flex-col items-center justify-center py-1 px-0.5 text-slate-400 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium transition-all box-border';
-    const iconFill = tab.active ? "font-variation-settings: 'FILL' 1;" : '';
-    const labelClass = isVolunteer
-      ? 'text-[10px] leading-none mt-0.5 tracking-tight whitespace-nowrap text-center'
-      : 'text-[9px] leading-none mt-1 tracking-tighter whitespace-nowrap text-center';
-
+    const cls = `ns-nav__item${tab.active ? ' is-active' : ''}`;
+    const inner = `<span class="material-symbols-outlined" aria-hidden="true">${tab.icon}</span><span>${tab.label}</span>`;
     if (tab.action) {
-      return `
-        <button type="button" onclick="${tab.action}" data-nav-tab="${tab.id}" class="${inactiveClasses}">
-          <span class="material-symbols-outlined text-[20px] leading-none">${tab.icon}</span>
-          <span class="${labelClass}">${tab.label}</span>
-        </button>
-      `;
+      return `<button type="button" onclick="${tab.action}" data-nav-tab="${tab.id}" class="${cls}">${inner}</button>`;
     }
-
-    return `
-      <a href="${tab.href}" onclick="event.preventDefault(); navigateTo('${tab.id}');" data-nav-tab="${tab.id}" class="${tab.active ? activeClasses : inactiveClasses}">
-        <span class="material-symbols-outlined text-[20px] leading-none" style="${iconFill}">${tab.icon}</span>
-        <span class="${labelClass}">${tab.label}</span>
-      </a>
-    `;
+    return `<a href="${tab.href}" data-nav-tab="${tab.id}" class="${cls}"${tab.active ? ' aria-current="page"' : ''}>${inner}</a>`;
   }).join('');
 }
 window.renderBottomNav = renderBottomNav;
 
 window.fetchUnifiedDeliveries = async function() {
-  let deliveries = [];
   try {
     const res = await fetch('/api/deliveries');
     if (res.ok) {
       const data = await res.json();
-      if (Array.isArray(data.deliveries) && data.deliveries.length > 0) {
-        deliveries = data.deliveries;
-        try { localStorage.setItem('northstar_cached_deliveries', JSON.stringify(deliveries)); } catch(_) {}
-      }
+      const deliveries = Array.isArray(data.deliveries) ? data.deliveries : [];
+      try { localStorage.setItem('northstar_cached_deliveries', JSON.stringify(deliveries)); } catch(_) {}
+      return deliveries;
     }
   } catch (err) {
-    console.warn('API fetch error, using cached fallback:', err);
+    console.warn('Deliveries API unavailable, using the last saved list:', err);
   }
-
-  if (!deliveries || deliveries.length === 0) {
-    try {
-      const local = localStorage.getItem('northstar_cached_deliveries');
-      if (local) deliveries = JSON.parse(local);
-    } catch (_) {}
+  // Offline or server error: show the last list we saw
+  try {
+    const local = JSON.parse(localStorage.getItem('northstar_cached_deliveries') || '[]');
+    return Array.isArray(local) ? local : [];
+  } catch (_) {
+    return [];
   }
-
-  if (!deliveries || deliveries.length === 0) {
-    deliveries = [
-      { id: 'del_101', items: ['4x Care Packages'], bags: 4, donorArea: 'Capitol Hill, Seattle', destination: 'St. Jude Community Refuge', status: 'pending_driver', timeWindow: 'Today 2:00 PM - 5:00 PM' },
-      { id: 'del_102', items: ['1x Warm Blanket & Jacket'], bags: 1, donorArea: 'Ballard, Seattle', destination: 'St. Jude Community Refuge', status: 'pending_driver', timeWindow: 'ASAP' },
-      { id: 'del_103', items: ['1x Sleeping Bag & Hygiene Kit'], bags: 1, donorArea: 'University District, Seattle', destination: 'St. Jude Community Refuge', status: 'pending_driver', timeWindow: 'Today 4:00 PM - 7:00 PM' }
-    ];
-  }
-
-  return deliveries;
 };
 
 window.notifyDeliveriesChanged = function() {
@@ -1734,14 +1376,14 @@ async function renderVolunteerFoodDonationsQueue() {
   const viewAllLink = document.getElementById('volunteer-view-all-pickups');
   const totalDonationsEl = document.getElementById('volunteer-total-donations');
 
-  // Dynamically calculate monetary donations total (defaults to $0 when no donations exist)
+  // Money donated from this device (stored locally by the donate flow)
   if (totalDonationsEl) {
     try {
       const storedDonations = JSON.parse(localStorage.getItem('northstar_donations') || '[]');
       const sum = Array.isArray(storedDonations)
         ? storedDonations.reduce((acc, item) => acc + (Number(item?.amount) || 0), 0)
         : 0;
-      totalDonationsEl.textContent = sum > 0 ? `$${sum.toLocaleString()}` : '$0';
+      totalDonationsEl.textContent = `$${sum.toLocaleString()}`;
     } catch (_) {
       totalDonationsEl.textContent = '$0';
     }
@@ -1750,18 +1392,15 @@ async function renderVolunteerFoodDonationsQueue() {
   if (!container) return;
 
   const emptyStateHTML = `
-    <div class="py-5 px-4 rounded-2xl bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-800 text-center space-y-1.5">
-      <div class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto text-sm">
-        📦
-      </div>
-      <p class="text-xs font-bold text-slate-700 dark:text-slate-300">No active pickup requests</p>
-      <p class="text-[11px] text-slate-400">New food donation requests will appear here when posted.</p>
+    <div class="ns-empty">
+      <p class="ns-empty__title">No pickups waiting</p>
+      <p class="ns-empty__sub">When someone posts a food donation, it shows up here for you to claim.</p>
     </div>
   `;
 
   try {
     const allDeliveries = await window.fetchUnifiedDeliveries();
-    const deliveries = (allDeliveries || []).filter(d => d.status !== 'claimed' && d.status !== 'driver_assigned' && d.status !== 'in_transit' && d.status !== 'delivered');
+    const deliveries = (allDeliveries || []).filter(d => !['claimed', 'driver_assigned', 'in_transit', 'delivered'].includes(d.status));
 
     if (deliveries.length === 0) {
       if (viewAllLink) viewAllLink.classList.add('hidden');
@@ -1771,27 +1410,23 @@ async function renderVolunteerFoodDonationsQueue() {
 
     if (viewAllLink) viewAllLink.classList.remove('hidden');
 
-    container.innerHTML = deliveries.slice(0, 5).map(d => {
-      const itemLabel = Array.isArray(d.items) ? d.items.join(', ') : (d.items || 'Care Package');
-      const bagLabel = d.bags ? `${d.bags} ${Number(d.bags) === 1 ? 'Crate/Bag' : 'Crates/Bags'} of ${itemLabel}` : itemLabel;
+    container.innerHTML = `<div class="ns-card px-4">${deliveries.slice(0, 5).map(d => {
+      const id = nsEscape(d.id);
+      const itemLabel = nsEscape(Array.isArray(d.items) ? d.items.join(', ') : (d.items || 'Food donation'));
+      const bags = Number(d.bags) || 0;
+      const route = [d.donorArea, d.destination].filter(Boolean).map(nsEscape).join(' → ');
+      const meta = [bags ? `${bags} ${bags === 1 ? 'bag' : 'bags'}` : '', nsEscape(d.timeWindow || '')].filter(Boolean).join(' · ');
       return `
-        <div class="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between gap-3 cursor-pointer hover:border-slate-300 dark:hover:border-slate-700 transition-all card-spring-click" onclick="window.claimAndTrackDelivery('${d.id}')">
-          <div class="flex items-center gap-3 min-w-0 flex-1 pr-1 pointer-events-none">
-            <div class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-[#FFB800] shrink-0">
-              <span class="material-symbols-outlined text-xl">local_shipping</span>
-            </div>
-            <div class="min-w-0 flex-1">
-              <h4 class="text-xs font-extrabold text-slate-900 dark:text-white font-heading truncate">${itemLabel}</h4>
-              <p class="text-[11px] text-slate-600 dark:text-slate-300 font-medium truncate mt-0.5">${d.donorArea || 'Capitol Hill, Seattle'} → ${d.destination || 'St. Jude Refuge'}</p>
-              <p class="text-[10px] text-slate-400 truncate mt-0.5">${bagLabel} • Ready for Pickup</p>
-            </div>
+        <div class="ns-row">
+          <span class="ns-tile"><span class="material-symbols-outlined">local_shipping</span></span>
+          <div class="ns-row__body">
+            <p class="ns-row__title truncate">${itemLabel}</p>
+            ${route ? `<p class="ns-row__sub truncate">${route}</p>` : ''}
+            ${meta ? `<p class="ns-row__sub truncate">${meta}</p>` : ''}
           </div>
-          <button onclick="event.stopPropagation(); window.claimAndTrackDelivery('${d.id}')" class="shrink-0 px-3.5 py-1.5 rounded-xl bg-[#FFB800] hover:bg-amber-400 text-slate-950 text-xs font-bold shadow-sm active:scale-95 transition-all cursor-pointer" style="background-color: #FFB800 !important; color: #020617 !important;">
-            Claim
-          </button>
-        </div>
-      `;
-    }).join('');
+          <button type="button" onclick="window.claimAndTrackDelivery('${id}')" class="ns-btn ns-btn--primary ns-btn--sm">Claim</button>
+        </div>`;
+    }).join('')}</div>`;
   } catch (err) {
     console.error('Error fetching dashboard deliveries:', err);
     if (viewAllLink) viewAllLink.classList.add('hidden');
@@ -1800,20 +1435,25 @@ async function renderVolunteerFoodDonationsQueue() {
 }
 window.renderVolunteerFoodDonationsQueue = renderVolunteerFoodDonationsQueue;
 
-// ── Global Interactive Delivery Tracking & Claiming Modal ─────────────────────
+// ── Delivery claiming & tracking ─────────────────────────────────────────────
 window.claimAndTrackDelivery = async function(id) {
   try {
     const sessionRaw = localStorage.getItem('northstar_session');
     const sessionObj = sessionRaw ? JSON.parse(sessionRaw) : {};
     const driverId = sessionObj.id || null;
-    const driverName = sessionObj.username || sessionObj.name || 'Volunteer (You)';
-    
-    await fetch(`/api/deliveries/${id}/claim`, {
+    const driverName = sessionObj.full_name || sessionObj.username || sessionObj.name || 'Volunteer';
+
+    const claimRes = await fetch(`/api/deliveries/${encodeURIComponent(id)}/claim`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ driverName: driverName, driver_id: driverId })
     });
-    
+    if (claimRes.status === 409) {
+      showNotification('Another volunteer already claimed this pickup.', 'error');
+      window.notifyDeliveriesChanged();
+      return;
+    }
+
     try { localStorage.setItem('northstar_last_delivery_id', id); } catch(_) {}
 
     // Update local cache status
@@ -1826,11 +1466,8 @@ window.claimAndTrackDelivery = async function(id) {
         localStorage.setItem('northstar_cached_deliveries', JSON.stringify(cached));
       }
     } catch(_) {}
-    
-    if (typeof showNotification === 'function') {
-      showNotification('🚚 Pickup claimed! Opening interactive delivery tracker...', 'success');
-    }
-    
+
+    showNotification('Pickup claimed.', 'success');
     window.openUberTrackingModal(id);
     window.notifyDeliveriesChanged();
   } catch (err) {
@@ -1842,17 +1479,16 @@ window.claimAndTrackDelivery = async function(id) {
 
 window.updateDeliveryStatusDirect = async function(id, status) {
   try {
-    await fetch(`/api/deliveries/${id}/status`, {
+    await fetch(`/api/deliveries/${encodeURIComponent(id)}/status`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: status })
     });
-    const res = await fetch(`/api/deliveries/${id}`);
+    const res = await fetch(`/api/deliveries/${encodeURIComponent(id)}`);
     const data = await res.json();
     if (data.delivery) {
       window.updateUberTrackingUI(data.delivery);
     }
-    // Update local cache
     try {
       const cached = JSON.parse(localStorage.getItem('northstar_cached_deliveries') || '[]');
       const target = cached.find(d => d.id === id);
@@ -1862,236 +1498,141 @@ window.updateDeliveryStatusDirect = async function(id, status) {
       }
     } catch(_) {}
 
-    if (typeof showNotification === 'function') {
-      const msg = status === 'delivered' ? '🎉 Delivery marked as completed!' : '🚚 Status updated: Food on the way!';
-      showNotification(msg, 'success');
-    }
+    showNotification(status === 'delivered' ? 'Marked as delivered.' : 'Marked as on the way.', 'success');
     window.notifyDeliveriesChanged();
   } catch (err) {
     console.warn('Status update notice:', err);
   }
 };
 
+function closeDeliveryTracker() {
+  clearInterval(window._uberTrackingInterval);
+  const modal = document.getElementById('uber-tracking-modal');
+  if (!modal) return;
+  const sheet = modal.querySelector('.modal-drawer');
+  if (sheet) sheet.classList.add('translate-y-full');
+  const backdrop = modal.querySelector('.ns-sheet-backdrop');
+  if (backdrop) { backdrop.style.transition = 'opacity 0.25s ease'; backdrop.style.opacity = '0'; }
+  setTimeout(() => modal.remove(), 300);
+}
+window.closeDeliveryTracker = closeDeliveryTracker;
+
+const DELIVERY_STEPS = [
+  { key: 'posted', label: 'Posted' },
+  { key: 'claimed', label: 'Claimed' },
+  { key: 'on_the_way', label: 'On the way' },
+  { key: 'delivered', label: 'Delivered' }
+];
+
 window.openUberTrackingModal = function(deliveryId) {
   const existing = document.getElementById('uber-tracking-modal');
   if (existing) existing.remove();
 
+  const safeId = nsEscape(deliveryId);
+  const isVolunteer = getRole() === 'volunteer';
   const modal = document.createElement('div');
   modal.id = 'uber-tracking-modal';
-  modal.className = 'fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm p-0 sm:p-4 animate-fade-in';
+  modal.className = 'ns-sheet-wrap flex';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'uber-status-title');
   modal.innerHTML = `
-    <div class="w-full sm:max-w-md bg-white border border-slate-200 rounded-t-2xl sm:rounded-2xl p-6 text-slate-900 space-y-4 shadow-xl relative overflow-hidden animate-slide-up">
-      <!-- Top Bar -->
-      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-        <div class="flex items-center gap-2">
-          <span class="relative flex h-2.5 w-2.5">
-            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-          </span>
-          <span class="text-xs font-bold uppercase tracking-wider text-slate-700 font-heading">LIVE DELIVERY TRACKER</span>
-        </div>
-        <button onclick="clearInterval(window._uberTrackingInterval); document.getElementById('uber-tracking-modal').remove()" class="text-slate-400 hover:text-slate-700 hover:bg-slate-100 active:scale-[0.98] p-1.5 rounded-lg transition-all duration-150 ease-in-out cursor-pointer flex items-center justify-center">
-          <span class="material-symbols-outlined text-xl">close</span>
-        </button>
-      </div>
-
-      <!-- ETA Banner -->
-      <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center justify-between">
+    <div class="ns-sheet-backdrop" onclick="closeDeliveryTracker()"></div>
+    <div class="modal-drawer ns-sheet translate-y-full">
+      <div class="ns-sheet__handle"></div>
+      <div class="flex items-start justify-between gap-3">
         <div>
-          <p class="text-[11px] text-slate-500 font-semibold uppercase tracking-wider">Estimated Drop-off</p>
-          <h3 id="uber-eta-text" class="text-xl font-bold text-slate-900 font-heading">~15-20 Mins</h3>
+          <p class="ns-card-sub">Food delivery</p>
+          <h2 id="uber-status-title" class="ns-sheet__title mt-1"><span id="uber-status-badge">Loading…</span></h2>
         </div>
-        <div class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 font-bold transition-all">
-          <span class="material-symbols-outlined text-xl animate-pulse text-slate-700">local_shipping</span>
-        </div>
-      </div>
-
-      <!-- 4-Step Visual Progress Bar -->
-      <div class="space-y-3 py-1">
-        <div class="flex justify-between items-center text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-          <span>PROGRESS TIMELINE</span>
-          <span id="uber-status-badge" class="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full uppercase tracking-wide">Request Received</span>
-        </div>
-
-        <div class="relative flex items-center justify-between px-2">
-          <div class="absolute left-4 right-4 top-1/2 -translate-y-1/2 h-1 bg-slate-200 rounded-full z-0"></div>
-          <div id="uber-progress-bar-fill" class="absolute left-4 top-1/2 -translate-y-1/2 h-1 bg-emerald-500 rounded-full z-0 transition-all duration-500" style="width: 25%;"></div>
-
-          <!-- Step 1 -->
-          <div id="step-node-1" class="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs z-10 border-2 border-white ring-4 ring-slate-900/20 animate-pulse shadow-none">
-            1
-          </div>
-          <!-- Step 2 -->
-          <div id="step-node-2" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-xs z-10 border-2 border-slate-200 shadow-none">
-            2
-          </div>
-          <!-- Step 3 -->
-          <div id="step-node-3" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-xs z-10 border-2 border-slate-200 shadow-none">
-            3
-          </div>
-          <!-- Step 4 -->
-          <div id="step-node-4" class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-xs z-10 border-2 border-slate-200 shadow-none">
-            4
-          </div>
-        </div>
-
-        <div class="grid grid-cols-4 text-center text-[10px] font-bold text-slate-500 pt-1">
-          <span id="step-label-1" class="text-slate-900 font-bold">Request</span>
-          <span id="step-label-2" class="text-slate-400 font-normal">Assigned</span>
-          <span id="step-label-3" class="text-slate-400 font-normal">On the Way</span>
-          <span id="step-label-4" class="text-slate-400 font-normal">Delivered</span>
-        </div>
-      </div>
-
-      <!-- Live Details Card -->
-      <div id="uber-details-card" class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2 text-xs">
-        <div class="flex justify-between text-slate-600">
-          <span class="font-medium">Package:</span>
-          <strong id="uber-items-text" class="text-slate-900 font-semibold">1x Care Package</strong>
-        </div>
-        <div class="flex justify-between text-slate-600">
-          <span class="font-medium">Pickup Neighborhood:</span>
-          <strong id="uber-area-text" class="text-slate-900 font-semibold">Seattle Area</strong>
-        </div>
-        <div class="flex justify-between text-slate-600">
-          <span class="font-medium">Target Shelter:</span>
-          <strong id="uber-dest-text" class="text-slate-900 font-semibold">St. Jude Refuge</strong>
-        </div>
-      </div>
-
-      <!-- Driver Card -->
-      <div id="uber-driver-card" class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700">
-            <span class="material-symbols-outlined text-xl text-slate-700 animate-pulse">directions_car</span>
-          </div>
-          <div>
-            <h4 id="uber-driver-name" class="text-xs font-bold text-slate-900">Searching for Driver...</h4>
-            <p class="text-[10px] text-slate-500 font-medium">Volunteer Community Logistics</p>
-          </div>
-        </div>
-        <button onclick="if(typeof showNotification==='function') showNotification('Calling Volunteer Driver...', 'info')" class="px-3 py-1.5 bg-white hover:bg-slate-100 hover:text-slate-900 text-slate-700 rounded-lg text-xs font-semibold border border-slate-300 active:scale-[0.98] transition-all duration-150 ease-in-out flex items-center gap-1 shadow-sm cursor-pointer">
-          <span class="material-symbols-outlined text-sm text-slate-500">call</span> Contact
+        <button type="button" class="ns-icon-btn ns-icon-btn--sm" onclick="closeDeliveryTracker()" aria-label="Close">
+          <span class="material-symbols-outlined">close</span>
         </button>
       </div>
 
-      <!-- Interactive Volunteer Action Controls -->
-      <div id="uber-volunteer-controls" class="pt-1 flex gap-2">
-        <button onclick="window.updateDeliveryStatusDirect('${deliveryId}', 'in_transit')" class="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold active:scale-[0.98] transition-all flex items-center justify-center gap-1 shadow-sm cursor-pointer">
-          <span class="material-symbols-outlined text-sm">local_shipping</span> On My Way
-        </button>
-        <button onclick="window.updateDeliveryStatusDirect('${deliveryId}', 'delivered')" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold active:scale-[0.98] transition-all flex items-center justify-center gap-1 shadow-sm cursor-pointer">
-          <span class="material-symbols-outlined text-sm">check_circle</span> Mark Delivered
-        </button>
+      <div class="mt-6 grid grid-cols-4 gap-2" aria-label="Delivery progress">
+        ${DELIVERY_STEPS.map((s, i) => `
+          <div class="flex flex-col items-center gap-2 text-center">
+            <span id="step-node-${i + 1}" class="w-9 h-9 rounded-full grid place-items-center bg-paper border-2 border-line text-muted text-[13px] font-bold">${i + 1}</span>
+            <span id="step-label-${i + 1}" class="text-[12px] font-semibold text-muted leading-tight">${s.label}</span>
+          </div>`).join('')}
       </div>
+      <div class="ns-progress mt-4"><span id="uber-progress-bar-fill" style="width: 0%"></span></div>
+
+      <div class="mt-6 ns-card px-4">
+        <div class="ns-row"><span class="ns-row__body ns-row__sub !mt-0">Items</span><span id="uber-items-text" class="ns-row__end">–</span></div>
+        <div class="ns-row"><span class="ns-row__body ns-row__sub !mt-0">Pickup area</span><span id="uber-area-text" class="ns-row__end">–</span></div>
+        <div class="ns-row"><span class="ns-row__body ns-row__sub !mt-0">Going to</span><span id="uber-dest-text" class="ns-row__end">–</span></div>
+        <div class="ns-row"><span class="ns-row__body ns-row__sub !mt-0">Volunteer</span><span id="uber-driver-name" class="ns-row__end">–</span></div>
+      </div>
+
+      ${isVolunteer ? `
+      <div id="uber-volunteer-controls" class="mt-6 grid grid-cols-2 gap-3 hidden">
+        <button type="button" onclick="window.updateDeliveryStatusDirect('${safeId}', 'in_transit')" class="ns-btn ns-btn--secondary">On my way</button>
+        <button type="button" onclick="window.updateDeliveryStatusDirect('${safeId}', 'delivered')" class="ns-btn ns-btn--primary">Delivered</button>
+      </div>` : ''}
     </div>
   `;
-  modal.addEventListener('click', (e) => { if (e.target === modal) { clearInterval(window._uberTrackingInterval); modal.remove(); } });
   const appFrame = document.querySelector('.app-frame') || document.body;
   appFrame.appendChild(modal);
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const sheet = modal.querySelector('.modal-drawer');
+    if (sheet) sheet.classList.remove('translate-y-full');
+  }));
 
-  // Auto Polling Status Update
   if (window._uberTrackingInterval) clearInterval(window._uberTrackingInterval);
-  
+
   const fetchAndUpdate = async () => {
     try {
-      const res = await fetch(`/api/deliveries/${deliveryId}`);
+      const res = await fetch(`/api/deliveries/${encodeURIComponent(deliveryId)}`);
       const data = await res.json();
-      if (data.delivery) {
-        window.updateUberTrackingUI(data.delivery);
-      }
+      if (data.delivery) window.updateUberTrackingUI(data.delivery);
     } catch (e) {
       console.warn('Tracking poll notice:', e);
     }
   };
 
   fetchAndUpdate();
-  window._uberTrackingInterval = setInterval(fetchAndUpdate, 2500);
+  window._uberTrackingInterval = setInterval(fetchAndUpdate, 4000);
 };
 
 window.updateUberTrackingUI = function(d) {
-  const statusBadge = document.getElementById('uber-status-badge');
-  const barFill = document.getElementById('uber-progress-bar-fill');
-  const driverName = document.getElementById('uber-driver-name');
-  const etaText = document.getElementById('uber-eta-text');
-  const itemsText = document.getElementById('uber-items-text');
-  const areaText = document.getElementById('uber-area-text');
-  const destText = document.getElementById('uber-dest-text');
+  const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
 
-  if (itemsText) {
-    if (Array.isArray(d.items) && d.items.length > 0) {
-      itemsText.innerText = d.items.join(', ');
-    } else if (typeof d.items === 'string' && d.items.trim()) {
-      itemsText.innerText = d.items;
-    } else {
-      itemsText.innerText = '1x Care Package';
-    }
-  }
-  if (areaText) areaText.innerText = d.donorArea || 'Seattle Area';
-  if (destText) destText.innerText = d.destination || 'St. Jude Refuge';
+  const items = Array.isArray(d.items) && d.items.length ? d.items.join(', ') : (typeof d.items === 'string' && d.items.trim() ? d.items : 'Food donation');
+  set('uber-items-text', items);
+  set('uber-area-text', d.donorArea || 'Not given');
+  set('uber-dest-text', d.destination || 'Not given');
+  set('uber-driver-name', d.driverName || 'Not claimed yet');
 
-  const node1 = document.getElementById('step-node-1');
-  const node2 = document.getElementById('step-node-2');
-  const node3 = document.getElementById('step-node-3');
-  const node4 = document.getElementById('step-node-4');
+  let stepIndex = 0;
+  let title = 'Waiting for a volunteer';
+  if (d.status === 'driver_assigned' || d.status === 'claimed') { stepIndex = 1; title = 'A volunteer claimed it'; }
+  else if (d.status === 'in_transit') { stepIndex = 2; title = 'On the way'; }
+  else if (d.status === 'delivered') { stepIndex = 3; title = 'Delivered'; }
+  set('uber-status-badge', title);
 
-  const label1 = document.getElementById('step-label-1');
-  const label2 = document.getElementById('step-label-2');
-  const label3 = document.getElementById('step-label-3');
-  const label4 = document.getElementById('step-label-4');
+  const fill = document.getElementById('uber-progress-bar-fill');
+  if (fill) fill.style.width = `${Math.round((stepIndex / 3) * 100)}%`;
 
-  const setNodeState = (node, label, state) => {
+  DELIVERY_STEPS.forEach((s, i) => {
+    const node = document.getElementById(`step-node-${i + 1}`);
+    const label = document.getElementById(`step-label-${i + 1}`);
     if (!node) return;
-    if (state === 'done') {
-      node.className = 'w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs z-10 border-2 border-white shadow-none';
-      node.innerText = '✓';
-      if (label) label.className = 'text-slate-700 font-semibold';
-    } else if (state === 'active') {
-      node.className = 'w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-xs z-10 border-2 border-white ring-4 ring-slate-900/20 animate-pulse shadow-none';
-      if (label) label.className = 'text-slate-900 font-bold';
-    } else {
-      node.className = 'w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-xs z-10 border-2 border-slate-200 shadow-none';
-      if (label) label.className = 'text-slate-400 font-normal';
-    }
-  };
+    const done = i < stepIndex || (i === stepIndex && d.status === 'delivered');
+    const current = i === stepIndex && !done;
+    node.className = 'w-9 h-9 rounded-full grid place-items-center text-[13px] font-bold border-2 transition-colors '
+      + (done ? 'bg-amber border-amber text-ink' : current ? 'bg-ink border-ink text-cream' : 'bg-paper border-line text-muted');
+    node.innerHTML = done ? '<span class="material-symbols-outlined text-[18px]">check</span>' : String(i + 1);
+    if (label) label.className = 'text-[12px] leading-tight ' + (done || current ? 'font-bold text-ink' : 'font-semibold text-muted');
+  });
 
-  if (d.status === 'pending_driver' || d.status === 'pending_volunteer') {
-    if (statusBadge) statusBadge.innerText = 'Request Posted';
-    if (barFill) barFill.style.width = '10%';
-    if (driverName) driverName.innerText = 'Searching for Driver...';
-    if (etaText) etaText.innerText = '~15-20 Mins';
-    setNodeState(node1, label1, 'active');
-    setNodeState(node2, label2, 'inactive');
-    setNodeState(node3, label3, 'inactive');
-    setNodeState(node4, label4, 'inactive');
-  } else if (d.status === 'driver_assigned' || d.status === 'claimed') {
-    if (statusBadge) statusBadge.innerText = 'Driver Assigned';
-    if (barFill) barFill.style.width = '40%';
-    if (driverName) driverName.innerText = d.driverName || 'Volunteer Sarah M.';
-    if (etaText) etaText.innerText = '~10-15 Mins';
-    setNodeState(node1, label1, 'done');
-    setNodeState(node2, label2, 'active');
-    setNodeState(node3, label3, 'inactive');
-    setNodeState(node4, label4, 'inactive');
-  } else if (d.status === 'in_transit') {
-    if (statusBadge) statusBadge.innerText = 'Food On the Way';
-    if (barFill) barFill.style.width = '70%';
-    if (driverName) driverName.innerText = d.driverName || 'Volunteer Sarah M.';
-    if (etaText) etaText.innerText = '~5 Mins';
-    setNodeState(node1, label1, 'done');
-    setNodeState(node2, label2, 'done');
-    setNodeState(node3, label3, 'active');
-    setNodeState(node4, label4, 'inactive');
-    setNodeState(node4, label4, 'inactive');
-  } else if (d.status === 'delivered') {
-    if (statusBadge) statusBadge.innerText = 'Delivered to Shelter';
-    if (barFill) barFill.style.width = '100%';
-    if (driverName) driverName.innerText = d.driverName || 'Volunteer Sarah M.';
-    if (etaText) etaText.innerText = 'Delivered 🎉';
-    setNodeState(node1, label1, 'done');
-    setNodeState(node2, label2, 'done');
-    setNodeState(node3, label3, 'done');
-    setNodeState(node4, label4, 'done');
+  const controls = document.getElementById('uber-volunteer-controls');
+  if (controls) {
+    // Only the volunteer who claimed this delivery can update it
+    const me = getSession();
+    const isMine = !!(d.driver_id && me && me.id && d.driver_id === me.id);
+    controls.classList.toggle('hidden', d.status === 'delivered' || !isMine);
   }
 };
 
@@ -2117,12 +1658,9 @@ window.matchAndRenderJobs = async function (resumeData) {
     }
 
     const scoredJobs = data.jobs.map(job => {
-      let score = 0;
       const jobText = (job.title + ' ' + (job.requirements || []).join(' ')).toLowerCase();
-      userKeywords.forEach(kw => {
-        if (kw && jobText.includes(kw.toLowerCase())) score += 15;
-      });
-      return { ...job, score };
+      const matched = userKeywords.filter(kw => kw && jobText.includes(String(kw).toLowerCase()));
+      return { ...job, matched, score: matched.length };
     }).filter(j => j.score > 0).sort((a, b) => b.score - a.score).slice(0, 3);
 
     if (scoredJobs.length === 0) {
@@ -2131,277 +1669,213 @@ window.matchAndRenderJobs = async function (resumeData) {
     }
 
     container.innerHTML = `
-      <div class="flex justify-between items-center mb-2">
-          <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-              <span class="material-symbols-outlined text-amber-400 text-sm">stars</span> Matched Job Postings
-          </h3>
+      <div class="ns-section-head"><h2>Jobs that fit your resume</h2></div>
+      <div class="flex flex-col gap-3">
+      ${scoredJobs.map(job => {
+        const parts = String(job.contact || '').split(' | ');
+        const email = (parts[0] || '').trim();
+        const phone = (parts[1] || '').replace(/[^0-9]/g, '');
+        return `
+        <div class="ns-card ns-card--pad">
+          <p class="ns-card-title">${nsEscape(job.title)}</p>
+          <p class="ns-card-sub mt-1">${[job.company, job.pay].filter(Boolean).map(nsEscape).join(' · ')}</p>
+          ${job.description ? `<p class="text-[14px] text-ink-2 mt-3 leading-relaxed">${nsEscape(job.description)}</p>` : ''}
+          <p class="ns-hint">Matches: ${job.matched.slice(0, 3).map(nsEscape).join(', ')}</p>
+          <div class="mt-4 grid grid-cols-2 gap-3">
+            ${email.includes('@') ? `<a href="mailto:${nsEscape(email)}" class="ns-btn ns-btn--ghost ns-btn--sm w-full">Email</a>` : ''}
+            ${phone ? `<a href="tel:${phone}" class="ns-btn ns-btn--primary ns-btn--sm w-full">Call</a>` : ''}
+          </div>
+        </div>`;
+      }).join('')}
       </div>
-      ${scoredJobs.map(job => `
-        <div class="backdrop-blur-md bg-slate-900/40 p-4 rounded-2xl border border-white/10 shadow-lg relative overflow-hidden mb-3">
-            <div class="flex justify-between items-start mb-1.5">
-                <div>
-                    <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] font-extrabold">AI Match Score: ${job.score}%</span>
-                    <h4 class="font-extrabold text-sm text-white mt-1.5">${job.title}</h4>
-                    <p class="text-[11px] text-amber-400 font-semibold">${job.company} • ${job.pay}</p>
-                </div>
-            </div>
-            <p class="text-xs text-slate-300 leading-relaxed mb-3">${job.description}</p>
-            <div class="flex gap-2 border-t border-white/10 pt-2.5">
-                <a href="mailto:${job.contact.split(' | ')[0]}" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold text-center border border-white/10 transition-colors">Email</a>
-                <a href="tel:${job.contact.split(' | ')[1] ? job.contact.split(' | ')[1].replace(/[^0-9]/g, '') : ''}" class="flex-1 py-2 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 rounded-lg text-xs font-bold text-center hover:from-amber-300 hover:to-amber-400 transition-colors">Call</a>
-            </div>
-        </div>
-      `).join('')}
     `;
   } catch (err) {
     console.error('Error matching jobs:', err);
   }
 };
 
-// --- Dashboard: Recommended AI Job Match Access Lock ---
+// --- Dashboard: job matches need an account and a resume ---
 function checkDashboardJobMatchLock() {
   const container = document.getElementById('ai-job-matches-container');
-  if (!container) return; // Not on the dashboard page, skip
+  if (!container) return;
 
   const session = getSession();
   const userData = getUserData();
   const hasResume = !!(userData && userData.resumeData);
 
   if (session.isGuest) {
-    // State 1: Guest — lock with account prompt
     container.innerHTML = `
-      <div class="relative flex flex-col items-center justify-center rounded-2xl border border-white/10 p-6 text-center shadow-lg bg-slate-900/60 backdrop-blur-md">
-        <span class="material-symbols-outlined text-4xl text-amber-500 mb-3" style="font-variation-settings: 'FILL' 1;">lock</span>
-        <h4 class="text-sm font-extrabold text-white mb-1">Job Matches Locked</h4>
-        <p class="text-xs text-slate-400 font-medium mb-4 max-w-[220px] mx-auto">Make an account to access personalized AI job matches.</p>
-        <button onclick="document.getElementById('auth-gateway-view') ? (document.getElementById('auth-gateway-view').classList.remove('hidden'), document.getElementById('auth-gateway-view').style.display='flex', document.getElementById('main-app-layout') && (document.getElementById('main-app-layout').classList.add('hidden'), document.getElementById('main-app-layout').style.display='none')) : window.location.href='index.html'" class="px-5 py-2.5 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-extrabold rounded-xl text-xs shadow-lg hover:from-amber-300 hover:to-amber-400 transition-all active:scale-95">
-          Sign In / Create Account
-        </button>
+      <div class="ns-empty">
+        <p class="ns-empty__title">Job matches need an account</p>
+        <p class="ns-empty__sub">Create a free account and we’ll match jobs to your skills.</p>
+        <button type="button" onclick="redirectToAuthGateway()" class="ns-btn ns-btn--primary ns-btn--sm mt-4">Sign in or create an account</button>
       </div>
     `;
-    // Also hide the match % badge in the section header
-    const matchBadge = container.closest('section')?.querySelector('span.bg-emerald-500\\/10');
-    if (matchBadge) matchBadge.classList.add('hidden');
     return;
   }
 
   if (!hasResume) {
-    // State 2: Logged-in but no resume — lock with resume prompt
     container.innerHTML = `
-      <div class="relative flex flex-col items-center justify-center rounded-2xl border border-white/10 p-6 text-center shadow-lg bg-slate-900/60 backdrop-blur-md">
-        <span class="material-symbols-outlined text-4xl text-indigo-400 mb-3" style="font-variation-settings: 'FILL' 1;">description</span>
-        <h4 class="text-sm font-extrabold text-white mb-1">Job Matches Locked</h4>
-        <p class="text-xs text-slate-400 font-medium mb-4 max-w-[220px] mx-auto">Make a resume to unlock AI-powered job matches tailored to your skills.</p>
-        <a href="resume-builder.html" class="px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white font-extrabold rounded-xl text-xs shadow-lg hover:from-indigo-400 hover:to-indigo-500 transition-all active:scale-95 inline-flex items-center gap-1.5">
-          <span class="material-symbols-outlined text-sm">edit_document</span> Build Your Resume
-        </a>
+      <div class="ns-empty">
+        <p class="ns-empty__title">Build a resume to see matches</p>
+        <p class="ns-empty__sub">We use your skills and past work to find jobs that fit.</p>
+        <a href="resume-builder.html" class="ns-btn ns-btn--primary ns-btn--sm mt-4">Build your resume</a>
       </div>
     `;
-    // Also hide the match % badge in the section header
-    const matchBadge = container.closest('section')?.querySelector('span.bg-emerald-500\\/10');
-    if (matchBadge) matchBadge.classList.add('hidden');
-    return;
   }
-
-  // State 3: Logged-in with resume — show the match % badge and leave the card intact
-  const matchBadge = container.closest('section')?.querySelector('span.bg-emerald-500\\/10');
-  if (matchBadge) matchBadge.classList.remove('hidden');
 }
 
 // ============================================================
 // GLOBAL AI CHATBOT WIDGET (SEEKER & HELPER / VOLUNTEER)
 // ============================================================
+// Companion lives on its own tab (companion.html). Other screens open it, optionally
+// with a question (?q=). Conversations are saved on this phone, per account, so people
+// can come back to a chat, start a new one, or delete them ("Your chats" sheet).
+const COMPANION_PAGE = 'companion.html';
+const COMPANION_TRANSCRIPT_KEY = 'ns_companion_transcript'; // legacy (session-only), migrated once
+const COMPANION_HISTORY_KEY = 'ns_companion_history';       // legacy
+const COMPANION_CHAT_LIMIT = 30;
+
+function isCompanionPage() {
+  return !!document.getElementById('companion-page');
+}
+
+function readSession(key, fallback) {
+  try {
+    const v = JSON.parse(sessionStorage.getItem(key) || 'null');
+    return v == null ? fallback : v;
+  } catch (e) {
+    return fallback;
+  }
+}
+
+function writeSession(key, value) {
+  try { sessionStorage.setItem(key, JSON.stringify(value)); } catch (e) {}
+}
+
+// ---- Saved chats (localStorage, one list per account on this phone) ----
+function chatStoreKey() {
+  const s = getSession();
+  const who = s && !s.isGuest && (s.id || s.username) ? String(s.id || s.username) : 'guest';
+  return `ns_companion_chats_${who}`;
+}
+
+function readChats() {
+  try {
+    const v = JSON.parse(localStorage.getItem(chatStoreKey()) || 'null');
+    if (v && Array.isArray(v.chats)) return v;
+  } catch (e) {}
+  return { chats: [], activeId: null };
+}
+
+function writeChats(store) {
+  store.chats.sort((a, b) => b.updatedAt - a.updatedAt);
+  store.chats = store.chats.slice(0, COMPANION_CHAT_LIMIT);
+  if (store.activeId && !store.chats.some(c => c.id === store.activeId)) store.activeId = null;
+  try { localStorage.setItem(chatStoreKey(), JSON.stringify(store)); } catch (e) {}
+}
+
+function activeChat(store) {
+  return store.chats.find(c => c.id === store.activeId) || null;
+}
+
+// One-time move of the old session-only conversation into the saved list
+function migrateLegacyChat() {
+  const legacy = readSession(COMPANION_TRANSCRIPT_KEY, []);
+  if (!legacy.length) return;
+  const store = readChats();
+  const now = Date.now();
+  const firstUser = legacy.find(i => i.who === 'user');
+  const chat = {
+    id: `c${now}`,
+    title: firstUser ? String(firstUser.text).slice(0, 60) : 'Chat',
+    createdAt: now,
+    updatedAt: now,
+    transcript: legacy.slice(-60),
+    history: readSession(COMPANION_HISTORY_KEY, [])
+  };
+  store.chats.unshift(chat);
+  store.activeId = chat.id;
+  writeChats(store);
+  try {
+    sessionStorage.removeItem(COMPANION_TRANSCRIPT_KEY);
+    sessionStorage.removeItem(COMPANION_HISTORY_KEY);
+  } catch (e) {}
+}
+
+// Draw a saved conversation into the message list
+function renderCompanionConversation(chat) {
+  const list = document.getElementById('chatbot-messages-list');
+  if (!list) return;
+  list.querySelectorAll('.chat-msg-incoming, .chat-msg-outgoing, #chatbot-typing-bubble').forEach(el => el.remove());
+  window.northstarChatHistory = chat && Array.isArray(chat.history) ? chat.history.slice(-10) : [];
+  (chat ? chat.transcript : []).forEach(item => {
+    if (item.who === 'user') appendUserMessageBubble(item.text, { restore: true });
+    else appendAssistantMessageBubble(item.text, !!item.error, item.action || null, { restore: true });
+  });
+  updateCompanionEmptyState();
+  updateCompanionHeader(chat);
+  list.scrollTop = list.scrollHeight;
+}
+
+function updateCompanionHeader(chat) {
+  const meta = document.getElementById('companion-meta');
+  if (meta) meta.textContent = chat && chat.title ? chat.title : 'Ask about beds, meals, gigs or your resume';
+  const count = document.getElementById('companion-chats-count');
+  if (count) {
+    const n = readChats().chats.length;
+    count.textContent = n > 9 ? '9+' : String(n);
+    count.classList.toggle('hidden', n === 0);
+  }
+}
+
 function initGlobalAIChatbot() {
-  const path = (window.location.pathname || '').toLowerCase();
-  if (path.includes('login') || path.includes('signup')) return;
+  // No floating button any more: Companion is a tab
+  document.querySelectorAll('#chat-fab').forEach(el => el.remove());
+  if (!isCompanionPage() || window._companionReady) return;
+  window._companionReady = true;
 
-  // ── 1. Mount the floating AI Chatbot FAB (.chatbot-fab) at bottom: calc(var(--nav-bar-height, 64px) + 16px); right: 16px; z-index: 50; ──
-  function mountGlobalFloatingFAB() {
-    // Remove any legacy #chat-fab inside <header> so it never duplicates
-    document.querySelectorAll('header #chat-fab').forEach(el => el.remove());
-
-    const appFrame = document.querySelector('.app-frame') || document.querySelector('.phone-frame');
-    if (appFrame) {
-      const mainEl = appFrame.querySelector('main');
-      if (mainEl) {
-        mainEl.style.setProperty('padding-bottom', '96px', 'important');
-      }
-    }
-
-    const existingFab = document.getElementById('chat-fab');
-    if (existingFab) {
-      existingFab.className = 'chatbot-fab chatbot-floating-fab w-12 h-12 rounded-full bg-[#FFE855] text-slate-950 border border-amber-400/40 shadow-[0_4px_12px_rgba(0,0,0,0.18)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.25)] flex items-center justify-center font-bold transition-all active:scale-95 hover:brightness-105 cursor-pointer select-none';
-      existingFab.style.cssText = 'bottom: calc(var(--nav-bar-height, 64px) + 16px); right: 16px; z-index: 50;';
-      if (appFrame && existingFab.parentElement !== appFrame) {
-        appFrame.appendChild(existingFab);
-      }
-      return;
-    }
-
-    const btn = document.createElement('button');
-    btn.id = 'chat-fab';
-    btn.setAttribute('data-fab-alias', 'chatbot-fab-btn');
-    btn.type = 'button';
-    btn.onclick = toggleAIChatbotWindow;
-    btn.setAttribute('aria-label', 'Open AI Assistant');
-    btn.title = 'NorthStar AI Assistant';
-    btn.className = 'chatbot-fab chatbot-floating-fab w-12 h-12 rounded-full bg-[#FFE855] text-slate-950 border border-amber-400/40 shadow-[0_4px_12px_rgba(0,0,0,0.18)] dark:shadow-[0_4px_12px_rgba(0,0,0,0.25)] flex items-center justify-center font-bold transition-all active:scale-95 hover:brightness-105 cursor-pointer select-none';
-    btn.style.cssText = 'bottom: calc(var(--nav-bar-height, 64px) + 16px); right: 16px; z-index: 50;';
-    btn.innerHTML = `
-      <span id="chatbot-fab-icon" class="material-symbols-outlined leading-none" style="font-size:22px;line-height:1;">smart_toy</span>
-    `;
-
-    const host = appFrame || document.body;
-    host.appendChild(btn);
-  }
-  mountGlobalFloatingFAB();
-
-  // ── 2. Backdrop overlay ──
-  if (!document.getElementById('chatbot-backdrop-overlay')) {
-    const backdrop = document.createElement('div');
-    backdrop.id = 'chatbot-backdrop-overlay';
-    backdrop.className = 'fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-[90] chatbot-backdrop-hidden transition-opacity pointer-events-none';
-    backdrop.onclick = (e) => { e.stopPropagation(); closeAIChatbotWindow(); };
-    document.body.appendChild(backdrop);
-  }
-
-  // ── 3. Drawer panel (fixed, opens directly above the floating FAB) ──
-  if (!document.getElementById('chatbot-window-drawer')) {
-    const drawer = document.createElement('div');
-    drawer.id = 'chatbot-window-drawer';
-    drawer.style.cssText = 'position: fixed; bottom: 156px; right: 16px; z-index: 9001;';
-    drawer.className = 'hidden w-[330px] sm:w-[360px] bg-white rounded-[24px] shadow-2xl border border-slate-200/80 overflow-hidden flex-col pointer-events-auto';
-    drawer.onclick = (e) => e.stopPropagation();
-    drawer.innerHTML = `
-      <!-- Header -->
-      <div class="bg-slate-900 text-white px-4 py-3 flex items-center justify-between select-none">
-        <div class="flex items-center gap-2.5">
-          <div class="w-8 h-8 rounded-xl bg-[#FFE855] text-slate-950 flex items-center justify-center font-bold flex-shrink-0 shadow-sm">
-            <span class="material-symbols-outlined text-lg">smart_toy</span>
-          </div>
-          <div>
-            <h3 class="text-xs font-extrabold tracking-tight leading-none text-white">NorthStar AI Assistant</h3>
-            <span id="chatbot-role-tag" class="text-[10px] font-semibold text-amber-400">Ask anything • Instant help</span>
-          </div>
-        </div>
-        <button id="chatbot-close-btn" type="button" onclick="closeAIChatbotWindow()" class="text-slate-400 hover:text-white transition-colors p-1 cursor-pointer" aria-label="Close chatbot">
-          <span class="material-symbols-outlined text-lg">close</span>
-        </button>
-      </div>
-
-      <!-- Quick Suggestion Chips -->
-      <div id="chatbot-suggestion-chips" class="px-3 py-2 bg-slate-50 border-b border-slate-200 flex gap-1.5 overflow-x-auto text-[10px] font-semibold text-slate-700">
-        <!-- Dynamically injected based on seeker vs helper role -->
-      </div>
-
-      <!-- Messages Body -->
-      <div id="chatbot-messages-list" class="p-3.5 h-[260px] overflow-y-auto space-y-3 bg-[#F4F5F7] text-xs select-text">
-        <div class="flex gap-2">
-          <div class="w-7 h-7 rounded-lg bg-[#FFE855] text-slate-950 flex items-center justify-center flex-shrink-0 font-bold">
-            <span class="material-symbols-outlined text-sm">smart_toy</span>
-          </div>
-          <div class="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-200/80 text-slate-800 shadow-sm leading-relaxed">
-            Hi! I'm your <strong>NorthStar AI Assistant</strong>. Ask me about shelters, food drop-offs, daily $20/hr cash gigs, or resume building!
-          </div>
-        </div>
-      </div>
-
-      <!-- Input Form -->
-      <form id="chatbot-input-form" onsubmit="handleAIChatSubmit(event)" class="p-2.5 bg-white border-t border-slate-200/80 flex items-center gap-2">
-        <input type="text" id="chatbot-input-field" placeholder="Ask NorthStar AI..." class="flex-1 rounded-[12px] bg-slate-50 border border-slate-200 px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400 font-medium select-text">
-        <button type="submit" id="chatbot-send-btn" onclick="handleAIChatSubmit(event)" class="w-9 h-9 rounded-[12px] bg-[#FFE855] text-slate-950 hover:bg-amber-300 font-bold flex items-center justify-center shadow-sm active:scale-95 transition-all flex-shrink-0 cursor-pointer" aria-label="Send message">
-          <span class="material-symbols-outlined text-base">send</span>
-        </button>
-      </form>
-    `;
-    document.body.appendChild(drawer);
-  }
-
-  // Keep the widget reference for external code that looks for #northstar-chatbot-widget
-  if (!document.getElementById('northstar-chatbot-widget')) {
-    const stub = document.createElement('span');
-    stub.id = 'northstar-chatbot-widget';
-    stub.style.display = 'none';
-    document.body.appendChild(stub);
-  }
-
+  migrateLegacyChat();
+  const store = readChats();
+  renderCompanionConversation(activeChat(store));
   updateChatbotSuggestionChips();
+
+  localStorage.setItem('northstar_ai_used', 'true');
+  if (typeof updateMilestone === 'function') updateMilestone('aiCompanion', true);
+
+  const q = new URLSearchParams(window.location.search).get('q');
+  if (q) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+    // A question from another screen starts its own chat
+    startNewCompanionChat({ keepSheet: true });
+    dispatchChatMessage(q);
+  }
+}
+
+// The empty-state welcome shows until the first message
+function updateCompanionEmptyState() {
+  const empty = document.getElementById('companion-empty');
+  const list = document.getElementById('chatbot-messages-list');
+  if (!empty || !list) return;
+  const hasMessages = !!list.querySelector('.chat-msg-incoming, .chat-msg-outgoing');
+  empty.classList.toggle('hidden', hasMessages);
 }
 
 window.isChatOpen = false;
 
 function openAIChatbotWindow() {
-  const drawer = document.getElementById('chatbot-window-drawer');
-  const backdrop = document.getElementById('chatbot-backdrop-overlay');
-  const fabBtn = document.getElementById('chat-fab') || document.getElementById('chatbot-fab-btn');
-  const fabIcon = document.getElementById('chatbot-fab-icon');
-  if (!drawer) return;
-
-  window.isChatOpen = true;
-
-  // OPEN ANIMATION
-  drawer.classList.remove('hidden', 'chatbot-drawer-close');
-  drawer.classList.add('flex', 'chatbot-drawer-open');
-
-  if (fabBtn) fabBtn.classList.add('fab-active');
-  if (fabIcon) fabIcon.innerText = 'close';
-
-  if (backdrop) {
-    backdrop.classList.remove('chatbot-backdrop-hidden', 'pointer-events-none');
-    backdrop.classList.add('chatbot-backdrop-visible', 'pointer-events-auto');
+  if (isCompanionPage()) {
+    const input = document.getElementById('chatbot-input-field');
+    if (input) input.focus();
+    return;
   }
-
-  // Track AI Companion milestone
-  localStorage.setItem('northstar_ai_used', 'true');
-  if (typeof updateMilestone === 'function') {
-    updateMilestone('aiCompanion', true);
-  }
-
-  updateChatbotSuggestionChips();
-  const input = document.getElementById('chatbot-input-field');
-  if (input) setTimeout(() => input.focus(), 150);
+  nsGo(COMPANION_PAGE);
 }
 
-function closeAIChatbotWindow() {
-  const drawer = document.getElementById('chatbot-window-drawer');
-  const backdrop = document.getElementById('chatbot-backdrop-overlay');
-  const fabBtn = document.getElementById('chat-fab') || document.getElementById('chatbot-fab-btn');
-  const fabIcon = document.getElementById('chatbot-fab-icon');
-  if (!drawer) return;
+function closeAIChatbotWindow() { window.isChatOpen = false; }
 
-  window.isChatOpen = false;
+function toggleAIChatbotWindow() { openAIChatbotWindow(); }
 
-  // CLOSE ANIMATION
-  drawer.classList.remove('chatbot-drawer-open');
-  drawer.classList.add('chatbot-drawer-close');
-
-  if (fabBtn) fabBtn.classList.remove('fab-active');
-  if (fabIcon) fabIcon.innerText = 'smart_toy';
-
-  if (backdrop) {
-    backdrop.classList.remove('chatbot-backdrop-visible', 'pointer-events-auto');
-    backdrop.classList.add('chatbot-backdrop-hidden', 'pointer-events-none');
-  }
-
-  // Hide display after collapse animation finishes (~200ms)
-  setTimeout(() => {
-    if (drawer.classList.contains('chatbot-drawer-close')) {
-      drawer.classList.add('hidden');
-      drawer.classList.remove('flex', 'chatbot-drawer-close');
-    }
-  }, 200);
-}
-
-function toggleAIChatbotWindow() {
-  const drawer = document.getElementById('chatbot-window-drawer');
-  if (!drawer) return;
-  const isHidden = drawer.classList.contains('hidden') || !window.isChatOpen;
-  if (isHidden) {
-    openAIChatbotWindow();
-  } else {
-    closeAIChatbotWindow();
-  }
-}
 window.openAIChatbotWindow = openAIChatbotWindow;
 window.closeAIChatbotWindow = closeAIChatbotWindow;
 window.openChatDrawer = openAIChatbotWindow;
@@ -2409,138 +1883,263 @@ window.closeChatDrawer = closeAIChatbotWindow;
 
 function updateChatbotSuggestionChips() {
   const container = document.getElementById('chatbot-suggestion-chips');
-  const roleTag = document.getElementById('chatbot-role-tag');
   if (!container) return;
 
-  const rawRole = (typeof getRole === 'function') ? getRole() : (localStorage.getItem('northstar_user_role') || 'seeker');
+  const rawRole = getRole();
   const isHelperRole = (rawRole === 'volunteer' || rawRole === 'donater' || rawRole === 'helper' || rawRole === 'employer');
+  const chips = isHelperRole
+    ? [
+      ['Food pickups', 'How do food pickup claims work?'],
+      ['Post a job', 'How do I post a new job opportunity?'],
+      ['Ways to help', 'How can I volunteer today?']
+    ]
+    : [
+      ['A bed tonight', 'I need a bed tonight.'],
+      ['Food near me', 'Where can I get food near me?'],
+      ['Gigs for me', 'Find the best job for me based on my resume.'],
+      ['Resume help', 'How do I make a resume?']
+    ];
 
-  if (isHelperRole) {
-    if (roleTag) roleTag.innerText = 'Helper Assistant • Community Support';
-    container.innerHTML = `
-      <button type="button" onclick="event.stopPropagation(); sendQuickChatMessage('How do I post a new job opportunity?', event)" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">💼 Post Job</button>
-      <button type="button" onclick="event.stopPropagation(); sendQuickChatMessage('How do food pickup claims work?', event)" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">📦 Food Pickups</button>
-      <button type="button" onclick="event.stopPropagation(); sendQuickChatMessage('How can I volunteer today?', event)" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">🤝 Volunteer</button>
-    `;
-  } else {
-    if (roleTag) roleTag.innerText = 'Seeker Navigator • Daily Resources';
-    container.innerHTML = `
-      <button type="button" onclick="event.stopPropagation(); sendQuickChatMessage('Find the best job for me based on my resume.', event)" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">💼 Best Jobs for Me</button>
-      <button type="button" onclick="event.stopPropagation(); sendQuickChatMessage('Where can I find $20/hr cash gigs?', event)" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">💰 Cash Gigs</button>
-      <button type="button" onclick="event.stopPropagation(); sendQuickChatMessage('Where is the nearest shelter?', event)" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">🏠 Shelters</button>
-      <button type="button" onclick="event.stopPropagation(); sendQuickChatMessage('How do I make an AI resume?', event)" class="px-2.5 py-1 bg-white border border-slate-200 rounded-full hover:bg-amber-50 whitespace-nowrap active:scale-95 transition-all">📄 AI Resume</button>
-    `;
-  }
+  container.innerHTML = chips.map(([label, question]) =>
+    `<button type="button" class="ns-chip ns-chip--sm" data-question="${nsEscape(question)}">${nsEscape(label)}</button>`
+  ).join('');
+  container.querySelectorAll('button[data-question]').forEach(btn => {
+    btn.onclick = (e) => sendQuickChatMessage(btn.getAttribute('data-question'), e);
+  });
 }
 
-// Canonical in-memory history array for NorthStar AI chatbot
+// Canonical in-memory history array for the Companion chat
 window.northstarChatHistory = window.northstarChatHistory || [];
 
 function sendQuickChatMessage(msg, event) {
-  if (event && typeof event.stopPropagation === 'function') {
-    event.stopPropagation();
+  if (event && typeof event.stopPropagation === 'function') event.stopPropagation();
+  if (!isCompanionPage()) {
+    nsGo(`${COMPANION_PAGE}?q=${encodeURIComponent(msg)}`);
+    return;
   }
-  openAIChatbotWindow();
   dispatchChatMessage(msg);
 }
 
 function appendChatMessage(msgObj) {
-  openAIChatbotWindow();
   const text = typeof msgObj === 'string' ? msgObj : (msgObj && msgObj.text ? msgObj.text : '');
-  if (text) {
-    dispatchChatMessage(text);
+  if (text) sendQuickChatMessage(text);
+  else openAIChatbotWindow();
+}
+
+// Save a message into the open chat (creates the chat on its first message)
+function saveTranscriptItem(item) {
+  const store = readChats();
+  let chat = activeChat(store);
+  const now = Date.now();
+  if (!chat) {
+    chat = { id: `c${now}`, title: '', createdAt: now, updatedAt: now, transcript: [], history: [] };
+    store.chats.unshift(chat);
+    store.activeId = chat.id;
   }
+  chat.transcript.push(item);
+  chat.transcript = chat.transcript.slice(-60);
+  if (!chat.title && item.who === 'user') chat.title = String(item.text).replace(/\s+/g, ' ').trim().slice(0, 60);
+  chat.updatedAt = now;
+  writeChats(store);
+  updateCompanionHeader(chat);
 }
 
-// Helper to safely render user bubble without raw innerHTML
-function appendUserMessageBubble(text) {
+// Keep the model's short memory with the chat so follow-ups work after reopening it
+function saveChatHistory() {
+  const store = readChats();
+  const chat = activeChat(store);
+  if (!chat) return;
+  chat.history = (window.northstarChatHistory || []).slice(-10);
+  writeChats(store);
+}
+
+function appendUserMessageBubble(text, opts = {}) {
   const messagesList = document.getElementById('chatbot-messages-list');
   if (!messagesList) return;
 
-  const userBubble = document.createElement('div');
-  userBubble.className = 'flex justify-end chat-msg-outgoing';
-
-  const innerDiv = document.createElement('div');
-  innerDiv.className = 'bg-slate-900 text-white p-3 rounded-2xl rounded-tr-none max-w-[85%] font-medium leading-relaxed shadow-sm';
-  innerDiv.textContent = text;
-
-  userBubble.appendChild(innerDiv);
-  messagesList.appendChild(userBubble);
+  const bubble = document.createElement('div');
+  bubble.className = 'ns-chat__bubble ns-chat__bubble--out chat-msg-outgoing';
+  bubble.textContent = text;
+  messagesList.appendChild(bubble);
   messagesList.scrollTop = messagesList.scrollHeight;
+  if (!opts.restore) saveTranscriptItem({ who: 'user', text });
+  updateCompanionEmptyState();
 }
 
-// Helper to safely render assistant/error bubble without interpreting text as HTML
-function appendAssistantMessageBubble(text, isError = false, action = null) {
+function appendAssistantMessageBubble(text, isError = false, action = null, opts = {}) {
   const messagesList = document.getElementById('chatbot-messages-list');
   if (!messagesList) return;
 
-  const botBubble = document.createElement('div');
-  botBubble.className = 'flex gap-2 chat-msg-incoming';
+  const row = document.createElement('div');
+  row.className = 'flex gap-2 items-start chat-msg-incoming';
 
-  const avatar = document.createElement('div');
-  avatar.className = `w-7 h-7 rounded-lg ${isError ? 'bg-red-100 text-red-600' : 'bg-[#FFE855] text-slate-950'} flex items-center justify-center flex-shrink-0 font-bold`;
+  const mark = document.createElement('span');
+  mark.className = 'ns-chat__mark ns-chat__mark--sm';
+  mark.setAttribute('aria-hidden', 'true');
 
-  const icon = document.createElement('span');
-  icon.className = 'material-symbols-outlined text-sm';
-  icon.textContent = isError ? 'error_outline' : 'smart_toy';
-  avatar.appendChild(icon);
+  const wrap = document.createElement('div');
+  wrap.className = 'flex flex-col gap-2 max-w-[85%]';
 
-  const bubbleWrapper = document.createElement('div');
-  bubbleWrapper.className = 'flex flex-col gap-2 max-w-[85%]';
+  const bubble = document.createElement('div');
+  bubble.className = `ns-chat__bubble ns-chat__bubble--in !max-w-full${isError ? ' ns-chat__bubble--error' : ''}`;
+  bubble.textContent = text;
+  wrap.appendChild(bubble);
 
-  const contentDiv = document.createElement('div');
-  contentDiv.className = `p-3 rounded-2xl rounded-tl-none border shadow-sm leading-relaxed ${isError
-      ? 'bg-red-50/80 border-red-200 text-red-700'
-      : 'bg-white border-slate-200/80 text-slate-800'
-    }`;
-  contentDiv.textContent = text;
-  bubbleWrapper.appendChild(contentDiv);
-
-  // Render navigation action button if explicitly provided by backend or deterministic resource lookup
   if (action && action.type === 'navigate') {
+    let target = null;
+    let label = action.label || '';
     if (action.destination === 'jobs') {
-      const actionBtn = document.createElement('button');
-      actionBtn.type = 'button';
-      actionBtn.className = 'self-start inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-850 active:scale-95 text-[#FFE855] text-xs font-bold shadow-sm transition-all border border-slate-800 cursor-pointer';
-      actionBtn.textContent = (action.label ? `${action.label} →` : 'View Jobs →');
-      actionBtn.onclick = (e) => {
-        e.preventDefault();
-        if (typeof toggleAIChatbotWindow === 'function') {
-          toggleAIChatbotWindow();
-        }
-        if (typeof navigateToPageInstant === 'function') {
-          navigateToPageInstant('opportunities.html');
-        } else {
-          window.location.href = 'opportunities.html';
-        }
-      };
-      bubbleWrapper.appendChild(actionBtn);
+      target = 'opportunities.html';
+      label = label || 'See gigs';
     } else if (action.destination === 'map' && action.resourceId) {
-      const mapBtn = document.createElement('button');
-      mapBtn.type = 'button';
-      mapBtn.className = 'self-start inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-850 active:scale-95 text-[#10B981] text-xs font-bold shadow-sm transition-all border border-slate-800 cursor-pointer';
-      mapBtn.textContent = (action.label ? `${action.label} →` : 'View on Map →');
-      mapBtn.onclick = (e) => {
+      target = `resource-map.html?resource=${encodeURIComponent(action.resourceId)}`;
+      label = label || 'Show on map';
+    }
+    if (target) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'ns-btn ns-btn--primary ns-btn--sm self-start';
+      btn.textContent = label;
+      btn.onclick = (e) => {
         e.preventDefault();
-        if (typeof toggleAIChatbotWindow === 'function') {
-          toggleAIChatbotWindow();
-        }
-        const targetUrl = `resource-map.html?resource=${encodeURIComponent(action.resourceId)}`;
-        if (typeof navigateToPageInstant === 'function') {
-          navigateToPageInstant(targetUrl);
-        } else {
-          window.location.href = targetUrl;
-        }
+        nsGo(target);
       };
-      bubbleWrapper.appendChild(mapBtn);
+      wrap.appendChild(btn);
     }
   }
 
-  botBubble.appendChild(avatar);
-  botBubble.appendChild(bubbleWrapper);
-  messagesList.appendChild(botBubble);
+  row.appendChild(mark);
+  row.appendChild(wrap);
+  messagesList.appendChild(row);
   messagesList.scrollTop = messagesList.scrollHeight;
+  if (!opts.restore) saveTranscriptItem({ who: 'assistant', text, error: !!isError, action: action || null });
+  updateCompanionEmptyState();
 }
+
+// ---- Managing chats: new, open, delete, list ----
+function chatBusy() {
+  // Don't switch chats while a reply is on its way (it belongs to the open chat)
+  if (!window._chatPending) return false;
+  showCompanionNotice('Wait for Companion to finish answering, then try again.');
+  return true;
+}
+
+function showCompanionNotice(text) {
+  const el = document.getElementById('companion-notice');
+  if (!el) return;
+  el.textContent = text;
+  el.classList.remove('hidden');
+  clearTimeout(window._companionNoticeTimer);
+  window._companionNoticeTimer = setTimeout(() => el.classList.add('hidden'), 2600);
+}
+
+function startNewCompanionChat(opts = {}) {
+  if (chatBusy()) return;
+  const store = readChats();
+  store.activeId = null;
+  writeChats(store);
+  renderCompanionConversation(null);
+  if (!opts.keepSheet) closeModal('companion-chats-sheet');
+  const input = document.getElementById('chatbot-input-field');
+  if (input && !opts.keepSheet) input.focus();
+}
+window.startNewCompanionChat = startNewCompanionChat;
+window.clearCompanionConversation = startNewCompanionChat; // older name
+
+window.openCompanionChat = function (id) {
+  if (chatBusy()) return;
+  const store = readChats();
+  if (!store.chats.some(c => c.id === id)) return;
+  store.activeId = id;
+  writeChats(store);
+  renderCompanionConversation(activeChat(store));
+  closeModal('companion-chats-sheet');
+};
+
+window.deleteCompanionChat = function (id, event) {
+  if (event) { event.stopPropagation(); event.preventDefault(); }
+  if (window._chatPending && readChats().activeId === id) { chatBusy(); return; }
+  const store = readChats();
+  const wasActive = store.activeId === id;
+  store.chats = store.chats.filter(c => c.id !== id);
+  if (wasActive) store.activeId = null;
+  writeChats(store);
+  if (wasActive) renderCompanionConversation(null);
+  else updateCompanionHeader(activeChat(store));
+  renderCompanionChatList();
+};
+
+window.clearAllCompanionChats = function (btn) {
+  if (chatBusy()) return;
+  // Two taps: the first asks, the second deletes
+  if (btn && btn.dataset.confirm !== '1') {
+    btn.dataset.confirm = '1';
+    btn.textContent = 'Tap again to delete all chats';
+    btn.classList.add('!text-danger');
+    setTimeout(() => {
+      if (btn.isConnected) { btn.dataset.confirm = ''; btn.textContent = 'Delete all chats'; btn.classList.remove('!text-danger'); }
+    }, 3500);
+    return;
+  }
+  writeChats({ chats: [], activeId: null });
+  renderCompanionConversation(null);
+  renderCompanionChatList();
+};
+
+function chatTimeLabel(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+  const startOfDay = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const days = Math.round((startOfDay(now) - startOfDay(d)) / 86400000);
+  if (days === 0) return d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  if (days === 1) return 'Yesterday';
+  if (days < 7) return d.toLocaleDateString(undefined, { weekday: 'long' });
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+function renderCompanionChatList() {
+  const listEl = document.getElementById('companion-chats-list');
+  if (!listEl) return;
+  const store = readChats();
+  const clearBtn = document.getElementById('companion-clear-all');
+  if (clearBtn) clearBtn.classList.toggle('hidden', store.chats.length === 0);
+
+  if (!store.chats.length) {
+    listEl.innerHTML = `
+      <div class="ns-empty">
+        <p class="ns-empty__title">No chats yet</p>
+        <p class="ns-empty__sub">Your conversations with Companion will show up here.</p>
+      </div>`;
+    return;
+  }
+
+  listEl.innerHTML = store.chats.map(c => {
+    const last = [...(c.transcript || [])].reverse().find(i => i.who === 'assistant' && !i.error) || (c.transcript || []).slice(-1)[0];
+    const preview = last ? String(last.text).replace(/\s+/g, ' ').slice(0, 90) : '';
+    const current = c.id === store.activeId;
+    return `
+      <div class="ns-row !py-2.5">
+        <button type="button" class="flex items-center gap-3 flex-1 min-w-0 text-left" onclick="openCompanionChat('${nsEscape(c.id)}')">
+          <span class="ns-tile ${current ? 'ns-tile--leaf' : ''}"><span class="material-symbols-outlined">chat_bubble</span></span>
+          <span class="min-w-0 flex-1">
+            <span class="flex items-baseline gap-2">
+              <span class="ns-row__title truncate flex-1">${nsEscape(c.title || 'New chat')}</span>
+              <span class="text-[12px] font-medium text-muted flex-shrink-0">${nsEscape(chatTimeLabel(c.updatedAt))}</span>
+            </span>
+            <span class="ns-row__sub block truncate">${current ? '<b class="text-ink">Current</b> · ' : ''}${nsEscape(preview)}</span>
+          </span>
+        </button>
+        <button type="button" class="ns-icon-btn ns-icon-btn--bare ns-icon-btn--sm flex-shrink-0 -mr-2 text-muted" onclick="deleteCompanionChat('${nsEscape(c.id)}', event)" aria-label="Delete chat: ${nsEscape(c.title || 'New chat')}">
+          <span class="material-symbols-outlined">delete</span>
+        </button>
+      </div>`;
+  }).join('');
+}
+
+window.openCompanionChats = function () {
+  renderCompanionChatList();
+  openModal('companion-chats-sheet');
+};
 
 function removeTypingIndicator() {
   const existingTyping = document.getElementById('chatbot-typing-bubble');
@@ -2591,6 +2190,20 @@ function getNorthStarCachedResources() {
   }
 }
 
+// Verified places from the server (same list as the Map), fetched once when needed
+let _nsServerResources = null;
+async function loadNorthStarServerResources() {
+  if (_nsServerResources) return _nsServerResources;
+  try {
+    const res = await fetch('/api/resources');
+    const data = await res.json();
+    _nsServerResources = Array.isArray(data.resources) ? data.resources : [];
+  } catch (err) {
+    _nsServerResources = [];
+  }
+  return _nsServerResources;
+}
+
 async function getNorthStarLocationResourceContext(message) {
   const lower = String(message || '').toLowerCase();
 
@@ -2622,7 +2235,8 @@ async function getNorthStarLocationResourceContext(message) {
     return null;
   }
 
-  const resources = getNorthStarCachedResources();
+  let resources = getNorthStarCachedResources();
+  if (!resources.length) resources = await loadNorthStarServerResources();
 
   if (!resources.length) {
     return {
@@ -2638,7 +2252,7 @@ async function getNorthStarLocationResourceContext(message) {
   else if (asksHygiene) category = 'restroom';
 
   return await new Promise(resolve => {
-    if (!navigator.geolocation) {
+    if (!navigator.geolocation || window.isSecureContext === false) {
       resolve({
         resource_lookup_requested: true,
         category,
@@ -2720,7 +2334,7 @@ async function getNorthStarLocationResourceContext(message) {
       },
       {
         enableHighAccuracy: false,
-        timeout: 10000,
+        timeout: 7000,
         maximumAge: 300000
       }
     );
@@ -2815,19 +2429,24 @@ async function dispatchChatMessage(rawText) {
   // 3. Append typing bubble with staggered wave dots
   const typingBubble = document.createElement('div');
   typingBubble.id = 'chatbot-typing-bubble';
-  typingBubble.className = 'flex gap-2 chat-msg-incoming';
+  typingBubble.className = 'flex gap-2 items-start chat-msg-incoming';
   typingBubble.innerHTML = `
-    <div class="w-7 h-7 rounded-lg bg-[#FFE855] text-slate-950 flex items-center justify-center flex-shrink-0 font-bold">
-      <span class="material-symbols-outlined text-sm">smart_toy</span>
-    </div>
-    <div class="bg-white px-3.5 py-3 rounded-2xl rounded-tl-none border border-slate-200/80 text-slate-500 shadow-sm flex items-center gap-1.5 min-h-[36px]">
+    <span class="ns-chat__mark ns-chat__mark--sm" aria-hidden="true"></span>
+    <div class="ns-chat__bubble ns-chat__bubble--in flex items-center gap-1.5" aria-label="Companion is typing">
       <span class="typing-dot"></span>
       <span class="typing-dot"></span>
       <span class="typing-dot"></span>
+      <span id="chatbot-typing-note" class="ml-2 text-[13px] font-medium text-muted"></span>
     </div>
   `;
   messagesList.appendChild(typingBubble);
   messagesList.scrollTop = messagesList.scrollHeight;
+  const typingNotes = [
+    setTimeout(() => { const n = document.getElementById('chatbot-typing-note'); if (n) n.textContent = 'Still thinking…'; }, 6000),
+    setTimeout(() => { const n = document.getElementById('chatbot-typing-note'); if (n) n.textContent = 'Almost there…'; }, 25000)
+  ];
+  const chatController = new AbortController();
+  const chatTimeout = setTimeout(() => chatController.abort(), 90000);
 
   // Set pending state & disable send button
   window._chatPending = true;
@@ -2882,7 +2501,8 @@ async function dispatchChatMessage(rawText) {
         role: currentRole,
         history: previousHistory,
         context: northstarContext
-      })
+      }),
+      signal: chatController.signal
     });
 
     // 5. After sending request, record the user turn into canonical history
@@ -2930,20 +2550,22 @@ async function dispatchChatMessage(rawText) {
         appendAssistantMessageBubble(data.reply, false, chatAction);
       }, 120);
     } else {
-      // API error or unsuccessful response
+      // The server answered but no assistant could reply
       setTimeout(() => {
-        appendAssistantMessageBubble("NorthStar AI is temporarily unavailable. Please try again.", true);
+        appendAssistantMessageBubble("Companion is busy right now. Please try again in a minute.", true);
       }, 120);
     }
   } catch (err) {
     console.error('Chat error:', err);
     removeTypingIndicator();
-
-    // Show error message bubble without fake fallback data
-    setTimeout(() => {
-      appendAssistantMessageBubble("NorthStar AI is temporarily unavailable. Please try again.", true);
-    }, 120);
+    const msg = err && err.name === 'AbortError'
+      ? 'That took too long. Please try again.'
+      : 'Companion can’t reach the internet right now. Check your connection and try again.';
+    setTimeout(() => appendAssistantMessageBubble(msg, true), 120);
   } finally {
+    saveChatHistory();
+    typingNotes.forEach(clearTimeout);
+    clearTimeout(chatTimeout);
     window._chatPending = false;
     if (sendBtn) sendBtn.disabled = false;
   }
@@ -2965,64 +2587,27 @@ if (document.readyState === 'loading') {
 }
 
 // ============================================================
-// FLUTTER-STYLE RIPPLE ANIMATION (INKWELL)
-// ============================================================
-document.addEventListener('mousedown', function(e) {
-  const target = e.target.closest('button, .interactive-card, nav a, .chip-btn, .flutter-btn, .chat-fab');
-  if (!target) return;
-
-  // Create ripple element
-  const ripple = document.createElement('span');
-  ripple.classList.add('ripple-effect');
-
-  // Calculate coordinates relative to the button
-  const rect = target.getBoundingClientRect();
-  
-  // Set ripple size based on the element size (multiply by 1.5 to ensure full coverage)
-  const diameter = Math.max(rect.width, rect.height) * 1.5;
-  const radius = diameter / 2;
-
-  // Set position based on click coordinates
-  ripple.style.width = ripple.style.height = `${diameter}px`;
-  ripple.style.left = `${e.clientX - rect.left - radius}px`;
-  ripple.style.top = `${e.clientY - rect.top - radius}px`;
-
-  // Remove existing ripples to prevent DOM bloat
-  const existingRipple = target.querySelector('.ripple-effect');
-  if (existingRipple) {
-    existingRipple.remove();
-  }
-
-  // Append ripple and remove after animation completes
-  target.appendChild(ripple);
-  
-  setTimeout(() => {
-    if (ripple.parentElement) {
-      ripple.remove();
-    }
-  }, 600); // Matches the 0.6s animation duration in CSS
-});
-
-// ============================================================
-// OFFLINE NETWORK STATUS TRACKING & FEATURE ACCESS CONTROL
-// Allowed Offline: Dashboard & Settings
-// Restricted Offline: AI Tools, Map Views, Jobs, Resume Builder
+// OFFLINE: pages that need the internet show a short notice instead of failing.
+// Allowed offline: dashboards and settings.
 // ============================================================
 (function initOfflineAccessControl() {
   function isAllowedOfflineHref(href) {
     if (!href) return true;
     const lower = href.toLowerCase();
-    if (
-      lower.includes('seeker-dashboard') ||
+    return lower.includes('seeker-dashboard') ||
       lower.includes('helper-dashboard') ||
       lower.includes('settings') ||
       lower === '#' ||
-      lower.startsWith('javascript:')
-    ) {
-      return true;
-    }
-    return false;
+      lower.startsWith('#') ||
+      lower.startsWith('tel:') ||
+      lower.startsWith('javascript:');
   }
+
+  function hideOfflineModal() {
+    const modal = document.getElementById('ns-global-offline-modal');
+    if (modal) modal.style.display = 'none';
+  }
+  window.hideOfflineModal = hideOfflineModal;
 
   function showOfflineModal() {
     let modal = document.getElementById('ns-global-offline-modal');
@@ -3032,26 +2617,16 @@ document.addEventListener('mousedown', function(e) {
       modal.className = 'ns-offline-modal-backdrop';
       modal.setAttribute('role', 'dialog');
       modal.setAttribute('aria-modal', 'true');
+      modal.setAttribute('aria-labelledby', 'ns-offline-title');
       modal.innerHTML = `
         <div class="ns-offline-modal-card" onclick="event.stopPropagation()">
-          <button type="button" class="ns-offline-modal-close" aria-label="Close" onclick="document.getElementById('ns-global-offline-modal').style.display='none'">
-            <span class="material-symbols-outlined text-lg leading-none">close</span>
-          </button>
-          <div class="mx-auto mb-4 w-14 h-14 rounded-2xl flex items-center justify-center shadow-md" style="background-color: rgba(255, 184, 0, 0.15); border: 1px solid rgba(255, 184, 0, 0.4); color: #FFB800;">
-            <span class="material-symbols-outlined text-3xl leading-none">wifi_off</span>
-          </div>
-          <h3 class="text-lg font-extrabold text-white tracking-tight mb-2 font-heading">Connection Required</h3>
-          <p class="text-sm font-medium text-slate-200 leading-relaxed mb-6">
-            You are offline. Please connect to the internet to use this feature.
-          </p>
-          <button type="button" onclick="document.getElementById('ns-global-offline-modal').style.display='none'" class="w-full py-3 rounded-xl font-extrabold text-sm text-slate-950 transition-all active:scale-95 cursor-pointer shadow-md" style="background-color: #FFB800; box-shadow: 0 4px 16px rgba(255, 184, 0, 0.3);">
-            Stay on Current Screen
-          </button>
+          <span class="ns-tile mx-auto"><span class="material-symbols-outlined">wifi_off</span></span>
+          <h3 id="ns-offline-title" class="text-[20px] font-bold mt-4">You’re offline</h3>
+          <p class="ns-card-sub mt-2">This part of the app needs an internet connection. Your home screen and saved info still work.</p>
+          <button type="button" onclick="hideOfflineModal()" class="ns-btn ns-btn--primary mt-6">OK</button>
         </div>
       `;
-      modal.onclick = () => {
-        modal.style.display = 'none';
-      };
+      modal.onclick = hideOfflineModal;
       document.body.appendChild(modal);
     }
     modal.style.display = 'flex';
@@ -3067,15 +2642,8 @@ document.addEventListener('mousedown', function(e) {
         placeholder = document.createElement('div');
         placeholder.className = 'ns-offline-map-placeholder';
         placeholder.innerHTML = `
-          <div class="w-10 h-10 rounded-full flex items-center justify-center mb-2 shadow-sm" style="background-color: rgba(255, 184, 0, 0.15); border: 1px solid rgba(255, 184, 0, 0.35); color: #FFB800;">
-            <span class="material-symbols-outlined text-xl leading-none">wifi_off</span>
-          </div>
-          <span class="text-xs font-extrabold tracking-wide uppercase" style="color: #FFB800;">
-            Map is unavailable offline
-          </span>
-          <span class="text-[11px] text-slate-400 font-medium mt-0.5">
-            Reconnect to view live verified essentials
-          </span>
+          <span class="material-symbols-outlined text-[24px] text-ink">wifi_off</span>
+          <span>The map needs a connection</span>
         `;
         mapCard.appendChild(placeholder);
       }
@@ -3090,15 +2658,14 @@ document.addEventListener('mousedown', function(e) {
     syncInlineMapPlaceholder(isOnline);
   }
 
-  // Intercept clicks on restricted links and AI tools when offline
+  // Intercept restricted links and the chat button while offline
   document.addEventListener(
     'click',
     function (e) {
       const isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
       if (isOnline) return;
 
-      // Guard AI Assistant button / drawer trigger when offline
-      const aiTrigger = e.target.closest('#chat-fab, #chatbot-fab-btn, [data-fab-alias="chatbot-fab-btn"]');
+      const aiTrigger = e.target.closest('#chat-fab, [data-fab-alias="chatbot-fab-btn"]');
       if (aiTrigger) {
         e.preventDefault();
         e.stopPropagation();
@@ -3106,7 +2673,6 @@ document.addEventListener('mousedown', function(e) {
         return;
       }
 
-      // Guard restricted page navigation links when offline
       const link = e.target.closest('a[href]');
       if (link) {
         const href = link.getAttribute('href');
@@ -3131,5 +2697,3 @@ document.addEventListener('mousedown', function(e) {
 
   window.showOfflineModal = showOfflineModal;
 })();
-
-

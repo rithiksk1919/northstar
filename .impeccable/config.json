@@ -1,0 +1,59 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "plus jakarta sans",
+        "createdAt": "2026-09-30T22:13:39.947Z",
+        "reason": "Claude: chosen to match the geometric sans in the user's supplied mockups (images 10-18) and design references"
+      },
+      {
+        "rule": "pulsing-dot",
+        "value": "*",
+        "files": [
+          "companion.html"
+        ],
+        "createdAt": "2026-09-30T22:13:51.421Z",
+        "reason": "Claude: .typing-dot is the Companion typing indicator, animated only while a real reply is in flight"
+      },
+      {
+        "rule": "pulsing-dot",
+        "value": "*",
+        "files": [
+          "seeker-dashboard.html"
+        ],
+        "createdAt": "2026-09-30T22:13:51.552Z",
+        "reason": "Claude: .typing-dot is the Companion typing indicator, animated only while a real reply is in flight"
+      },
+      {
+        "rule": "pulsing-dot",
+        "value": "*",
+        "files": [
+          "progress.html"
+        ],
+        "createdAt": "2026-09-30T22:13:51.697Z",
+        "reason": "Claude: .typing-dot is the Companion typing indicator, animated only while a real reply is in flight"
+      },
+      {
+        "rule": "kicker-above-heading",
+        "value": "*",
+        "files": [
+          "seeker-dashboard.html"
+        ],
+        "createdAt": "2026-09-30T22:13:51.839Z",
+        "reason": "Claude: 'RIGHT NOW' label copied from the user's Home mockup (image 13), which they asked to match exactly"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "seeker-dashboard.html"
+        ],
+        "createdAt": "2026-09-30T22:13:52.005Z",
+        "reason": "Claude: flagged element is ns-tile, a 42px icon tile with a centered glyph and no text"
+      }
+    ]
+  }
+}

@@ -7,42 +7,19 @@
 // 1. DYNAMIC DEVICE THEME DETECTION & SYNCHRONIZATION
 // ==========================================================================
 
+// Dark mode is switched off for now: the app always renders in light mode.
 function getSystemTheme() {
-  if (typeof window !== 'undefined' && window.matchMedia) {
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  }
   return 'light';
 }
 
-function applyTheme(theme) {
+function applyTheme() {
   if (typeof document === 'undefined') return;
-  document.documentElement.classList.remove('light', 'dark');
-  document.documentElement.classList.add(theme);
+  document.documentElement.classList.remove('dark');
+  document.documentElement.classList.add('light');
 }
 
 function initDeviceThemeDetection() {
-  const savedTheme = localStorage.getItem('northstar_theme');
-  if (savedTheme && (savedTheme === 'light' || savedTheme === 'dark')) {
-    applyTheme(savedTheme);
-  } else {
-    applyTheme(getSystemTheme());
-  }
-
-  if (typeof window !== 'undefined' && window.matchMedia) {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handler = (e) => {
-      const explicitOverride = localStorage.getItem('northstar_theme_override');
-      if (!explicitOverride) {
-        applyTheme(e.matches ? 'dark' : 'light');
-      }
-    };
-
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener('change', handler);
-    } else if (mediaQuery.addListener) {
-      mediaQuery.addListener(handler);
-    }
-  }
+  applyTheme('light');
 }
 
 if (typeof document !== 'undefined') {

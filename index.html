@@ -3,371 +3,177 @@
 
 <head>
     <meta charset="utf-8">
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title>Northstar | Your Path to Support</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-        rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link rel="stylesheet" href="css/northstar.css">
-    <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    "fontFamily": {
-                        "sans": ["Inter", "sans-serif"],
-                        "heading": ["Plus Jakarta Sans", "sans-serif"]
-                    },
-                    "colors": {
-                        "obsidian": "#0B0E14",
-                        "surface-navy": "#121722",
-                        "stroke-slate": "#232C3F",
-                        "text-primary": "#F0F4F8",
-                        "text-secondary": "#8896AB",
-                        "accent-emerald": "#10B981",
-                        "error": "#ba1a1a",
-                        "surface": "#121722",
-                        "tertiary-container": "#121722",
-                        "surface-variant": "#121722",
-                        "on-primary-container": "#8896AB",
-                        "surface-container-lowest": "#0B0E14",
-                        "primary-fixed-dim": "#bec6e0",
-                        "on-surface": "#F0F4F8",
-                        "surface-tint": "#565e74",
-                        "on-background": "#F0F4F8",
-                        "background": "#0B0E14",
-                        "outline": "#232C3F",
-                        "surface-container": "#121722",
-                        "on-surface-variant": "#8896AB",
-                        "outline-variant": "#232C3F"
-                    },
-                    "borderRadius": {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "2xl": "1rem",
-                        "3xl": "1.5rem",
-                        "full": "9999px"
-                    }
-                },
-            },
-        }
-    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#111111">
+    <title>Northstar</title>
+    <link rel="icon" href="favicon.png">
+    <script src="js/ns-boot.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com?plugins=container-queries"></script>
+    <script src="js/tailwind-config.js"></script>
+    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/onboarding.css">
 </head>
 
-<body class="bg-[#F4F5F7] min-h-screen flex items-center justify-center p-0 sm:py-6 text-slate-900 font-sans selection:bg-amber-500/30 selection:text-amber-900" style="background-color: var(--bg-light) !important; color: var(--text-dark) !important;">
+<body>
 
-    <!-- Mobile Frame Shell -->
-    <div
-        class="app-frame phone-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-[#F4F5F7] sm:rounded-[44px] shadow-2xl relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-300 z-10" style="background-color: var(--bg-light) !important;">
+    <div class="app-frame">
 
-
-
-        <!-- ============================================ -->
-        <!-- SWIRLING PAGE TRANSITION LOADER              -->
-        <!-- ============================================ -->
-        <div id="swirling-loader-overlay" class="hidden fixed inset-0 z-[300] bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center transition-all duration-200">
-            <div class="flex flex-col items-center gap-3 p-6 bg-slate-900/90 border border-slate-800 rounded-3xl shadow-2xl">
-                <svg id="swirling-svg-spinner" class="w-14 h-14 text-amber-400" viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
-                    <style>
-                        @keyframes loading-ui-swirling-spin {
-                            to { transform: rotate(360deg); }
-                        }
-                        @keyframes loading-ui-swirling-dash {
-                            0% { stroke-dasharray: 1, 800; stroke-dashoffset: 0; }
-                            50% { stroke-dasharray: 400, 400; stroke-dashoffset: -200px; }
-                            100% { stroke-dasharray: 800, 1; stroke-dashoffset: -800px; }
-                        }
-                        .loading-ui-swirling-circle {
-                            transform-origin: center;
-                            animation:
-                                loading-ui-swirling-dash 1.5s ease-in-out infinite alternate,
-                                loading-ui-swirling-spin 2s linear infinite;
-                        }
-                    </style>
-                    <circle class="loading-ui-swirling-circle" cx="400" cy="400" r="200" fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="50" />
-                </svg>
-                <span class="text-xs font-bold tracking-wide text-slate-300">Loading...</span>
-            </div>
-        </div>
-
-        <!-- ============================================ -->
-        <!-- AUTH GATEWAY OVERLAY (EXACT DASHBOARD TOKENS) -->
-        <!-- ============================================ -->
-        <!-- ============================================ -->
-        <!-- MAIN APP LAYOUT                             -->
-        <!-- ============================================ -->
-        <div id="main-app-layout" class="flex-1 flex flex-col overflow-hidden">
-
-            <!-- App Header -->
-            <header
-                class="bg-white sticky top-0 z-40 flex justify-between items-center w-full px-5 py-3 border-b border-slate-200">
-                <div class="flex items-center gap-2">
-                    <span class="material-symbols-outlined text-slate-800 text-xl font-bold cursor-pointer">menu</span>
-                    <h1 class="text-lg font-bold text-slate-900 font-heading tracking-tight">Northstar</h1>
-                </div>
-                <div class="header-actions-right flex items-center gap-2">
-                    <button id="theme-toggle-btn" onclick="toggleTheme()" class="top-nav-btn icon-btn w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-amber-400 text-xs font-bold transition-all active:scale-95 cursor-pointer flex-shrink-0" title="Toggle Light / Dark Mode">
-                        <span class="material-symbols-outlined text-base leading-none">brightness_4</span>
-                    </button>
-                    <button id="profile-btn" type="button" onclick="openSettingsModal()" class="top-nav-btn profile-avatar-btn w-9 h-9 rounded-full bg-slate-900 text-[#facc15] dark:bg-[#facc15] dark:text-slate-950 border border-slate-300 dark:border-amber-300 flex items-center justify-center font-extrabold text-sm shadow-sm transition-all active:scale-95 cursor-pointer select-none flex-shrink-0" title="Settings">
-                        S
-                    </button>
-                </div>
-            </header>
-
-            <!-- Main Scrollable Canvas -->
-            <main class="flex-grow px-5 pt-6 pb-24 flex flex-col items-center space-y-5 bg-[#F4F5F7]">
-
-                <!-- Spacer — onboarding overlay handles auth before main content is shown -->
-
-            </main>
-
-            <!-- Bottom Navigation Bar -->
-            <nav id="main-nav"
-                class="bottom-nav absolute bottom-0 left-0 w-full z-40 flex justify-around items-center px-1.5 py-2 bg-[#121722] border-t border-[#232C3F]">
-                <a class="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-2xl px-2 py-1 shadow-md starlight-glow active:scale-95 duration-150"
-                    href="index.html">
-                    <span class="material-symbols-outlined text-xl"
-                        style="font-variation-settings: 'FILL' 1;">home</span>
-                    <span class="text-[10px] sm:text-[11px] font-bold">Home</span>
-                </a>
-                <a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-1.5 py-1 transition-colors"
-                    href="seeker-dashboard.html">
-                    <span class="material-symbols-outlined text-xl">dashboard</span>
-                    <span class="text-[10px] sm:text-[11px] font-medium">Dashboard</span>
-                </a>
-                <a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-1.5 py-1 transition-colors"
-                    href="progress.html">
-                    <span class="material-symbols-outlined text-xl">timeline</span>
-                    <span class="text-[10px] sm:text-[11px] font-medium">Progress</span>
-                </a>
-                <a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-1.5 py-1 transition-colors"
-                    href="resume-builder.html">
-                    <span class="material-symbols-outlined text-xl">description</span>
-                    <span class="text-[10px] sm:text-[11px] font-medium">Resume</span>
-                </a>
-                <a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-1.5 py-1 transition-colors"
-                    href="resource-map.html">
-                    <span class="material-symbols-outlined text-xl">map</span>
-                    <span class="text-[10px] sm:text-[11px] font-medium">Map</span>
-                </a>
-                <a class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary px-1.5 py-1 transition-colors"
-                    href="call-shelter.html">
-                    <span class="material-symbols-outlined text-xl">call</span>
-                    <span class="text-[10px] sm:text-[11px] font-medium">Shelter</span>
-                </a>
-            </nav>
-
-        </div><!-- /#main-app-layout -->
-
-
+        <!-- Kept for northstar.js, which reveals it on index; the onboarding overlay sits on top -->
+        <div id="main-app-layout" class="hidden"></div>
 
     <!-- ============================================================ -->
     <!-- ONBOARDING OVERLAY — Constrained to Mobile Frame            -->
+    <!-- Styles: css/onboarding.css                                   -->
     <!-- ============================================================ -->
-    <div id="onboarding-overlay"
-        style="position:absolute;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#0b0e14 0%,#121722 60%,#1a2238 100%);overflow:hidden;border-radius:inherit;">
+    <div id="onboarding-overlay">
 
-        <!-- Floating particles canvas -->
-        <canvas id="onboarding-particles" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;"></canvas>
+        <!-- Brand mark, reused via <use>. N follows currentColor, star follows --ob-star -->
+        <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+            <defs>
+                <symbol id="ns-mark" viewBox="236 40 1090 966">
+                    <path fill="currentColor" d="M250 340 L752 737 L752 405 L881 493 L881 991 L381 597 L381 991 L250 905 Z"/>
+                    <path fill="var(--ob-star, #FFC933)" d="M1062 55 C1072 150 1088 225 1120 250 C1152 282 1215 290 1310 300 C1215 310 1152 318 1120 350 C1088 375 1072 450 1062 548 C1052 450 1036 375 1004 350 C972 318 909 310 813 300 C909 290 972 282 1004 250 C1036 225 1052 150 1062 55 Z"/>
+                </symbol>
+            </defs>
+        </svg>
 
-        <!-- Card shell -->
-        <div style="position:relative;z-index:1;width:100%;max-width:380px;padding:0 20px;">
-
-            <!-- ======= STEP 1: Splash / Choose path ======= -->
-            <div id="onboarding-step-1" style="display:flex;flex-direction:column;align-items:center;gap:20px;animation:fadeInUp 0.5s ease both;">
-
-                <!-- Logo & Brand -->
-                <div style="text-align:center;margin-bottom:4px;">
-                    <img src="assets/northstar-logo-new.png" alt="Northstar Logo" style="width:100px;height:auto;margin:0 auto 12px;border-radius:22px;">
-                    <h1 style="font-family:'Plus Jakarta Sans',sans-serif;font-size:28px;font-weight:800;color:#f0f4f8;letter-spacing:-0.5px;margin:0 0 6px;">Northstar</h1>
-                    <p style="font-size:13px;color:#8896ab;margin:0;line-height:1.5;">Your path to support &amp; community.</p>
-                </div>
-
-                <!-- Divider -->
-                <div style="width:48px;height:2px;background:linear-gradient(90deg,transparent,#f59e0b,transparent);border-radius:2px;"></div>
-
-                <!-- Action Buttons -->
-                <div style="width:100%;display:flex;flex-direction:column;gap:12px;">
-                    <button id="onboarding-create-btn"
-                        onclick="showOnboardingStep(2,'create')"
-                        style="width:100%;height:52px;border-radius:16px;background:linear-gradient(135deg,#f59e0b,#fbbf24);border:none;color:#0b0e14;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 6px 24px rgba(245,158,11,0.3);transition:transform 0.15s,box-shadow 0.15s;" 
-                        onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 10px 32px rgba(245,158,11,0.4)'"
-                        onmouseout="this.style.transform='';this.style.boxShadow='0 6px 24px rgba(245,158,11,0.3)'">
-                        <span class="material-symbols-outlined" style="font-size:20px;font-variation-settings:'FILL' 1;">person_add</span>
-                        Create Account
-                    </button>
-                    <button id="onboarding-signin-btn"
-                        onclick="showOnboardingStep(2,'signin')"
-                        style="width:100%;height:52px;border-radius:16px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.12);color:#f0f4f8;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;backdrop-filter:blur(10px);transition:transform 0.15s,background 0.15s;"
-                        onmouseover="this.style.background='rgba(255,255,255,0.1)';this.style.transform='translateY(-2px)'"
-                        onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.transform=''">
-                        <span class="material-symbols-outlined" style="font-size:20px;font-variation-settings:'FILL' 1;">login</span>
-                        Sign In
-                    </button>
-                    <button id="onboarding-admin-btn"
-                        onclick="if(window.showNateWelcome){ window.showNateWelcome('seeker-dashboard.html'); } else { window.location.href='seeker-dashboard.html'; }"
-                        style="width:100%;height:52px;border-radius:16px;background:rgba(239, 68, 68, 0.1);border:1.5px solid rgba(239, 68, 68, 0.3);color:#fca5a5;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;backdrop-filter:blur(10px);transition:transform 0.15s,background 0.15s;"
-                        onmouseover="this.style.background='rgba(239, 68, 68, 0.2)';this.style.transform='translateY(-2px)'"
-                        onmouseout="this.style.background='rgba(239, 68, 68, 0.1)';this.style.transform=''">
-                        <span class="material-symbols-outlined" style="font-size:20px;font-variation-settings:'FILL' 1;">admin_panel_settings</span>
-                        Admin Test Login
-                    </button>
-                </div>
-
-                <!-- Skip/Guest link -->
-                <button onclick="dismissOnboarding(true)" style="background:none;border:none;color:#4b5563;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;padding:4px 8px;text-decoration:underline;text-underline-offset:3px;">Continue as guest</button>
+        <!-- ======= SPLASH (visual only, once per browser session) ======= -->
+        <div id="ob-splash" class="ob-splash" aria-hidden="true">
+            <div class="ob-splash-center">
+                <svg class="ob-splash-mark" viewBox="236 40 1090 966" aria-hidden="true">
+                    <path class="ob-splash-n" d="M250 340 L752 737 L752 405 L881 493 L881 991 L381 597 L381 991 L250 905 Z"/>
+                    <path class="ob-splash-star" d="M1062 55 C1072 150 1088 225 1120 250 C1152 282 1215 290 1310 300 C1215 310 1152 318 1120 350 C1088 375 1072 450 1062 548 C1052 450 1036 375 1004 350 C972 318 909 310 813 300 C909 290 972 282 1004 250 C1036 225 1052 150 1062 55 Z"/>
+                </svg>
+                <p class="ob-splash-tag">Your next step, right now.</p>
             </div>
-
-            <!-- ======= STEP 2: Create Account / Sign In Form ======= -->
-            <div id="onboarding-step-2" style="display:none;flex-direction:column;gap:16px;animation:fadeInUp 0.4s ease both;">
-
-                <!-- Back + Title -->
-                <div style="display:flex;align-items:center;gap:12px;margin-bottom:2px;">
-                    <button type="button" onclick="showOnboardingStep(1)" style="width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:#f0f4f8;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                        <span class="material-symbols-outlined" style="font-size:20px;">arrow_back</span>
-                    </button>
-                    <div>
-                        <h2 id="onboarding-form-title" style="font-family:'Plus Jakarta Sans',sans-serif;font-size:22px;font-weight:800;color:#f0f4f8;margin:0 0 2px;letter-spacing:-0.02em;">Create Account</h2>
-                        <p id="onboarding-form-subtitle" style="font-size:12px;color:#8896ab;margin:0;">Complete your details to get started.</p>
-                    </div>
-                </div>
-
-                <!-- Role Selector (I AM A: Seeker | Helper) -->
-                <div id="onboarding-role-selector" style="display:flex;flex-direction:column;gap:6px;">
-                    <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#8896ab;">I AM A:</label>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-                        <button type="button" id="role-toggle-seeker" onclick="selectOnboardingRole('seeker')" style="height:48px;border-radius:14px;background:#f59e0b;border:none;color:#0b0e14;font-size:14px;font-weight:800;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s;box-shadow:0 4px 14px rgba(245,158,11,0.25);">
-                            <span class="material-symbols-outlined" style="font-size:18px;">search</span>
-                            Seeker
-                        </button>
-                        <button type="button" id="role-toggle-helper" onclick="selectOnboardingRole('volunteer')" style="height:48px;border-radius:14px;background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.12);color:#f0f4f8;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s;">
-                            <span class="material-symbols-outlined" style="font-size:18px;">volunteer_activism</span>
-                            Helper
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Form -->
-                <form id="simple-login-form" onsubmit="handleSimpleLoginSubmit(event)" style="display:flex;flex-direction:column;gap:12px;">
-                    <div id="onboarding-name-group">
-                        <label id="onboarding-name-label" style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#8896ab;margin-bottom:6px;">YOUR NAME</label>
-                        <input type="text" id="simple-login-name" placeholder="e.g. Alex Smith" required autocomplete="username"
-                            style="width:100%;height:48px;border-radius:14px;background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.1);color:#f0f4f8;font-size:14px;font-family:inherit;padding:0 16px;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
-                            onfocus="this.style.borderColor='#f59e0b'"
-                            onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
-                    </div>
-                    <div>
-                        <label style="display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#8896ab;margin-bottom:6px;">PASSWORD</label>
-                        <input type="password" id="simple-login-password" placeholder="Min 6 characters" required minlength="4" autocomplete="current-password"
-                            style="width:100%;height:48px;border-radius:14px;background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.1);color:#f0f4f8;font-size:14px;font-family:inherit;padding:0 16px;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
-                            onfocus="this.style.borderColor='#f59e0b'"
-                            onblur="this.style.borderColor='rgba(255,255,255,0.1)'">
-                    </div>
-
-                    <div id="simple-login-error" style="display:none;font-size:12px;color:#f87171;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);padding:10px 14px;border-radius:12px;text-align:center;"></div>
-
-                    <button type="submit" id="simple-login-submit-btn"
-                        style="width:100%;height:52px;border-radius:16px;background:linear-gradient(135deg,#f59e0b,#fbbf24);border:none;color:#0b0e14;font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 6px 24px rgba(245,158,11,0.3);transition:transform 0.15s;margin-top:4px;"
-                        onmouseover="this.style.transform='translateY(-2px)'"
-                        onmouseout="this.style.transform=''">
-                        <span id="onboarding-submit-icon" class="material-symbols-outlined" style="font-size:20px;font-variation-settings:'FILL' 1;">person_add</span>
-                        <span id="onboarding-submit-label">Create Account</span>
-                    </button>
-                </form>
-            </div>
-
-            <!-- ======= STEP 3: Choose Role (Only for New Accounts) ======= -->
-            <div id="onboarding-step-3" style="display:none;flex-direction:column;align-items:center;gap:20px;animation:fadeInUp 0.4s ease both;">
-                
-                <!-- Hero Illustration Card -->
-                <div style="width:100%;background:linear-gradient(to bottom, #1C2538, #0D1424);color:white;border-radius:24px;padding:20px;display:flex;flex-direction:column;align-items:center;text-align:center;box-shadow:0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);border:1px solid #1e293b;position:relative;overflow:hidden;gap:12px;">
-                    <div style="width:64px;height:64px;border-radius:16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;padding:8px;box-shadow:inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);margin-top:4px;margin-bottom:4px;">
-                        <span class="material-symbols-outlined" style="font-size:30px;color:white;">auto_awesome</span>
-                    </div>
-                    <div style="display:flex;flex-direction:column;gap:6px;">
-                        <h2 style="font-size:20px;font-weight:700;color:white;font-family:'Plus Jakarta Sans', sans-serif;letter-spacing:-0.025em;margin:0;">Your path to support.</h2>
-                        <p style="font-size:11px;color:#cbd5e1;line-height:1.625;max-width:256px;font-weight:400;margin:0;">
-                            Northstar connects community volunteers with those seeking help when it's needed most.
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Action Triggers (Black Pill vs Yellow Pill) -->
-                <div style="width:100%;display:flex;flex-direction:column;gap:10px;">
-                    <!-- Black Pill Primary Button -->
-                    <button onclick="event.preventDefault(); setRole('volunteer'); window.location.href='helper-dashboard.html';"
-                        style="width:100%;height:52px;background:#020617;color:white;font-weight:700;border-radius:16px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);transition:all 0.15s;font-size:14px;border:none;cursor:pointer;" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
-                        <span class="material-symbols-outlined" style="font-size:18px;color:white;">volunteer_activism</span>
-                        <span>I want to help</span>
-                    </button>
-
-                    <!-- Yellow Pill Secondary Button -->
-                    <button onclick="event.preventDefault(); setRole('seeker'); window.location.href='seeker-dashboard.html';"
-                        style="width:100%;height:52px;background:#fbbf24;color:#020617;font-weight:700;border-radius:16px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);transition:all 0.15s;font-size:14px;border:none;cursor:pointer;" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
-                        <span class="material-symbols-outlined" style="font-size:18px;color:#020617;">search</span>
-                        <span>I need help</span>
-                    </button>
-                </div>
-
-                <!-- Capacity Progress Bar Card -->
-                <div style="width:100%;background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.1);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:8px;backdrop-filter:blur(10px);">
-                    <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600;">
-                        <span style="color:#8896ab;">Active Community</span>
-                        <span style="color:#f0f4f8;font-weight:700;">84% Capacity</span>
-                    </div>
-                    <div style="width:100%;background:rgba(0,0,0,0.3);border-radius:9999px;height:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.05);">
-                        <div style="background:#fbbf24;height:100%;border-radius:9999px;width:84%;"></div>
-                    </div>
-                </div>
-            </div>
-
         </div>
 
-        <style>
-            @keyframes fadeInUp {
-                from { opacity:0; transform:translateY(20px); }
-                to   { opacity:1; transform:translateY(0); }
-            }
-            @keyframes fadeOutDown {
-                from { opacity:1; transform:translateY(0); }
-                to   { opacity:0; transform:translateY(20px); }
-            }
-        </style>
+        <!-- ======= STEP 1: Welcome / Choose path ======= -->
+        <section id="onboarding-step-1" class="ob-screen" aria-labelledby="ob-welcome-title" style="display:flex;">
+            <div class="ob-logo-row">
+                <svg class="ob-mark" aria-hidden="true"><use href="#ns-mark"/></svg>
+            </div>
+
+            <div class="ob-body ob-body--center ob-stagger">
+                <img class="ob-art" style="--i:0" src="assets/illustrations/welcome.svg" alt="">
+                <h1 id="ob-welcome-title" class="ob-title ob-title--center" style="--i:1">Help is closer than you think</h1>
+                <p class="ob-lede ob-lede--center" style="--i:2">Beds, meals, Wi-Fi and gigs, all in one place.</p>
+            </div>
+
+            <div class="ob-actions ob-stagger">
+                <button id="onboarding-create-btn" type="button" class="ob-option" style="--i:3" onclick="showOnboardingStep(2,'create')">
+                    <span class="material-symbols-outlined" aria-hidden="true">person_add</span>
+                    <span>Create an account</span>
+                </button>
+                <button type="button" class="ob-option" style="--i:4" onclick="dismissOnboarding(true)">
+                    <span class="material-symbols-outlined" aria-hidden="true">explore</span>
+                    <span>Explore without an account</span>
+                </button>
+                <p class="ob-small ob-small--center" style="--i:5">Already have an account?</p>
+                <button id="onboarding-signin-btn" type="button" class="ob-btn ob-btn--secondary" style="--i:5" onclick="showOnboardingStep(2,'signin')">
+                    Log in
+                </button>
+                <button id="onboarding-admin-btn" type="button" class="ob-admin" style="--i:6" onclick="nsGo('seeker-dashboard.html')">
+                    Admin test login
+                </button>
+            </div>
+        </section>
+
+        <!-- ======= STEP 2: Create Account / Log In Form ======= -->
+        <section id="onboarding-step-2" class="ob-screen" aria-labelledby="onboarding-form-heading" style="display:none;">
+            <div class="ob-topbar">
+                <button type="button" class="ob-back" onclick="showOnboardingStep(1)" aria-label="Close">
+                    <span class="material-symbols-outlined" aria-hidden="true">close</span>
+                </button>
+                <svg class="ob-mark ob-mark--sm" aria-hidden="true"><use href="#ns-mark"/></svg>
+                <span aria-hidden="true"></span>
+                <h2 id="onboarding-form-title" class="sr-only">Create account</h2>
+            </div>
+
+            <form id="simple-login-form" class="ob-form" onsubmit="handleSimpleLoginSubmit(event)" novalidate>
+                <div class="ob-body">
+                    <h1 id="onboarding-form-heading" class="ob-title">Let’s get you signed up</h1>
+                    <p id="onboarding-form-subtitle" class="ob-lede">Just a name and a password. No email, ID or address needed.</p>
+
+                    <div class="ob-fields">
+                        <div id="onboarding-name-group" class="ob-field">
+                            <label id="onboarding-name-label" class="ob-field__label" for="simple-login-name">Your name</label>
+                            <input type="text" id="simple-login-name" class="ob-input" placeholder="e.g. Alex Smith" required
+                                autocomplete="username" autocorrect="off" spellcheck="false">
+                        </div>
+
+                        <div class="ob-field ob-field--pw">
+                            <label class="ob-field__label" for="simple-login-password">Password</label>
+                            <input type="password" id="simple-login-password" class="ob-input" placeholder="At least 4 characters" required minlength="4"
+                                autocomplete="current-password">
+                            <button type="button" class="ob-reveal" aria-label="Show password" aria-controls="simple-login-password" onclick="toggleOnboardingPassword(this)">
+                                <span class="material-symbols-outlined" aria-hidden="true">visibility</span>
+                            </button>
+                        </div>
+
+                        <!-- Role Selector (Seeker | Helper) -->
+                        <div id="onboarding-role-selector">
+                            <span class="ob-label" id="ob-role-label">I’m here to</span>
+                            <div class="ob-roles" role="group" aria-labelledby="ob-role-label">
+                                <button type="button" id="role-toggle-seeker" class="ob-role is-selected" aria-pressed="true" onclick="selectOnboardingRole('seeker')">Find help</button>
+                                <button type="button" id="role-toggle-helper" class="ob-role" aria-pressed="false" onclick="selectOnboardingRole('volunteer')">Give help</button>
+                            </div>
+                        </div>
+
+                        <div id="onboarding-create-note" class="ob-note">
+                            <span class="material-symbols-outlined" aria-hidden="true">lock</span>
+                            <span>Write your password down somewhere safe. You’ll need it with your name to log in again.</span>
+                        </div>
+
+                        <div id="simple-login-error" class="ob-error" role="alert" style="display:none;"></div>
+                    </div>
+                </div>
+
+                <div class="ob-actions">
+                    <button type="submit" id="simple-login-submit-btn" class="ob-btn ob-btn--primary">
+                        <span id="onboarding-submit-label">Continue</span>
+                        <span id="onboarding-submit-icon" class="hidden" aria-hidden="true"></span>
+                    </button>
+                    <button type="button" id="onboarding-switch-mode" class="ob-link" onclick="toggleOnboardingMode()">
+                        I already have an account
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- ======= STEP 3: Choose Role (legacy, not linked) ======= -->
+        <section id="onboarding-step-3" class="ob-screen" aria-labelledby="ob-role-title" style="display:none;">
+            <div class="ob-body">
+                <h1 id="ob-role-title" class="ob-title">How will you use Northstar?</h1>
+            </div>
+            <div class="ob-actions">
+                <button type="button" class="ob-btn ob-btn--primary" onclick="event.preventDefault(); setRole('seeker'); nsGo('seeker-dashboard.html');">I need help</button>
+                <button type="button" class="ob-btn ob-btn--secondary" onclick="event.preventDefault(); setRole('volunteer'); nsGo('helper-dashboard.html');">I want to help</button>
+            </div>
+        </section>
+
+        <!-- ======= STEP 4: Location permission (after creating an account or exploring) ======= -->
+        <section id="onboarding-step-4" class="ob-screen" aria-labelledby="ob-location-title" style="display:none;">
+            <div class="ob-body ob-body--center">
+                <p class="ob-kicker">Help is</p>
+                <p class="ob-title ob-title--center !mt-1">closer than you think</p>
+                <img class="ob-art ob-art--loc" src="assets/illustrations/location.svg" alt="">
+                <div class="ob-permission" role="dialog" aria-labelledby="ob-location-title" aria-describedby="ob-location-desc">
+                    <h2 id="ob-location-title">Allow Northstar to use your location?</h2>
+                    <p id="ob-location-desc">We use it only to show beds, meals and gigs near you.</p>
+                    <div class="ob-permission__actions">
+                        <button type="button" class="ob-btn ob-btn--secondary" onclick="finishLocationStep(false)">Not now</button>
+                        <button type="button" id="ob-location-allow" class="ob-btn ob-btn--yellow" onclick="finishLocationStep(true)">Allow</button>
+                    </div>
+                </div>
+            </div>
+            <p class="ob-small ob-small--center pb-2">You can change this anytime in your phone’s settings.</p>
+        </section>
+
     </div>
     </div><!-- /.app-frame -->
-
-    <!-- Emergency SOS Dial Modal -->
-    <div id="call-overlay-modal"
-        class="fixed inset-0 z-[100] hidden items-end sm:items-center justify-center bg-slate-950/80 backdrop-blur-md p-0 sm:p-4">
-        <div
-            class="modal-drawer w-full sm:max-w-md bg-slate-900 border border-slate-800 rounded-t-3xl sm:rounded-3xl p-6 text-white text-center space-y-5 shadow-2xl transform translate-y-full transition-transform duration-300">
-            <div class="w-12 h-1.5 bg-slate-700 rounded-full mx-auto sm:hidden"></div>
-            <div class="w-20 h-20 rounded-full bg-amber-400/20 flex items-center justify-center mx-auto calling-pulse">
-                <span class="material-symbols-outlined text-4xl text-amber-400">call_in_progress</span>
-            </div>
-            <div class="space-y-1">
-                <span class="text-xs font-bold uppercase tracking-wider text-amber-400">24/7 Emergency Dispatch</span>
-                <h3 id="call-modal-name" class="text-xl font-bold">Northstar Helpline</h3>
-                <p id="call-modal-phone" class="text-2xl font-mono text-slate-300 font-bold">1-800-555-0199</p>
-            </div>
-            <p class="text-xs text-slate-400">Connecting to nearest open shelter & emergency transport coordinator...
-            </p>
-            <div class="flex gap-3 pt-2">
-                <button onclick="closeModal('call-overlay-modal')"
-                    class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold text-sm transition-colors">Cancel</button>
-                <a href="tel:18005550199"
-                    class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-colors">
-                    <span class="material-symbols-outlined text-sm">call</span> Call Now
-                </a>
-            </div>
-        </div>
-    </div>
-
-
-
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
@@ -375,10 +181,6 @@
     <script src="js/northstar.js"></script>
     <script src="js/jobs.js"></script>
     <script>
-        function triggerEmergencyCall() {
-            openModal('call-overlay-modal');
-        }
-
         window.continueAsGuest = function() {
             if (typeof loginAsGuest === 'function') {
                 loginAsGuest();
@@ -436,101 +238,167 @@
             if (typeof window.setRole === 'function') window.setRole(role);
             const seekerBtn = document.getElementById('role-toggle-seeker');
             const helperBtn = document.getElementById('role-toggle-helper');
-            if (role === 'seeker') {
-                if (seekerBtn) {
-                    seekerBtn.style.background = '#f59e0b';
-                    seekerBtn.style.border = 'none';
-                    seekerBtn.style.color = '#0b0e14';
-                    seekerBtn.style.fontWeight = '800';
-                    seekerBtn.style.boxShadow = '0 4px 14px rgba(245,158,11,0.25)';
-                }
-                if (helperBtn) {
-                    helperBtn.style.background = 'rgba(255,255,255,0.06)';
-                    helperBtn.style.border = '1.5px solid rgba(255,255,255,0.12)';
-                    helperBtn.style.color = '#f0f4f8';
-                    helperBtn.style.fontWeight = '700';
-                    helperBtn.style.boxShadow = 'none';
-                }
-            } else {
-                if (helperBtn) {
-                    helperBtn.style.background = '#f59e0b';
-                    helperBtn.style.border = 'none';
-                    helperBtn.style.color = '#0b0e14';
-                    helperBtn.style.fontWeight = '800';
-                    helperBtn.style.boxShadow = '0 4px 14px rgba(245,158,11,0.25)';
-                }
-                if (seekerBtn) {
-                    seekerBtn.style.background = 'rgba(255,255,255,0.06)';
-                    seekerBtn.style.border = '1.5px solid rgba(255,255,255,0.12)';
-                    seekerBtn.style.color = '#f0f4f8';
-                    seekerBtn.style.fontWeight = '700';
-                    seekerBtn.style.boxShadow = 'none';
-                }
+            const isSeeker = role === 'seeker';
+            if (seekerBtn) {
+                seekerBtn.classList.toggle('is-selected', isSeeker);
+                seekerBtn.setAttribute('aria-pressed', String(isSeeker));
+            }
+            if (helperBtn) {
+                helperBtn.classList.toggle('is-selected', !isSeeker);
+                helperBtn.setAttribute('aria-pressed', String(!isSeeker));
             }
         };
 
+        // Show / hide password (visual only)
+        window.toggleOnboardingPassword = function(btn) {
+            const input = document.getElementById('simple-login-password');
+            if (!input) return;
+            const show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+            const icon = btn.querySelector('.material-symbols-outlined');
+            if (icon) icon.textContent = show ? 'visibility_off' : 'visibility';
+        };
+
+        // Swap between "Create account" and "Sign in" from inside the form
+        window.toggleOnboardingMode = function() {
+            showOnboardingStep(2, _onboardingMode === 'create' ? 'signin' : 'create');
+        };
+
+        // Clear the red error outline as soon as the person starts typing again
+        ['simple-login-name', 'simple-login-password'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', () => el.removeAttribute('aria-invalid'));
+        });
+
+        // ---- Screen transitions: slide forward/back, fade when staying on the same step ----
+        let _onboardingCurrentStep = 1;
+        const _OB_ANIM = ['ob-in-fwd', 'ob-in-back', 'ob-in-fade', 'ob-out-fwd', 'ob-out-back'];
+
+        function _obTransition(step) {
+            const next = document.getElementById('onboarding-step-' + step);
+            if (!next) return;
+            const prevStep = _onboardingCurrentStep;
+            const dir = step > prevStep ? 'fwd' : (step < prevStep ? 'back' : 'fade');
+            _onboardingCurrentStep = step;
+
+            [1, 2, 3, 4].forEach(i => {
+                const el = document.getElementById('onboarding-step-' + i);
+                if (!el || el === next) return;
+                if (el.style.display === 'none') return;
+                el.classList.remove(..._OB_ANIM);
+                if (dir === 'fade') { el.style.display = 'none'; return; }
+                el.classList.add(dir === 'fwd' ? 'ob-out-fwd' : 'ob-out-back');
+                setTimeout(() => {
+                    if (_onboardingCurrentStep !== i) {
+                        el.style.display = 'none';
+                        el.classList.remove(..._OB_ANIM);
+                    }
+                }, 260);
+            });
+
+            next.classList.remove(..._OB_ANIM);
+            next.style.display = 'flex';
+            next.scrollTop = 0;
+            void next.offsetWidth; // reflow so the animation restarts
+            next.classList.add('ob-in-' + dir);
+        }
+
         window.showOnboardingStep = function(step, mode) {
-            const step1 = document.getElementById('onboarding-step-1');
-            const step2 = document.getElementById('onboarding-step-2');
-            const step3 = document.getElementById('onboarding-step-3');
             const title = document.getElementById('onboarding-form-title');
+            const heading = document.getElementById('onboarding-form-heading');
             const subtitle = document.getElementById('onboarding-form-subtitle');
-            const submitIcon = document.getElementById('onboarding-submit-icon');
             const submitLabel = document.getElementById('onboarding-submit-label');
             const roleSelector = document.getElementById('onboarding-role-selector');
-            const emailGroup = document.getElementById('onboarding-email-group');
             const nameLabel = document.getElementById('onboarding-name-label');
+            const nameInput = document.getElementById('simple-login-name');
+            const passInput = document.getElementById('simple-login-password');
+            const createNote = document.getElementById('onboarding-create-note');
+            const switchBtn = document.getElementById('onboarding-switch-mode');
             const errDiv = document.getElementById('simple-login-error');
 
-            if (step === 1) {
-                if(step2) step2.style.display = 'none';
-                if(step3) step3.style.display = 'none';
-                if(step1) {
-                    step1.style.display = 'flex';
-                    step1.style.animation = 'none';
-                    void step1.offsetWidth; // reflow
-                    step1.style.animation = 'fadeInUp 0.4s ease both';
-                }
-            } else if (step === 2) {
+            if (step === 2) {
                 _onboardingMode = mode || 'create';
                 const isCreate = _onboardingMode === 'create';
 
-                if (title) title.textContent = isCreate ? 'Create Account' : 'Welcome Back';
+                if (title) title.textContent = isCreate ? 'Create account' : 'Log in';
+                if (heading) heading.textContent = isCreate ? 'Let’s get you signed up' : 'Welcome back';
                 if (subtitle) subtitle.textContent = isCreate
-                    ? 'Complete your details to get started.'
-                    : 'Enter your details to sign in.';
-                if (submitIcon) submitIcon.textContent = isCreate ? 'person_add' : 'login';
-                if (submitLabel) submitLabel.textContent = isCreate ? 'Create Account' : 'Sign In';
+                    ? 'Just a name and a password. No email, ID or address needed.'
+                    : 'Log in with the name and password you picked.';
+                if (submitLabel) submitLabel.textContent = 'Continue';
+                if (switchBtn) switchBtn.textContent = isCreate ? 'I already have an account' : 'Create a new account';
 
-                if (roleSelector) roleSelector.style.display = isCreate ? 'flex' : 'none';
-                if (nameLabel) nameLabel.textContent = isCreate ? 'YOUR NAME' : 'USERNAME OR EMAIL';
+                if (roleSelector) roleSelector.style.display = isCreate ? '' : 'none';
+                if (createNote) createNote.style.display = isCreate ? '' : 'none';
+                if (nameLabel) nameLabel.textContent = isCreate ? 'Your name' : 'Username or email';
+                if (nameInput) nameInput.placeholder = isCreate ? 'e.g. Alex Smith' : 'The name you signed up with';
+                if (passInput) {
+                    passInput.setAttribute('autocomplete', isCreate ? 'new-password' : 'current-password');
+                    passInput.type = 'password';
+                }
+                const reveal = document.querySelector('#onboarding-overlay .ob-reveal');
+                if (reveal) {
+                    reveal.setAttribute('aria-label', 'Show password');
+                    const icon = reveal.querySelector('.material-symbols-outlined');
+                    if (icon) icon.textContent = 'visibility';
+                }
 
                 // Reset form
                 const form = document.getElementById('simple-login-form');
                 if (form) form.reset();
                 if (errDiv) { errDiv.style.display = 'none'; errDiv.textContent = ''; }
+                if (nameInput) nameInput.removeAttribute('aria-invalid');
+                if (passInput) passInput.removeAttribute('aria-invalid');
 
                 // Set default role
                 selectOnboardingRole('seeker');
-
-                if(step1) step1.style.display = 'none';
-                if(step3) step3.style.display = 'none';
-                if(step2) {
-                    step2.style.display = 'flex';
-                    step2.style.animation = 'none';
-                    void step2.offsetWidth;
-                    step2.style.animation = 'fadeInUp 0.4s ease both';
-                }
-            } else if (step === 3) {
-                if(step1) step1.style.display = 'none';
-                if(step2) step2.style.display = 'none';
-                if(step3) {
-                    step3.style.display = 'flex';
-                    step3.style.animation = 'none';
-                    void step3.offsetWidth;
-                    step3.style.animation = 'fadeInUp 0.4s ease both';
-                }
+                updateOnboardingContinue();
             }
+
+            if (step >= 1 && step <= 4) _obTransition(step);
+        };
+
+        // Continue stays gray until there's a name and a 4+ character password
+        function updateOnboardingContinue() {
+            const btn = document.getElementById('simple-login-submit-btn');
+            const n = document.getElementById('simple-login-name');
+            const pw = document.getElementById('simple-login-password');
+            if (!btn || !n || !pw) return;
+            btn.disabled = !(n.value.trim() && pw.value.trim().length >= 4);
+        }
+        ['simple-login-name', 'simple-login-password'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', updateOnboardingContinue);
+        });
+
+        // After creating an account or exploring: ask once for location, then go home
+        let _afterLocationUrl = 'seeker-dashboard.html';
+        window.showLocationStep = function (nextUrl) {
+            _afterLocationUrl = nextUrl || 'seeker-dashboard.html';
+            let asked = false;
+            try { asked = localStorage.getItem('northstar_location_asked') === '1'; } catch (e) {}
+            if (asked || !navigator.geolocation) { nsGo(_afterLocationUrl); return; }
+            showOnboardingStep(4);
+        };
+
+        window.finishLocationStep = function (allow) {
+            try { localStorage.setItem('northstar_location_asked', '1'); } catch (e) {}
+            const go = () => nsGo(_afterLocationUrl);
+            if (!allow || !navigator.geolocation || window.isSecureContext === false) { go(); return; }
+            const btn = document.getElementById('ob-location-allow');
+            if (btn) { btn.disabled = true; btn.textContent = 'One moment…'; }
+            let done = false;
+            const finish = () => { if (!done) { done = true; go(); } };
+            navigator.geolocation.getCurrentPosition(pos => {
+                try {
+                    localStorage.setItem('northstar_last_location', JSON.stringify({
+                        lat: pos.coords.latitude, lng: pos.coords.longitude, at: Date.now()
+                    }));
+                } catch (e) {}
+                finish();
+            }, finish, { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 });
+            setTimeout(finish, 12000);
         };
 
         // guestDismiss = true when called from "Continue as guest" button
@@ -539,7 +407,7 @@
                 // Set a lightweight guest session and redirect to dashboard
                 const guestSession = { id: 'guest', username: 'Guest', role: 'seeker', isGuest: true };
                 localStorage.setItem('northstar_session', JSON.stringify(guestSession));
-                window.location.href = 'seeker-dashboard.html';
+                showLocationStep('seeker-dashboard.html');
                 return;
             }
             // Non-guest dismiss: just fade out the overlay
@@ -551,57 +419,36 @@
             setTimeout(() => { overlay.style.display = 'none'; }, 420);
         };
 
+        // ---- Splash: plays once per browser session, tap to skip ----
+        (function initOnboardingSplash() {
+            const overlay = document.getElementById('onboarding-overlay');
+            const splash = document.getElementById('ob-splash');
+            const ready = () => { if (overlay) overlay.classList.add('is-ready'); };
+            if (!splash) { ready(); return; }
+
+            let seen = false;
+            try {
+                seen = sessionStorage.getItem('ns_splash_seen') === '1';
+                sessionStorage.setItem('ns_splash_seen', '1');
+            } catch (e) {}
+            if (seen) { splash.remove(); ready(); return; }
+
+            const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            let finished = false;
+            const finish = () => {
+                if (finished) return;
+                finished = true;
+                splash.classList.add('is-leaving');
+                ready();
+                setTimeout(() => splash.remove(), 480);
+            };
+            const timer = setTimeout(finish, reduceMotion ? 500 : 1800);
+            splash.addEventListener('click', () => { clearTimeout(timer); finish(); });
+        })();
+
         // Patch handleSimpleLoginSubmit to dismiss the overlay on success
         document.addEventListener('DOMContentLoaded', () => {
             updateLandingRoleCards();
-
-            // ---- Onboarding particle canvas ----
-            (function initOnboardingParticles() {
-                const canvas = document.getElementById('onboarding-particles');
-                if (!canvas) return;
-                const ctx = canvas.getContext('2d');
-                const dpr = window.devicePixelRatio || 1;
-                let w = canvas.offsetWidth || window.innerWidth;
-                let h = canvas.offsetHeight || window.innerHeight;
-                canvas.width = w * dpr;
-                canvas.height = h * dpr;
-                ctx.scale(dpr, dpr);
-
-                const pts = [];
-                for (let i = 0; i < 60; i++) {
-                    pts.push({
-                        x: Math.random() * w, y: Math.random() * h,
-                        r: Math.random() * 1.6 + 0.3,
-                        a: Math.random() * 0.45 + 0.08,
-                        dx: (Math.random() - 0.5) * 0.35,
-                        dy: (Math.random() - 0.5) * 0.35
-                    });
-                }
-
-                function draw() {
-                    ctx.clearRect(0, 0, w, h);
-                    pts.forEach(p => {
-                        p.x = (p.x + p.dx + w) % w;
-                        p.y = (p.y + p.dy + h) % h;
-                        ctx.beginPath();
-                        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                        ctx.fillStyle = '#f59e0b';
-                        ctx.globalAlpha = p.a;
-                        ctx.fill();
-                    });
-                    ctx.globalAlpha = 1;
-                    requestAnimationFrame(draw);
-                }
-                draw();
-
-                window.addEventListener('resize', () => {
-                    w = canvas.offsetWidth || window.innerWidth;
-                    h = canvas.offsetHeight || window.innerHeight;
-                    canvas.width = w * dpr;
-                    canvas.height = h * dpr;
-                    ctx.scale(dpr, dpr);
-                });
-            })();
 
             // ---- Session check: skip onboarding if user already logged in ----
             const existingSession = localStorage.getItem('northstar_session');
@@ -610,7 +457,7 @@
                     const sess = JSON.parse(existingSession);
                     if (sess && sess.username && !sess.isGuest) {
                         // Returning user — redirect to dashboard instantly
-                        window.location.href = (sess.role === 'volunteer') ? 'helper-dashboard.html' : 'seeker-dashboard.html';
+                        nsGo((sess.role === 'volunteer') ? 'helper-dashboard.html' : 'seeker-dashboard.html', { replace: true });
                     }
                 } catch(e) {}
             }
@@ -630,22 +477,23 @@
 
                 // Clear previous errors
                 if (errDiv) { errDiv.style.display = 'none'; errDiv.textContent = ''; }
-                if (nameInput) nameInput.style.borderColor = 'rgba(255,255,255,0.1)';
-                if (passInput) passInput.style.borderColor = 'rgba(255,255,255,0.1)';
+                if (nameInput) nameInput.removeAttribute('aria-invalid');
+                if (passInput) passInput.removeAttribute('aria-invalid');
 
                 function showErr(msg) {
-                    if (errDiv) { errDiv.textContent = msg; errDiv.style.display = 'block'; }
-                    if (nameInput) nameInput.style.borderColor = '#ef4444';
-                    if (passInput) passInput.style.borderColor = '#ef4444';
+                    // auth.js adds .hidden while typing; drop it so the message can show again
+                    if (errDiv) { errDiv.textContent = msg; errDiv.classList.remove('hidden'); errDiv.style.display = 'block'; }
+                    if (nameInput) nameInput.setAttribute('aria-invalid', 'true');
+                    if (passInput) passInput.setAttribute('aria-invalid', 'true');
                     if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = '1'; }
-                    if (submitLabel) submitLabel.textContent = _onboardingMode === 'create' ? 'Create Account' : 'Sign In';
+                    if (submitLabel) submitLabel.textContent = 'Continue';
                 }
 
                 if (!name) { showErr('Please enter your name.'); return; }
                 if (!pass || pass.length < 4) { showErr('Password must be at least 4 characters.'); return; }
 
                 if (submitBtn) { submitBtn.disabled = true; submitBtn.style.opacity = '0.7'; }
-                if (submitLabel) submitLabel.textContent = _onboardingMode === 'create' ? 'Creating...' : 'Signing in...';
+                if (submitLabel) submitLabel.textContent = _onboardingMode === 'create' ? 'Creating your account…' : 'Logging in…';
 
                 // ---- Storage helpers ----
                 const STORE_KEY = 'ns_users_v3';
@@ -685,14 +533,15 @@
                     };
                     saveUser(newUser);
 
-                    // Background: sync to Supabase profiles (non-blocking)
+                    // Sync to Supabase profiles. Wait briefly so navigating away doesn't cancel the request.
                     try {
                         const sb = window.supabaseClient;
                         if (sb) {
-                            sb.from('profiles').upsert({
+                            const saveProfile = sb.from('profiles').upsert({
                                 id: newUser.id, username: newUser.username,
                                 role: newUser.role, updated_at: new Date().toISOString()
-                            }).then(() => {}).catch(() => {});
+                            }).then(({ error }) => { if (error) console.warn('Profile sync failed:', error.message); });
+                            await Promise.race([saveProfile, new Promise(r => setTimeout(r, 2000))]);
                         }
                     } catch(e) {}
 
@@ -702,11 +551,7 @@
                     }));
                     if (typeof window.setRole === 'function') window.setRole(newUser.role);
                     const dashUrl = (newUser.role === 'volunteer') ? 'helper-dashboard.html' : 'seeker-dashboard.html';
-                    if (typeof window.showNateWelcome === 'function') {
-                        window.showNateWelcome(dashUrl);
-                    } else {
-                        window.location.href = dashUrl;
-                    }
+                    showLocationStep(dashUrl);
 
                 } else {
                     // --- SIGN IN ---
@@ -729,7 +574,7 @@
                         role: record.role, isGuest: false
                     }));
                     if (typeof window.setRole === 'function') window.setRole(record.role);
-                    window.location.href = (record.role === 'volunteer') ? 'helper-dashboard.html' : 'seeker-dashboard.html';
+                    nsGo((record.role === 'volunteer') ? 'helper-dashboard.html' : 'seeker-dashboard.html');
                 }
             };
 
@@ -739,7 +584,6 @@
             document.head.appendChild(shakeStyle);
         });
     </script>
-    <script src="js/nate-welcome.js"></script>
 </body>
 
 </html>

@@ -1,0 +1,451 @@
+/* ==========================================================================
+   Northstar onboarding (v3): dark splash, then white screens with black pills
+   and the signature yellow. Scoped to #onboarding-overlay.
+   ========================================================================== */
+
+#onboarding-overlay {
+  --ob-night: #111111;
+  --ob-ink: #111111;
+  --ob-ink-2: #5C5C5C;
+  --ob-muted: #737373;
+  --ob-paper: #FFFFFF;
+  --ob-sand: #F2F2F2;
+  --ob-line: #E3E3E3;
+  --ob-amber: #FFD43B;
+  --ob-danger: #B42318;
+  --ob-danger-wash: #FEF3F2;
+  --ob-danger-line: #FECDCA;
+  --ob-ease: cubic-bezier(0.22, 0.8, 0.24, 1);
+  --ob-settle: cubic-bezier(0.16, 1, 0.3, 1); /* ease-out-expo: settles without overshoot */
+
+  position: absolute;
+  inset: 0;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--ob-paper);
+  color: var(--ob-ink);
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#onboarding-overlay *,
+#onboarding-overlay *::before,
+#onboarding-overlay *::after { box-sizing: border-box; }
+
+#onboarding-overlay button {
+  font-family: inherit;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: transform 0.16s var(--ob-ease), background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+}
+
+#onboarding-overlay button:active { transform: scale(0.98); }
+
+#onboarding-overlay#onboarding-overlay :focus-visible,
+#onboarding-overlay#onboarding-overlay button:focus-visible {
+  outline: 2px solid var(--ob-ink) !important;
+  outline-offset: 3px !important;
+  box-shadow: none !important;
+}
+
+#onboarding-overlay .material-symbols-outlined { line-height: 1; user-select: none; }
+
+/* ---- Splash (dark) -------------------------------------------------------- */
+#onboarding-overlay .ob-splash {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ob-night);
+  transition: opacity 0.45s ease, visibility 0.45s;
+}
+
+#onboarding-overlay .ob-splash.is-leaving { opacity: 0; visibility: hidden; }
+
+#onboarding-overlay .ob-splash-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  transition: transform 0.45s var(--ob-ease);
+}
+
+#onboarding-overlay .ob-splash.is-leaving .ob-splash-center { transform: scale(1.04); }
+#onboarding-overlay .ob-splash-mark { width: 140px; height: auto; overflow: visible; }
+
+#onboarding-overlay .ob-splash-n {
+  fill: #FFFFFF;
+  animation: obNRise 0.7s var(--ob-ease) 0.1s both;
+}
+
+#onboarding-overlay .ob-splash-star {
+  fill: #FFC933;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: obStarIn 0.8s var(--ob-settle) 0.45s both, obStarTwinkle 0.9s ease-in-out 1.35s 1;
+}
+
+#onboarding-overlay .ob-splash-tag {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.72);
+  animation: obFadeUp 0.6s var(--ob-ease) 0.8s both;
+}
+
+/* ---- Screens -------------------------------------------------------------- */
+#onboarding-overlay .ob-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: max(16px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+}
+
+#onboarding-overlay .ob-screen::-webkit-scrollbar { display: none; }
+
+#onboarding-overlay .ob-form { flex: 1; display: flex; flex-direction: column; margin: 0; }
+
+#onboarding-overlay .ob-body {
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding-top: 20px;
+}
+
+#onboarding-overlay .ob-body--center { align-items: center; text-align: center; justify-content: center; padding-top: 0; }
+
+#onboarding-overlay .ob-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 24px;
+}
+
+#onboarding-overlay .ob-logo-row { display: flex; justify-content: center; padding-top: 8px; }
+
+#onboarding-overlay .ob-topbar {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  min-height: 44px;
+  justify-items: center;
+}
+
+#onboarding-overlay .ob-back {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 0;
+  background: transparent;
+  color: var(--ob-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: start;
+  margin-left: -10px;
+}
+
+#onboarding-overlay .ob-back .material-symbols-outlined { font-size: 26px; }
+
+/* ---- Brand mark + type ---------------------------------------------------- */
+#onboarding-overlay .ob-mark {
+  display: block;
+  width: 44px;
+  height: 40px;
+  color: var(--ob-ink);
+  --ob-star: #FFC933;
+  overflow: visible;
+}
+
+#onboarding-overlay .ob-mark--sm { width: 38px; height: 34px; }
+
+#onboarding-overlay .ob-art { width: min(300px, 82%); height: auto; margin: 8px auto 0; }
+#onboarding-overlay .ob-art--loc { width: min(280px, 78%); margin-top: 20px; }
+
+#onboarding-overlay .ob-title {
+  margin: 20px 0 8px;
+  font-size: clamp(26px, 7.4vw, 30px);
+  line-height: 1.14;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--ob-ink);
+  text-wrap: balance;
+}
+
+#onboarding-overlay .ob-title--center { margin-left: auto; margin-right: auto; max-width: 320px; }
+
+#onboarding-overlay .ob-kicker { margin: 0; font-size: 18px; font-weight: 500; color: var(--ob-ink); }
+
+#onboarding-overlay .ob-lede {
+  margin: 0;
+  max-width: 36ch;
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 500;
+  color: var(--ob-ink-2);
+}
+
+#onboarding-overlay .ob-lede--center { margin: 0 auto; }
+
+#onboarding-overlay .ob-small { margin: 8px 0 0; font-size: 14px; font-weight: 500; color: var(--ob-muted); }
+#onboarding-overlay .ob-small--center { text-align: center; }
+
+/* ---- Buttons -------------------------------------------------------------- */
+#onboarding-overlay .ob-btn {
+  width: 100%;
+  height: 52px;
+  border-radius: 999px;
+  border: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+#onboarding-overlay .ob-btn--primary { background: var(--ob-ink); color: #fff; }
+#onboarding-overlay .ob-btn--primary:hover { background: #2A2A2A; }
+#onboarding-overlay .ob-btn--primary:disabled { background: var(--ob-sand); color: #A3A3A3; cursor: default; transform: none; }
+#onboarding-overlay .ob-btn--secondary { background: var(--ob-sand); color: var(--ob-ink); }
+#onboarding-overlay .ob-btn--secondary:hover { background: #E9E9E9; }
+#onboarding-overlay .ob-btn--yellow { background: var(--ob-amber); color: var(--ob-ink); }
+
+/* Outlined full-width choice rows (welcome screen) */
+#onboarding-overlay .ob-option {
+  position: relative;
+  width: 100%;
+  height: 52px;
+  border-radius: 14px;
+  border: 1px solid var(--ob-line);
+  background: var(--ob-paper);
+  color: var(--ob-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+#onboarding-overlay .ob-option .material-symbols-outlined {
+  position: absolute;
+  left: 18px;
+  font-size: 22px;
+  font-variation-settings: 'FILL' 0, 'wght' 350;
+}
+
+#onboarding-overlay .ob-option:hover { border-color: #CFCFCF; }
+
+#onboarding-overlay .ob-link {
+  align-self: center;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 0;
+  background: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ob-ink-2);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+#onboarding-overlay .ob-admin {
+  align-self: center;
+  height: 32px;
+  padding: 0 10px;
+  border: 0;
+  background: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: #A3A3A3;
+}
+
+/* ---- Form fields: floating labels inside a hairline box -------------------- */
+#onboarding-overlay .ob-fields { display: flex; flex-direction: column; gap: 14px; margin-top: 24px; }
+
+#onboarding-overlay .ob-field {
+  position: relative;
+  border: 1px solid #DCDCDC;
+  border-radius: 12px;
+  background: var(--ob-paper);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#onboarding-overlay .ob-field:focus-within { border-color: var(--ob-ink); box-shadow: 0 0 0 1px var(--ob-ink); }
+
+#onboarding-overlay .ob-field__label {
+  position: absolute;
+  left: 16px;
+  top: 9px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ob-muted);
+  pointer-events: none;
+}
+
+#onboarding-overlay .ob-field__label::after { content: '*'; color: var(--ob-danger); margin-left: 1px; }
+
+#onboarding-overlay .ob-input {
+  width: 100%;
+  height: 60px;
+  margin: 0;
+  padding: 22px 16px 6px;
+  border: 0 !important;
+  border-radius: 12px;
+  background: transparent !important;
+  color: var(--ob-ink) !important;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+#onboarding-overlay .ob-input::placeholder { color: #B5B5B5 !important; font-weight: 500; }
+
+#onboarding-overlay .ob-field:has(.ob-input[aria-invalid="true"]) {
+  border-color: var(--ob-danger);
+  box-shadow: 0 0 0 1px var(--ob-danger);
+}
+
+#onboarding-overlay .ob-field--pw .ob-input { padding-right: 56px; }
+
+#onboarding-overlay .ob-reveal {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #8A8A8A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#onboarding-overlay .ob-reveal:active { transform: translateY(-50%); }
+#onboarding-overlay .ob-reveal .material-symbols-outlined { font-size: 22px; }
+
+#onboarding-overlay .ob-label {
+  display: block;
+  margin: 6px 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ob-ink);
+}
+
+/* Role choice: gray chips, the selected one is black */
+#onboarding-overlay .ob-roles { display: flex; flex-wrap: wrap; gap: 8px; }
+
+#onboarding-overlay .ob-role {
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 10px;
+  border: 0;
+  background: var(--ob-sand);
+  color: var(--ob-ink);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+#onboarding-overlay .ob-role.is-selected { background: var(--ob-ink); color: #fff; }
+
+#onboarding-overlay .ob-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--ob-sand);
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 500;
+  color: var(--ob-ink-2);
+}
+
+#onboarding-overlay .ob-note .material-symbols-outlined { font-size: 20px; color: var(--ob-ink); }
+
+#onboarding-overlay .ob-error {
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--ob-danger-line);
+  background: var(--ob-danger-wash);
+  color: var(--ob-danger);
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 600;
+  animation: obFadeUp 0.28s var(--ob-ease) both;
+}
+
+/* ---- Location permission card -------------------------------------------- */
+#onboarding-overlay .ob-permission {
+  width: 100%;
+  max-width: 330px;
+  margin: 24px auto 0;
+  padding: 20px;
+  border-radius: 20px;
+  border: 1px solid var(--ob-line);
+  background: var(--ob-paper);
+  box-shadow: 0 24px 48px -28px rgba(0, 0, 0, 0.35);
+  text-align: center;
+}
+
+#onboarding-overlay .ob-permission h2 { margin: 0; font-size: 17px; line-height: 1.3; font-weight: 800; letter-spacing: -0.01em; }
+#onboarding-overlay .ob-permission p { margin: 8px 0 0; font-size: 14px; line-height: 1.45; font-weight: 500; color: var(--ob-muted); }
+#onboarding-overlay .ob-permission__actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+#onboarding-overlay .ob-permission .ob-btn { height: 46px; font-size: 15px; }
+
+/* ---- Motion --------------------------------------------------------------- */
+#onboarding-overlay .ob-in-fwd  { animation: obInFwd 0.42s var(--ob-ease) both; }
+#onboarding-overlay .ob-in-back { animation: obInBack 0.42s var(--ob-ease) both; }
+#onboarding-overlay .ob-in-fade { animation: obFade 0.3s ease both; }
+#onboarding-overlay .ob-out-fwd  { animation: obOutFwd 0.26s ease both; pointer-events: none; }
+#onboarding-overlay .ob-out-back { animation: obOutBack 0.26s ease both; pointer-events: none; }
+
+#onboarding-overlay .ob-stagger > * { opacity: 0; }
+
+#onboarding-overlay.is-ready .ob-stagger > * {
+  animation: obFadeUp 0.6s var(--ob-ease) both;
+  animation-delay: calc(var(--i, 0) * 70ms + 80ms);
+}
+
+@keyframes obNRise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+@keyframes obStarIn { from { opacity: 0; transform: scale(0) rotate(-120deg); } to { opacity: 1; transform: scale(1) rotate(0); } }
+@keyframes obStarTwinkle { 0%, 100% { transform: scale(1); } 45% { transform: scale(1.12); } }
+@keyframes obFade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes obFadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes obInFwd { from { opacity: 0; transform: translateX(32px); } to { opacity: 1; transform: none; } }
+@keyframes obInBack { from { opacity: 0; transform: translateX(-32px); } to { opacity: 1; transform: none; } }
+@keyframes obOutFwd { to { opacity: 0; transform: translateX(-24px); } }
+@keyframes obOutBack { to { opacity: 0; transform: translateX(24px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  #onboarding-overlay *,
+  #onboarding-overlay *::before,
+  #onboarding-overlay *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-height: 700px) {
+  #onboarding-overlay .ob-art { width: min(240px, 70%); }
+  #onboarding-overlay .ob-title { font-size: 25px; margin-top: 14px; }
+  #onboarding-overlay .ob-actions { padding-top: 16px; gap: 10px; }
+}
+
+/* The field box shows focus; don't also ring the input inside it */
+#onboarding-overlay#onboarding-overlay .ob-input:focus-visible { outline: none !important; }

@@ -1,340 +1,180 @@
 <!DOCTYPE html>
-<html class="dark" lang="en">
-
+<html class="light" lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title>Northstar | Progress</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-        rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link rel="stylesheet" href="css/northstar.css">
-    <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    "colors": {
-                        "error": "#ba1a1a",
-                        "surface": "#0f1117",
-                        "tertiary-container": "#0d1c2f",
-                        "surface-variant": "#1a1d27",
-                        "on-primary-container": "#7c839b",
-                        "surface-container-lowest": "#12141c",
-                        "primary-fixed-dim": "#bec6e0",
-                        "on-surface": "#f8fafc",
-                        "surface-tint": "#565e74",
-                        "on-background": "#f8fafc",
-                        "tertiary": "#000000",
-                        "secondary": "#f59e0b",
-                        "primary-fixed": "#dae2fd",
-                        "on-primary": "#ffffff",
-                        "surface-container-low": "#161922",
-                        "tertiary-fixed": "#d5e3fd",
-                        "on-error-container": "#93000a",
-                        "on-primary-fixed": "#131b2e",
-                        "secondary-fixed-dim": "#e2c62d",
-                        "background": "#0f1117",
-                        "on-tertiary-fixed-variant": "#3a485c",
-                        "primary-container": "#131b2e",
-                        "tertiary-fixed-dim": "#b9c7e0",
-                        "outline": "#475569",
-                        "surface-container": "#1e2230",
-                        "on-tertiary-container": "#76859b",
-                        "on-surface-variant": "#94a3b8",
-                        "on-secondary": "#ffffff",
-                        "on-secondary-fixed": "#211b00",
-                        "outline-variant": "#334155",
-                        "surface-container-highest": "#282d3f",
-                        "on-error": "#ffffff",
-                        "surface-container-high": "#222737",
-                        "on-tertiary-fixed": "#0d1c2f",
-                        "primary": "#0d1c2f",
-                        "surface-dim": "#0b0c10",
-                        "surface-bright": "#161922",
-                        "secondary-fixed": "#ffe24c",
-                        "on-tertiary": "#ffffff",
-                        "on-secondary-fixed-variant": "#524600",
-                        "inverse-on-surface": "#eff1f3",
-                        "secondary-container": "#fcdf46",
-                        "inverse-surface": "#2d3133",
-                        "error-container": "#ffdad6",
-                        "on-secondary-container": "#726200",
-                        "inverse-primary": "#bec6e0",
-                        "on-primary-fixed-variant": "#3f465c"
-                    },
-                    "borderRadius": {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "2xl": "1rem",
-                        "3xl": "1.5rem",
-                        "full": "9999px"
-                    }
-                },
-            },
-        }
-    </script>
-    <style>
-        /* Hide scrollbar on the main canvas */
-        .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#FFFFFF">
+<title>Me · Northstar</title>
+<link rel="icon" href="favicon.png">
+<script src="js/ns-boot.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=container-queries"></script>
+<script src="js/tailwind-config.js"></script>
+<link rel="stylesheet" href="css/app.css">
+<style>
+    .me-top { display: flex; justify-content: flex-end; padding: max(8px, env(safe-area-inset-top)) 8px 0; }
+    .me-avatar {
+        width: 88px; height: 88px; border-radius: 50%;
+        background: var(--amber);
+        border: 2px solid var(--ink);
+        display: grid; place-items: center;
+        font-size: 26px; font-weight: 800; letter-spacing: -0.02em; color: var(--ink);
+    }
+    .me-name { margin-top: 12px; font-size: 25px; line-height: 1.15; font-weight: 800; letter-spacing: -0.025em; }
+    .me-skills { display: flex; flex-wrap: wrap; gap: 8px; }
+    .me-row__value { font-size: 15px; font-weight: 500; color: var(--muted); white-space: nowrap; }
+</style>
 </head>
+<body>
 
-<body class="bg-[#0F1117] min-h-screen flex items-center justify-center p-0 sm:py-6 text-slate-100 selection:bg-amber-500/30 selection:text-amber-300">
+<div class="app-frame">
 
-    <!-- Atmospheric Background Glows -->
-    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0">
-        <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl"></div>
-        <div class="absolute top-1/3 -right-40 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl"></div>
-        <div class="absolute -bottom-40 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
-    </div>
-
-    <!-- Mobile Frame Shell -->
-    <div class="app-frame w-full sm:max-w-[420px] h-screen sm:h-[900px] max-h-screen sm:max-h-[920px] bg-[#0F1117] sm:rounded-[44px] shadow-[0_0_70px_rgba(0,0,0,0.85)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800/80 z-10">
-
-        <!-- App Header -->
-        <header class="bg-white dark:bg-[#0F1117]/90 backdrop-blur-md sticky top-0 z-40 flex justify-between items-center w-full px-5 pt-5 pb-3 border-b border-slate-200 dark:border-white/10">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-[#EAB308]/15 border border-[#EAB308]/30 flex items-center justify-center flex-shrink-0">
-                    <span class="material-symbols-outlined text-[#EAB308] dark:text-[#FACC15] text-lg" style="color: #EAB308 !important;">trending_up</span>
-                </div>
-                <div>
-                    <h1 class="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight font-heading">Progress</h1>
-                    <p class="dashboard-subtext text-xs font-medium text-[#4A5568] dark:text-[#94A3B8]">Every step forward matters.</p>
-                </div>
-            </div>
-            <div class="header-actions header-actions-right flex items-center gap-2">
-                <button id="theme-toggle-btn" onclick="toggleTheme()" class="icon-btn w-10 h-10 rounded-[12px] bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-700 dark:text-amber-400 text-sm font-bold transition-all active:scale-95 cursor-pointer" aria-label="Toggle Theme" title="Toggle Light / Dark Mode">
-                    <span class="material-symbols-outlined text-base">brightness_4</span>
-                </button>
-                <button id="profile-btn" type="button" onclick="openSettingsModal()" class="profile-avatar-btn w-10 h-10 rounded-full flex items-center justify-center font-extrabold text-sm shadow-sm transition-all active:scale-95 cursor-pointer select-none" title="Signed in as Seeker - Tap for Settings">
-                    S
-                </button>
-            </div>
-        </header>
-
-        <!-- Main Scrollable Canvas -->
-        <main class="progress-scroll-container main-content flex-grow px-4 pt-4 pb-32 overflow-y-auto no-scrollbar space-y-3 bg-[#F4F5F7] dark:bg-[#0F1117]" style="padding-bottom: 120px !important; -webkit-overflow-scrolling: touch;">
-
-            <!-- Journey Summary Card -->
-            <div class="progress-card dashboard-card-border bg-white dark:bg-[#1E293B] rounded-[20px] p-4 shadow-[0_8px_24px_rgba(0,0,0,0.06)] space-y-3 stagger-1">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <div class="flex items-center gap-1.5">
-                            <span class="material-symbols-outlined text-base text-[#EAB308] dark:text-[#FACC15]" style="color: #EAB308 !important;">trending_up</span>
-                            <h2 class="text-sm font-extrabold text-slate-900 dark:text-white font-heading">Your NorthStar Journey</h2>
-                        </div>
-                        <p class="text-xs font-extrabold mt-0.5 text-[#EAB308] dark:text-[#FACC15]" id="journey-progress-text" style="color: #EAB308 !important;">1 of 5 milestones completed</p>
-                    </div>
-                    <span id="journey-pct-badge" class="text-xs font-extrabold px-2.5 py-1 rounded-full bg-[#EAB308]/15 text-[#EAB308] dark:text-[#FACC15] border border-[#EAB308]/40" style="color: #EAB308 !important;">20%</span>
-                </div>
-
-                <!-- Progress Bar (Yellow #EAB308 / #FACC15 Fill) -->
-                <div class="w-full bg-slate-200 dark:bg-white/10 rounded-full h-2 overflow-hidden">
-                    <div id="journey-progress-bar" class="h-full rounded-full transition-all duration-500 animated-progress-bar" style="width: 20%; background-color: #EAB308 !important;"></div>
-                </div>
-
-                <!-- Stepper Nodes -->
-                <div class="relative flex items-center justify-between pt-1">
-                    <div class="absolute left-0 top-1/2 w-full h-px bg-slate-200 dark:bg-white/10 -translate-y-1/2 z-0"></div>
-                    <div id="stepper-nodes" class="flex justify-between w-full relative z-10">
-                        <div class="w-6 h-6 rounded-full flex items-center justify-center bg-[#EAB308] text-slate-950 shadow-[0_0_10px_rgba(234,179,8,0.5)] border-2 border-[#EAB308] z-10 text-xs"><span class="material-symbols-outlined text-[14px] font-bold">check</span></div>
-                        <div class="w-6 h-6 rounded-full flex items-center justify-center bg-slate-200 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-slate-500 z-10 text-xs"><span class="material-symbols-outlined text-[14px]">radio_button_unchecked</span></div>
-                        <div class="w-6 h-6 rounded-full flex items-center justify-center bg-slate-200 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-slate-500 z-10 text-xs"><span class="material-symbols-outlined text-[14px]">radio_button_unchecked</span></div>
-                        <div class="w-6 h-6 rounded-full flex items-center justify-center bg-slate-200 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-slate-500 z-10 text-xs"><span class="material-symbols-outlined text-[14px]">radio_button_unchecked</span></div>
-                        <div class="w-6 h-6 rounded-full flex items-center justify-center bg-slate-200 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 text-slate-500 z-10 text-xs"><span class="material-symbols-outlined text-[14px]">radio_button_unchecked</span></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Journey Milestone List (5 Core User Actions Ordered Easiest/Onboarding -> Advanced Goals) -->
-            <section class="space-y-2.5" id="journey-list-container">
-                <!-- 1. Navigating Through Northstar -->
-                <div class="relative flex gap-3.5 pb-4 stagger-2">
-                    <div class="timeline-connector-line absolute z-0 bg-[#EAB308]" style="left: 17px !important; top: 36px !important; bottom: 0 !important; width: 2px !important;"></div>
-                    <button type="button" style="width: 36px !important; height: 36px !important; flex-shrink: 0 !important;" class="timeline-node-circle w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center z-10 bg-[#EAB308] text-slate-950 shadow-sm border border-[#EAB308]">
-                        <span class="material-symbols-outlined text-[18px] leading-none flex items-center justify-center" style="font-variation-settings: 'FILL' 1;">explore</span>
-                    </button>
-                    <div class="milestone-card dashboard-card-border bg-white dark:bg-[#1E293B] p-4 rounded-[18px] shadow-sm flex-1 transition-all" data-milestone-id="appExplorer">
-                        <div class="flex justify-between items-start gap-2">
-                            <div>
-                                <h4 class="font-extrabold text-sm text-slate-900 dark:text-white font-heading">App Explorer</h4>
-                                <p class="dashboard-subtext text-xs text-[#4A5568] dark:text-[#94A3B8] mt-1 leading-snug font-medium">Navigated through key screens and features across Northstar.</p>
-                            </div>
-                            <span class="milestone-status-badge inline-flex items-center gap-1 rounded-full text-[11px]" style="background: rgba(234, 179, 8, 0.15) !important; color: #EAB308 !important; border-radius: 9999px !important; font-weight: 600 !important; padding: 2px 8px !important; border: none !important; box-shadow: none !important;">
-                                <span class="material-symbols-outlined text-xs">check_circle</span> +20%
-                            </span>
-                        </div>
-                        <div class="mt-3 pt-2.5 border-t border-slate-200/80 dark:border-white/10 flex items-center justify-between gap-2">
-                            <span class="pending-status-text completed-status-pill text-[11px] font-bold" style="background: #EDF2F7; border: 1px solid #CBD5E1; color: #4A5568; padding: 2px 8px; border-radius: 6px; font-weight: 600;">Completed ✓</span>
-                            <a href="seeker-dashboard.html" class="action-btn milestone-cta-btn inline-flex items-center gap-1 text-xs font-medium px-3.5 py-1.5 rounded-full transition-all active:scale-95" style="background: #1A202C !important; color: #FFFFFF !important; border-radius: 9999px !important; font-weight: 500 !important;">
-                                Explore App <span class="material-symbols-outlined text-xs">arrow_forward</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. Northstar AI Assistant -->
-                <div class="relative flex gap-3.5 pb-4 stagger-3">
-                    <div class="timeline-connector-line absolute z-0 bg-slate-300 dark:bg-slate-700" style="left: 17px !important; top: 36px !important; bottom: 0 !important; width: 2px !important;"></div>
-                    <button type="button" style="width: 36px !important; height: 36px !important; flex-shrink: 0 !important;" class="timeline-node-circle w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center z-10 bg-slate-100 dark:bg-slate-800 text-[#EAB308] dark:text-[#FACC15] border border-slate-300 dark:border-white/15">
-                        <span class="material-symbols-outlined text-[18px] leading-none flex items-center justify-center">smart_toy</span>
-                    </button>
-                    <div class="milestone-card dashboard-card-border bg-white dark:bg-[#1E293B] p-4 rounded-[18px] shadow-sm flex-1 transition-all" data-milestone-id="aiCompanion">
-                        <div class="flex justify-between items-start gap-2">
-                            <div>
-                                <h4 class="font-extrabold text-sm text-slate-900 dark:text-white font-heading">AI Companion</h4>
-                                <p class="dashboard-subtext text-xs text-[#4A5568] dark:text-[#94A3B8] mt-1 leading-snug font-medium">Used Northstar AI to ask questions and get instant guidance.</p>
-                            </div>
-                            <span class="milestone-status-badge inline-flex items-center gap-1 rounded-full text-[11px]" style="background: rgba(234, 179, 8, 0.15) !important; color: #EAB308 !important; border-radius: 9999px !important; font-weight: 600 !important; padding: 2px 8px !important; border: none !important; box-shadow: none !important;">
-                                +20%
-                            </span>
-                        </div>
-                        <div class="mt-3 pt-2.5 border-t border-slate-200/80 dark:border-white/10 flex items-center justify-between gap-2">
-                            <span class="pending-status-text text-[11px] font-bold text-[#4A5568] dark:text-[#94A3B8]">Pending action</span>
-                            <a href="javascript:toggleAIChatbotWindow()" class="action-btn milestone-cta-btn inline-flex items-center gap-1 text-xs font-medium px-3.5 py-1.5 rounded-full transition-all shadow-xs active:scale-95" style="background: #1A202C !important; color: #FFFFFF !important; border-radius: 9999px !important; font-weight: 500 !important;">
-                                Ask Northstar AI <span class="material-symbols-outlined text-xs">arrow_forward</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 3. Saving a Place on the Map -->
-                <div class="relative flex gap-3.5 pb-4 stagger-4">
-                    <div class="timeline-connector-line absolute z-0 bg-slate-300 dark:bg-slate-700" style="left: 17px !important; top: 36px !important; bottom: 0 !important; width: 2px !important;"></div>
-                    <button type="button" style="width: 36px !important; height: 36px !important; flex-shrink: 0 !important;" class="timeline-node-circle w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center z-10 bg-slate-100 dark:bg-slate-800 text-[#EAB308] dark:text-[#FACC15] border border-slate-300 dark:border-white/15">
-                        <span class="material-symbols-outlined text-[18px] leading-none flex items-center justify-center">bookmark</span>
-                    </button>
-                    <div class="milestone-card dashboard-card-border bg-white dark:bg-[#1E293B] p-4 rounded-[18px] shadow-sm flex-1 transition-all" data-milestone-id="savedLocation">
-                        <div class="flex justify-between items-start gap-2">
-                            <div>
-                                <h4 class="font-extrabold text-sm text-slate-900 dark:text-white font-heading">Saved Essential Location</h4>
-                                <p class="dashboard-subtext text-xs text-[#4A5568] dark:text-[#94A3B8] mt-1 leading-snug font-medium">Bookmarked a resource or shelter on the interactive map.</p>
-                            </div>
-                            <span class="milestone-status-badge inline-flex items-center gap-1 rounded-full text-[11px]" style="background: rgba(234, 179, 8, 0.15) !important; color: #EAB308 !important; border-radius: 9999px !important; font-weight: 600 !important; padding: 2px 8px !important; border: none !important; box-shadow: none !important;">
-                                +20%
-                            </span>
-                        </div>
-                        <div class="mt-3 pt-2.5 border-t border-slate-200/80 dark:border-white/10 flex items-center justify-between gap-2">
-                            <span class="pending-status-text text-[11px] font-bold text-[#4A5568] dark:text-[#94A3B8]">Pending action</span>
-                            <a href="map.html" class="action-btn milestone-cta-btn inline-flex items-center gap-1 text-xs font-medium px-3.5 py-1.5 rounded-full transition-all shadow-xs active:scale-95" style="background: #1A202C !important; color: #FFFFFF !important; border-radius: 9999px !important; font-weight: 500 !important;">
-                                Open Map <span class="material-symbols-outlined text-xs">arrow_forward</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 4. Resume Creation -->
-                <div class="relative flex gap-3.5 pb-4 stagger-5">
-                    <div class="timeline-connector-line absolute z-0 bg-slate-300 dark:bg-slate-700" style="left: 17px !important; top: 36px !important; bottom: 0 !important; width: 2px !important;"></div>
-                    <button type="button" style="width: 36px !important; height: 36px !important; flex-shrink: 0 !important;" class="timeline-node-circle w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center z-10 bg-slate-100 dark:bg-slate-800 text-[#EAB308] dark:text-[#FACC15] border border-slate-300 dark:border-white/15">
-                        <span class="material-symbols-outlined text-[18px] leading-none flex items-center justify-center">description</span>
-                    </button>
-                    <div class="milestone-card dashboard-card-border bg-white dark:bg-[#1E293B] p-4 rounded-[18px] shadow-sm flex-1 transition-all" data-milestone-id="resumeBuilder">
-                        <div class="flex justify-between items-start gap-2">
-                            <div>
-                                <h4 class="font-extrabold text-sm text-slate-900 dark:text-white font-heading">Resume Builder</h4>
-                                <p class="dashboard-subtext text-xs text-[#4A5568] dark:text-[#94A3B8] mt-1 leading-snug font-medium">Created or updated your professional resume in the app.</p>
-                            </div>
-                            <span class="milestone-status-badge inline-flex items-center gap-1 rounded-full text-[11px]" style="background: rgba(234, 179, 8, 0.15) !important; color: #EAB308 !important; border-radius: 9999px !important; font-weight: 600 !important; padding: 2px 8px !important; border: none !important; box-shadow: none !important;">
-                                +20%
-                            </span>
-                        </div>
-                        <div class="mt-3 pt-2.5 border-t border-slate-200/80 dark:border-white/10 flex items-center justify-between gap-2">
-                            <span class="pending-status-text text-[11px] font-bold text-[#4A5568] dark:text-[#94A3B8]">Pending action</span>
-                            <a href="resume-builder.html" class="action-btn milestone-cta-btn inline-flex items-center gap-1 text-xs font-medium px-3.5 py-1.5 rounded-full transition-all shadow-xs active:scale-95" style="background: #1A202C !important; color: #FFFFFF !important; border-radius: 9999px !important; font-weight: 500 !important;">
-                                Build Resume <span class="material-symbols-outlined text-xs">arrow_forward</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 5. Job Recommendation Engine -->
-                <div class="relative flex gap-3.5 stagger-6">
-                    <button type="button" style="width: 36px !important; height: 36px !important; flex-shrink: 0 !important;" class="timeline-node-circle w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center z-10 bg-slate-100 dark:bg-slate-800 text-[#EAB308] dark:text-[#FACC15] border border-slate-300 dark:border-white/15">
-                        <span class="material-symbols-outlined text-[18px] leading-none flex items-center justify-center">work</span>
-                    </button>
-                    <div class="milestone-card dashboard-card-border bg-white dark:bg-[#1E293B] p-4 rounded-[18px] shadow-sm flex-1 transition-all" data-milestone-id="jobMatcher">
-                        <div class="flex justify-between items-start gap-2">
-                            <div>
-                                <h4 class="font-extrabold text-sm text-slate-900 dark:text-white font-heading">Job Matcher</h4>
-                                <p class="dashboard-subtext text-xs text-[#4A5568] dark:text-[#94A3B8] mt-1 leading-snug font-medium">Explored personalized job recommendations in the Jobs section.</p>
-                            </div>
-                            <span class="milestone-status-badge inline-flex items-center gap-1 rounded-full text-[11px]" style="background: rgba(234, 179, 8, 0.15) !important; color: #EAB308 !important; border-radius: 9999px !important; font-weight: 600 !important; padding: 2px 8px !important; border: none !important; box-shadow: none !important;">
-                                +20%
-                            </span>
-                        </div>
-                        <div class="mt-3 pt-2.5 border-t border-slate-200/80 dark:border-white/10 flex items-center justify-between gap-2">
-                            <span class="pending-status-text text-[11px] font-bold text-[#4A5568] dark:text-[#94A3B8]">Pending action</span>
-                            <a href="jobs.html" class="action-btn milestone-cta-btn inline-flex items-center gap-1 text-xs font-medium px-3.5 py-1.5 rounded-full transition-all shadow-xs active:scale-95" style="background: #1A202C !important; color: #FFFFFF !important; border-radius: 9999px !important; font-weight: 500 !important;">
-                                View Jobs <span class="material-symbols-outlined text-xs">arrow_forward</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Account Footer -->
-            <div class="pt-3 pb-4 text-center">
-                <p id="progress-account-label" class="text-[11px] text-[#4A5568] dark:text-[#94A3B8] font-semibold"></p>
-                <button id="switch-account-btn" type="button" onclick="localStorage.removeItem('northstar_session'); window.location.href='index.html';"
-                    style="border: none !important; background: transparent !important; padding: 0 !important; outline: none !important; box-shadow: none !important;"
-                    class="switch-account-link mt-1 text-[11px] text-[#EAB308] dark:text-[#FACC15] hover:underline underline-offset-2 transition-colors font-bold bg-transparent border-0 p-0 outline-none shadow-none">Switch Account</button>
-            </div>
-
-            <!-- Extra Bottom Scroll Clearance Spacer above FAB & Bottom Navigation Bar -->
-            <div class="h-12 w-full flex-shrink-0" aria-hidden="true"></div>
-
-        </main>
-
-        <!-- Full 6-Tab Bottom Navigation Bar -->
-        <nav class="bottom-nav absolute bottom-0 left-0 w-full z-40 grid grid-cols-6 items-center justify-items-center px-1.5 py-2 bg-white dark:bg-[#12141C] shadow-[0px_-4px_25px_rgba(0,0,0,0.08)] border-t border-slate-200 dark:border-white/10">
-            <a href="seeker-dashboard.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
-                <span class="material-symbols-outlined text-[20px] leading-none">dashboard</span>
-                <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Dashboard</span>
-            </a>
-            <a href="progress.html" class="active-tab flex flex-col items-center justify-center w-full py-1 px-0.5 bg-amber-400/15 text-amber-500 dark:text-amber-400 border border-amber-400/30 rounded-xl shadow-[0_0_12px_rgba(245,158,11,0.2)] font-extrabold transition-all">
-                <span class="material-symbols-outlined text-[20px] leading-none" style="font-variation-settings: 'FILL' 1;">trending_up</span>
-                <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Progress</span>
-            </a>
-            <a href="opportunities.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
-                <span class="material-symbols-outlined text-[20px] leading-none">work</span>
-                <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Jobs</span>
-            </a>
-            <a href="resource-map.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
-                <span class="material-symbols-outlined text-[20px] leading-none">map</span>
-                <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Map</span>
-            </a>
-            <a href="resume-builder.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
-                <span class="material-symbols-outlined text-[20px] leading-none">description</span>
-                <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Resume</span>
-            </a>
-            <button type="button" onclick="openSettingsModal()" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
-                <span class="material-symbols-outlined text-[20px] leading-none">settings</span>
-                <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Settings</span>
+    <main class="ns-main !p-0 progress-scroll-container">
+        <div class="me-top">
+            <button type="button" class="ns-icon-btn ns-icon-btn--bare" onclick="openSettingsModal()" aria-label="Open settings">
+                <span class="material-symbols-outlined">settings</span>
             </button>
-        </nav>
-
-        <!-- Milestone Details Drawer/Modal -->
-        <div id="milestone-modal" class="absolute inset-0 z-[100] hidden flex-col justify-end">
-            <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onclick="closeModal('milestone-modal')"></div>
-            <div class="modal-drawer bg-[#12141C] border border-white/10 w-full rounded-t-3xl p-6 transform translate-y-full transition-transform duration-300 ease-in-out relative flex flex-col max-h-[85vh] text-white shadow-2xl">
-                <div class="w-12 h-1.5 bg-slate-700 rounded-full mx-auto mb-5"></div>
-                <h2 id="modal-title" class="text-lg font-extrabold text-white mb-2 font-heading">Milestone Details</h2>
-                <p id="modal-desc" class="text-sm text-slate-300 mb-6 leading-relaxed">Details will appear here.</p>
-                <div id="modal-actions" class="mt-auto pt-4 flex flex-col gap-3">
-                    <!-- Dynamic Actions -->
-                </div>
-            </div>
         </div>
 
-    </div>
+        <section class="flex flex-col items-center text-center px-4">
+            <div id="me-avatar" class="me-avatar" aria-hidden="true">N</div>
+            <h1 id="me-name" class="me-name">Welcome</h1>
+            <p id="me-handle" class="text-[15px] font-medium text-muted mt-1">Using Northstar without an account</p>
+        </section>
 
-    <script src="js/northstar.js"></script>
-    <script src="js/jobs.js"></script>
+        <div class="px-4 pb-8">
+
+            <!-- Resume (seekers) -->
+            <a id="me-resume-card" href="resume-builder.html" class="ns-card block p-4 mt-5">
+                <span class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-[22px]" aria-hidden="true">auto_awesome</span>
+                    <span class="flex-1 text-[16px] font-bold">Resume</span>
+                    <span id="me-resume-pct" class="text-[16px] font-bold">0%</span>
+                </span>
+                <span class="ns-progress block mt-3"><span id="me-resume-bar" style="width: 0%"></span></span>
+                <span id="me-resume-status" class="block text-[13px] text-muted mt-2">5 short questions</span>
+            </a>
+
+            <!-- Skills from the saved resume -->
+            <div id="me-skills" class="me-skills mt-4"></div>
+
+            <!-- Rows -->
+            <div class="ns-list mt-4">
+                <a id="me-steps-row" href="#first-steps" class="ns-row" onclick="event.preventDefault(); document.getElementById('first-steps').scrollIntoView({ behavior: 'smooth' });">
+                    <span class="material-symbols-outlined text-[22px]" aria-hidden="true">flag</span>
+                    <span class="ns-row__body ns-row__title !font-medium">First steps</span>
+                    <span id="journey-progress-text" class="me-row__value">0 of 5 done</span>
+                    <span class="material-symbols-outlined ns-chevron">chevron_right</span>
+                </a>
+                <button type="button" class="ns-row" onclick="openSettingsModal()">
+                    <span class="material-symbols-outlined text-[22px]" aria-hidden="true">swap_horiz</span>
+                    <span class="ns-row__body ns-row__title !font-medium">Using Northstar to</span>
+                    <span id="me-role-value" class="me-row__value">Find help</span>
+                    <span class="material-symbols-outlined ns-chevron">chevron_right</span>
+                </button>
+                <a href="call-shelter.html" class="ns-row">
+                    <span class="material-symbols-outlined text-[22px]" aria-hidden="true">call</span>
+                    <span class="ns-row__body ns-row__title !font-medium">Call for help</span>
+                    <span class="me-row__value">211</span>
+                    <span class="material-symbols-outlined ns-chevron">chevron_right</span>
+                </a>
+                <button id="switch-account-btn" type="button" class="ns-row" onclick="localStorage.removeItem('northstar_session'); nsGo('index.html');">
+                    <span class="material-symbols-outlined text-[22px]" aria-hidden="true">logout</span>
+                    <span id="me-account-action" class="ns-row__body ns-row__title !font-medium">Sign out</span>
+                    <span id="progress-account-label" class="me-row__value truncate max-w-[45%]"></span>
+                    <span class="material-symbols-outlined ns-chevron">chevron_right</span>
+                </button>
+            </div>
+
+            <!-- First steps (progress list, real milestones from js/northstar.js) -->
+            <section id="first-steps">
+                <div class="ns-section-head">
+                    <h2>First steps</h2>
+                    <span id="journey-pct-badge" class="ns-aside">0%</span>
+                </div>
+                <div id="stepper-nodes" class="flex gap-1.5" aria-hidden="true"></div>
+                <div class="hidden"><span id="journey-progress-bar"></span></div>
+                <div id="journey-list-container" class="ns-list mt-2"></div>
+            </section>
+        </div>
+    </main>
+
+    <nav class="bottom-nav ns-nav" aria-label="Main"></nav>
+</div>
+
+<script src="js/northstar.js"></script>
+<script>
+(function () {
+    const esc = s => (window.nsEscape ? nsEscape(s) : String(s == null ? '' : s));
+
+    function savedResume() {
+        try {
+            const raw = JSON.parse(localStorage.getItem('northstar_latest_resume_data') || 'null');
+            if (raw && typeof raw === 'object') return raw;
+        } catch (e) {}
+        try {
+            const data = getUserData();
+            if (data && data.resumeData) return data.resumeData;
+        } catch (e) {}
+        return null;
+    }
+
+    function renderProfile() {
+        const session = typeof getSession === 'function' ? getSession() : { isGuest: true };
+        const name = typeof nsDisplayName === 'function' ? nsDisplayName() : '';
+        const isGuest = !session || session.isGuest;
+        const role = typeof getRole === 'function' ? getRole() : 'seeker';
+        const isVolunteer = role === 'volunteer';
+
+        document.getElementById('me-avatar').textContent = isGuest || !name
+            ? 'N'
+            : name.split(/\s+/).map(p => p.charAt(0)).join('').slice(0, 2).toUpperCase();
+        document.getElementById('me-name').textContent = isGuest ? 'Welcome' : (name || 'Your account');
+
+        const handle = !isGuest && session.username ? `@${String(session.username).toLowerCase().replace(/\s+/g, '')}` : '';
+        document.getElementById('me-handle').textContent = isGuest
+            ? 'Using Northstar without an account'
+            : [handle, isVolunteer ? 'Volunteer' : 'Finding help'].filter(Boolean).join(' · ');
+
+        document.getElementById('me-role-value').textContent = isVolunteer ? 'Give help' : 'Find help';
+        const action = document.getElementById('me-account-action');
+        if (action) action.textContent = isGuest ? 'Sign in or create an account' : 'Sign out';
+
+        // Resume card + skills are for people finding work; volunteers don't use the resume builder
+        const card = document.getElementById('me-resume-card');
+        const skillsEl = document.getElementById('me-skills');
+        const stepsSection = document.getElementById('first-steps');
+        const stepsRow = document.getElementById('me-steps-row');
+        if (isVolunteer) {
+            card.classList.add('hidden');
+            skillsEl.classList.add('hidden');
+            stepsSection.classList.add('hidden');
+            stepsRow.classList.add('hidden');
+            return;
+        }
+
+        const resume = savedResume();
+        const ready = !!resume || localStorage.getItem('northstar_resume_saved') === 'true';
+        document.getElementById('me-resume-pct').textContent = ready ? '100%' : '0%';
+        document.getElementById('me-resume-bar').style.width = ready ? '100%' : '0%';
+        document.getElementById('me-resume-status').textContent = ready ? 'Ready to print or share' : 'Not started · 5 short questions';
+
+        const skills = [];
+        if (resume && resume.skills) {
+            ['certifications', 'practical_skills', 'core_strengths'].forEach(k => {
+                (resume.skills[k] || []).forEach(v => { if (v && skills.length < 4 && !skills.includes(v)) skills.push(v); });
+            });
+        }
+        skillsEl.innerHTML = skills.map((s, i) =>
+            `<a href="resume-builder.html" class="ns-chip${i === 0 ? ' is-active' : ''}">${esc(s)}</a>`
+        ).join('') + `<a href="resume-builder.html" class="ns-chip"><span class="material-symbols-outlined">add</span>${skills.length ? 'Add skill' : 'Add your skills'}</a>`;
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', renderProfile);
+    else renderProfile();
+})();
+</script>
+<script src="js/jobs.js"></script>
 </body>
-
 </html>

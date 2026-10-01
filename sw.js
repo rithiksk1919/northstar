@@ -1,4 +1,4 @@
-const APP_CACHE_NAME = 'northstar-offline-v2';
+const APP_CACHE_NAME = 'northstar-offline-v4';
 const TILE_CACHE_NAME = 'northstar-map-tiles';
 
 const CORE_ASSETS = [
@@ -9,10 +9,16 @@ const CORE_ASSETS = [
   '/volunteer-dashboard.html',
   '/resource-map.html',
   '/map.html',
-  '/css/northstar.css',
+  '/css/app.css',
+  '/assets/fonts/material-symbols-outlined-subset.woff2',
+  '/companion.html',
+  '/progress.html',
+  '/css/onboarding.css',
+  '/js/ns-boot.js',
+  '/js/tailwind-config.js',
   '/js/northstar.js',
   '/js/auth.js',
-  '/js/supabase-client.js',
+  '/js/supabase.js',
   '/js/offline-map.js',
   '/assets/static-map-snapshot.png'
 ];

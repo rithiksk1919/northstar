@@ -143,9 +143,8 @@ const REGIONAL_25MI_ESSENTIALS = [
 
 function getPinBadgeColor(category) {
   const cat = (category || "").toLowerCase();
-  if (cat.includes("shelter")) return "#2563eb";
-  if (cat.includes("food")) return "#059669";
-  return "#d97706";
+  // One calm pin colour (ink); categories are named on each card
+  return "#111111";
 }
 
 function getBadgeClass(category) {
@@ -182,9 +181,8 @@ function buildRealOpenStreetMapStaticDataUri(resources) {
     const fill = getPinBadgeColor(item.category);
     return `
       <g transform="translate(${x}, ${y})">
-        <circle r="15" fill="#ffffff" stroke="#0f172a" stroke-width="1.5" opacity="0.95"/>
-        <circle r="12" fill="${fill}" stroke="#ffffff" stroke-width="2"/>
-        <text y="4" text-anchor="middle" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, sans-serif" font-size="11.5" font-weight="900">${num}</text>
+        <circle r="14" fill="${fill}" stroke="#ffffff" stroke-width="2.5"/>
+        <text y="4" text-anchor="middle" fill="#ffffff" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif" font-size="12" font-weight="700">${num}</text>
       </g>
     `;
   }).join("");
@@ -194,12 +192,12 @@ function buildRealOpenStreetMapStaticDataUri(resources) {
     <!-- Real OpenStreetMap / Carto Street Tiles -->
     ${tileElements}
     <!-- Subtle 25-Mile Radius Coverage Ring -->
-    <circle cx="355" cy="375" r="215" fill="none" stroke="#2563eb" stroke-opacity="0.45" stroke-width="2.5" stroke-dasharray="8,6"/>
+    <circle cx="355" cy="375" r="215" fill="#FFD43B" fill-opacity="0.06" stroke="#111111" stroke-opacity="0.35" stroke-width="2" stroke-dasharray="8,6"/>
     <!-- Numbered Pins #1 through #10 -->
     ${pinsMarkup}
     <!-- Clean Top Attribution / Scale Pill -->
-    <rect x="158" y="158" width="248" height="32" rx="8" fill="#0f172a" fill-opacity="0.88"/>
-    <text x="170" y="178" fill="#ffffff" font-family="sans-serif" font-size="11" font-weight="800">SEATTLE 25-MILE STREET MAP (PINS #1–#10)</text>
+    <rect x="166" y="188" width="176" height="30" rx="15" fill="#FFFFFF" fill-opacity="0.94"/>
+    <text x="180" y="207" fill="#111111" font-family="'Plus Jakarta Sans', -apple-system, sans-serif" font-size="12" font-weight="700">Seattle area, 25 miles</text>
   </svg>`;
 
   return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
@@ -211,17 +209,13 @@ function resetButtonToDefaultState() {
   btn.innerText = "Download";
   btn.classList.remove("download-complete");
   btn.classList.add("download-default");
-  btn.style.backgroundColor = "#facc15";
-  btn.style.color = "#0f172a";
 }
 
 function setButtonDownloadedState(btn) {
   if (!btn) return;
-  btn.innerText = "Downloaded ✓";
+  btn.innerText = "Saved";
   btn.classList.remove("download-default");
   btn.classList.add("download-complete");
-  btn.style.backgroundColor = "#22c55e";
-  btn.style.color = "#ffffff";
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -259,6 +253,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const mapDataUri = buildRealOpenStreetMapStaticDataUri(resources);
 
+      const esc = (v) => String(v == null ? "" : v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
       const cardsMarkup = resources.map((item, idx) => {
         const badgeClass = getBadgeClass(item.category);
         const hoursText = item.opening_hours || (item.open_24_7 ? "Open 24/7" : "Open Today");
@@ -267,12 +262,13 @@ document.addEventListener("DOMContentLoaded", () => {
         return `
       <div class="resource-card">
         <div class="card-header">
-          <span class="badge ${badgeClass}">#${idx + 1} · ${item.category || "Essential"}</span>
-          <span class="hours">${hoursText}</span>
+          <span class="num">${idx + 1}</span>
+          <span class="badge ${badgeClass}">${esc(item.category || "Place")}</span>
         </div>
-        <div class="resource-title">#${idx + 1} ${item.name}</div>
-        <div class="info-line">📍 <span>${item.address}</span></div>
-        <div class="info-line">📞 <a class="phone-link" href="tel:${cleanPhone}">${item.phone}</a></div>
+        <div class="resource-title">${esc(item.name)}</div>
+        <div class="hours${item.open_24_7 ? " hours-open" : ""}">${esc(hoursText)}</div>
+        <div class="info-line"><span class="label">Address</span><span>${esc(item.address)}</span></div>
+        ${cleanPhone ? `<a class="call-btn" href="tel:${esc(cleanPhone)}">Call ${esc(item.phone)}</a>` : ""}
       </div>`;
       }).join("\n");
 
@@ -285,14 +281,15 @@ document.addEventListener("DOMContentLoaded", () => {
   <style>
     * { box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: #0b0f19;
-      color: #f8fafc;
+      font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #FFFFFF;
+      color: #111111;
       margin: 0;
-      padding: 16px;
+      padding: 24px 20px 40px;
       line-height: 1.5;
       display: flex;
       justify-content: center;
+      -webkit-font-smoothing: antialiased;
     }
 
     .app-container {
@@ -301,31 +298,30 @@ document.addEventListener("DOMContentLoaded", () => {
       margin: 0 auto;
     }
 
-    .header {
-      text-align: center;
-      margin-bottom: 16px;
-    }
-    .header h1 { font-size: 20px; margin: 0 0 4px 0; color: #ffffff; }
-    .header p { font-size: 12px; color: #94a3b8; margin: 0; }
+    .header { margin-bottom: 20px; }
+    .header h1 { font-size: 28px; line-height: 1.15; letter-spacing: -0.025em; margin: 0 0 6px 0; font-weight: 700; }
+    .header p { font-size: 14px; font-weight: 500; color: #6B7280; margin: 0; }
 
-    /* Real Static Street Map Container (320px vertical height) */
+    /* Static street map (320px tall) */
     .map-card {
       width: 100%;
-      height: 320px; /* Gives the map proper vertical height */
-      border-radius: 16px;
+      height: 320px;
+      border-radius: 22px;
       overflow: hidden;
-      border: 1px solid #334155;
-      margin-bottom: 20px;
-      background: #1e293b;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 10px 24px -14px rgba(0, 0, 0, 0.18);
+      margin-bottom: 24px;
+      background: #F2F2F2;
     }
     .map-img {
       width: 100%;
       height: 100%;
-      object-fit: cover; /* Ensures real map tiles fit without distortion */
+      object-fit: cover;
       display: block;
+      filter: saturate(0.55) sepia(0.12) brightness(1.03) contrast(0.96);
     }
 
-    /* Single-Column Mobile Directory Cards */
+    /* Single-column directory cards */
     .directory-container {
       display: flex;
       flex-direction: column;
@@ -333,69 +329,96 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     .resource-card {
-      background: #151c2c;
-      border: 1px solid #283548;
-      border-radius: 12px;
-      padding: 14px;
+      background: #FFFFFF;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 22px;
+      padding: 18px 20px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 10px 24px -14px rgba(0, 0, 0, 0.18);
     }
 
     .card-header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 6px;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #111111;
+      color: #FFFFFF;
+      font-size: 13px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .badge {
-      font-size: 10px;
+      display: inline-flex;
+      align-items: center;
+      height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      font-size: 12px;
       font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 6px;
-      text-transform: uppercase;
+      background: #F2F2F2;
+      color: #3F3F3F;
     }
-    .badge-shelter { background: #3b82f6; color: #fff; }
-    .badge-food { background: #10b981; color: #fff; }
-    .badge-health { background: #f59e0b; color: #fff; }
-
-    .hours {
-      font-size: 11px;
-      font-weight: 600;
-      color: #4ade80;
-    }
+    .badge-shelter, .badge-food, .badge-health { background: #F2F2F2; color: #3F3F3F; }
 
     .resource-title {
       font-size: 16px;
       font-weight: 700;
-      margin: 4px 0;
-      color: #ffffff;
+      line-height: 1.3;
+      margin: 0 0 4px;
     }
+
+    .hours {
+      font-size: 13px;
+      font-weight: 600;
+      color: #3F3F3F;
+    }
+    .hours-open { color: #1F7A44; }
 
     .info-line {
       font-size: 13px;
-      color: #cbd5e1;
-      margin-top: 4px;
+      font-weight: 500;
+      color: #3F3F3F;
+      margin-top: 8px;
+      display: flex;
+      gap: 8px;
+    }
+    .info-line .label { color: #6B7280; flex-shrink: 0; }
+
+    /* Tap-to-call button */
+    .call-btn {
       display: flex;
       align-items: center;
-      gap: 6px;
-    }
-
-    /* Tap-to-call link for phones */
-    .phone-link {
-      color: #facc15;
+      justify-content: center;
+      height: 48px;
+      margin-top: 14px;
+      border-radius: 14px;
+      background: #FFF7D1;
+      border: 1px solid #F2DC7A;
+      color: #111111;
+      font-size: 15px;
+      font-weight: 700;
       text-decoration: none;
-      font-weight: 600;
     }
   </style>
 </head>
 <body>
   <div class="app-container">
     <div class="header">
-      <h1>Northstar Emergency Directory</h1>
-      <p>Offline Regional Map &amp; Verified Resources (25-Mile Radius)</p>
+      <h1>Places near Seattle</h1>
+      <p>Shelters, food and health care within 25 miles. This page works without internet.</p>
     </div>
 
     <div class="map-card">
-      <img class="map-img" src="${mapDataUri}" onerror="this.src=\"/assets/seattle-25mi-map.png\"" alt="Seattle 25-Mile Street Map">
+      <img class="map-img" src="${mapDataUri}" onerror="this.src=\"/assets/seattle-25mi-map.png\"" alt="Map of the Seattle area with numbered places">
     </div>
 
     <div class="directory-container">
@@ -418,7 +441,7 @@ ${cardsMarkup}
       setButtonDownloadedState(btn);
     } catch (err) {
       console.error("Download error:", err);
-      btn.innerText = "Download Failed";
+      btn.innerText = "Try again";
     }
   });
 });

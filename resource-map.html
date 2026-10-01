@@ -2,458 +2,448 @@
 <html class="light" lang="en">
 <head>
 <meta charset="utf-8">
-<meta content="width=device-width, initial-scale=1.0" name="viewport">
-<title>Northstar | Live Resource Map</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link rel="stylesheet" href="css/northstar.css">
-<style>
-    /* Fix click interactions by ignoring child elements */
-    button * {
-        pointer-events: none;
-    }
-    /* Expandable Bottom Drawer Sheet */
-    #bottom-drawer-sheet.expanded {
-        max-height: 55vh !important;
-    }
-</style>
-
-<!-- Leaflet CSS & JS Bundle -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#FFFFFF">
+<title>Map · Northstar</title>
+<link rel="icon" href="favicon.png">
+<script src="js/ns-boot.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<!-- Leaflet, Dexie (IndexedDB) and leaflet.offline tile caching -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<!-- Dexie.js (IndexedDB wrapper for offline storage) -->
 <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.min.js"></script>
-<!-- Leaflet.offline tile caching extension -->
-<script src="https://unpkg.com/leaflet.offline@3.2.1/dist/leaflet.offline.min.js"></script>
-
-<script id="tailwind-config">
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            "fontFamily": {
-              "sans": ["Inter", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
-              "heading": ["Plus Jakarta Sans", "sans-serif"]
-            },
-            "colors": {
-              "dark-pill": "#0F141C",
-              "brand-dark": "#0B0E14",
-              "brand-accent": "#10B981"
-            }
-          },
-        },
-      }
-</script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet.offline@3.2.1/dist/bundle.min.js"></script>
+<script src="https://cdn.tailwindcss.com?plugins=container-queries"></script>
+<script src="js/tailwind-config.js"></script>
+<link rel="stylesheet" href="css/app.css">
 <style>
-  .leaflet-popup-content-wrapper {
-    background: rgba(15, 20, 28, 0.92) !important;
-    backdrop-filter: blur(20px) saturate(180%) !important;
-    color: #ffffff !important;
-    border-radius: 24px !important;
-    padding: 6px !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4) !important;
+  /* ---- Map page layout (page-specific) ---- */
+  .rm-main {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    isolation: isolate; /* keeps Leaflet panes (z 400-1000) inside this box, below sheets and nav */
+    background: #F2F2F2;
   }
-  .leaflet-popup-tip {
-    background: rgba(15, 20, 28, 0.92) !important;
+  #map { position: absolute; inset: 0; z-index: 0; }
+  .leaflet-container { background: #F2F2F2; }
+
+  /* Floating top controls */
+  .rm-top {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    z-index: 1100;
+    padding: max(16px, env(safe-area-inset-top)) 0 0;
+    pointer-events: none;
   }
-  .leaflet-container {
-    background: #EBF0F5 !important;
-    font-family: 'Inter', -apple-system, sans-serif !important;
+  .rm-top > * { pointer-events: auto; }
+  .rm-top__row { display: flex; align-items: center; gap: 12px; padding: 0 16px; }
+  .rm-search {
+    flex: 1; min-width: 0;
+    height: 44px;
+    padding: 0 16px;
+    border-radius: 999px;
+    background: var(--paper);
+    box-shadow: var(--shadow-lift);
+    display: flex; align-items: center; gap: 8px;
   }
-  /* Hide Leaflet default attribution & controls for clean full-bleed experience */
-  .leaflet-control-container .leaflet-bottom,
-  .leaflet-control-container .leaflet-top {
-    z-index: 20 !important;
+  .rm-search input {
+    flex: 1; min-width: 0; height: 100%;
+    border: 0; outline: none; background: transparent;
+    font-size: 15px; font-weight: 500; color: var(--ink);
   }
-  /* Custom scrollbar for horizontal category shelf */
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
+  .rm-search input::placeholder { color: #8A8A8A; }
+  .rm-search:focus-within { box-shadow: 0 0 0 1.5px var(--ink), var(--shadow-lift); }
+  .rm-pill {
+    flex: 1; min-width: 0;
+    height: 48px;
+    padding: 0 16px 0 14px;
+    border-radius: 999px;
+    background: var(--paper);
+    box-shadow: var(--shadow-lift);
+    display: flex; align-items: center; gap: 8px;
+    font-size: 15px; font-weight: 700; color: var(--ink);
+    text-align: left;
   }
-  .no-scrollbar {
-    -ms-overflow-style: none;
+  .rm-pill > span:nth-child(2) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rm-chips { display: flex; gap: 8px; overflow-x: auto; padding: 12px 16px 12px; scrollbar-width: none; }
+  .rm-chips::-webkit-scrollbar { display: none; }
+  .rm-chips .ns-chip { background: var(--paper); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 12px -6px rgba(0, 0, 0, 0.22); border-color: transparent; }
+  .rm-chips .ns-chip.is-active, .rm-chips .ns-chip[aria-pressed='true'] { background: var(--ink); color: #fff; }
+  .rm-chips .ns-chip.is-active { border-color: var(--ink); }
+  .rm-count {
+    min-width: 22px; height: 22px; padding: 0 6px;
+    border-radius: 999px; background: var(--ink); color: var(--cream);
+    font-size: 12px; font-weight: 700;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+
+  /* Quiet loading state */
+  #map-loading-overlay {
+    position: absolute; inset: 0; z-index: 1300;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--cream);
+    transition: opacity 0.4s ease;
+  }
+  .rm-spinner {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 3px solid var(--sand-deep); border-top-color: var(--ink);
+    animation: rmSpin 0.9s linear infinite;
+  }
+  @keyframes rmSpin { to { transform: rotate(360deg); } }
+
+  /* Bottom places sheet: draggable, snaps to peek / half / full (see initPlacesSheet) */
+  #bottom-drawer-sheet {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    z-index: 1100;
+    height: 70%;
+    display: flex; flex-direction: column;
+    background: var(--paper);
+    border-radius: 28px 28px 0 0;
+    box-shadow: 0 -12px 32px -16px rgba(0, 0, 0, 0.28);
+    transform: translateY(var(--sheet-y, 40%));
+    transition: transform 0.42s cubic-bezier(0.22, 0.9, 0.24, 1);
+    touch-action: none;
+    will-change: transform;
+  }
+  #bottom-drawer-sheet.is-dragging { transition: none; }
+  #drawer-header { width: 100%; padding: 6px 16px 10px; text-align: left; cursor: grab; flex-shrink: 0; }
+  #bottom-drawer-sheet.is-dragging #drawer-header { cursor: grabbing; }
+  #sheet-body {
+    flex: 1 1 auto; min-height: 0;
+    overflow: hidden;
+    overscroll-behavior: contain;
     scrollbar-width: none;
   }
-  /* Dynamic Station Spring Animations */
-  .spring-transition {
-    transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  #sheet-body::-webkit-scrollbar { display: none; }
+  #bottom-drawer-sheet.is-full #sheet-body { overflow-y: auto; touch-action: pan-y; }
+  #place-focus-card { padding: 0 16px 14px; }
+  #places-list { padding: 4px 16px calc(14px + env(safe-area-inset-bottom)); }
+  #places-list:empty { display: none; }
+  .rm-list-head { padding: 10px 16px 0; border-top: 1px solid var(--line); }
+  .rm-expand-icon { transition: transform 0.3s var(--ease); }
+  #bottom-drawer-sheet.is-full .rm-expand-icon { transform: rotate(180deg); }
+
+  /* Map buttons ride on top of the sheet */
+  .rm-fabs {
+    position: absolute; right: 16px; bottom: calc(100% + 16px);
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    transition: opacity 0.2s ease;
   }
-  .ios-glass-station {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  #bottom-drawer-sheet.is-full .rm-fabs,
+  #bottom-drawer-sheet.fabs-hidden .rm-fabs { opacity: 0; pointer-events: none; }
+  .rm-zoom {
+    display: flex; flex-direction: column;
+    border-radius: 999px; background: var(--paper); box-shadow: var(--shadow-lift);
+    overflow: hidden;
   }
+  .rm-zoom button { width: 48px; height: 44px; display: flex; align-items: center; justify-content: center; }
+  .rm-zoom button + button { border-top: 1px solid var(--line); }
+
+  /* Pins */
+  .ns-pin { background: none; border: 0; }
+  .rm-pin {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--ink); color: #fff;
+    border: 2px solid #fff;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 10px -4px rgba(0, 0, 0, 0.6);
+  }
+  .rm-pin .material-symbols-outlined { font-size: 18px; }
+  .rm-pin--saved { box-shadow: 0 0 0 3px var(--amber), 0 4px 10px -4px rgba(0, 0, 0, 0.6); }
+  .rm-label-pin {
+    position: absolute; left: 0; top: 0;
+    transform: translate(-50%, calc(-100% - 6px));
+    display: flex; align-items: center; gap: 6px;
+    height: 36px; padding: 0 14px 0 10px;
+    border-radius: 999px;
+    background: var(--amber); color: var(--ink);
+    font-size: 13px; font-weight: 700; white-space: nowrap;
+    max-width: 220px;
+    box-shadow: 0 8px 18px -8px rgba(214, 146, 20, 0.9);
+  }
+  .rm-label-pin span:last-child { overflow: hidden; text-overflow: ellipsis; }
+  .rm-label-pin .material-symbols-outlined { font-size: 18px; }
+  .rm-label-dot {
+    position: absolute; left: -6px; top: -6px;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--ink); border: 2px solid #fff;
+  }
+  .rm-me {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: rgba(0, 0, 0, 0.14);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .rm-me span { width: 12px; height: 12px; border-radius: 50%; background: var(--ink); border: 2px solid #fff; }
+  .rm-stop {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--amber); color: var(--ink); border: 2px solid var(--ink);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700;
+  }
+
+  /* Directions steps */
+  .rm-step { display: flex; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .rm-step:last-child { border-bottom: 0; }
+  .rm-step__icon { width: 36px; height: 36px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--sand); color: var(--ink); }
+  .rm-step__icon--bus { background: var(--ink); color: var(--cream); }
+  .rm-step__icon .material-symbols-outlined { font-size: 20px; }
 </style>
 </head>
+<body>
 
-<body class="bg-[#0B0E14] min-h-screen flex items-center justify-center p-0 sm:py-6 text-slate-900 font-sans selection:bg-emerald-500/30 selection:text-emerald-300">
+<div class="app-frame">
 
-<!-- Mobile Frame Shell -->
-<div class="app-frame w-full sm:max-w-[420px] min-h-screen sm:min-h-[860px] sm:max-h-[920px] bg-[#0B0E14] sm:rounded-[44px] shadow-[0_0_70px_rgba(0,0,0,0.85)] relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-800/80 z-10">
+    <main class="rm-main" aria-label="Map of places near you">
 
-    <!-- Unified AppHeader (Map View) -->
-    <header class="flex items-center justify-between px-4 py-3 border-b border-slate-200/10 bg-slate-900/40 backdrop-blur-md z-40 flex-shrink-0">
-      <div>
-        <h1 class="text-lg font-bold text-white tracking-tight">Resource Map</h1>
-        <p class="text-xs text-slate-400">Verified nearby essentials &amp; safe shelters</p>
-      </div>
+        <div id="map" class="ns-map-soft"></div>
 
-      <!-- Right controls: Theme Toggle + Profile Avatar (AppHeader Pattern) -->
-      <div class="header-actions-right flex items-center gap-2.5">
-        <button
-          id="theme-toggle-btn"
-          type="button"
-          onclick="toggleTheme()"
-          aria-label="Toggle theme"
-          class="w-9 h-9 rounded-full bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-300 hover:text-amber-400 transition-colors cursor-pointer flex-shrink-0"
-        >
-          <svg class="theme-sun-icon hidden dark:block w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-          </svg>
-          <svg class="theme-moon-icon block dark:hidden w-4 h-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-          </svg>
-        </button>
-
-        <button
-          id="profile-btn"
-          data-standardized-avatar="true"
-          type="button"
-          onclick="openSettingsModal()"
-          class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700/60 flex items-center justify-center shadow-sm cursor-pointer select-none flex-shrink-0"
-          title="Signed in as Seeker - Tap for Settings"
-          aria-label="Profile & Settings"
-        >
-          <span class="text-[#FFB800] font-bold text-sm tracking-wide">S</span>
-        </button>
-      </div>
-    </header>
-
-    <!-- MAIN FULL-BLEED MAP CONTAINER -->
-    <div class="relative w-full h-full flex-1 overflow-hidden flex flex-col">
-        
-        <!-- FULL-BLEED LEAFLET MAP -->
-        <div id="map" class="absolute inset-0 w-full h-full z-0 bg-[#0B0E14]"></div>
-
-        <!-- MAP LOADING ANIMATION OVERLAY -->
-        <div id="map-loading-overlay" class="absolute inset-0 z-50 bg-[#0B0E14]/95 backdrop-blur-xl flex flex-col items-center justify-center p-6 transition-all duration-700 pointer-events-auto">
-          <div class="relative flex items-center justify-center w-36 h-36 mb-6">
-            <!-- Concentric Pulsing Radar Rings -->
-            <div class="absolute inset-0 rounded-full border border-emerald-500/30 animate-ping opacity-75" style="animation-duration: 3s;"></div>
-            <div class="absolute inset-3 rounded-full border border-amber-400/40 animate-pulse"></div>
-            <div class="absolute inset-6 rounded-full bg-emerald-500/10 backdrop-blur-sm border border-emerald-500/40"></div>
-            
-            <!-- Rotating Scan Beam -->
-            <div class="absolute inset-0 rounded-full border-t-2 border-emerald-400 animate-spin" style="animation-duration: 2.5s;"></div>
-            
-            <!-- Central Animated Pin -->
-            <div class="relative z-10 flex flex-col items-center transform animate-bounce" style="animation-duration: 1.8s;">
-              <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-500 to-amber-400 p-0.5 shadow-2xl shadow-emerald-500/40 flex items-center justify-center">
-                <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
-                  <span class="material-symbols-outlined text-emerald-400 text-2xl">location_on</span>
-                </div>
-              </div>
-              <div class="w-4 h-1.5 bg-emerald-500/40 rounded-full blur-[2px] mt-1"></div>
+        <!-- Quiet loading state -->
+        <div id="map-loading-overlay" role="status" aria-live="polite">
+            <div class="flex flex-col items-center gap-3">
+                <div class="rm-spinner" aria-hidden="true"></div>
+                <p class="text-[14px] font-semibold text-ink-2">Loading the map</p>
             </div>
-          </div>
-
-          <!-- Loading Text & Status -->
-          <div class="text-center space-y-2 max-w-xs z-10">
-            <h3 class="text-base font-extrabold text-white tracking-tight flex items-center justify-center gap-2">
-              <span class="material-symbols-outlined text-emerald-400 text-lg animate-spin" style="animation-duration: 4s;">explore</span>
-              <span>Initializing Live Map</span>
-            </h3>
-            <p class="text-xs text-slate-400 font-medium">
-              Locating nearby safe shelters, food &amp; essential services...
-            </p>
-          </div>
-
-          <!-- Progress Shimmer Bar -->
-          <div class="w-48 h-1.5 bg-slate-800 rounded-full overflow-hidden mt-6 relative z-10">
-            <div class="h-full bg-gradient-to-r from-emerald-500 via-amber-400 to-emerald-400 rounded-full animate-pulse w-full"></div>
-          </div>
         </div>
 
-        <!-- OVERLAY LAYER: DYNAMIC FLOATING STATION LAYER (Z-INDEX 30) -->
-        <div class="relative z-30 w-full h-full flex flex-col justify-between pointer-events-none pt-3 pb-4 px-3.5">
-
-            <!-- SINGLE UNIFIED DYNAMIC FLOATING STATION (APPLE CONTROL CENTER / DYNAMIC ISLAND ARCHITECTURE) -->
-            <div id="dynamic-floating-station" class="pointer-events-auto w-full rounded-[28px] ios-glass-station p-2.5 space-y-2.5 spring-transition stagger-1">
-                
-                <!-- TIER 1: COLLAPSED CAPSULE ROW (MODE TOGGLE + ACTION BUTTONS TIGHTLY GROUPED) -->
-                <div class="flex justify-between items-center w-full">
-                    <!-- Segmented Mode Controller (Nearby vs Saved vs Offline) -->
-                    <div class="bg-slate-200/80 p-1 rounded-[20px] flex items-center gap-1 shadow-inner">
-                        <button id="mode-btn-nearby" onclick="switchMapMode('nearby')" class="px-3 py-1.5 rounded-[16px] text-xs font-bold bg-white text-slate-950 shadow-sm transition-all">
-                            Nearby
-                        </button>
-                        <button id="mode-btn-saved" onclick="switchMapMode('saved')" class="px-3 py-1.5 rounded-[16px] text-xs font-bold text-slate-600 hover:text-slate-950 transition-all">
-                            Saved
-                        </button>
-                        <button id="mode-btn-offline" onclick="window.toggleOfflineDirectoryModal && window.toggleOfflineDirectoryModal()" class="px-3 py-1.5 rounded-[16px] text-xs font-bold text-slate-600 hover:text-slate-950 transition-all flex items-center gap-1">
-                            <span>Offline</span>
-                        </button>
-                    </div>
-
-                    <!-- Location Name Pill -->
-                    <div class="px-3 py-1 rounded-[16px] bg-slate-100 text-slate-800 text-[11px] font-bold border border-slate-200 flex items-center gap-1 shadow-sm">
-                        <span class="material-symbols-outlined text-xs text-emerald-600">location_on</span>
-                        <span id="location-name-label">Seattle Area</span>
-                    </div>
-
-                    <!-- Recenter / Share Location Button -->
-                    <div class="flex items-center">
-                        <button onclick="locateAndCenterUser()" title="Share / Recenter Location" class="w-9 h-9 rounded-full bg-white text-slate-900 shadow-md flex items-center justify-center hover:bg-slate-100 active:scale-95 transition-all">
-                            <span class="material-symbols-outlined text-base">near_me</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- TIER 2: FILTER ROW (DYNAMIC INLINE EXPANSION FOR SCOPE & OPEN NOW) -->
-                <div class="flex items-center justify-between gap-2 pt-0.5">
-                    <!-- Scope Filter Segment (Everyone vs Verified Only) -->
-                    <div class="bg-slate-200/80 p-0.5 rounded-[18px] flex items-center gap-0.5 shadow-inner flex-grow">
-                        <button id="scope-btn-everyone" onclick="setScopeFilter('everyone')" class="flex-1 py-1.5 px-2.5 rounded-[14px] text-[11px] font-bold bg-white text-slate-950 shadow-sm transition-all text-center truncate">
-                            Everyone
-                        </button>
-                        <button id="scope-btn-verified" onclick="setScopeFilter('verified')" class="flex-1 py-1.5 px-2.5 rounded-[14px] text-[11px] font-bold text-slate-600 hover:text-slate-950 transition-all text-center truncate flex items-center justify-center gap-1">
-                            <span>Verified</span>
-                            <span class="text-[9px] text-amber-500 font-black">✓</span>
-                        </button>
-                    </div>
-
-                    <!-- Real Open Now Toggle Pill (Active by default) -->
-                    <button id="open-now-btn" onclick="toggleOpenNowFilter()" class="py-1.5 px-3 rounded-[18px] bg-[#0F141C] text-white text-[11px] font-bold border border-white/20 flex items-center gap-1.5 transition-all shadow-md flex-shrink-0">
-                        <span id="open-now-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        <span id="open-now-text">Open now</span>
+        <!-- Top: location pill + category chips -->
+        <div class="rm-top">
+            <div class="rm-top__row">
+                <button type="button" class="ns-icon-btn ns-icon-btn--float" onclick="rmBack()" aria-label="Back">
+                    <span class="material-symbols-outlined">chevron_left</span>
+                </button>
+                <form class="rm-search" role="search" onsubmit="event.preventDefault(); setMapSearch(this.q.value, true); this.q.blur();">
+                    <span class="material-symbols-outlined text-[21px] text-ink-2" aria-hidden="true">search</span>
+                    <input id="map-search-input" name="q" type="search" placeholder="Beds, meals, Wi-Fi near me" aria-label="Search places" autocomplete="off" enterkeyhint="search" oninput="setMapSearch(this.value)">
+                    <button type="button" id="map-search-clear" class="hidden -mr-2 w-9 h-9 grid place-items-center rounded-full text-ink-2" onclick="clearMapSearch()" aria-label="Clear search">
+                        <span class="material-symbols-outlined text-[20px]">close</span>
                     </button>
-                </div>
-
-                <!-- TIER 3: iOS SEGMENTED CATEGORY SHELF (MULTI-SELECT SUPPORTED) -->
-                <div class="pt-0.5">
-                    <div class="flex gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-                        <button data-cat="all" onclick="toggleCategoryFilter('all')" class="cat-pill-btn px-3.5 py-1.5 rounded-[16px] text-[11px] font-extrabold bg-[#0F141C] text-white flex items-center gap-1 flex-shrink-0 shadow-md transition-all">
-                            <span class="material-symbols-outlined text-xs text-emerald-400">auto_awesome</span>
-                            <span>All</span>
-                        </button>
-                        <button data-cat="work" onclick="toggleCategoryFilter('work')" class="cat-pill-btn px-3.5 py-1.5 rounded-[16px] text-[11px] font-bold bg-white text-slate-800 flex items-center gap-1 flex-shrink-0 border border-slate-200 shadow-sm hover:bg-slate-50 transition-all">
-                            <span class="material-symbols-outlined text-xs text-amber-500">work</span>
-                            <span>Gigs</span>
-                        </button>
-                        <button data-cat="food" onclick="toggleCategoryFilter('food')" class="cat-pill-btn px-3.5 py-1.5 rounded-[16px] text-[11px] font-bold bg-white text-slate-800 flex items-center gap-1 flex-shrink-0 border border-slate-200 shadow-sm hover:bg-slate-50 transition-all">
-                            <span class="material-symbols-outlined text-xs text-rose-500">restaurant</span>
-                            <span>Meals</span>
-                        </button>
-                        <button data-cat="shelter" onclick="toggleCategoryFilter('shelter')" class="cat-pill-btn px-3.5 py-1.5 rounded-[16px] text-[11px] font-bold bg-white text-slate-800 flex items-center gap-1 flex-shrink-0 border border-slate-200 shadow-sm hover:bg-slate-50 transition-all">
-                            <span class="material-symbols-outlined text-xs text-blue-500">single_bed</span>
-                            <span>Shelter</span>
-                        </button>
-                        <button data-cat="wifi" onclick="toggleCategoryFilter('wifi')" class="cat-pill-btn px-3.5 py-1.5 rounded-[16px] text-[11px] font-bold bg-white text-slate-800 flex items-center gap-1 flex-shrink-0 border border-slate-200 shadow-sm hover:bg-slate-50 transition-all">
-                            <span class="material-symbols-outlined text-xs text-indigo-500">wifi</span>
-                            <span>Wi-Fi</span>
-                        </button>
-                        <button data-cat="restroom" onclick="toggleCategoryFilter('restroom')" class="cat-pill-btn px-3.5 py-1.5 rounded-[16px] text-[11px] font-bold bg-white text-slate-800 flex items-center gap-1 flex-shrink-0 border border-slate-200 shadow-sm hover:bg-slate-50 transition-all">
-                            <span class="material-symbols-outlined text-xs text-teal-500">shower</span>
-                            <span>Showers</span>
-                        </button>
-                        <button data-cat="charging" onclick="toggleCategoryFilter('charging')" class="cat-pill-btn px-3.5 py-1.5 rounded-[16px] text-[11px] font-bold bg-white text-slate-800 flex items-center gap-1 flex-shrink-0 border border-slate-200 shadow-sm hover:bg-slate-50 transition-all">
-                            <span class="material-symbols-outlined text-xs text-yellow-500">power</span>
-                            <span>Charging</span>
-                        </button>
-                    </div>
-                </div>
-
+                    <span id="location-name-label" class="sr-only">Seattle area</span>
+                </form>
             </div>
 
-            <!-- RADIUS SELECTOR BAR (CLEANLY CENTERED) -->
-            <div class="w-full flex justify-center pointer-events-auto my-auto pt-1">
-                <div id="radius-controls" class="bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-full shadow-lg border border-slate-200/90 flex items-center gap-1.5 transition-all">
-                    <span class="material-symbols-outlined text-xs text-emerald-600">adjust</span>
-                    <span class="text-[10px] font-bold text-slate-700">Radius:</span>
-                    <div class="flex items-center gap-1">
-                        <button id="radius-btn-5" onclick="setSearchRadius(5)" class="radius-pill-btn px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#0F141C] text-white shadow-sm transition-all">5 mi</button>
-                        <button id="radius-btn-10" onclick="setSearchRadius(10)" class="radius-pill-btn px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all">10 mi</button>
-                        <button id="radius-btn-25" onclick="setSearchRadius(25)" class="radius-pill-btn px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all">25 mi</button>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-
-    </div>
-
-    <!-- ZOOM CONTROLS (DOCKED ABOVE BOTTOM DRAWER) -->
-    <div class="absolute bottom-[134px] right-3.5 z-30 flex flex-col gap-2 pointer-events-auto">
-        <button onclick="if(map) map.zoomIn()" title="Zoom In" class="w-9 h-9 bg-white text-slate-900 rounded-full shadow-md flex items-center justify-center font-bold text-lg hover:bg-slate-100 active:scale-95 transition-all border border-slate-200/80">+</button>
-        <button onclick="if(map) map.zoomOut()" title="Zoom Out" class="w-9 h-9 bg-white text-slate-900 rounded-full shadow-md flex items-center justify-center font-bold text-lg hover:bg-slate-100 active:scale-95 transition-all border border-slate-200/80">-</button>
-    </div>
-
-    <!-- EXPANDABLE BOTTOM DRAWER SHEET ("PLACES LIST") -->
-    <div id="bottom-drawer-sheet" class="absolute bottom-[72px] left-3 right-3 z-30 bg-white/95 backdrop-blur-xl rounded-[24px] shadow-[0_8px_30px_rgba(0,0,0,0.18)] border border-slate-200/80 transition-all duration-300 ease-out overflow-hidden flex flex-col pointer-events-auto" style="max-height: 54px;">
-        <!-- DRAG HANDLE & HEADER BAR (CLICKABLE / DRAGGABLE) -->
-        <div id="drawer-header" onclick="toggleBottomDrawer()" class="w-full pt-2 pb-2.5 px-4 cursor-pointer flex flex-col items-center select-none hover:bg-slate-50/60 transition-colors">
-            <!-- Horizontal drag handle pill -->
-            <div class="w-10 h-1 rounded-full bg-slate-300 mb-1.5"></div>
-            
-            <div class="w-full flex items-center justify-start gap-2">
-                <span class="material-symbols-outlined text-base text-emerald-600">format_list_bulleted</span>
-                <span id="drawer-title" class="text-xs font-extrabold text-slate-900 tracking-tight">Places & Resources</span>
-                <span id="drawer-count-badge" class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black">0</span>
+            <div class="rm-chips" role="toolbar" aria-label="Show places by type">
+                <button type="button" class="ns-chip" onclick="openMapFilters()" aria-label="Filters">
+                    <span class="material-symbols-outlined">tune</span>
+                    <span>Filters</span>
+                    <span id="filters-count" class="rm-count hidden">0</span>
+                </button>
+                <button type="button" data-cat="all" data-icon="" onclick="toggleCategoryFilter('all')" class="cat-pill-btn ns-chip is-active" aria-pressed="true">
+                    <span class="material-symbols-outlined">check</span><span>All</span>
+                </button>
+                <button type="button" data-cat="shelter" data-icon="bed" onclick="toggleCategoryFilter('shelter')" class="cat-pill-btn ns-chip" aria-pressed="false">
+                    <span class="material-symbols-outlined">bed</span><span>Beds</span>
+                </button>
+                <button type="button" data-cat="food" data-icon="restaurant" onclick="toggleCategoryFilter('food')" class="cat-pill-btn ns-chip" aria-pressed="false">
+                    <span class="material-symbols-outlined">restaurant</span><span>Meals</span>
+                </button>
+                <button type="button" data-cat="restroom" data-icon="shower" onclick="toggleCategoryFilter('restroom')" class="cat-pill-btn ns-chip" aria-pressed="false">
+                    <span class="material-symbols-outlined">shower</span><span>Showers</span>
+                </button>
+                <button type="button" data-cat="wifi" data-icon="wifi" onclick="toggleCategoryFilter('wifi')" class="cat-pill-btn ns-chip" aria-pressed="false">
+                    <span class="material-symbols-outlined">wifi</span><span>Wi-Fi</span>
+                </button>
+                <button type="button" data-cat="charging" data-icon="power" onclick="toggleCategoryFilter('charging')" class="cat-pill-btn ns-chip" aria-pressed="false">
+                    <span class="material-symbols-outlined">power</span><span>Charging</span>
+                </button>
+                <button type="button" data-cat="work" data-icon="work" onclick="toggleCategoryFilter('work')" class="cat-pill-btn ns-chip" aria-pressed="false">
+                    <span class="material-symbols-outlined">work</span><span>Gigs</span>
+                </button>
             </div>
         </div>
 
-        <!-- SCROLLABLE LIST CONTENT (REVEALED WHEN EXPANDED) -->
-        <div id="places-list" class="drawer-content-list px-3 pb-3 pt-1 overflow-y-auto max-h-[46vh] space-y-2 no-scrollbar">
-            <!-- Populated dynamically by renderDrawerPlaces() -->
-        </div>
-    </div>
-
-    <!-- TRANSIT DIRECTIONS IN-APP MODAL SHEET (STRICTLY CONSTRAINED TO APP FRAME) -->
-    <div id="transit-directions-modal" class="absolute inset-0 z-[100] hidden items-center justify-center bg-slate-950/70 backdrop-blur-sm p-3 transition-all">
-        <div class="modal-drawer w-full max-w-[340px] bg-[#0F141C] border border-slate-700/80 rounded-[28px] p-3.5 text-slate-100 space-y-2.5 shadow-2xl overflow-hidden max-h-[88vh] flex flex-col my-auto">
-            
-            <div class="flex justify-between items-center flex-shrink-0 border-b border-slate-800/80 pb-2.5">
-                <div class="flex items-center gap-2 min-w-0">
-                    <div class="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 flex-shrink-0">
-                        <span class="material-symbols-outlined text-base">directions_bus</span>
-                    </div>
-                    <div class="min-w-0">
-                        <h3 id="transit-dest-name" class="text-xs font-extrabold text-white truncate">Bus & Transit Directions</h3>
-                        <p id="transit-dest-address" class="text-[10px] font-medium text-slate-400 truncate">Live Google Transit Schedule</p>
-                    </div>
-                </div>
-                <button onclick="closeTransitModal()" class="w-7 h-7 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition-colors flex-shrink-0">
-                    <span class="material-symbols-outlined text-sm">close</span>
+        <!-- Bottom sheet: focused place, expands into the full list -->
+        <section id="bottom-drawer-sheet" aria-label="Places">
+            <div class="rm-fabs">
+                <button type="button" onclick="_centerOnMeRequested = true; locateAndCenterUser()" class="ns-icon-btn" aria-label="Show my location">
+                    <span class="material-symbols-outlined">my_location</span>
                 </button>
-            </div>
-
-            <!-- Mode Selector (Bus+Walk Hybrid, Bus Only, Walk Only) -->
-            <div class="flex items-center justify-between bg-slate-800/50 p-1.5 rounded-2xl border border-slate-700/50 flex-shrink-0 text-[11px] font-extrabold shadow-inner">
-                <button id="mode-btn-hybrid" onclick="switchRouteMode('transit')" class="flutter-btn flex-1 py-1.5 px-2 rounded-xl bg-slate-700/80 text-white shadow-sm flex items-center justify-center gap-1.5 transition-all border border-slate-600/50">
-                    <span class="material-symbols-outlined text-xs">directions_bus</span>
-                    <span>Bus + Walk</span>
-                </button>
-                <button id="mode-btn-walking" onclick="switchRouteMode('walking')" class="flutter-btn flex-1 py-1.5 px-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-700/30 flex items-center justify-center gap-1.5 transition-all">
-                    <span class="material-symbols-outlined text-xs">directions_walk</span>
-                    <span>Walk Only</span>
-                </button>
-            </div>
-
-            <!-- Transit Summary Bar -->
-            <div id="transit-summary-bar" class="interactive-card flutter-btn cursor-pointer overflow-hidden bg-slate-900/90 border border-slate-800/80 rounded-2xl p-2.5 flex items-center justify-between gap-2 flex-shrink-0 transition-all">
-                <div class="flex items-center gap-2">
-                    <span class="material-symbols-outlined text-amber-400 text-lg">schedule</span>
-                    <div>
-                        <span id="transit-total-duration" class="text-xs font-black text-white">-- mins</span>
-                        <span id="transit-total-distance" class="text-[10px] text-slate-400 ml-0.5">(-- mi)</span>
-                    </div>
-                </div>
-                <div id="transit-time-range" class="px-2.5 py-0.5 rounded-xl bg-emerald-500/20 text-emerald-300 font-extrabold text-[10px] border border-emerald-500/30">
-                    Departs Now
+                <div class="rm-zoom">
+                    <button type="button" onclick="if(map) map.zoomIn()" aria-label="Zoom in"><span class="material-symbols-outlined">add</span></button>
+                    <button type="button" onclick="if(map) map.zoomOut()" aria-label="Zoom out"><span class="material-symbols-outlined">remove</span></button>
                 </div>
             </div>
 
-            <!-- Map View Direct Navigation Action -->
-            <button id="view-on-map-route-btn" onclick="drawRouteOnMapAndClose()" class="flutter-btn w-full py-2.5 bg-[#FFE855] text-slate-950 font-extrabold text-xs rounded-xl shadow-sm hover:brightness-105 transition-all flex items-center justify-center gap-1.5 flex-shrink-0">
-                <span class="material-symbols-outlined text-[14px]">map</span>
-                <span>Show Walking & Bus Path on Map</span>
+            <button id="drawer-header" type="button" onclick="toggleBottomDrawer()" aria-expanded="false" aria-controls="sheet-body" aria-label="Places list. Drag or tap to show more or less">
+                <span class="ns-sheet__handle block" style="margin-bottom:12px"></span>
+                <span class="flex items-center gap-2">
+                    <span id="drawer-title" class="text-[15px] font-bold flex-1">Places nearby</span>
+                    <span id="drawer-count-badge" class="ns-badge ns-badge--sand">0</span>
+                    <span class="material-symbols-outlined rm-expand-icon text-[22px]">expand_less</span>
+                </span>
             </button>
 
-            <!-- Scrollable Step-by-Step Directions Container -->
-            <div id="transit-steps-list" class="space-y-2.5 overflow-y-auto pr-0.5 flex-1 no-scrollbar min-h-[140px]">
-                <div class="p-6 text-center text-slate-400 flex flex-col items-center gap-2">
-                    <span class="material-symbols-outlined text-2xl animate-spin text-emerald-400">sync</span>
-                    <p class="text-xs font-bold text-slate-300">Fetching live bus timings...</p>
+            <div id="sheet-body">
+                <div id="place-focus-card"></div>
+                <p class="rm-list-head ns-card-sub">All places</p>
+                <div id="places-list" class="drawer-content-list ns-list">
+                    <!-- Populated by renderDrawerPlaces() -->
                 </div>
+            </div>
+        </section>
+
+    </main>
+
+    <nav class="bottom-nav ns-nav" aria-label="Main"></nav>
+
+    <!-- SHEET: filters, mode, distance, offline, add a place -->
+    <div id="map-filters-modal" class="ns-sheet-wrap hidden">
+        <div class="ns-sheet-backdrop" onclick="closeModal('map-filters-modal')"></div>
+        <div class="modal-drawer ns-sheet translate-y-full">
+            <div class="ns-sheet__handle"></div>
+            <div class="flex items-center justify-between gap-3">
+                <h2 class="ns-sheet__title">Filters</h2>
+                <button type="button" class="ns-icon-btn ns-icon-btn--sm" onclick="closeModal('map-filters-modal')" aria-label="Close">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <p class="ns-label mt-6">Show</p>
+            <div class="ns-segment" role="group" aria-label="Which places">
+                <button type="button" id="mode-btn-nearby" onclick="switchMapMode('nearby')" class="is-active">Nearby</button>
+                <button type="button" id="mode-btn-saved" onclick="switchMapMode('saved')">Saved</button>
+                <button type="button" id="mode-btn-offline" onclick="window.toggleOfflineDirectoryModal && window.toggleOfflineDirectoryModal()">Offline</button>
+            </div>
+
+            <div id="offline-panel" class="hidden ns-card ns-card--sand ns-card--pad mt-4">
+                <p class="ns-card-title">Use the map without internet</p>
+                <p id="offline-panel-status" class="ns-card-sub mt-1">Download a list of shelters, food and health care near Seattle, with a map. It opens on your phone with no signal.</p>
+                <button id="download-offline-btn" type="button" class="ns-btn ns-btn--secondary ns-btn--sm w-full mt-4">Download</button>
+            </div>
+
+            <p class="ns-label mt-6">Distance</p>
+            <div id="radius-controls" class="ns-segment" role="group" aria-label="Distance from you">
+                <button type="button" id="radius-btn-5" onclick="setSearchRadius(5)" class="radius-pill-btn is-active">5 mi</button>
+                <button type="button" id="radius-btn-10" onclick="setSearchRadius(10)" class="radius-pill-btn">10 mi</button>
+                <button type="button" id="radius-btn-25" onclick="setSearchRadius(25)" class="radius-pill-btn">25 mi</button>
+            </div>
+
+            <p class="ns-label mt-6">Run by</p>
+            <div class="ns-segment" role="group" aria-label="Who runs the place">
+                <button type="button" id="scope-btn-everyone" onclick="setScopeFilter('everyone')" class="is-active">Anyone</button>
+                <button type="button" id="scope-btn-verified" onclick="setScopeFilter('verified')">Verified only</button>
+            </div>
+
+            <div class="ns-list mt-4">
+                <label class="ns-row cursor-pointer" for="open-now-btn">
+                    <span class="ns-row__body">
+                        <span class="ns-row__title block">Open now</span>
+                        <span id="open-now-text" class="ns-row__sub block">Hide places that are closed right now</span>
+                    </span>
+                    <input type="checkbox" id="open-now-btn" class="ns-switch" checked onchange="toggleOpenNowFilter()">
+                </label>
+                <button type="button" class="ns-row" onclick="closeModal('map-filters-modal'); locateAndCenterUser();">
+                    <span class="ns-tile ns-tile--plain ns-tile--sm"><span class="material-symbols-outlined">near_me</span></span>
+                    <span class="ns-row__body">
+                        <span class="ns-row__title block">Use my location</span>
+                        <span class="ns-row__sub block">Center the map on where you are</span>
+                    </span>
+                    <span class="material-symbols-outlined ns-chevron">chevron_right</span>
+                </button>
+                <button type="button" class="ns-row" onclick="closeModal('map-filters-modal'); setTimeout(openAddResourceModal, 320);">
+                    <span class="ns-tile ns-tile--plain ns-tile--sm"><span class="material-symbols-outlined">add_location_alt</span></span>
+                    <span class="ns-row__body">
+                        <span class="ns-row__title block">Add a place</span>
+                        <span class="ns-row__sub block">Mark a meal, shelter or other spot</span>
+                    </span>
+                    <span class="material-symbols-outlined ns-chevron">chevron_right</span>
+                </button>
+            </div>
+
+            <button id="filters-apply-btn" type="button" class="ns-btn ns-btn--primary mt-6" onclick="closeModal('map-filters-modal')">Show places</button>
+        </div>
+    </div>
+
+    <!-- SHEET: bus and walking directions -->
+    <div id="transit-directions-modal" class="ns-sheet-wrap hidden">
+        <div class="ns-sheet-backdrop" onclick="closeTransitModal()"></div>
+        <div class="modal-drawer ns-sheet translate-y-full flex flex-col" style="padding-bottom:0">
+            <div class="ns-sheet__handle flex-shrink-0"></div>
+            <div class="flex items-start gap-3 flex-shrink-0">
+                <div class="min-w-0 flex-1">
+                    <h2 id="transit-dest-name" class="text-[20px] font-bold leading-tight">Directions</h2>
+                    <p id="transit-dest-address" class="ns-card-sub mt-1 truncate"></p>
+                </div>
+                <button type="button" onclick="closeTransitModal()" class="ns-icon-btn ns-icon-btn--sm" aria-label="Close">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <div class="ns-segment mt-4 flex-shrink-0" role="group" aria-label="How you travel">
+                <button type="button" id="mode-btn-hybrid" onclick="switchRouteMode('transit')" class="is-active">Bus and walk</button>
+                <button type="button" id="mode-btn-walking" onclick="switchRouteMode('walking')">Walk only</button>
+            </div>
+
+            <div id="transit-summary-bar" class="flex items-center justify-between gap-3 mt-4 flex-shrink-0">
+                <div class="flex items-baseline gap-2">
+                    <span id="transit-total-duration" class="text-[22px] font-bold tracking-tight">–</span>
+                    <span id="transit-total-distance" class="text-[14px] font-semibold text-muted"></span>
+                </div>
+                <span id="transit-time-range" class="ns-badge ns-badge--sand"></span>
+            </div>
+
+            <div id="transit-steps-list" class="flex-1 min-h-[140px] mt-2 overflow-y-auto no-scrollbar"></div>
+
+            <div class="flex-shrink-0 pt-3 pb-[max(20px,env(safe-area-inset-bottom))] bg-paper">
+                <button id="view-on-map-route-btn" type="button" onclick="drawRouteOnMapAndClose()" class="ns-btn ns-btn--primary">
+                    <span class="material-symbols-outlined">map</span>
+                    <span>Show route on map</span>
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Full 6-Tab Bottom Navigation Bar -->
-    <nav class="bottom-nav absolute bottom-0 left-0 w-full z-40 grid grid-cols-6 items-center justify-items-center px-1.5 py-2 bg-white dark:bg-[#12141C] shadow-[0px_-4px_25px_rgba(0,0,0,0.2)] border-t border-slate-200 dark:border-white/10">
-        <a href="seeker-dashboard.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
-            <span class="material-symbols-outlined text-[20px] leading-none">dashboard</span>
-            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Dashboard</span>
-        </a>
-        <a href="progress.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
-            <span class="material-symbols-outlined text-[20px] leading-none">trending_up</span>
-            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Progress</span>
-        </a>
-        <a href="opportunities.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
-            <span class="material-symbols-outlined text-[20px] leading-none">work</span>
-            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Jobs</span>
-        </a>
-        <a href="resource-map.html" class="active-tab flex flex-col items-center justify-center w-full py-1 px-0.5 bg-amber-400/15 text-amber-500 dark:text-amber-400 border border-amber-400/30 rounded-xl shadow-[0_0_12px_rgba(245,158,11,0.2)] font-extrabold transition-all">
-            <span class="material-symbols-outlined text-[20px] leading-none" style="font-variation-settings: 'FILL' 1;">map</span>
-            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Map</span>
-        </a>
-        <a href="resume-builder.html" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
-            <span class="material-symbols-outlined text-[20px] leading-none">description</span>
-            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Resume</span>
-        </a>
-        <button type="button" onclick="openSettingsModal()" class="flex flex-col items-center justify-center w-full py-1 px-0.5 text-slate-600 dark:text-[#94a3b8] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
-            <span class="material-symbols-outlined text-[20px] leading-none">settings</span>
-            <span class="text-[10px] leading-tight mt-1 tracking-tight truncate max-w-full">Settings</span>
-        </button>
-    </nav>
+    <!-- SHEET: add a place -->
+    <div id="add-resource-modal" class="ns-sheet-wrap hidden">
+        <div class="ns-sheet-backdrop" onclick="closeAddResourceModal()"></div>
+        <div class="modal-drawer ns-sheet translate-y-full">
+            <div class="ns-sheet__handle"></div>
+            <div class="flex items-center justify-between gap-3">
+                <h2 class="ns-sheet__title">Add a place</h2>
+                <button type="button" onclick="closeAddResourceModal()" class="ns-icon-btn ns-icon-btn--sm" aria-label="Close">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <p class="ns-card-sub mt-1">It shows on your map on this phone.</p>
+
+            <form id="new-resource-form" onsubmit="handleCreateResource(event)" class="mt-5 flex flex-col gap-4">
+                <div>
+                    <label class="ns-label" for="res-title">Name</label>
+                    <input type="text" id="res-title" required placeholder="Community meal at St. Mark's" class="ns-input">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="ns-label" for="res-category">Type</label>
+                        <select id="res-category" class="ns-select">
+                            <option value="food">Meals</option>
+                            <option value="shelter">Shelter</option>
+                            <option value="work">Gig work</option>
+                            <option value="wifi">Wi-Fi</option>
+                            <option value="restroom">Showers</option>
+                            <option value="charging">Charging</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="ns-label" for="res-hours">Hours</label>
+                        <input type="text" id="res-hours" placeholder="08:00 - 20:00" class="ns-input">
+                    </div>
+                </div>
+                <div>
+                    <label class="ns-label" for="res-address">Address</label>
+                    <input type="text" id="res-address" required placeholder="515 3rd Ave, Seattle" class="ns-input">
+                </div>
+                <div>
+                    <label class="ns-label" for="res-details">Details</label>
+                    <textarea id="res-details" rows="2" placeholder="What to know before you go" class="ns-textarea"></textarea>
+                </div>
+                <button type="submit" class="ns-btn ns-btn--primary mt-2">Add to map</button>
+            </form>
+        </div>
+    </div>
 
 </div><!-- /.app-frame -->
-
-<!-- MODAL: ADD RESOURCE / GIG -->
-<div id="add-resource-modal" class="fixed inset-0 z-[100] hidden items-end sm:items-center justify-center bg-slate-950/80 backdrop-blur-md p-0 sm:p-4">
-    <div class="w-full sm:max-w-md bg-[#0F141C] border border-slate-800 rounded-t-3xl sm:rounded-3xl p-6 text-white space-y-4 shadow-2xl">
-        <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-            <h3 class="font-extrabold text-base flex items-center gap-2">
-                <span class="material-symbols-outlined text-emerald-400">add_location_alt</span>
-                Post Resource / Gig
-            </h3>
-            <button onclick="closeAddResourceModal()" class="text-slate-400 hover:text-white">
-                <span class="material-symbols-outlined text-lg">close</span>
-            </button>
-        </div>
-
-        <form id="new-resource-form" onsubmit="handleCreateResource(event)" class="space-y-3">
-            <div>
-                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Title / Location Name</label>
-                <input type="text" id="res-title" required placeholder="e.g. Community Meal Distribution" class="w-full mt-1 p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs font-medium text-white focus:outline-none focus:border-emerald-500">
-            </div>
-
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Category</label>
-                    <select id="res-category" class="w-full mt-1 p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs font-medium text-white focus:outline-none focus:border-emerald-500">
-                        <option value="food">Meal / Pantry</option>
-                        <option value="shelter">Shelter Bed</option>
-                        <option value="work">Gig Job</option>
-                        <option value="wifi">Wi-Fi Access</option>
-                        <option value="restroom">Showers / Restroom</option>
-                        <option value="charging">Power Charging</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Hours</label>
-                    <input type="text" id="res-hours" placeholder="e.g. 08:00 - 20:00" class="w-full mt-1 p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs font-medium text-white focus:outline-none focus:border-emerald-500">
-                </div>
-            </div>
-
-            <div>
-                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Address / Location</label>
-                <input type="text" id="res-address" required placeholder="e.g. 515 3rd Ave, Seattle" class="w-full mt-1 p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs font-medium text-white focus:outline-none focus:border-emerald-500">
-            </div>
-
-            <div>
-                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Details & Instructions</label>
-                <textarea id="res-details" rows="2" placeholder="Details for seekers..." class="w-full mt-1 p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs font-medium text-white focus:outline-none focus:border-emerald-500"></textarea>
-            </div>
-
-            <button type="submit" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold rounded-xl text-xs shadow-lg transition-all active:scale-[0.98]">
-                Publish Location to Map
-            </button>
-        </form>
-    </div>
-</div>
 
 <script src="js/northstar.js"></script>
     <script src="js/jobs.js"></script>
@@ -512,6 +502,11 @@
     }
 
     localStorage.setItem(USER_SAVED_STORAGE_KEY, JSON.stringify(currentList));
+    // Mirror to the key the progress tracker reads, and mark the milestone
+    try { localStorage.setItem('northstar_saved_resources', JSON.stringify(currentList)); } catch (e) {}
+    if (isNowSaved && typeof updateMilestone === 'function') {
+      try { updateMilestone('savedLocation', true); } catch (e) { console.warn('Milestone update failed:', e); }
+    }
 
     // Optional Supabase persistence if user is authenticated
     if (window.supabaseClient) {
@@ -533,10 +528,6 @@
       } catch (err) {
         console.warn('Supabase user_saved_places sync warning:', err);
       }
-    }
-
-    if (typeof showNotification === 'function') {
-      showNotification(isNowSaved ? '🔖 Place added to your Saved places' : 'Removed from Saved places', isNowSaved ? 'success' : 'info');
     }
 
     applyCombinedFilters();
@@ -918,14 +909,14 @@
       category: category,
       lat: Number(item.lat) || 47.6062,
       lng: Number(item.lng) || -122.3321,
-      rating: item.rating || 4.8,
+      rating: item.rating || null,
       open_status: item.open_24_7 ? 'OPEN_NOW' : 'OPEN_NOW',
-      status: item.open_24_7 ? 'Open · 24/7 Resource' : (item.opening_hours || 'Open Today'),
-      statusDetail: item.opening_hours || (item.open_24_7 ? 'Open 24/7' : 'Open Today'),
+      status: item.open_24_7 ? 'Open 24 hours' : (item.opening_hours || 'Open today'),
+      statusDetail: item.opening_hours || (item.open_24_7 ? 'Open 24 hours' : 'Open today'),
       address: item.address || 'Seattle, WA',
-      phone: item.phone || '(206) 211-0000',
+      phone: item.phone || '',
       icon: item.icon || icon,
-      details: item.details || `${item.category || 'Essential Resource'} · Phone: ${item.phone || 'N/A'}`,
+      details: item.details || '',
       verifiedOnly: true,
       is24Seven: Boolean(item.open_24_7),
       opening_hours: { open_now: true }
@@ -989,24 +980,174 @@
     }
   }
 
+  function applyUrlFilters() {
+    const params = new URLSearchParams(window.location.search);
+    const cat = params.get('category');
+    const q = params.get('q');
+    if (cat && document.querySelector(`.cat-pill-btn[data-cat="${cat}"]`)) toggleCategoryFilter(cat);
+    if (q) {
+      const input = document.getElementById('map-search-input');
+      if (input) input.value = q;
+      setMapSearch(q, true);
+    }
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
+    initPlacesSheet();
     initLeafletCleanMap();
+    setTimeout(applyUrlFilters, 0);
     loadResourcesFromDatabase();
 
     // Highlight Offline mode pill if loaded with ?offline=true or when offline
     if (!navigator.onLine || window.location.search.includes('offline=true')) {
-      const offlineBtn = document.getElementById('mode-btn-offline');
-      const nearbyBtn = document.getElementById('mode-btn-nearby');
-      if (offlineBtn && nearbyBtn) {
-        nearbyBtn.className = 'px-3 py-1.5 rounded-[16px] text-xs font-bold text-slate-600 hover:text-slate-950 transition-all';
-        offlineBtn.className = 'px-3 py-1.5 rounded-[16px] text-xs font-bold bg-emerald-500 text-white shadow-sm transition-all flex items-center gap-1';
-      }
+      isOfflineView = true;
+      syncModeButtons();
       const locLabel = document.getElementById('location-name-label');
       if (locLabel) {
-        locLabel.textContent = 'Offline Map Ready';
+        locLabel.textContent = 'Offline map';
+      }
+      const offlineStatus = document.getElementById('offline-panel-status');
+      if (offlineStatus) {
+        offlineStatus.textContent = "You're offline. The map shows places saved on this phone. You can also download a list with a map to open later.";
       }
     }
+    syncFilterSummary();
   });
+
+  // ---- Page UI helpers (filters sheet, mode buttons, focused place) ----
+  let isOfflineView = false;          // Offline panel shown in the filters sheet
+  let focusedPlaceId = null;          // Place the person tapped (or deep-linked)
+  let currentFocusId = null;          // Place shown in the bottom sheet right now
+  let lastFilteredCount = 0;
+
+  const CATEGORY_META = {
+    shelter: { icon: 'bed', label: 'Shelter' },
+    food: { icon: 'restaurant', label: 'Meals' },
+    restroom: { icon: 'shower', label: 'Showers' },
+    wifi: { icon: 'wifi', label: 'Wi-Fi' },
+    charging: { icon: 'power', label: 'Charging' },
+    work: { icon: 'work', label: 'Gig work' },
+    health: { icon: 'medical_services', label: 'Health care' }
+  };
+  function categoryMeta(cat) {
+    return CATEGORY_META[cat] || { icon: 'location_on', label: 'Place' };
+  }
+  const esc = (v) => (typeof nsEscape === 'function' ? nsEscape(v) : String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])));
+  // Safe for a single-quoted JS string inside a double-quoted HTML attribute
+  const jsArg = (v) => esc(String(v == null ? '' : v).replace(/\\/g, '\\\\').replace(/'/g, "\\'"));
+
+  function setPressed(el, on) {
+    if (!el) return;
+    el.classList.toggle('is-active', !!on);
+    el.setAttribute('aria-pressed', on ? 'true' : 'false');
+  }
+
+  function syncModeButtons() {
+    setPressed(document.getElementById('mode-btn-nearby'), !isOfflineView && activeMapMode === 'nearby');
+    setPressed(document.getElementById('mode-btn-saved'), !isOfflineView && activeMapMode === 'saved');
+    setPressed(document.getElementById('mode-btn-offline'), isOfflineView);
+    const panel = document.getElementById('offline-panel');
+    if (panel) panel.classList.toggle('hidden', !isOfflineView);
+  }
+
+  window.toggleOfflineDirectoryModal = function () {
+    isOfflineView = !isOfflineView;
+    syncModeButtons();
+  };
+
+  function openMapFilters() {
+    syncFilterSummary();
+    openModal('map-filters-modal');
+  }
+  window.openMapFilters = openMapFilters;
+
+  function syncFilterSummary() {
+    let n = 0;
+    if (activeMapMode === 'saved') n++;
+    if (activeScopeFilter === 'verified') n++;
+    if (!isOpenNowFilterActive) n++;
+    if (activeRadiusMiles !== 5) n++;
+    const countEl = document.getElementById('filters-count');
+    if (countEl) {
+      countEl.textContent = n;
+      countEl.classList.toggle('hidden', n === 0);
+    }
+    [5, 10, 25].forEach(m => setPressed(document.getElementById(`radius-btn-${m}`), m === activeRadiusMiles));
+    const applyBtn = document.getElementById('filters-apply-btn');
+    if (applyBtn) {
+      applyBtn.textContent = lastFilteredCount === 0
+        ? 'Close'
+        : `Show ${lastFilteredCount} ${lastFilteredCount === 1 ? 'place' : 'places'}`;
+    }
+  }
+
+  function formatMiles(miles) {
+    if (!Number.isFinite(miles)) return '';
+    return miles < 0.1 ? 'Under 0.1 mi' : `${miles.toFixed(1)} mi`;
+  }
+
+  function renderFocusCard(res) {
+    const card = document.getElementById('place-focus-card');
+    if (!card) return;
+
+    if (!res) {
+      const savedMode = activeMapMode === 'saved';
+      if (mapSearchQuery) {
+        card.innerHTML = `
+          <div class="ns-empty">
+            <p class="ns-empty__title">No places match “${esc(mapSearchQuery)}”</p>
+            <p class="ns-empty__sub">Try a simpler word like bed, meal, shower or Wi-Fi. You can also ask Companion or call 211.</p>
+            <div class="flex justify-center gap-2 mt-4">
+              <button type="button" class="ns-btn ns-btn--primary ns-btn--sm" onclick="clearMapSearch()">Clear search</button>
+              <a href="companion.html?q=${encodeURIComponent('Where can I find ' + mapSearchQuery + '?')}" class="ns-btn ns-btn--secondary ns-btn--sm">Ask Companion</a>
+            </div>
+          </div>`;
+        return;
+      }
+      card.innerHTML = `
+        <div class="ns-empty">
+          <p class="ns-empty__title">${savedMode ? 'No saved places here' : 'Nothing matches here'}</p>
+          <p class="ns-empty__sub">${savedMode ? 'Tap the bookmark on a place to save it.' : 'Try a longer distance, or turn off “Open now”.'}</p>
+          <button type="button" class="ns-btn ns-btn--ghost ns-btn--sm mt-4" onclick="openMapFilters()">Change filters</button>
+        </div>`;
+      return;
+    }
+
+    const isOpen = isPlaceOpenNow(res);
+    const saved = isPlaceSaved(res.id);
+    const phone = (res.phone || '').trim();
+    const tel = phone.replace(/[^0-9+]/g, '');
+    const meta = categoryMeta(res.category);
+    const badges = [
+      res.verifiedOnly ? '<span class="ns-badge ns-badge--leaf"><span class="material-symbols-outlined">verified</span>Verified</span>' : '',
+      isOpen
+        ? '<span class="ns-badge ns-badge--sand ns-badge--dot">Open now</span>'
+        : '<span class="ns-badge ns-badge--sand">Closed now</span>',
+      `<span class="ns-badge ns-badge--sand"><span class="material-symbols-outlined">${meta.icon}</span>${esc(meta.label)}</span>`
+    ].join('');
+    // Stored status text can be stale ("Open · Closes 7 PM"); drop it when it contradicts the live check
+    const statusText = (!isOpen && /^\s*open/i.test(res.status || '')) ? '' : res.status;
+    const statusLine = [statusText, res.address].filter(Boolean).map(esc).join('<br>');
+
+    const dist = formatMiles(res.distanceMiles);
+    card.innerHTML = `
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <h3 class="text-[18px] font-extrabold leading-snug tracking-tight">${esc(res.name)}</h3>
+          <p class="ns-card-sub mt-0.5 line-clamp-2">${[dist ? esc(dist) : '', statusLine].filter(Boolean).join(' · ')}</p>
+        </div>
+        <button type="button" class="ns-icon-btn ns-icon-btn--bare flex-shrink-0 -mr-2 -mt-1" onclick="toggleSavePlace('${jsArg(res.id)}', event)" aria-pressed="${saved}" aria-label="${saved ? 'Remove from saved' : 'Save this place'}">
+          <span class="material-symbols-outlined ${saved ? 'ms-fill' : ''}">bookmark</span>
+        </button>
+      </div>
+      <div class="flex flex-wrap gap-2 mt-3">${badges}</div>
+      <div class="flex items-center gap-3 mt-4">
+        ${tel ? `<a href="tel:${esc(tel)}" class="ns-btn ns-btn--ghost !w-auto px-6 flex-shrink-0" aria-label="Call ${esc(res.name)}"><span class="material-symbols-outlined">call</span><span>Call</span></a>` : ''}
+        <button type="button" class="ns-btn ns-btn--primary flex-1" onclick="openTransitModal('${jsArg(res.name)}', '${jsArg(res.address)}', ${Number(res.lat)}, ${Number(res.lng)})">
+          <span>Directions</span><span class="material-symbols-outlined">keyboard_double_arrow_right</span>
+        </button>
+      </div>`;
+  }
 
   function initLeafletCleanMap() {
     const startCoords = [47.6062, -122.3321]; // Downtown Seattle
@@ -1075,6 +1216,7 @@
   function renderBlueDot(latitude, longitude) {
     if (!map) return;
     userLocationCoords = { lat: latitude, lng: longitude };
+    try { localStorage.setItem('northstar_last_location', JSON.stringify({ lat: latitude, lng: longitude, at: Date.now() })); } catch (_) {}
 
     if (userLocationMarker) map.removeLayer(userLocationMarker);
     if (userRadiusCircle) map.removeLayer(userRadiusCircle);
@@ -1083,35 +1225,40 @@
 
     userRadiusCircle = L.circle([latitude, longitude], {
       radius: radiusMeters,
-      color: '#10B981',
-      fillColor: '#10B981',
-      fillOpacity: 0.08,
+      color: '#111111',
+      fillColor: '#111111',
+      fillOpacity: 0.03,
+      opacity: 0.3,
       weight: 1.5,
-      dashArray: '4, 6'
+      dashArray: '4, 6',
+      interactive: false
     }).addTo(map);
 
     const blueDotIcon = L.divIcon({
-      className: 'user-blue-dot-marker',
-      html: `
-        <div class="relative w-7 h-7 flex items-center justify-center">
-          <div class="absolute w-7 h-7 rounded-full bg-emerald-500/30 animate-ping"></div>
-          <div class="w-4 h-4 rounded-full bg-emerald-500 border-2 border-white shadow-lg"></div>
-        </div>
-      `,
-      iconSize: [28, 28],
-      iconAnchor: [14, 14]
+      className: 'user-blue-dot-marker ns-pin',
+      html: '<div class="rm-me" aria-label="You are here"><span></span></div>',
+      iconSize: [22, 22],
+      iconAnchor: [11, 11]
     });
 
     userLocationMarker = L.marker([latitude, longitude], { icon: blueDotIcon, zIndexOffset: 1000 }).addTo(map);
-    userLocationMarker.bindPopup('<b style="color:#ffffff;">📍 Your Location</b>');
+    userLocationMarker.bindTooltip('You are here', { direction: 'top', offset: [0, -10] });
 
-    // Auto-fit bounds around the initial circle perimeter
-    if (map && typeof map.fitBounds === 'function' && userRadiusCircle) {
-      map.fitBounds(userRadiusCircle.getBounds(), { padding: [20, 20], animate: true });
+    // Auto-fit around the radius circle, unless a search is showing: then keep the results in view
+    const keepResults = !!mapSearchQuery && !_centerOnMeRequested;
+    _centerOnMeRequested = false;
+    if (keepResults) {
+      _fitOnNextSearch = true;
+    } else if (map && typeof map.fitBounds === 'function' && userRadiusCircle) {
+      map.fitBounds(userRadiusCircle.getBounds(), Object.assign({ animate: true }, mapFitPadding()));
     }
 
     updateVisiblePlaces();
+    return !keepResults;
   }
+
+  // Set when the person taps "Show my location" (always re-centers, even during a search)
+  let _centerOnMeRequested = false;
 
   function locateAndCenterUser() {
     if (!navigator.geolocation) {
@@ -1126,8 +1273,7 @@
         // If user is outside Puget Sound / Seattle (>60 mi away), anchor to Seattle mock cluster
         if (dist > 60) {
           renderBlueDot(47.6062, -122.3321);
-        } else {
-          renderBlueDot(latitude, longitude);
+        } else if (renderBlueDot(latitude, longitude) !== false) {
           map.flyTo([latitude, longitude], 14, { animate: true });
         }
       },
@@ -1140,32 +1286,16 @@
 
   function switchMapMode(mode) {
     activeMapMode = mode;
-    const nearbyBtn = document.getElementById('mode-btn-nearby');
-    const savedBtn = document.getElementById('mode-btn-saved');
-
-    if (mode === 'nearby') {
-      nearbyBtn.className = 'px-3.5 py-1.5 rounded-[16px] text-xs font-bold bg-white text-slate-950 shadow-sm transition-all';
-      savedBtn.className = 'px-3.5 py-1.5 rounded-[16px] text-xs font-bold text-slate-600 hover:text-slate-950 transition-all';
-    } else {
-      savedBtn.className = 'px-3.5 py-1.5 rounded-[16px] text-xs font-bold bg-white text-slate-950 shadow-sm transition-all';
-      nearbyBtn.className = 'px-3.5 py-1.5 rounded-[16px] text-xs font-bold text-slate-600 hover:text-slate-950 transition-all';
-    }
+    isOfflineView = false;
+    syncModeButtons();
 
     applyCombinedFilters();
   }
 
   function setScopeFilter(scope) {
     activeScopeFilter = scope;
-    const everyoneBtn = document.getElementById('scope-btn-everyone');
-    const verifiedBtn = document.getElementById('scope-btn-verified');
-
-    if (scope === 'everyone') {
-      everyoneBtn.className = 'flex-1 py-1.5 px-2.5 rounded-[14px] text-[11px] font-bold bg-white text-slate-950 shadow-sm transition-all text-center truncate';
-      verifiedBtn.className = 'flex-1 py-1.5 px-2.5 rounded-[14px] text-[11px] font-bold text-slate-600 hover:text-slate-950 transition-all text-center truncate flex items-center justify-center gap-1';
-    } else {
-      verifiedBtn.className = 'flex-1 py-1.5 px-2.5 rounded-[14px] text-[11px] font-bold bg-white text-slate-950 shadow-sm transition-all text-center truncate flex items-center justify-center gap-1';
-      everyoneBtn.className = 'flex-1 py-1.5 px-2.5 rounded-[14px] text-[11px] font-bold text-slate-600 hover:text-slate-950 transition-all text-center truncate';
-    }
+    setPressed(document.getElementById('scope-btn-everyone'), scope === 'everyone');
+    setPressed(document.getElementById('scope-btn-verified'), scope !== 'everyone');
 
     applyCombinedFilters();
   }
@@ -1173,15 +1303,7 @@
   function toggleOpenNowFilter() {
     isOpenNowFilterActive = !isOpenNowFilterActive;
     const btn = document.getElementById('open-now-btn');
-    const dot = document.getElementById('open-now-dot');
-
-    if (isOpenNowFilterActive) {
-      btn.className = 'py-1.5 px-3 rounded-[18px] bg-[#0F141C] text-white text-[11px] font-bold border border-white/20 flex items-center gap-1.5 transition-all shadow-md flex-shrink-0';
-      dot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
-    } else {
-      btn.className = 'py-1.5 px-3 rounded-[18px] bg-slate-100 text-slate-700 text-[11px] font-bold border border-slate-200 flex items-center gap-1.5 hover:bg-white transition-all shadow-sm flex-shrink-0';
-      dot.className = 'w-2 h-2 rounded-full bg-slate-400';
-    }
+    if (btn) btn.checked = isOpenNowFilterActive;
 
     applyCombinedFilters();
   }
@@ -1207,10 +1329,13 @@
     // Update UI chips
     document.querySelectorAll('.cat-pill-btn').forEach(btn => {
       const bCat = btn.dataset.cat;
-      if (activeSelectedCategories.includes(bCat)) {
-        btn.className = 'cat-pill-btn px-3.5 py-1.5 rounded-[16px] text-[11px] font-extrabold bg-[#0F141C] text-white flex items-center gap-1 flex-shrink-0 shadow-md border border-white/10 transition-all';
-      } else {
-        btn.className = 'cat-pill-btn px-3.5 py-1.5 rounded-[16px] text-[11px] font-bold bg-white text-slate-800 flex items-center gap-1 flex-shrink-0 border border-slate-200 shadow-sm hover:bg-slate-50 transition-all';
+      const on = activeSelectedCategories.includes(bCat);
+      setPressed(btn, on);
+      const iconEl = btn.querySelector('.material-symbols-outlined');
+      const baseIcon = btn.dataset.icon || '';
+      if (iconEl) {
+        iconEl.textContent = on ? 'check' : baseIcon;
+        iconEl.classList.toggle('hidden', !on && !baseIcon);
       }
     });
 
@@ -1318,6 +1443,82 @@
   window.isPlaceOpenNow = isPlaceOpenNow;
 
   // REAL COMBINED MULTI-FILTER FUNCTION (INTERSECTING AND LOGIC)
+  // Free-text search from the top bar or ?q= (plain words map to categories)
+  let mapSearchQuery = '';
+  const SEARCH_SYNONYMS = {
+    shelter: 'bed beds shelter sleep stay night',
+    food: 'food meal meals eat pantry lunch dinner breakfast',
+    restroom: 'shower showers restroom bathroom toilet hygiene laundry',
+    wifi: 'wifi wi-fi internet library computer',
+    charging: 'charge charging power outlet phone',
+    work: 'work job jobs gig gigs labor'
+  };
+  // Extra searchable text per place from the verified list (/api/resources): full names
+  // like "(DESC)", descriptions and services the map's own copy leaves out
+  const searchExtra = {};
+  fetch('/api/resources').then(r => r.json()).then(data => {
+    (data.resources || []).forEach(r => {
+      searchExtra[r.id] = [r.name, r.status, r.description, r.hours, r.address].filter(Boolean).join(' ');
+    });
+    if (mapSearchQuery) applyCombinedFilters();
+  }).catch(() => {});
+
+  const SEARCH_STOP_WORDS = ['near', 'me', 'nearby', 'a', 'an', 'the', 'for', 'in', 'to', 'i', 'need', 'find', 'where', 'is', 'can', 'get', 'some', 'place', 'places', 'open', 'now', 'today', 'tonight'];
+  function searchWords() {
+    return mapSearchQuery.toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').split(/\s+/)
+      .filter(w => w && !SEARCH_STOP_WORDS.includes(w));
+  }
+  function matchesMapSearch(pin) {
+    if (!mapSearchQuery) return true;
+    const hay = [pin.name, pin.category, pin.status, pin.details, pin.description, pin.address,
+      SEARCH_SYNONYMS[pin.category] || '', searchExtra[pin.id] || '']
+      .join(' ').toLowerCase();
+    const words = searchWords();
+    if (!words.length) return true;
+    // every word must match; "showers" also matches "shower", "meals" matches "meal"
+    return words.every(w => hay.includes(w) || (w.length > 3 && w.endsWith('s') && hay.includes(w.slice(0, -1))));
+  }
+
+  let _mapSearchTimer = null;
+  let _fitOnNextSearch = false;
+  function runMapSearch(value) {
+    mapSearchQuery = String(value || '').trim();
+    const clearBtn = document.getElementById('map-search-clear');
+    if (clearBtn) clearBtn.classList.toggle('hidden', !mapSearchQuery);
+    _fitOnNextSearch = !!mapSearchQuery;
+    if (typeof applyCombinedFilters === 'function') applyCombinedFilters();
+  }
+  function setMapSearch(value, immediate) {
+    clearTimeout(_mapSearchTimer);
+    if (immediate) runMapSearch(value);
+    else _mapSearchTimer = setTimeout(() => runMapSearch(value), 220);
+  }
+  window.setMapSearch = setMapSearch;
+
+  window.clearMapSearch = function () {
+    const input = document.getElementById('map-search-input');
+    if (input) input.value = '';
+    setMapSearch('', true);
+  };
+
+  // Show every search result on screen
+  function fitMapToResults(items) {
+    if (!map || !items || !items.length) return;
+    const pts = items.filter(p => typeof p.lat === 'number' && typeof p.lng === 'number').map(p => [p.lat, p.lng]);
+    if (!pts.length) return;
+    const pad = mapFitPadding();
+    if (pts.length === 1) map.flyTo(pts[0], Math.max(map.getZoom(), 14), { duration: 0.6 });
+    else map.flyToBounds(L.latLngBounds(pts), { ...pad, maxZoom: 15, duration: 0.6 });
+  }
+
+  // Back: to wherever the person came from inside the app, else Home
+  function rmBack() {
+    const fromApp = document.referrer && document.referrer.startsWith(window.location.origin);
+    if (fromApp && window.history.length > 1) window.history.back();
+    else nsGo(getRole() === 'volunteer' ? 'helper-dashboard.html' : 'seeker-dashboard.html');
+  }
+  window.rmBack = rmBack;
+
   function applyCombinedFilters() {
     const resources = getResourcesData();
     const savedIds = getSavedPlaceIds();
@@ -1331,22 +1532,25 @@
         }
       }
 
+      // While searching, look across everything: the words decide, not the chips or toggles
+      const searching = !!mapSearchQuery;
+
       // Category Match
-      const matchesCategory = activeSelectedCategories.includes('all') || activeSelectedCategories.includes(pin.category);
+      const matchesCategory = searching || activeSelectedCategories.includes('all') || activeSelectedCategories.includes(pin.category);
 
       // Verified Scope Match
       let matchesScope = true;
-      if (activeScopeFilter === 'verified') {
+      if (activeScopeFilter === 'verified' && !searching) {
         matchesScope = (pin.verifiedOnly === true);
       }
 
       // Dynamic "Open Now" Real-Time Hours Status Check
       let matchesOpenNow = true;
-      if (isOpenNowFilterActive) {
+      if (isOpenNowFilterActive && !searching) {
         matchesOpenNow = isPlaceOpenNow(pin);
       }
 
-      return matchesCategory && matchesScope && matchesOpenNow;
+      return matchesCategory && matchesScope && matchesOpenNow && matchesMapSearch(pin);
     });
 
     // 2. Radius distance filtering:
@@ -1358,10 +1562,26 @@
           const dist = calculateDistanceMiles(refCoords.lat, refCoords.lng, place.lat, place.lng);
           return { ...place, distanceMiles: dist };
         })
-      : filterPlacesByRadius(baseMatchingPins, activeRadiusMiles);
+      : filterPlacesByRadius(baseMatchingPins, mapSearchQuery ? 500 : activeRadiusMiles);
 
+    lastFilteredCount = filteredPins.length;
+    currentFocusId = resolveFocusId(filteredPins);
     renderLeafletMarkers(filteredPins);
     renderDrawerPlaces(filteredPins);
+    syncFilterSummary();
+    if (_fitOnNextSearch) {
+      _fitOnNextSearch = false;
+      fitMapToResults(filteredPins);
+      if (filteredPins.length > 1 && typeof snapPlacesSheet === 'function') snapPlacesSheet('half');
+    }
+  }
+
+  // The bottom sheet shows the tapped place, or the closest one
+  function resolveFocusId(items) {
+    if (!items || !items.length) return null;
+    if (focusedPlaceId && items.some(p => String(p.id) === String(focusedPlaceId))) return String(focusedPlaceId);
+    const nearest = items.reduce((best, p) => (best === null || p.distanceMiles < best.distanceMiles ? p : best), null);
+    return nearest ? String(nearest.id) : null;
   }
 
   function updateVisiblePlaces() {
@@ -1374,59 +1594,34 @@
     mapMarkers.forEach(m => map.removeLayer(m.marker));
     mapMarkers = [];
 
+    const savedIds = getSavedPlaceIds();
+
     items.forEach(res => {
-      const customIcon = L.divIcon({
-        className: 'custom-leaflet-pin',
-        html: `
-          <div class="px-2.5 py-1 bg-[#0F141C] text-white font-extrabold text-[11px] rounded-full shadow-xl border border-white/20 flex items-center gap-1.5 transform hover:scale-110 transition-transform">
-            <span class="text-xs">${res.icon || '📍'}</span>
-            <span class="truncate max-w-[90px] text-slate-100">${res.name}</span>
-          </div>
-        `,
-        iconSize: [120, 30],
-        iconAnchor: [60, 15]
-      });
+      const meta = categoryMeta(res.category);
+      const isFocus = currentFocusId !== null && String(res.id) === currentFocusId;
+      const isSaved = savedIds.includes(res.id);
+      const customIcon = isFocus
+        ? L.divIcon({
+            className: 'custom-leaflet-pin ns-pin',
+            html: `<div class="rm-label-pin"><span class="material-symbols-outlined">${meta.icon}</span><span>${esc(res.name)}</span></div><div class="rm-label-dot"></div>`,
+            iconSize: [0, 0],
+            iconAnchor: [0, 0]
+          })
+        : L.divIcon({
+            className: 'custom-leaflet-pin ns-pin',
+            html: `<div class="rm-pin${isSaved ? ' rm-pin--saved' : ''}"><span class="material-symbols-outlined">${meta.icon}</span></div>`,
+            iconSize: [36, 36],
+            iconAnchor: [18, 18]
+          });
 
-      const marker = L.marker([res.lat, res.lng], { icon: customIcon }).addTo(map);
+      const marker = L.marker([res.lat, res.lng], {
+        icon: customIcon,
+        title: res.name,
+        keyboard: true,
+        zIndexOffset: isFocus ? 900 : 0
+      }).addTo(map);
 
-      const isOpen = isPlaceOpenNow(res);
-
-      const statusColor = isOpen
-        ? 'text-emerald-400 font-bold'
-        : 'text-red-400 font-bold';
-
-      const statusDot = isOpen
-        ? '<span class="inline-block w-2 h-2 rounded-full bg-emerald-400 mr-1"></span>'
-        : '<span class="inline-block w-2 h-2 rounded-full bg-red-400 mr-1"></span>';
-
-      const popupContent = `
-        <div class="space-y-1.5 text-slate-100 font-sans p-1">
-          <div class="flex justify-between items-center">
-            <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 font-bold text-[10px] rounded-full uppercase">${res.category}</span>
-            <div class="flex items-center gap-1.5">
-              ${res.rating ? `<span class="text-[10px] font-extrabold text-amber-300">★ ${res.rating}</span>` : ''}
-              ${res.verifiedOnly ? '<span class="text-[10px] text-amber-400 font-extrabold">✓ Verified</span>' : ''}
-            </div>
-          </div>
-          <h4 class="font-extrabold text-sm text-white">${res.name}</h4>
-          <p class="text-xs text-slate-300">📍 ${res.address}</p>
-          <p class="text-xs flex items-center ${statusColor}">${statusDot}${res.status}</p>
-          ${res.hoursOpen ? `<p class="text-[10px] text-slate-400 font-mono">🕒 Hours: ${res.hoursOpen} - ${res.hoursClose}</p>` : ''}
-          ${res.details ? `<p class="text-[11px] text-slate-300 bg-slate-900 p-2 rounded-xl border border-slate-800 mt-1">${res.details}</p>` : ''}
-          <div class="pt-3 mt-1 flex items-center gap-2">
-            <button onclick="toggleSavePlace('${res.id}')" class="flutter-btn flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs rounded-xl border border-slate-700 transition-all flex items-center justify-center gap-1.5 shadow-sm">
-              <span class="material-symbols-outlined text-[14px] ${isPlaceSaved(res.id) ? 'text-amber-400' : ''}">${isPlaceSaved(res.id) ? 'bookmark' : 'bookmark_border'}</span>
-              <span>${isPlaceSaved(res.id) ? 'Saved' : 'Save'}</span>
-            </button>
-            <button onclick="openTransitModal('${res.name.replace(/'/g, "\\'")}', '${res.address.replace(/'/g, "\\'")}', ${res.lat}, ${res.lng})" class="flutter-btn flex-1 py-2 bg-[#FFE855] text-slate-950 font-extrabold text-xs rounded-xl shadow-sm hover:brightness-105 transition-all flex items-center justify-center gap-1.5">
-              <span class="material-symbols-outlined text-[14px]">directions_bus</span>
-              <span>Bus Times</span>
-            </button>
-          </div>
-        </div>
-      `;
-
-      marker.bindPopup(popupContent);
+      marker.on('click', () => focusPlaceInSheet(res.id));
       mapMarkers.push({ resId: res.id, marker: marker, data: res });
     });
 
@@ -1441,13 +1636,11 @@
   }
 
   function openAddResourceModal() {
-    document.getElementById('add-resource-modal').classList.remove('hidden');
-    document.getElementById('add-resource-modal').classList.add('flex');
+    openModal('add-resource-modal');
   }
 
   function closeAddResourceModal() {
-    document.getElementById('add-resource-modal').classList.add('hidden');
-    document.getElementById('add-resource-modal').classList.remove('flex');
+    closeModal('add-resource-modal');
   }
 
   function handleCreateResource(e) {
@@ -1459,6 +1652,12 @@
     const details = document.getElementById('res-details').value;
 
     const [hOpen, hClose] = hours.split('-').map(s => s.trim());
+    const toHHMM = (t, fallback) => {
+      const m = /^(\d{1,2}):?(\d{2})$/.exec(t || '');
+      return m ? m[1].padStart(2, '0') + m[2] : fallback;
+    };
+    const openHHMM = toHHMM(hOpen, '0800');
+    const closeHHMM = toHHMM(hClose, '2000');
 
     const center = userLocationCoords || { lat: 47.6062, lng: -122.3321 };
 
@@ -1468,20 +1667,21 @@
       category: category,
       lat: center.lat + (Math.random() * 0.01 - 0.005),
       lng: center.lng + (Math.random() * 0.01 - 0.005),
-      rating: 5.0,
+      rating: null,
       open_status: 'OPEN_NOW',
-      status: 'Open Now • Community Submitted',
+      status: `Open ${hOpen || '08:00'} to ${hClose || '20:00'} (added by you)`,
       address: address,
-      icon: category === 'food' ? '🍲' : category === 'shelter' ? '🛏️' : category === 'work' ? '💼' : '📍',
+      icon: '',
       details: details,
-      verifiedOnly: true,
+      verifiedOnly: false,
       hoursOpen: hOpen || "08:00",
       hoursClose: hClose || "20:00",
       daysClosed: [],
       is24Seven: false,
       opening_hours: {
         open_now: true,
-        periods: [{ open: { day: 0, time: "0800" }, close: { day: 0, time: "2000" } }]
+        // Same hours every day (previously only Sunday was listed, hiding it on other days)
+        periods: [0, 1, 2, 3, 4, 5, 6].map(day => ({ open: { day, time: openHHMM }, close: { day, time: closeHHMM } }))
       }
     };
 
@@ -1490,11 +1690,11 @@
     localStorage.setItem(RESOURCE_STORAGE_KEY, JSON.stringify(currentData));
 
     closeAddResourceModal();
+    const form = document.getElementById('new-resource-form');
+    if (form) form.reset();
+    focusedPlaceId = newRes.id;
+    revealPlace(newRes);
     applyCombinedFilters();
-
-    if (typeof showNotification === 'function') {
-      showNotification('✨ New resource published to live map!', 'success');
-    }
   }
 
   // RADIUS MODIFIER LOGIC
@@ -1503,19 +1703,13 @@
     
     [5, 10, 25].forEach(m => {
       const btn = document.getElementById(`radius-btn-${m}`);
-      if (btn) {
-        if (m === miles) {
-          btn.className = 'radius-pill-btn px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-[#0F141C] text-white shadow-sm transition-all';
-        } else {
-          btn.className = 'radius-pill-btn px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-all';
-        }
-      }
+      setPressed(btn, m === miles);
     });
 
     if (userRadiusCircle) {
       userRadiusCircle.setRadius(miles * 1609.34);
       if (map && typeof map.fitBounds === 'function') {
-        map.fitBounds(userRadiusCircle.getBounds(), { padding: [20, 20], animate: true });
+        map.fitBounds(userRadiusCircle.getBounds(), Object.assign({ animate: true }, mapFitPadding()));
       }
     }
 
@@ -1537,22 +1731,176 @@
     return isNaN(dist) ? 0 : dist;
   }
 
-  // BOTTOM DRAWER EXPAND / COLLAPSE & PLACES LIST RENDERING
+  // BOTTOM SHEET: drag / flick between peek (title only), half (the chosen place) and full (whole list)
+  const placesSheet = {
+    state: 'half',      // 'peek' | 'half' | 'full'
+    y: 0,               // current translateY in px (0 = fully open)
+    snaps: { full: 0, half: 0, peek: 0 },
+    suppressClick: false
+  };
+
+  function sheetEls() {
+    return {
+      sheet: document.getElementById('bottom-drawer-sheet'),
+      header: document.getElementById('drawer-header'),
+      body: document.getElementById('sheet-body'),
+      card: document.getElementById('place-focus-card'),
+      main: document.querySelector('.rm-main'),
+      top: document.querySelector('.rm-top')
+    };
+  }
+
+  // Size the sheet to the space under the top controls and work out the three resting points
+  function measurePlacesSheet() {
+    const { sheet, header, card, main, top } = sheetEls();
+    if (!sheet || !main) return;
+    const topSpace = top ? top.offsetHeight + 8 : 120;
+    const height = Math.max(240, main.clientHeight - topSpace);
+    sheet.style.height = `${height}px`;
+    const headerH = header ? header.offsetHeight : 64;
+    const cardH = card ? card.offsetHeight : 0;
+    const peek = Math.max(0, height - headerH);
+    const halfVisible = Math.min(height * 0.62, headerH + cardH);
+    placesSheet.snaps = {
+      full: 0,
+      half: Math.min(peek, Math.max(0, height - halfVisible)),
+      peek
+    };
+  }
+
+  function setSheetY(y) {
+    const { sheet } = sheetEls();
+    if (!sheet) return;
+    placesSheet.y = y;
+    sheet.style.setProperty('--sheet-y', `${y}px`);
+    // map buttons only make sense while the map is mostly visible
+    sheet.classList.toggle('fabs-hidden', y < placesSheet.snaps.half - 40);
+  }
+
+  function snapPlacesSheet(state, { animate = true } = {}) {
+    const { sheet, header, body } = sheetEls();
+    if (!sheet) return;
+    measurePlacesSheet();
+    placesSheet.state = state;
+    isDrawerExpanded = state === 'full';
+    if (!animate) sheet.classList.add('is-dragging');
+    setSheetY(placesSheet.snaps[state]);
+    if (!animate) requestAnimationFrame(() => sheet.classList.remove('is-dragging'));
+    sheet.classList.toggle('is-full', state === 'full');
+    sheet.classList.toggle('expanded', state === 'full');
+    sheet.dataset.state = state;
+    if (header) header.setAttribute('aria-expanded', state === 'full' ? 'true' : 'false');
+    if (body && state !== 'full') body.scrollTop = 0;
+  }
+  window.snapPlacesSheet = snapPlacesSheet;
+
+  // Kept for existing callers: true opens the full list, false shows the chosen place, no arg toggles
   function toggleBottomDrawer(forceState) {
-    const drawer = document.getElementById('bottom-drawer-sheet');
-    if (!drawer) return;
-
     if (typeof forceState === 'boolean') {
-      isDrawerExpanded = forceState;
+      snapPlacesSheet(forceState ? 'full' : 'half');
     } else {
-      isDrawerExpanded = !isDrawerExpanded;
+      snapPlacesSheet(placesSheet.state === 'full' ? 'half' : 'full');
     }
+  }
 
-    if (isDrawerExpanded) {
-      drawer.classList.add('expanded');
-    } else {
-      drawer.classList.remove('expanded');
+  function initPlacesSheet() {
+    const { sheet, header, body, card } = sheetEls();
+    if (!sheet || sheet.dataset.dragReady) return;
+    sheet.dataset.dragReady = '1';
+
+    let startY = 0, startSheetY = 0, dragging = false, tracking = false, pointerId = null;
+    let lastY = 0, lastT = 0, velocity = 0;
+
+    const onDown = (e) => {
+      if (e.button !== undefined && e.button !== 0) return;
+      // In the full list, let the list scroll normally unless the drag starts on the header
+      if (placesSheet.state === 'full' && !header.contains(e.target) && body.scrollTop > 0) return;
+      tracking = true;
+      dragging = false;
+      pointerId = e.pointerId;
+      startY = lastY = e.clientY;
+      lastT = performance.now();
+      startSheetY = placesSheet.y;
+      velocity = 0;
+    };
+
+    const onMove = (e) => {
+      if (!tracking || e.pointerId !== pointerId) return;
+      const dy = e.clientY - startY;
+      if (!dragging) {
+        if (Math.abs(dy) < 6) return;
+        // Pushing up inside the full list is a scroll, not a drag
+        if (placesSheet.state === 'full' && !header.contains(e.target) && dy < 0) { tracking = false; return; }
+        dragging = true;
+        sheet.classList.add('is-dragging');
+        try { sheet.setPointerCapture(pointerId); } catch (_) {}
+      }
+      const { full, peek } = placesSheet.snaps;
+      let y = startSheetY + dy;
+      // gentle resistance past the ends
+      if (y < full) y = full - Math.sqrt(full - y) * 4;
+      if (y > peek) y = peek + Math.sqrt(y - peek) * 4;
+      setSheetY(y);
+      const now = performance.now();
+      const dt = Math.max(1, now - lastT);
+      velocity = 0.8 * ((e.clientY - lastY) / dt) + 0.2 * velocity;
+      lastY = e.clientY;
+      lastT = now;
+      e.preventDefault();
+    };
+
+    const onUp = (e) => {
+      if (!tracking || (e.pointerId !== undefined && e.pointerId !== pointerId)) return;
+      tracking = false;
+      if (!dragging) return;
+      dragging = false;
+      sheet.classList.remove('is-dragging');
+      try { sheet.releasePointerCapture(pointerId); } catch (_) {}
+      placesSheet.suppressClick = true;
+      setTimeout(() => { placesSheet.suppressClick = false; }, 0);
+
+      // Project where a flick would land, then rest at the closest point
+      const projected = placesSheet.y + velocity * 180;
+      const order = ['full', 'half', 'peek'];
+      let best = order[0];
+      order.forEach(k => {
+        if (Math.abs(placesSheet.snaps[k] - projected) < Math.abs(placesSheet.snaps[best] - projected)) best = k;
+      });
+      snapPlacesSheet(best);
+    };
+
+    sheet.addEventListener('pointerdown', onDown);
+    // Follow the pointer everywhere once a press starts on the sheet (a mouse can leave it before the drag grabs)
+    window.addEventListener('pointermove', onMove, { passive: false });
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+    // A drag must not also count as a tap on whatever was under the finger
+    sheet.addEventListener('click', (e) => {
+      if (placesSheet.suppressClick) { e.stopPropagation(); e.preventDefault(); }
+    }, true);
+
+    // Keyboard: arrow keys on the header move between the three positions
+    header.addEventListener('keydown', (e) => {
+      const order = ['peek', 'half', 'full'];
+      const i = order.indexOf(placesSheet.state);
+      if (e.key === 'ArrowUp' && i < 2) { e.preventDefault(); snapPlacesSheet(order[i + 1]); }
+      if (e.key === 'ArrowDown' && i > 0) { e.preventDefault(); snapPlacesSheet(order[i - 1]); }
+    });
+
+    // Re-fit when the chosen place (and so the half height) or the screen size changes
+    if (card && window.ResizeObserver) {
+      new ResizeObserver(() => { if (!dragging) snapPlacesSheet(placesSheet.state); }).observe(card);
     }
+    window.addEventListener('resize', () => snapPlacesSheet(placesSheet.state, { animate: false }));
+
+    snapPlacesSheet('half', { animate: false });
+  }
+
+  // How much of the map the sheet currently covers
+  function sheetVisibleHeight() {
+    const { sheet } = sheetEls();
+    if (!sheet) return 240;
+    return Math.max(0, sheet.offsetHeight - placesSheet.y);
   }
 
   function renderDrawerPlaces(items) {
@@ -1566,17 +1914,21 @@
       badgeEl.textContent = count;
     }
     if (titleEl) {
-      titleEl.textContent = `Places & Resources (${count})`;
+      titleEl.textContent = mapSearchQuery
+        ? `Results for “${mapSearchQuery}”`
+        : activeMapMode === 'saved'
+          ? 'Saved places'
+          : `Places within ${activeRadiusMiles} mi`;
     }
 
     if (!items || items.length === 0) {
       listEl.innerHTML = `
-        <div class="p-6 text-center text-slate-500">
-          <span class="material-symbols-outlined text-3xl text-slate-400 mb-1">search_off</span>
-          <p class="text-xs font-bold text-slate-700">No resources found</p>
-          <p class="text-[11px] text-slate-500 mt-0.5">Try expanding your search radius (e.g. 10 or 25 mi) or adjusting filters.</p>
+        <div class="ns-empty">
+          <p class="ns-empty__title">${activeMapMode === 'saved' ? 'No saved places here' : 'No places found'}</p>
+          <p class="ns-empty__sub">${activeMapMode === 'saved' ? 'Tap the bookmark on a place to save it.' : 'Try a longer distance, or change your filters.'}</p>
         </div>
       `;
+      renderFocusCard(null);
       return;
     }
 
@@ -1587,63 +1939,31 @@
       return { ...pin, distanceMiles: dist };
     }).sort((a, b) => a.distanceMiles - b.distanceMiles);
 
-    listEl.innerHTML = sorted.map((res, idx) => {
-      const distStr = res.distanceMiles.toFixed(1) + ' mi';
-      const catColor = res.category === 'food' ? 'text-rose-600 bg-rose-50'
-                     : res.category === 'shelter' ? 'text-blue-600 bg-blue-50'
-                     : res.category === 'work' ? 'text-amber-600 bg-amber-50'
-                     : res.category === 'wifi' ? 'text-indigo-600 bg-indigo-50'
-                     : res.category === 'restroom' ? 'text-teal-600 bg-teal-50'
-                     : 'text-yellow-600 bg-yellow-50';
+    const focusRes = sorted.find(r => String(r.id) === currentFocusId) || sorted[0];
+    renderFocusCard(focusRes);
 
+    listEl.innerHTML = sorted.map((res) => {
+      const meta = categoryMeta(res.category);
       const isOpen = isPlaceOpenNow(res);
-      const statusBadge = isOpen 
-        ? `<span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>${res.status}</span>`
-        : `<span class="inline-flex items-center gap-1 text-[10px] font-bold text-red-600"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>${res.status}</span>`;
-
       const isSaved = isPlaceSaved(res.id);
-      const saveBtnClass = isSaved 
-        ? 'px-2.5 py-1 rounded-xl bg-amber-100 text-amber-900 border border-amber-300 font-extrabold text-[10px] flex items-center gap-1 shadow-sm transition-all hover:bg-amber-200' 
-        : 'px-2.5 py-1 rounded-xl bg-slate-100 text-slate-700 border border-slate-200 font-bold text-[10px] flex items-center gap-1 shadow-sm transition-all hover:bg-slate-200';
-      const saveIcon = isSaved ? 'bookmark' : 'bookmark_border';
-      const saveText = isSaved ? 'Saved' : 'Save';
+      const sub = [
+        esc(formatMiles(res.distanceMiles)),
+        isOpen ? '<span class="text-leaf font-semibold">Open now</span>' : 'Closed now',
+        res.verifiedOnly ? 'Verified' : ''
+      ].filter(Boolean).join(', ');
 
       return `
-        <div class="p-2.5 bg-slate-50 hover:bg-slate-100/90 rounded-2xl border border-slate-200/70 shadow-sm flex items-center justify-between gap-2.5 transition-all place-card spring-bounce-hover stagger-${(idx % 6) + 1}">
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-1.5 mb-0.5">
-              <span class="text-sm flex-shrink-0">${res.icon || '📍'}</span>
-              <h5 class="text-xs font-extrabold text-slate-900 truncate">${res.name}</h5>
-              ${res.rating ? `<span class="text-[10px] font-black text-amber-500 flex items-center gap-0.5">★${res.rating}</span>` : ''}
-              ${res.verifiedOnly ? '<span class="text-[9px] text-amber-500 font-black flex-shrink-0" title="Verified">✓</span>' : ''}
-              ${isSaved ? '<span class="text-[9px] px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 font-bold flex items-center gap-0.5">🔖 Saved</span>' : ''}
-            </div>
-            <div class="flex items-center gap-1.5 text-[11px] text-slate-500 mb-0.5">
-              <span class="font-extrabold text-emerald-600 flex items-center gap-0.5">
-                <span class="material-symbols-outlined text-[12px]">near_me</span>
-                ${distStr} away
-              </span>
-              <span>•</span>
-              <span class="px-1.5 py-0.2 rounded text-[10px] font-bold ${catColor} capitalize">${res.category}</span>
-            </div>
-            <div class="truncate">${statusBadge}</div>
-          </div>
-          <div class="flex flex-col items-end gap-1.5 flex-shrink-0">
-            <div class="flex items-center gap-1">
-              <button onclick="toggleSavePlace('${res.id}', event)" title="${isSaved ? 'Remove from Saved' : 'Save Place'}" class="${saveBtnClass}">
-                <span class="material-symbols-outlined text-[13px] ${isSaved ? 'text-amber-600' : 'text-slate-500'}">${saveIcon}</span>
-                <span>${saveText}</span>
-              </button>
-              <button onclick="selectAndFocusPlace('${res.id}', ${res.lat}, ${res.lng})" class="px-3 py-1 bg-[#0F141C] text-white hover:bg-slate-800 text-[11px] font-extrabold rounded-xl shadow-sm transition-all active:scale-95 flex items-center gap-1">
-                <span>View</span>
-                <span class="material-symbols-outlined text-[12px] text-emerald-400">arrow_forward</span>
-              </button>
-            </div>
-            <button onclick="openTransitModal('${res.name.replace(/'/g, "\\'")}', '${res.address.replace(/'/g, "\\'")}', ${res.lat}, ${res.lng})" class="text-[10px] font-extrabold text-emerald-600 hover:text-emerald-500 flex items-center gap-0.5 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200 shadow-xs active:scale-95 transition-all">
-              <span class="material-symbols-outlined text-[12px]">directions_bus</span>
-              <span>Bus Times ↗</span>
-            </button>
-          </div>
+        <div class="ns-row place-card">
+          <button type="button" class="flex items-center gap-4 flex-1 min-w-0 text-left" onclick="selectAndFocusPlace('${jsArg(res.id)}', ${Number(res.lat)}, ${Number(res.lng)})" aria-label="Show ${esc(res.name)} on the map">
+            <span class="ns-tile ns-tile--plain"><span class="material-symbols-outlined">${meta.icon}</span></span>
+            <span class="ns-row__body">
+              <span class="ns-row__title block truncate">${esc(res.name)}</span>
+              <span class="ns-row__sub block">${sub}</span>
+            </span>
+          </button>
+          <button type="button" class="ns-icon-btn ns-icon-btn--sm" onclick="toggleSavePlace('${jsArg(res.id)}', event)" aria-pressed="${isSaved}" aria-label="${isSaved ? 'Remove from saved' : 'Save this place'}" style="box-shadow:none;border:1px solid var(--line)">
+            <span class="material-symbols-outlined ${isSaved ? 'ms-fill' : ''}" style="${isSaved ? 'color:#111111' : ''}">bookmark</span>
+          </button>
         </div>
       `;
     }).join('');
@@ -1688,9 +2008,15 @@
         }
       }
 
-      const targetMarker = mapMarkers.find(
+      let targetMarker = mapMarkers.find(
         m => String(m.resId) === String(resourceId)
       );
+
+      // If a filter hides the linked place, relax just that filter once
+      if (!targetMarker) {
+        revealPlace(resource);
+        targetMarker = mapMarkers.find(m => String(m.resId) === String(resourceId));
+      }
 
       if (!targetMarker || !targetMarker.marker) {
         return false;
@@ -1720,10 +2046,38 @@
 
   window.focusResourceFromUrl = focusResourceFromUrl;
 
+  // Turn off only the filters that would hide this place
+  function revealPlace(resource) {
+    if (!resource) return;
+    if (activeMapMode === 'saved' && !isPlaceSaved(resource.id)) {
+      switchMapMode('nearby');
+    }
+    if (!activeSelectedCategories.includes('all') && !activeSelectedCategories.includes(resource.category)) {
+      toggleCategoryFilter('all');
+    }
+    if (activeScopeFilter === 'verified' && resource.verifiedOnly !== true) {
+      setScopeFilter('everyone');
+    }
+    if (isOpenNowFilterActive && !isPlaceOpenNow(resource)) {
+      toggleOpenNowFilter();
+    }
+  }
+
+  // Keep fitted content clear of the floating controls and the bottom sheet
+  function mapFitPadding() {
+    const top = document.querySelector('.rm-top');
+    const sheet = document.getElementById('bottom-drawer-sheet');
+    return {
+      paddingTopLeft: [24, (top ? top.offsetHeight : 120) + 12],
+      paddingBottomRight: [24, sheetVisibleHeight() + 24]
+    };
+  }
+
   function selectAndFocusPlace(resId, lat, lng, autoOpenPopup = false) {
     if (!map) return;
 
     window.northstarSelectedMapResourceId = String(resId);
+    focusedPlaceId = String(resId);
 
     // Prevent moveend/zoomend from rebuilding all markers while
     // this one-time chatbot/map focus is happening.
@@ -1739,24 +2093,27 @@
         m => String(m.resId) === String(resId)
       );
 
+      // Details for the place now live in the bottom sheet (no popup)
       if (targetMarker && targetMarker.marker && autoOpenPopup) {
-        const popup = targetMarker.marker.getPopup?.();
-
-        if (popup) {
-          popup.options.autoClose = false;
-          popup.options.closeOnClick = false;
-          popup.options.autoPan = false;
-        }
-
-        targetMarker.marker.openPopup();
+        applyCombinedFilters();
       }
 
       // The one-time View on Map focus is now finished.
       window.northstarProgrammaticMapFocus = false;
     }, 1000);
 
+    applyCombinedFilters();
     toggleBottomDrawer(false);
   }
+
+  // Tapping a pin: show it in the bottom sheet without zooming in
+  function focusPlaceInSheet(resId) {
+    focusedPlaceId = String(resId);
+    toggleBottomDrawer(false);
+    applyCombinedFilters();
+  }
+  window.focusPlaceInSheet = focusPlaceInSheet;
+  window.selectAndFocusPlace = selectAndFocusPlace;
 
   let currentTransitRouteData = null;
   let currentTransitDest = null;
@@ -1821,9 +2178,9 @@
         boundsPoints.push(...decodedPts);
 
         if (step.travel_mode === 'TRANSIT') {
-          // Solid Emerald Line for Bus Route
+          // Solid ink line for the bus ride
           L.polyline(decodedPts, {
-            color: '#10b981',
+            color: '#111111',
             weight: 6,
             opacity: 0.9,
             lineCap: 'round',
@@ -1835,21 +2192,21 @@
             if (step.transit.departure_location) {
               const stopIcon = L.divIcon({
                 className: 'bus-stop-numbered-icon',
-                html: `<div style="background-color:#FFE855; color:#0F141C; border:2px solid #0F141C; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:900; box-shadow:0 2px 6px rgba(0,0,0,0.25); line-height:1;">${transitStopNum}</div>`,
-                iconSize: [22, 22],
-                iconAnchor: [11, 11]
+                html: `<div class="rm-stop">${transitStopNum}</div>`,
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
               });
               L.marker([step.transit.departure_location.lat, step.transit.departure_location.lng], { icon: stopIcon })
-               .bindTooltip(`Stop ${transitStopNum} - Bus ${step.transit.line_name}: Board at ${step.transit.departure_stop}`, { permanent: false })
+               .bindTooltip(esc(`Stop ${transitStopNum}: get on bus ${step.transit.line_name} at ${step.transit.departure_stop}`), { permanent: false })
                .addTo(mapRouteLayerGroup);
               
               transitStopNum++;
             }
           }
         } else {
-          // Dashed Blue Line for Walking Route
+          // Dashed amber line for walking
           L.polyline(decodedPts, {
-            color: '#3b82f6',
+            color: '#111111',
             weight: 5,
             opacity: 0.85,
             dashArray: '6, 8',
@@ -1860,7 +2217,92 @@
     });
 
     if (boundsPoints.length > 0) {
-      map.fitBounds(boundsPoints, { padding: [40, 40], maxZoom: 16 });
+      map.fitBounds(boundsPoints, Object.assign({ maxZoom: 16 }, mapFitPadding()));
+    }
+  }
+
+  // ---- Directions sources ----
+  // 1. Our server (/api/transit-directions, Google): bus + walk, or walking.
+  // 2. If that can't be reached or finds nothing: a free OpenStreetMap walking route
+  //    (routing.openstreetmap.de, no key), so people always get a way there.
+  async function fetchServerDirections(originStr, destStr, mode) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15000);
+    try {
+      const resp = await fetch(`/api/transit-directions?origin=${encodeURIComponent(originStr)}&destination=${encodeURIComponent(destStr)}&mode=${mode === 'walking' ? 'walking' : 'transit'}`, { signal: controller.signal });
+      const type = resp.headers.get('content-type') || '';
+      if (!type.includes('json')) throw new Error(`directions service returned ${resp.status}`);
+      const data = await resp.json();
+      if (data.success && Array.isArray(data.steps) && data.steps.length) return data;
+      throw new Error(data.error || 'no route');
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  function fmtWalkDuration(sec) {
+    const mins = Math.max(1, Math.round(sec / 60));
+    if (mins < 60) return `${mins} min${mins === 1 ? '' : 's'}`;
+    const h = Math.floor(mins / 60), m = mins % 60;
+    return `${h} hr${h === 1 ? '' : 's'}${m ? ` ${m} min` : ''}`;
+  }
+
+  function fmtWalkDistance(meters) {
+    const miles = meters / 1609.34;
+    return miles < 0.1 ? `${Math.round(meters * 3.281)} ft` : `${miles.toFixed(1)} mi`;
+  }
+
+  function osmStepText(step) {
+    const m = step.maneuver || {};
+    const road = step.name ? ` on ${step.name}` : '';
+    const onto = step.name ? ` onto ${step.name}` : '';
+    const dir = m.modifier ? m.modifier.replace('sharp ', 'sharp ').replace('slight ', 'slight ') : '';
+    switch (m.type) {
+      case 'depart': return `Start walking${road}`;
+      case 'arrive': return 'You have arrived';
+      case 'turn': case 'end of road': case 'fork':
+        return dir === 'straight' ? `Keep going${road}` : `Turn ${dir}${onto}`;
+      case 'roundabout': case 'rotary': return `Go around the roundabout${onto}`;
+      case 'new name': case 'continue': return `Continue${road}`;
+      default: return dir ? `Go ${dir}${onto}` : `Continue${road}`;
+    }
+  }
+
+  async function fetchOsmWalkingRoute(origin, destLat, destLng) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15000);
+    try {
+      const url = `https://routing.openstreetmap.de/routed-foot/route/v1/foot/${origin.lng},${origin.lat};${destLng},${destLat}?overview=full&geometries=polyline&steps=true`;
+      const resp = await fetch(url, { signal: controller.signal });
+      const data = await resp.json();
+      const route = data && data.code === 'Ok' && data.routes && data.routes[0];
+      if (!route) throw new Error('no walking route');
+      const steps = (route.legs[0].steps || [])
+        // skip tiny steps (a few feet) that only add noise
+        .filter(st => st.distance >= 25 || (st.maneuver && st.maneuver.type === 'arrive'))
+        .map(st => ({
+          travel_mode: 'WALKING',
+          duration: fmtWalkDuration(st.duration),
+          distance: st.distance > 0 ? fmtWalkDistance(st.distance) : '',
+          instructions: osmStepText(st),
+          polyline: st.geometry || '',
+          start_location: st.maneuver && st.maneuver.location ? { lat: st.maneuver.location[1], lng: st.maneuver.location[0] } : null,
+          end_location: null
+        }));
+      return {
+        success: true,
+        mode_used: 'walking',
+        source: 'osm',
+        summary: {
+          departure_time: null,
+          duration: fmtWalkDuration(route.duration),
+          distance: fmtWalkDistance(route.distance),
+          overview_polyline: route.geometry || ''
+        },
+        steps
+      };
+    } finally {
+      clearTimeout(timer);
     }
   }
 
@@ -1875,110 +2317,116 @@
 
     if (!modal) return;
 
-    currentTransitDest = { destName, destAddress, destLat, destLng };
+    currentTransitDest = { destName, destAddress, destLat, destLng, mode };
 
-    // Update Mode Pill UI
-    const hybridBtn = document.getElementById('mode-btn-hybrid');
-    const walkingBtn = document.getElementById('mode-btn-walking');
-    const activeClass = "flutter-btn flex-1 py-1.5 px-2 rounded-xl bg-slate-700/80 text-white shadow-sm flex items-center justify-center gap-1.5 transition-all border border-slate-600/50";
-    const inactiveClass = "flutter-btn flex-1 py-1.5 px-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-700/30 flex items-center justify-center gap-1.5 transition-all border border-transparent";
-    
-    if (hybridBtn && walkingBtn) {
-      if (mode === 'walking') {
-        walkingBtn.className = activeClass;
-        hybridBtn.className = inactiveClass;
-      } else {
-        hybridBtn.className = activeClass;
-        walkingBtn.className = inactiveClass;
-      }
-    }
+    // Update travel mode segment
+    setPressed(document.getElementById('mode-btn-hybrid'), mode !== 'walking');
+    setPressed(document.getElementById('mode-btn-walking'), mode === 'walking');
+
+    const routeBtn = document.getElementById('view-on-map-route-btn');
+    if (routeBtn) routeBtn.disabled = true;
+    currentTransitRouteData = null;
 
     nameEl.textContent = destName || 'Directions';
-    addrEl.textContent = destAddress || 'Live Google Directions';
-    durEl.textContent = 'Calculating...';
+    addrEl.textContent = destAddress || '';
+    durEl.textContent = '–';
     distEl.textContent = '';
-    timeRangeEl.textContent = mode === 'walking' ? 'Walking Mode' : 'Live Schedule';
+    timeRangeEl.textContent = '';
+    timeRangeEl.classList.add('hidden');
 
     stepsListEl.innerHTML = `
-      <div class="p-6 text-center text-slate-400 flex flex-col items-center gap-2">
-        <span class="material-symbols-outlined text-3xl animate-spin text-emerald-400">sync</span>
-        <p class="text-xs font-bold text-slate-300">Fetching live ${mode === 'walking' ? 'walking' : 'bus'} route details...</p>
+      <div class="flex flex-col items-center gap-3 py-10" role="status">
+        <div class="rm-spinner" aria-hidden="true"></div>
+        <p class="text-[14px] font-semibold text-ink-2">Finding a route</p>
       </div>
     `;
 
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
+    openModal('transit-directions-modal');
 
     const originCoords = userLocationCoords || { lat: 47.6062, lng: -122.3321 };
     const originStr = `${originCoords.lat},${originCoords.lng}`;
     const destStr = `${destLat},${destLng}`;
+    const googleUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destStr)}&travelmode=${mode === 'walking' ? 'walking' : 'transit'}`;
+    const fallbackHtml = (title, sub) => `
+      <div class="ns-empty mt-2">
+        <p class="ns-empty__title">${esc(title)}</p>
+        <p class="ns-empty__sub">${esc(sub)}</p>
+        <a href="${googleUrl}" target="_blank" rel="noopener" class="ns-btn ns-btn--ghost ns-btn--sm mt-4">
+          <span>Open in Google Maps</span><span class="material-symbols-outlined">open_in_new</span>
+        </a>
+      </div>
+    `;
+
+    let data = null;
+    let note = '';
+    try {
+      data = await fetchServerDirections(originStr, destStr, mode);
+      if (mode !== 'walking' && data.mode_used === 'walking') note = 'No bus goes there right now, so here’s the walking route.';
+    } catch (serverErr) {
+      console.warn('Directions service unavailable, trying a walking route:', serverErr);
+      try {
+        data = await fetchOsmWalkingRoute(originCoords, destLat, destLng);
+        note = mode === 'walking' ? '' : 'Bus times aren’t available right now, so here’s the walking route.';
+      } catch (walkErr) {
+        console.warn('Walking route unavailable too:', walkErr);
+        data = null;
+      }
+    }
+
+    // A newer request (mode switch) may have replaced this one while it loaded
+    if (currentTransitDest.destLat !== destLat || currentTransitDest.destLng !== destLng || currentTransitDest.mode !== mode) return;
 
     try {
-      const resp = await fetch(`/api/transit-directions?origin=${encodeURIComponent(originStr)}&destination=${encodeURIComponent(destStr)}`);
-      const data = await resp.json();
-
-      if (data.success && data.steps && data.steps.length > 0) {
+      if (data && data.success && data.steps && data.steps.length > 0) {
         currentTransitRouteData = data;
-        durEl.textContent = data.summary.duration || 'Live Route';
-        distEl.textContent = `(${data.summary.distance || ''})`;
-        timeRangeEl.textContent = mode === 'walking' ? 'Walking Path' : `Departs ${data.summary.departure_time || 'Now'}`;
+        if (routeBtn) routeBtn.disabled = false;
+        durEl.textContent = data.summary.duration || '';
+        distEl.textContent = data.summary.distance || '';
+        const leaves = data.mode_used === 'walking' ? 'Walking' : (data.summary.departure_time ? `Leave at ${data.summary.departure_time}` : '');
+        timeRangeEl.textContent = leaves;
+        timeRangeEl.classList.toggle('hidden', !leaves);
 
-        stepsListEl.innerHTML = data.steps.map((step, idx) => {
+        stepsListEl.innerHTML = (note ? `<p class="ns-card ns-card--sand !border-0 px-4 py-3 mb-1 text-[13px] font-semibold text-ink-2">${esc(note)}</p>` : '') + data.steps.map((step) => {
           if (step.travel_mode === 'TRANSIT' && step.transit) {
             const t = step.transit;
+            const stops = Number(t.num_stops) || 1;
             return `
-              <div class="interactive-card flutter-btn cursor-pointer overflow-hidden p-3 bg-slate-900 border border-slate-800 rounded-2xl space-y-1.5 text-left transition-all">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-1.5">
-                    <span class="px-2 py-0.5 rounded-lg bg-emerald-500 text-slate-950 font-black text-xs flex items-center gap-1 shadow-sm">
-                      <span class="material-symbols-outlined text-xs">directions_bus</span>
-                      ${t.line_name || t.vehicle}
-                    </span>
-                    <span class="text-xs font-extrabold text-white">${t.departure_time}</span>
+              <div class="rm-step">
+                <span class="rm-step__icon rm-step__icon--bus"><span class="material-symbols-outlined">directions_bus</span></span>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-baseline justify-between gap-3">
+                    <p class="text-[15px] font-bold">Bus ${esc(t.line_name || t.vehicle)} at ${esc(t.departure_time)}</p>
+                    <span class="text-[13px] font-semibold text-muted flex-shrink-0">${esc(step.duration)}</span>
                   </div>
-                  <span class="text-[10px] font-bold text-slate-400">${step.duration}</span>
+                  <p class="ns-card-sub mt-1">Get on at ${esc(t.departure_stop)}. Ride ${stops} ${stops === 1 ? 'stop' : 'stops'}.</p>
+                  <p class="ns-card-sub">Get off at ${esc(t.arrival_stop)} (${esc(t.arrival_time)}).</p>
                 </div>
-                <div class="text-xs text-slate-200 font-medium space-y-0.5 pt-0.5">
-                  <div class="flex items-center gap-1 text-slate-300">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"></span>
-                    <span>Board at: <strong class="text-white font-bold">${t.departure_stop}</strong></span>
-                  </div>
-                  <div class="flex items-center gap-1 text-slate-400 pl-3 text-[11px]">
-                    <span>↓ Ride ${t.num_stops || 1} stops</span>
-                  </div>
-                  <div class="flex items-center gap-1 text-slate-300">
-                    <span class="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0"></span>
-                    <span>Arrive at: <strong class="text-white font-bold">${t.arrival_stop}</strong> (${t.arrival_time})</span>
-                  </div>
-                </div>
-              </div>
-            `;
-          } else {
-            return `
-              <div class="interactive-card flutter-btn cursor-pointer overflow-hidden p-2.5 bg-slate-900/60 border border-slate-800/80 rounded-xl flex items-center justify-between text-xs text-slate-300 text-left transition-all">
-                <div class="flex items-center gap-2 min-w-0">
-                  <span class="material-symbols-outlined text-blue-400 text-base flex-shrink-0">directions_walk</span>
-                  <span class="truncate font-medium">${step.instructions}</span>
-                </div>
-                <span class="text-[10px] font-bold text-slate-400 flex-shrink-0 ml-2">${step.duration} (${step.distance})</span>
               </div>
             `;
           }
-        }).join('');
-      } else {
-        stepsListEl.innerHTML = `
-          <div class="p-4 bg-slate-900 border border-slate-800 rounded-2xl text-center space-y-2">
-            <span class="material-symbols-outlined text-2xl text-amber-400">directions_bus</span>
-            <p class="text-xs font-bold text-white">Direct Route Details</p>
-            <p class="text-[11px] text-slate-400">Head to destination or nearest bus stop nearby.</p>
-            <a href="https://www.google.com/maps/dir/?api=1&destination=${destLat},${destLng}&travelmode=${mode}" target="_blank" class="inline-flex items-center gap-1 px-4 py-2 bg-emerald-500 text-slate-950 font-extrabold text-xs rounded-xl shadow mt-1 hover:bg-emerald-400">
-              Open Google Maps ↗
-            </a>
-          </div>
+          return `
+            <div class="rm-step">
+              <span class="rm-step__icon"><span class="material-symbols-outlined">directions_walk</span></span>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-baseline justify-between gap-3">
+                  <p class="text-[15px] font-semibold">${esc(step.instructions)}</p>
+                  <span class="text-[13px] font-semibold text-muted flex-shrink-0">${esc(step.duration)}</span>
+                </div>
+                <p class="ns-card-sub mt-1">${esc(step.distance)}</p>
+              </div>
+            </div>
+          `;
+        }).join('') + `
+          <a href="${googleUrl}" target="_blank" rel="noopener" class="ns-link my-2">Open in Google Maps<span class="material-symbols-outlined text-[18px]">open_in_new</span></a>
         `;
+      } else {
+        durEl.textContent = '';
+        stepsListEl.innerHTML = fallbackHtml('Couldn’t find a route', 'Check your internet connection and try again, or open Google Maps.');
       }
     } catch (err) {
-      console.error('Failed to load transit modal:', err);
+      console.warn('Failed to show directions:', err);
+      durEl.textContent = '';
+      stepsListEl.innerHTML = fallbackHtml('Couldn’t find a route', 'Check your internet connection and try again, or open Google Maps.');
     }
   }
 
@@ -1988,10 +2436,8 @@
   }
 
   function closeTransitModal() {
-    const modal = document.getElementById('transit-directions-modal');
-    if (modal) {
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
+    if (document.getElementById('transit-directions-modal')) {
+      closeModal('transit-directions-modal');
     }
   }
   window.openTransitModal = openTransitModal;

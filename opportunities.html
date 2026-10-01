@@ -1,656 +1,180 @@
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html class="light" lang="en">
 <head>
 <meta charset="utf-8">
-<meta content="width=device-width, initial-scale=1.0" name="viewport">
-<title>Northstar | Job & Task Opportunities</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Atkinson+Hyperlegible+Next:wght@400;500;700&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link rel="stylesheet" href="css/northstar.css">
-<script id="tailwind-config">
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            "colors": {
-                    "error": "#ba1a1a",
-                    "surface": "#0f1117",
-                    "tertiary-container": "#0d1c2f",
-                    "surface-variant": "#1a1d27",
-                    "on-primary-container": "#7c839b",
-                    "surface-container-lowest": "#12141c",
-                    "primary-fixed-dim": "#bec6e0",
-                    "on-surface": "#f8fafc",
-                    "surface-tint": "#565e74",
-                    "on-background": "#f8fafc",
-                    "tertiary": "#000000",
-                    "secondary": "#f59e0b",
-                    "primary-fixed": "#dae2fd",
-                    "on-primary": "#ffffff",
-                    "surface-container-low": "#161922",
-                    "tertiary-fixed": "#d5e3fd",
-                    "on-error-container": "#93000a",
-                    "on-primary-fixed": "#131b2e",
-                    "secondary-fixed-dim": "#e2c62d",
-                    "background": "#0f1117",
-                    "on-tertiary-fixed-variant": "#3a485c",
-                    "primary-container": "#131b2e",
-                    "tertiary-fixed-dim": "#b9c7e0",
-                    "outline": "#475569",
-                    "surface-container": "#1e2230",
-                    "on-tertiary-container": "#76859b",
-                    "on-surface-variant": "#94a3b8",
-                    "on-secondary": "#ffffff",
-                    "on-secondary-fixed": "#211b00",
-                    "outline-variant": "#334155",
-                    "surface-container-highest": "#282d3f",
-                    "on-error": "#ffffff",
-                    "surface-container-high": "#222737",
-                    "on-tertiary-fixed": "#0d1c2f",
-                    "primary": "#0d1c2f",
-                    "surface-dim": "#0b0c10",
-                    "surface-bright": "#161922",
-                    "secondary-fixed": "#ffe24c",
-                    "on-tertiary": "#ffffff",
-                    "on-secondary-fixed-variant": "#524600",
-                    "inverse-on-surface": "#eff1f3",
-                    "secondary-container": "#fcdf46",
-                    "inverse-surface": "#2d3133",
-                    "error-container": "#ffdad6",
-                    "on-secondary-container": "#726200",
-                    "inverse-primary": "#bec6e0",
-                    "on-primary-fixed-variant": "#3f465c"
-            },
-            "borderRadius": {
-                    "DEFAULT": "0.25rem",
-                    "lg": "0.5rem",
-                    "xl": "0.75rem",
-                    "2xl": "1rem",
-                    "3xl": "1.5rem",
-                    "full": "9999px"
-            }
-          },
-        },
-      }
-</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#FFFFFF">
+<title>Gigs · Northstar</title>
+<link rel="icon" href="favicon.png">
+<script src="js/ns-boot.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=container-queries"></script>
+<script src="js/tailwind-config.js"></script>
+<link rel="stylesheet" href="css/app.css">
 <style>
-/* Job Opportunity Card Styles */
-.job-card {
-  height: auto !important;
-  max-height: none !important;
-  overflow: visible !important;
-}
-
-.job-text-column {
-  margin-left: 0 !important;
-  padding-left: 0 !important;
-  width: 100% !important;
-  min-width: 0 !important;
-}
-
-.job-header-stack {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 6px !important;
-  width: 100% !important;
-  min-width: 0 !important;
-}
-
-.job-title {
-  display: block !important;
-  width: 100% !important;
-  min-width: 0 !important;
-  font-size: 0.8125rem !important; /* 13px */
-  line-height: 1.35 !important;
-  white-space: normal !important;
-  overflow: visible !important;
-  word-break: normal !important;
-  overflow-wrap: break-word !important;
-  hyphens: manual !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-.pay-rate-badge {
-  display: inline-block !important;
-  font-size: 0.725rem !important; /* 11.5px */
-  padding: 3px 8px !important;
-  border-radius: 6px !important;
-  max-width: 100% !important;
-  white-space: normal !important;
-  word-break: break-word !important;
-}
-
-.job-tags-container, .tag-group {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  gap: 8px !important;
-  align-items: center !important;
-  margin-left: 0 !important;
-  padding-left: 0 !important;
-  border-left: none !important;
-  width: 100% !important;
-}
-
-.header-subtitle,
-.job-description,
-.card-description {
-  color: #475569 !important;
-}
-
-html.dark .header-subtitle,
-html.dark .job-description,
-html.dark .card-description {
-  color: #d1d5db !important;
-}
-
+/* Job cards (markup comes from js/jobs.js) */
+/* Room for the Companion button above the nav */
+.ns-main { padding-bottom: 104px; }
+#opportunities-feed { display: flex; flex-direction: column; gap: 12px; }
+.job-card { padding: 16px; }
+.job-pay-col { flex-shrink: 0; max-width: 42%; text-align: right; padding-top: 1px; }
 .job-description {
-  white-space: normal !important;
-  overflow: visible !important;
-  word-break: normal !important;
-  overflow-wrap: break-word !important;
-  hyphens: none !important;
-  -webkit-hyphens: none !important;
-  height: auto !important;
-  max-height: none !important;
-  -webkit-line-clamp: unset !important;
-  line-clamp: unset !important;
-  margin-left: 0 !important;
-  padding-left: 0 !important;
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
 }
-
-.job-tag, .tag-pill {
-  background-color: #f1f5f9 !important;
-  border-radius: 9999px !important;
-  color: #1e293b !important;
-  font-weight: 500 !important;
-  font-size: 0.75rem !important;
-  line-height: 1rem !important;
-  padding: 0.15rem 0.625rem !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  border: 1px solid #cbd5e1 !important;
-  white-space: nowrap !important;
-  margin-left: 0 !important;
-}
-
-html.dark .job-tag,
-html.dark .tag-pill {
-  background-color: #334155 !important;
-  color: #f8fafc !important;
-  font-weight: 500 !important;
-  border: 1px solid #475569 !important;
-}
-
-/* Header Container: Expanded Top Internal Padding */
-.header-container {
-  padding-top: 28px;
-  padding-bottom: 20px;
-}
-
-.header-container,
-.app-header,
-.header-bar,
-header,
-.app-frame > header {
-  padding: 20px 16px !important;
-  padding-top: 28px !important;
-  padding-top: max(28px, env(safe-area-inset-top)) !important;
-  padding-bottom: 20px !important;
-  box-sizing: border-box !important;
-}
-
-/* Header Content Row: Shift Downward & Strict Horizontal Flex Alignment */
-.header-content-row {
-  margin-top: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.header-content-row,
-.header-flex-wrapper {
-  margin-top: 8px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  width: 100% !important;
-}
-
-.header-left {
-  display: flex !important;
-  align-items: center !important;
-  min-width: 0 !important;
-  flex-shrink: 0 !important;
-}
-
-.header-left > div:first-child {
-  flex-shrink: 0 !important;
-  width: 36px !important;
-  height: 36px !important;
-  min-width: 36px !important;
-  min-height: 36px !important;
-}
-
-.header-title-group {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 4px !important;
-  justify-content: center !important;
-}
-
-.header-center {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-.header-actions-right {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-end !important;
-  flex-shrink: 0 !important;
-}
-
-#active-jobs-count,
-.status-badge,
-.active-badge {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  vertical-align: middle !important;
-  line-height: 1 !important;
-}
-
-.user-avatar,
-#header-user-avatar,
-.header-account-avatar {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  flex-shrink: 0 !important;
-}
-
-.audio-primer-btn,
-.btn-secondary {
-  background: #f8fafc !important;
-  border: 1px solid #cbd5e1 !important;
-  color: #1e293b !important;
-  font-weight: 700 !important;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
-.audio-primer-btn:hover,
-.btn-secondary:hover {
-  background: #f1f5f9 !important;
-  border-color: #94a3b8 !important;
-}
-
-html.dark .audio-primer-btn,
-html.dark .btn-secondary {
-  background: #1e293b !important;
-  border: 1px solid #334155 !important;
-  color: #f8fafc !important;
-}
-
-html.dark .audio-primer-btn:hover,
-html.dark .btn-secondary:hover {
-  background: #283548 !important;
-  border-color: #475569 !important;
-}
-
-.card-divider {
-  border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
-  margin: 0.75rem 0 0 0 !important;
-  padding-top: 0.75rem !important;
-}
-
-.pay-rate-badge {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  color: #0f172a;
-  font-size: 0.75rem;
-  font-weight: 700;
-  border-radius: 10px;
-}
-
-.apply-cta-btn {
-  background: #facc15 !important;
-  color: #0f172a !important;
-  font-weight: 700 !important;
-  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.apply-cta-btn:hover {
-  filter: brightness(1.05);
-}
-
-.apply-cta-btn:active {
-  transform: scale(0.97);
-}
-
-/* AI Matcher Banner */
-.ai-match-trigger {
-  background: #fefce8 !important;
-  border: 1px solid #fef08a !important;
-  border-radius: 12px !important;
-  padding: 12px 16px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  cursor: pointer !important;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
-  width: 100% !important;
-  text-align: left !important;
-}
-
-.ai-match-trigger:hover {
-  background: #fef9c3 !important;
-  border-color: #fde047 !important;
-}
-
-.ai-match-trigger:active {
-  transform: scale(0.99) !important;
-}
-
-.ai-match-title {
-  color: #0f172a !important;
-}
-
-.ai-match-subtext {
-  color: #64748b !important;
-}
-
-html.dark .ai-match-trigger {
-  background: #1e293b !important;
-  border: 1px solid rgba(250, 204, 21, 0.3) !important;
-}
-
-html.dark .ai-match-trigger:hover {
-  border-color: rgba(250, 204, 21, 0.6) !important;
-  background: #243248 !important;
-}
-
-html.dark .ai-match-title {
-  color: #ffffff !important;
-}
-
-html.dark .ai-match-subtext {
-  color: #94a3b8 !important;
-}
-
-/* Layout Scroll Padding (pb-20 / 80px clearance for FAB & bottom nav) */
-.main-content,
-main {
-  padding-bottom: 80px !important;
-  scroll-padding-bottom: 80px !important;
-}
-
-#opportunities-feed,
-#jobs-feed {
-  padding-bottom: 80px !important;
-  margin-bottom: 16px !important;
-}
-
-/* Dynamic Hover Borders on Job Cards (border-slate-700/50 idle, hover:border-amber-400 strictly on :hover) */
-.job-card {
-  border: 1px solid rgba(51, 65, 85, 0.5);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-}
-
-.job-card:hover,
-html.dark .job-card:hover {
-  border-color: #fbbf24 !important; /* hover:border-amber-400 */
-  cursor: pointer !important;
-}
-
-/* Permanently strip header badges (Active counter & + Post button) */
-#active-jobs-count,
-#post-job-header-btn,
-.header-center {
-  display: none !important;
-}
+.job-card .ns-hint { margin-top: 6px; }
+.job-card .card-divider { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
+.job-card .audio-primer-btn { box-shadow: none; border: 1px solid var(--line); }
+.job-card .audio-primer-btn:hover { border-color: #D6CEC1; }
 </style>
 </head>
-<body class="bg-[#F4F5F7] min-h-screen flex items-center justify-center p-0 sm:py-6 text-slate-900 selection:bg-amber-300 selection:text-slate-950">
+<body>
 
-<!-- Mobile Frame Shell -->
-<div class="app-frame w-full sm:max-w-[420px] h-screen sm:h-[900px] max-h-screen sm:max-h-[920px] bg-[#F4F5F7] sm:rounded-[44px] shadow-2xl relative flex flex-col overflow-hidden border-0 sm:border-[8px] sm:border-slate-300 z-10">
+<div class="app-frame">
 
-    <!-- App Header (JobsHeader Layout Grid: [Icon Badge] [Title/Subtitle] ... [ThemeToggle] [ProfileAvatar]) -->
-    <header class="header-container app-header header-bar flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-200/10 bg-white dark:bg-slate-900/60 backdrop-blur-md sticky top-0 z-40 w-full flex-shrink-0">
-      <div class="header-content-row header-flex-wrapper flex items-center justify-between w-full">
-        <!-- Left: Icon Badge + Title Stack -->
-        <div class="header-left flex items-center gap-3 min-w-0 flex-shrink-0">
-          <div class="w-10 h-10 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-[#FFB800] shadow-sm flex-shrink-0">
-            <!-- Briefcase/Work Icon -->
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <div class="header-title-group min-w-0">
-            <h1 class="text-base font-bold text-slate-900 dark:text-white tracking-tight leading-tight whitespace-nowrap font-heading">Work Opportunities</h1>
-            <p class="header-subtitle text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Vetted daily gigs &amp; local work</p>
-          </div>
+    <header class="ns-header">
+        <div class="min-w-0">
+            <h1 class="ns-header__title">Gigs</h1>
+            <p id="jobs-header-meta" class="ns-header__meta">Loading listings…</p>
         </div>
-
-        <!-- Far Right: Theme Toggle + Profile Avatar matching Progress/Dashboard (gap-2.5) -->
-        <div class="header-actions-right flex items-center gap-2.5 flex-shrink-0">
-          <button
-            id="theme-toggle-btn"
-            type="button"
-            onclick="toggleTheme()"
-            aria-label="Toggle theme"
-            class="w-8 h-8 rounded-full bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-slate-300 hover:text-amber-400 transition-colors"
-          >
-            <!-- Pre-hydrated Sun/Moon SVG fallback matching exact Progress header icon -->
-            <svg class="theme-sun-icon hidden dark:block w-4 h-4 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="5" />
-              <line x1="12" y1="1" x2="12" y2="3" />
-              <line x1="12" y1="21" x2="12" y2="23" />
-              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-              <line x1="1" y1="12" x2="3" y2="12" />
-              <line x1="21" y1="12" x2="23" y2="12" />
-              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-            </svg>
-            <svg class="theme-moon-icon block dark:hidden w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-            </svg>
-          </button>
-          <div id="profile-btn" data-standardized-avatar="true" onclick="openSettingsModal()" class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700/60 flex items-center justify-center shadow-sm cursor-pointer select-none">
-            <span class="text-[#FFB800] font-bold text-xs tracking-wide">S</span>
-          </div>
+        <div class="ns-header__actions">
+            <button id="profile-btn" type="button" class="ns-icon-btn ns-avatar-btn" aria-label="Open settings" onclick="openSettingsModal()">S</button>
         </div>
-      </div>
     </header>
 
-    <!-- Main Content Canvas (pb-24 / padding-bottom: 96px for full scroll clearance above 80px FAB and 64px bottom nav) -->
-    <main class="main-content flex-grow p-4 pb-24 space-y-4 overflow-y-auto bg-[#F4F5F7]" style="padding-bottom: 96px !important; scroll-padding-bottom: 96px !important;">
-        
-        <!-- Post Job Banner (Visible to Volunteers/Employers only) -->
-        <div id="post-job-volunteer-banner" class="hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[16px] p-4 text-slate-900 dark:text-slate-100 space-y-2">
-            <div class="flex justify-between items-center text-xs">
-                <span class="px-2.5 py-1 rounded-[8px] text-[10px] font-bold bg-[#FFE855] text-slate-950 uppercase tracking-wide flex items-center gap-1 border border-amber-400/30">
-                    <span class="material-symbols-outlined text-xs">work</span> Employer Portal
-                </span>
-                <span class="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">Smart Match Active</span>
+    <main class="ns-main">
+
+        <!-- Post a job (volunteers only; js/jobs.js toggles .hidden by role) -->
+        <div id="post-job-volunteer-banner" class="hidden ns-card ns-card--amber ns-card--pad mb-3">
+            <div class="flex items-start gap-4">
+                <span class="ns-tile !bg-paper" aria-hidden="true"><span class="material-symbols-outlined">post_add</span></span>
+                <div class="min-w-0">
+                    <p class="ns-card-title">Have work to offer?</p>
+                    <p class="ns-card-sub mt-1">Post a job and it shows up in the Gigs list for people looking for work.</p>
+                </div>
             </div>
-            <button onclick="openModal('post-job-modal')" class="w-full py-2.5 bg-[#FFE855] hover:bg-amber-300 text-slate-950 rounded-[12px] font-bold text-xs active:scale-95 transition-all flex items-center justify-center gap-1 border border-amber-400">
-                <span class="material-symbols-outlined text-sm">post_add</span> Post Opportunity
+            <button type="button" onclick="openModal('post-job-modal')" class="ns-btn ns-btn--primary ns-btn--sm w-full mt-4">
+                <span class="material-symbols-outlined" aria-hidden="true">add</span> Post a job
             </button>
         </div>
 
-        <!-- Direct Match Action Banner -->
-        <button
-          id="ai-match-trigger"
-          type="button"
-          onclick="event.stopPropagation(); handleMatchClick(event)"
-          class="w-full flex items-center justify-between p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 transition-colors text-left cursor-pointer stagger-1"
-        >
-          <div>
-            <div class="flex items-center gap-1.5 text-slate-900 dark:text-slate-100 font-bold text-sm">
-              <span class="material-symbols-outlined text-base text-amber-500">search</span>
-              <span>Find your perfect job match</span>
-            </div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Tap to match gigs against your resume</p>
-          </div>
-          <span class="text-slate-400 dark:text-slate-500 font-bold">→</span>
+        <!-- Ask Companion about the listings (seekers; click is bound in js/jobs.js) -->
+        <button id="ai-match-trigger" type="button" class="w-full flex items-center gap-3 h-12 px-4 rounded-2xl bg-sand text-left">
+            <span class="material-symbols-outlined text-[20px] text-ink-2" aria-hidden="true">forum</span>
+            <span class="flex-1 min-w-0 text-[14px] font-semibold truncate">Ask Companion which jobs fit you</span>
+            <span class="material-symbols-outlined ns-chevron text-[20px]" aria-hidden="true">chevron_right</span>
         </button>
 
-        <!-- Opportunities List Feed -->
-        <section class="space-y-2.5 pt-1 stagger-2">
-            <div class="flex justify-between items-center px-1">
-                <h3 class="text-base font-extrabold text-slate-900 font-heading tracking-tight opacity-100">Vetted Daily Gigs & Job Listings</h3>
-            </div>
+        <div class="ns-section-head">
+            <h2 id="jobs-section-title">Listings</h2>
+        </div>
 
-            <div id="opportunities-feed" class="space-y-3 pb-24 mb-6" style="padding-bottom: 96px !important; margin-bottom: 24px;">
-                <!-- Pre-hydrated static initial seed listings (synchronously hydrated by js/jobs.js) -->
-                <div class="job-card bg-slate-800/40 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 hover:border-amber-400 dark:hover:border-amber-400 transition-colors space-y-3">
-                  <div class="flex justify-between items-start gap-2">
-                    <div>
-                      <span class="inline-block px-2 py-0.5 rounded-[10px] text-[10px] font-bold mb-1 category-badge">Drop-In Daily Labor</span>
-                      <h4 class="font-extrabold text-sm leading-snug card-title">Cash in Hand - Drop-In Day Labor (Millionair Club)</h4>
-                      <p class="text-[11px] font-medium mt-0.5 card-meta">📍 2515 Western Ave, Belltown • 🏢 Millionair Club Charity</p>
-                    </div>
-                  </div>
-                  <div class="job-tags-container tag-group flex flex-wrap items-center gap-x-1.5 gap-y-2 pt-1" style="row-gap: 8px; column-gap: 6px;">
-                    <span class="px-2.5 py-1 rounded-full font-extrabold text-xs whitespace-nowrap pay-badge">$20–$25/hr Cash</span>
-                    <span class="px-2.5 py-1 rounded-[10px] text-[10px] font-bold tag-pill">Drop-In 7AM</span>
-                    <span class="px-2.5 py-1 rounded-[10px] text-[10px] font-bold tag-pill">Free Hot Breakfast</span>
-                    <span class="px-2.5 py-1 rounded-[10px] text-[10px] font-bold tag-pill">Work Boots Provided</span>
-                    <span class="px-2.5 py-1 rounded-[10px] text-[10px] font-bold tag-pill">Daily Pay</span>
-                  </div>
-                  <div class="flex items-center justify-between pt-3 card-footer">
-                    <span class="text-[11px] font-semibold truncate max-w-[180px] contact-text">📞 (206) 728-5627 | Walk-ins Welcome</span>
-                    <div class="flex gap-1.5">
-                      <button onclick="playAudioPrepPrimer('Cash%20in%20Hand%20-%20Drop-In%20Day%20Labor%20(Millionair%20Club)')" class="audio-primer-btn audio-btn px-3 py-1.5 rounded-[12px] text-[10px] font-bold transition-all active:scale-95 inline-flex items-center justify-center gap-1.5" title="Listen to Tailored Audio Prep Primer">
-                        <span class="material-symbols-outlined text-xs leading-none">volume_up</span>
-                        <span class="leading-none">Audio Primer</span>
-                      </button>
-                      <button onclick="handleJobContactClick('(206)%20728-5627%20%7C%20Walk-ins%20Welcome')" class="apply-btn px-3.5 py-1.5 rounded-[12px] text-xs font-extrabold transition-all active:scale-95 flex items-center gap-1">
-                        Apply / Call
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <div class="job-card bg-slate-800/40 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50 hover:border-amber-400 dark:hover:border-amber-400 transition-colors space-y-3">
-                  <div class="flex justify-between items-start gap-2">
-                    <div>
-                      <span class="inline-block px-2 py-0.5 rounded-[10px] text-[10px] font-bold mb-1 category-badge">Same-Day Labor</span>
-                      <h4 class="font-extrabold text-sm leading-snug card-title">Urgent: Warehouse Box Loading &amp; Pallet Wrapping</h4>
-                      <p class="text-[11px] font-medium mt-0.5 card-meta">📍 SODO District, Seattle • 🏢 Craigslist Live / Verified Gig</p>
-                    </div>
-                  </div>
-                  <div class="job-tags-container tag-group flex flex-wrap items-center gap-x-1.5 gap-y-2 pt-1" style="row-gap: 8px; column-gap: 6px;">
-                    <span class="px-2.5 py-1 rounded-full font-extrabold text-xs whitespace-nowrap pay-badge">$22/hr Cash Daily</span>
-                    <span class="px-2.5 py-1 rounded-[10px] text-[10px] font-bold tag-pill">No Resume Needed</span>
-                    <span class="px-2.5 py-1 rounded-[10px] text-[10px] font-bold tag-pill">Lift 40lbs</span>
-                    <span class="px-2.5 py-1 rounded-[10px] text-[10px] font-bold tag-pill">Same-Day Cash Payout</span>
-                  </div>
-                  <div class="flex items-center justify-between pt-3 card-footer">
-                    <span class="text-[11px] font-semibold truncate max-w-[180px] contact-text">📞 (206) 555-0192 | Ask for Shift Lead</span>
-                    <div class="flex gap-1.5">
-                      <button onclick="playAudioPrepPrimer('Urgent%3A%20Warehouse%20Box%20Loading%20%26%20Pallet%20Wrapping')" class="audio-primer-btn audio-btn px-3 py-1.5 rounded-[12px] text-[10px] font-bold transition-all active:scale-95 inline-flex items-center justify-center gap-1.5" title="Listen to Tailored Audio Prep Primer">
-                        <span class="material-symbols-outlined text-xs leading-none">volume_up</span>
-                        <span class="leading-none">Audio Primer</span>
-                      </button>
-                      <button onclick="handleJobContactClick('(206)%20555-0192%20%7C%20Ask%20for%20Shift%20Lead')" class="apply-btn px-3.5 py-1.5 rounded-[12px] text-xs font-extrabold transition-all active:scale-95 flex items-center gap-1">
-                        Apply / Call
-                      </button>
-                    </div>
-                  </div>
-                </div>
-            </div>
-        </section>
+        <!-- Shown only when both day gigs and locally posted jobs are listed -->
+        <div id="jobs-filter" class="ns-segment hidden mb-3" role="group" aria-label="Show">
+            <button type="button" data-filter="all" class="is-active" aria-pressed="true" onclick="setJobsFilter('all')">All</button>
+            <button type="button" data-filter="gig" aria-pressed="false" onclick="setJobsFilter('gig')">Day gigs</button>
+            <button type="button" data-filter="posted" aria-pressed="false" onclick="setJobsFilter('posted')">Posted here</button>
+        </div>
 
+        <!-- Shown when a refresh fails but saved listings are on screen -->
+        <div id="jobs-status" class="hidden ns-card ns-card--sand flex items-center gap-3 px-4 py-3 mb-3" role="status">
+            <span class="material-symbols-outlined text-ink-2" aria-hidden="true">cloud_off</span>
+            <p data-jobs-status-text class="flex-1 text-[13px] font-medium text-ink-2"></p>
+            <button type="button" class="ns-link !min-h-0 !text-[13px]" onclick="loadOpportunities()">Try again</button>
+        </div>
+
+        <div id="opportunities-feed" aria-live="polite">
+            <div data-jobs-state="loading" class="ns-empty">
+                <p class="ns-empty__title">Loading jobs…</p>
+            </div>
+        </div>
     </main>
 
-    <!-- Floating Action Button (FAB) -->
-    <button id="chat-fab" data-fab-alias="chatbot-fab-btn" type="button" onclick="toggleAIChatbotWindow()" class="chatbot-fab chatbot-floating-fab w-12 h-12 rounded-full bg-[#FFE855] text-slate-950 border border-slate-900/20 flex items-center justify-center font-bold transition-all active:scale-95 hover:bg-amber-400 cursor-pointer select-none" style="position: absolute; bottom: calc(var(--nav-bar-height, 64px) + 16px); bottom: 80px; right: 16px; z-index: 50; box-shadow: none;" aria-label="Open Support Assistant" title="NorthStar Support Assistant">
-        <span id="chatbot-fab-icon" class="material-symbols-outlined leading-none" style="font-size:20px;line-height:1;">chat_bubble</span>
-    </button>
+    <nav class="bottom-nav ns-nav" aria-label="Main"></nav>
 
-    <!-- Full 6-Tab Equidistant Grid Bottom Navigation Bar (grid grid-cols-6 w-full px-2, compact active pill, non-truncating labels) -->
-    <nav class="bottom-nav nav-bar-wrapper nav-container nav-bar-container relative w-full max-w-full box-border z-40 grid grid-cols-6 items-center justify-items-center px-2 py-1.5 bg-white dark:bg-[#12141C] shadow-[0px_-4px_25px_rgba(0,0,0,0.2)] border-t border-slate-200 dark:border-white/10">
-        <a href="seeker-dashboard.html" onclick="event.preventDefault(); navigateTo('dashboard');" data-nav-tab="dashboard" class="nav-tab nav-item-inactive w-full flex flex-col items-center justify-center py-1 px-0.5 text-slate-500 dark:text-[#A0AEC0] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
-            <span class="material-symbols-outlined text-[20px] leading-none">dashboard</span>
-            <span class="text-[9px] leading-none mt-1 tracking-tighter whitespace-nowrap text-center">Dashboard</span>
-        </a>
-        <a href="progress.html" onclick="event.preventDefault(); navigateTo('progress');" data-nav-tab="progress" class="nav-tab nav-item-inactive w-full flex flex-col items-center justify-center py-1 px-0.5 text-slate-500 dark:text-[#A0AEC0] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
-            <span class="material-symbols-outlined text-[20px] leading-none">trending_up</span>
-            <span class="text-[9px] leading-none mt-1 tracking-tighter whitespace-nowrap text-center">Progress</span>
-        </a>
-        <a href="opportunities.html" onclick="event.preventDefault(); navigateTo('jobs');" data-nav-tab="jobs" class="nav-tab active active-tab mx-auto w-auto min-w-[48px] max-w-[58px] px-2.5 py-1 rounded-xl bg-[#FFB800] text-slate-950 font-extrabold shadow-sm flex flex-col items-center justify-center transition-all">
-            <span class="material-symbols-outlined text-[20px] leading-none" style="font-variation-settings: 'FILL' 1;">work</span>
-            <span class="text-[9px] leading-none mt-1 tracking-tighter whitespace-nowrap text-center">Jobs</span>
-        </a>
-        <a href="resource-map.html" onclick="event.preventDefault(); navigateTo('map');" data-nav-tab="map" class="nav-tab nav-item-inactive w-full flex flex-col items-center justify-center py-1 px-0.5 text-slate-500 dark:text-[#A0AEC0] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
-            <span class="material-symbols-outlined text-[20px] leading-none">map</span>
-            <span class="text-[9px] leading-none mt-1 tracking-tighter whitespace-nowrap text-center">Map</span>
-        </a>
-        <a href="resume-builder.html" onclick="event.preventDefault(); navigateTo('resume');" data-nav-tab="resume" class="nav-tab nav-item-inactive w-full flex flex-col items-center justify-center py-1 px-0.5 text-slate-500 dark:text-[#A0AEC0] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
-            <span class="material-symbols-outlined text-[20px] leading-none">description</span>
-            <span class="text-[9px] leading-none mt-1 tracking-tighter whitespace-nowrap text-center">Resume</span>
-        </a>
-        <button type="button" onclick="openSettingsModal()" data-nav-tab="settings" class="nav-tab nav-item-inactive w-full flex flex-col items-center justify-center py-1 px-0.5 text-slate-500 dark:text-[#A0AEC0] hover:text-slate-900 dark:hover:text-white font-medium transition-all">
-            <span class="material-symbols-outlined text-[20px] leading-none">settings</span>
-            <span class="text-[9px] leading-none mt-1 tracking-tighter whitespace-nowrap text-center">Settings</span>
-        </button>
-    </nav>
+    <!-- Sheet: post a job -->
+    <div id="post-job-modal" class="ns-sheet-wrap hidden" role="dialog" aria-modal="true" aria-labelledby="post-job-title">
+        <div class="ns-sheet-backdrop" onclick="closeModal('post-job-modal')"></div>
+        <div class="modal-drawer ns-sheet translate-y-full">
+            <div class="ns-sheet__handle"></div>
+            <div class="flex items-start justify-between gap-3">
+                <div>
+                    <h2 id="post-job-title" class="ns-sheet__title">Post a job</h2>
+                    <p class="ns-card-sub mt-1">People looking for work will see this in their Gigs list.</p>
+                </div>
+                <button type="button" class="ns-icon-btn ns-icon-btn--sm" onclick="closeModal('post-job-modal')" aria-label="Close">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
 
-</div>
+            <form onsubmit="submitNewJob(event)" oninput="setPostJobError('')" class="mt-6 flex flex-col gap-5" novalidate>
+                <div>
+                    <label for="job-title-input" class="ns-label">Job title</label>
+                    <input type="text" id="job-title-input" class="ns-input" placeholder="Warehouse helper" required>
+                </div>
 
-<!-- Modal: Post New Opportunity -->
-<div id="post-job-modal" class="fixed inset-0 z-[100] hidden items-end sm:items-center justify-center bg-slate-950/60 backdrop-blur-sm p-0 sm:p-4">
-    <div class="modal-drawer w-full sm:max-w-md bg-white border border-slate-200/80 rounded-t-3xl sm:rounded-[24px] p-6 text-slate-900 space-y-4 shadow-2xl transform translate-y-full">
-        <div class="w-12 h-1.5 bg-slate-200 rounded-full mx-auto sm:hidden"></div>
-        <div class="flex justify-between items-center">
-            <h3 class="text-lg font-extrabold text-slate-900 flex items-center gap-2 tracking-tight">
-                <span class="material-symbols-outlined text-amber-600">work</span> Post Opportunity
-            </h3>
-            <button onclick="closeModal('post-job-modal')" class="text-slate-400 hover:text-slate-700 transition-colors">
-                <span class="material-symbols-outlined">close</span>
-            </button>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="min-w-0">
+                        <label for="job-company-input" class="ns-label">Company <span class="font-medium text-muted">(optional)</span></label>
+                        <input type="text" id="job-company-input" class="ns-input" placeholder="Metro Catering">
+                    </div>
+                    <div class="min-w-0">
+                        <label for="job-pay-input" class="ns-label">Pay <span class="font-medium text-muted">(optional)</span></label>
+                        <input type="text" id="job-pay-input" class="ns-input" placeholder="$20 / hr">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="job-location-input" class="ns-label">Where <span class="font-medium text-muted">(optional)</span></label>
+                    <input type="text" id="job-location-input" class="ns-input" placeholder="Downtown Seattle">
+                </div>
+
+                <div>
+                    <label for="job-reqs-input" class="ns-label">What it asks for <span class="font-medium text-muted">(optional)</span></label>
+                    <input type="text" id="job-reqs-input" class="ns-input" placeholder="Can lift 40 lb, food handler card">
+                    <p class="ns-hint">Separate with commas.</p>
+                </div>
+
+                <div>
+                    <label for="job-contact-input" class="ns-label">How to apply</label>
+                    <input type="text" id="job-contact-input" class="ns-input" placeholder="Email or phone number" required>
+                    <p class="ns-hint">Shown on the listing so people can reach you.</p>
+                </div>
+
+                <p id="post-job-error" class="hidden text-[14px] font-semibold text-danger" role="alert"></p>
+
+                <button type="submit" id="post-job-submit" class="ns-btn ns-btn--primary">Post job</button>
+            </form>
         </div>
+    </div>
 
-        <form onsubmit="submitNewJob(event)" class="space-y-3 pt-1">
-            <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Job Title <span class="text-rose-500">*</span></label>
-                <input type="text" id="job-title-input" placeholder="e.g. Warehouse Associate / Day Prep" class="w-full rounded-[12px] bg-slate-50 border border-slate-200 p-2.5 text-xs text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-amber-400 focus:border-amber-400" required>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2">
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Company / Org</label>
-                    <input type="text" id="job-company-input" placeholder="e.g. Metro Catering" class="w-full rounded-[12px] bg-slate-50 border border-slate-200 p-2.5 text-xs text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
+    <!-- Sheet: spoken tips for a job (filled by showAudioPrimerModal) -->
+    <div id="audio-primer-modal" class="ns-sheet-wrap hidden" role="dialog" aria-modal="true" aria-labelledby="audio-primer-title">
+        <div class="ns-sheet-backdrop" onclick="closeAudioPrimerModal()"></div>
+        <div class="modal-drawer ns-sheet translate-y-full">
+            <div class="ns-sheet__handle"></div>
+            <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                    <h2 id="audio-primer-title" class="ns-sheet__title">Tips for this job</h2>
+                    <p id="audio-primer-job" class="ns-card-sub mt-1"></p>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Pay Rate</label>
-                    <input type="text" id="job-pay-input" placeholder="e.g. $20.00 / hr" class="w-full rounded-[12px] bg-slate-50 border border-slate-200 p-2.5 text-xs text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
-                </div>
+                <button type="button" class="ns-icon-btn ns-icon-btn--sm" onclick="closeAudioPrimerModal()" aria-label="Close">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
             </div>
-
-            <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Location / Intersection</label>
-                <input type="text" id="job-location-input" placeholder="e.g. Seattle, WA (Downtown)" class="w-full rounded-[12px] bg-slate-50 border border-slate-200 p-2.5 text-xs text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
+            <p id="audio-primer-text" class="mt-5 text-[16px] leading-relaxed font-medium text-ink"></p>
+            <div class="mt-6 flex flex-col gap-3">
+                <button type="button" id="audio-primer-play" onclick="replayAudioSpeech()" class="ns-btn ns-btn--primary">
+                    <span class="material-symbols-outlined" aria-hidden="true">volume_up</span> <span id="audio-primer-play-label">Play again</span>
+                </button>
+                <button type="button" onclick="closeAudioPrimerModal()" class="ns-btn ns-btn--ghost">Done</button>
             </div>
-
-            <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Key Requirements (Comma Separated)</label>
-                <input type="text" id="job-reqs-input" placeholder="e.g. Heavy Lifting, Food Handler Card, Punctual" class="w-full rounded-[12px] bg-slate-50 border border-slate-200 p-2.5 text-xs text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-amber-400 focus:border-amber-400">
-            </div>
-
-            <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Contact Email or Phone <span class="text-rose-500">*</span></label>
-                <input type="text" id="job-contact-input" placeholder="e.g. jobs@company.org or (555) 234-5678" class="w-full rounded-[12px] bg-slate-50 border border-slate-200 p-2.5 text-xs text-slate-900 placeholder-slate-400 focus:ring-2 focus:ring-amber-400 focus:border-amber-400" required>
-            </div>
-
-            <button type="submit" class="w-full py-3 bg-[#FFE855] hover:bg-amber-300 text-slate-950 font-bold rounded-[12px] text-xs border border-amber-400 transition-all active:scale-95">
-                Publish Opportunity & Enable Smart Match
-            </button>
-        </form>
+        </div>
     </div>
 </div>
 
@@ -658,8 +182,9 @@ html.dark .job-card:hover {
 <script src="js/jobs.js"></script>
 <script>
 window.deleteVolunteerJob = async function(id) {
-  if (!confirm('Are you sure you want to delete this posted opportunity?')) return;
-  
+  id = decodeURIComponent(String(id));
+  if (!confirm('Delete this job? People won’t see it anymore.')) return;
+
   try {
     const existing = JSON.parse(localStorage.getItem('northstar_custom_posted_jobs') || '[]');
     const updated = existing.filter(j => String(j.id) !== String(id));
@@ -667,52 +192,57 @@ window.deleteVolunteerJob = async function(id) {
   } catch (e) {}
 
   try {
-    await fetch(`/api/jobs/${id}`, { method: 'DELETE' });
+    await fetch(`/api/jobs/${encodeURIComponent(id)}`, { method: 'DELETE' });
   } catch (err) {}
 
-  showNotification('Opportunity removed successfully.', 'info');
   if (typeof window.loadOpportunities === 'function') {
     window.loadOpportunities();
   }
 };
 
+// Opens the post form filled in with a job this phone posted earlier
 window.editVolunteerJob = function(id) {
-  showNotification('Opening edit form...', 'info');
+  id = decodeURIComponent(String(id));
+  try {
+    const job = JSON.parse(localStorage.getItem('northstar_custom_posted_jobs') || '[]').find(j => String(j.id) === String(id));
+    if (job) {
+      const set = (elId, v) => { const el = document.getElementById(elId); if (el) el.value = v || ''; };
+      set('job-title-input', job.title);
+      set('job-company-input', job.company);
+      set('job-pay-input', job.pay);
+      set('job-location-input', job.location);
+      set('job-reqs-input', (job.requirements || []).join(', '));
+      set('job-contact-input', job.contact);
+    }
+  } catch (e) {}
   openModal('post-job-modal');
 };
 
 window.triggerLiveFeedScan = async function() {
   const icon = document.getElementById('scan-btn-icon');
   const btn = document.getElementById('scan-live-feed-btn');
-  
+
   if (icon) icon.classList.add('animate-spin');
   if (btn) btn.disabled = true;
-  showNotification('🔄 Triggering live Apify + Gemini crawl for fresh gigs...', 'info');
 
   try {
     const res = await fetch('/api/trigger-scrape');
-    const data = await res.json();
-    showNotification(`✅ Live feed updated! Scraped ${data.count || 0} low-barrier gigs.`, 'success');
-    window.loadOpportunities();
+    await res.json();
   } catch (err) {
     console.error('Trigger scrape error:', err);
-    showNotification('Scrape trigger finished. Refreshing feed...', 'info');
-    window.loadOpportunities();
   } finally {
+    window.loadOpportunities();
     if (icon) icon.classList.remove('animate-spin');
     if (btn) btn.disabled = false;
   }
 };
 
 window.handleJobContactClick = function(encodedContact) {
-  const contact = decodeURIComponent(encodedContact);
-  
-  window.open('https://seattle.craigslist.org/search/lbg?query=same+day+pay', '_blank', 'noopener,noreferrer');
+  const contact = decodeURIComponent(encodedContact || '').trim();
 
   if (contact.includes('@')) {
     const email = contact.split('|')[0].trim();
     window.location.href = `mailto:${email}`;
-    showNotification(`Opened website listing & email composer for ${email}`, 'success');
   } else if (contact.startsWith('http://') || contact.startsWith('https://')) {
     window.open(contact, '_blank', 'noopener,noreferrer');
   } else {
@@ -720,121 +250,68 @@ window.handleJobContactClick = function(encodedContact) {
     if (phoneMatch) {
       const cleanPhone = phoneMatch[0].replace(/[^0-9]/g, '');
       window.location.href = `tel:${cleanPhone}`;
-      showNotification(`Opened website & dialing ${phoneMatch[0]}...`, 'success');
-    } else {
-      showNotification(`Opened website listing! Contact: ${contact}`, 'success');
+    } else if (contact) {
+      alert(`How to apply: ${contact}`);
     }
   }
 };
 
+// Spoken tips. General advice only: nothing here promises pay, timing or paperwork for a listing.
 window.playAudioPrepPrimer = function(encodedTitle) {
-  const title = decodeURIComponent(encodedTitle);
-  const lowerTitle = title.toLowerCase();
-  
+  const rawTitle = decodeURIComponent(encodedTitle || '');
+  const title = typeof window.nsCleanJobTitle === 'function' ? window.nsCleanJobTitle(rawTitle) : rawTitle;
+  const t = title.toLowerCase();
+
   let prepAdvice = '';
-  
-  if (lowerTitle.includes('move') || lowerTitle.includes('haul') || lowerTitle.includes('loading') || lowerTitle.includes('warehouse') || lowerTitle.includes('freight')) {
-    prepAdvice = `For this heavy lifting and logistics gig, wear closed-toe work boots or sturdy sneakers, and bring durable work gloves. Protect your back when lifting objects over 40 pounds. Confirm the loading dock or address with the contractor before heading out. Cash payment is issued immediately upon shift completion.`;
-  } else if (lowerTitle.includes('kitchen') || lowerTitle.includes('food') || lowerTitle.includes('dish') || lowerTitle.includes('cook') || lowerTitle.includes('prep')) {
-    prepAdvice = `For kitchen and food prep work, bring your Food Handler card if available. Wear non-slip closed-toe shoes and comfortable clothing. Ensure your hair is tied back or wear a hat. Check in with the kitchen manager upon arrival and confirm shift break times and cash payout details.`;
-  } else if (lowerTitle.includes('yard') || lowerTitle.includes('clean') || lowerTitle.includes('landscaping') || lowerTitle.includes('rake') || lowerTitle.includes('outdoor') || lowerTitle.includes('handyman')) {
-    prepAdvice = `For outdoor yardwork, groundskeeping, and handyman tasks, dress in weather-appropriate layers, bring sun protection, and carry a water bottle. Tools will be provided on site. Verify the property address and cross-streets with the owner before starting.`;
-  } else if (lowerTitle.includes('event') || lowerTitle.includes('setup') || lowerTitle.includes('stage') || lowerTitle.includes('chair')) {
-    prepAdvice = `For event staging and setup, wear dark comfortable clothing and supportive shoes. Arrive 10 minutes early to meet your team lead. Confirm supervisor contact info and ensure same-day cash stipend is verified before shift ends.`;
-  } else if (lowerTitle.includes('digital') || lowerTitle.includes('microtask') || lowerTitle.includes('online') || lowerTitle.includes('labeling') || lowerTitle.includes('testing')) {
-    prepAdvice = `For instant digital microtasks and micro-jobs, ensure you have a stable internet connection or visit a local Wi-Fi hotspot. No ID or length verification is needed. Payout is issued directly to your digital cash wallet upon task submission.`;
-  } else if (lowerTitle.includes('drop-in') || lowerTitle.includes('day labor') || lowerTitle.includes('center') || lowerTitle.includes('cash in hand')) {
-    prepAdvice = `For drop-in daily labor and cash in hand gigs, check in at the drop-in site early in the morning. Bring a valid phone number or message contact. Confirm daily stipend terms upfront before starting your assignment.`;
+  if (/move|mover|haul|lift|loading|unload|warehouse|freight|pallet/.test(t)) {
+    prepAdvice = 'Wear closed-toe shoes or boots and bring work gloves if you have them. Lift with your legs, not your back, and ask for help with anything too heavy. Check the address and a phone number for the person in charge before you head out.';
+  } else if (/kitchen|food|dish|cook|prep|meal|catering/.test(t)) {
+    prepAdvice = 'Bring your food handler card if you have one. Wear non-slip, closed-toe shoes and tie your hair back. When you arrive, ask for the kitchen lead and check when your breaks are.';
+  } else if (/yard|clean|landscap|rake|outdoor|handyman|demo/.test(t)) {
+    prepAdvice = 'Dress in layers for the weather and bring water. Ask ahead whether tools are provided. Check the address and cross streets before you start.';
+  } else if (/event|setup|stage|chair/.test(t)) {
+    prepAdvice = 'Wear dark, comfortable clothes and supportive shoes. Try to arrive ten minutes early and ask for the team lead. Save their phone number in case plans change.';
+  } else if (/digital|microtask|online|label|testing/.test(t)) {
+    prepAdvice = 'You will need a phone or computer with a steady internet connection. A library or community center with free Wi-Fi works. Check how and when you get paid before you start.';
   } else {
-    prepAdvice = `Here is your preparation primer for ${title}. Always confirm meetup location, contact details, and agreed cash rate before starting work. Stay hydrated, prioritize workplace safety, and verify cash payment upon completion.`;
+    prepAdvice = 'Before you go, check the address, who to ask for, and a phone number to reach them. Stay hydrated and put your safety first.';
   }
+  prepAdvice += ' Agree on the pay, and when you will be paid, before you start work.';
 
-  const fullSpeechText = `Audio Primer for ${title}. ${prepAdvice}`;
-
-  if ('speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(fullSpeechText);
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-    window.speechSynthesis.speak(utterance);
-  }
-
+  window._audioPrimerCurrent = { title, prepAdvice };
+  speakPrimer();
   showAudioPrimerModal(title, prepAdvice);
 };
 
+function speakPrimer() {
+  const cur = window._audioPrimerCurrent;
+  if (!cur || !('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(`Tips for ${cur.title}. ${cur.prepAdvice}`);
+  utterance.rate = 1.0;
+  utterance.pitch = 1.0;
+  window.speechSynthesis.speak(utterance);
+}
+
 window.showAudioPrimerModal = function(title, prepAdvice) {
-  let modal = document.getElementById('audio-primer-modal');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'audio-primer-modal';
-    modal.className = 'fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md transition-all duration-300';
-    document.body.appendChild(modal);
-  }
-
-  modal.innerHTML = `
-    <div class="bg-white dark:bg-[#121722] border border-slate-200 dark:border-[#232C3F] rounded-2xl p-5 max-w-sm w-full shadow-2xl space-y-4 text-slate-900 dark:text-white relative animate-in fade-in zoom-in-95">
-      <button onclick="closeAudioPrimerModal()" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 rounded-lg">
-        <span class="material-symbols-outlined text-lg">close</span>
-      </button>
-
-      <!-- Header -->
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-500 dark:text-amber-400 flex-shrink-0">
-          <span class="material-symbols-outlined text-xl animate-pulse">graphic_eq</span>
-        </div>
-        <div>
-          <span class="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Tailored Audio Prep Primer</span>
-          <h3 class="text-xs font-extrabold text-slate-900 dark:text-white leading-snug">${title}</h3>
-        </div>
-      </div>
-
-      <!-- Animated Soundwave Visualizer -->
-      <div class="bg-slate-100 dark:bg-[#1A2130] p-3 rounded-xl border border-slate-200 dark:border-[#232C3F] flex items-center justify-center gap-1.5 h-12">
-        <div class="w-1 bg-amber-500 dark:bg-amber-400 h-6 rounded-full animate-bounce"></div>
-        <div class="w-1 bg-amber-500 dark:bg-amber-400 h-9 rounded-full animate-bounce [animation-delay:0.1s]"></div>
-        <div class="w-1 bg-amber-500 dark:bg-amber-400 h-4 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-        <div class="w-1 bg-amber-500 dark:bg-amber-400 h-8 rounded-full animate-bounce [animation-delay:0.3s]"></div>
-        <div class="w-1 bg-amber-500 dark:bg-amber-400 h-5 rounded-full animate-bounce [animation-delay:0.4s]"></div>
-      </div>
-
-      <!-- Transcript & Checklist -->
-      <div class="space-y-2 bg-slate-50 dark:bg-slate-900/80 p-3 rounded-xl border border-slate-200 dark:border-white/5 text-xs">
-        <div class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
-          <span class="material-symbols-outlined text-sm text-amber-500 dark:text-amber-400">assignment_turned_in</span> Preparation Checklist:
-        </div>
-        <p class="text-slate-700 dark:text-slate-300 leading-relaxed">${prepAdvice}</p>
-      </div>
-
-      <!-- Controls -->
-      <div class="flex gap-2 pt-1">
-        <button onclick="replayAudioSpeech('${encodeURIComponent(title)}', '${encodeURIComponent(prepAdvice)}')" class="flex-1 py-2 bg-[#FFE855] text-slate-950 font-bold text-xs rounded-xl shadow-sm hover:bg-amber-300 flex items-center justify-center gap-1 active:scale-95 transition-all">
-          <span class="material-symbols-outlined text-sm">volume_up</span> Replay Audio
-        </button>
-        <button onclick="closeAudioPrimerModal()" class="px-4 py-2 bg-slate-100 dark:bg-[#1A2130] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white font-semibold text-xs rounded-xl border border-slate-200 dark:border-[#232C3F]">
-          Done
-        </button>
-      </div>
-    </div>
-  `;
-
-  modal.classList.remove('hidden');
+  window._audioPrimerCurrent = { title, prepAdvice };
+  document.getElementById('audio-primer-job').textContent = title;
+  document.getElementById('audio-primer-text').textContent = prepAdvice;
+  const canSpeak = 'speechSynthesis' in window;
+  document.getElementById('audio-primer-play').classList.toggle('hidden', !canSpeak);
+  openModal('audio-primer-modal');
 };
 
 window.closeAudioPrimerModal = function() {
   if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-  const modal = document.getElementById('audio-primer-modal');
-  if (modal) modal.classList.add('hidden');
+  closeModal('audio-primer-modal');
 };
 
 window.replayAudioSpeech = function(encodedTitle, encodedAdvice) {
-  const title = decodeURIComponent(encodedTitle);
-  const advice = decodeURIComponent(encodedAdvice);
-  if ('speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(`Audio Primer for ${title}. ${advice}`);
-    utterance.rate = 1.0;
-    window.speechSynthesis.speak(utterance);
+  if (encodedTitle && encodedAdvice) {
+    window._audioPrimerCurrent = { title: decodeURIComponent(encodedTitle), prepAdvice: decodeURIComponent(encodedAdvice) };
   }
+  speakPrimer();
 };
 
 (function triggerOpportunitiesInit() {
@@ -855,6 +332,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+function setPostJobError(message) {
+  const el = document.getElementById('post-job-error');
+  if (!el) return;
+  el.textContent = message || '';
+  el.classList.toggle('hidden', !message);
+}
 
 async function submitNewJob(e) {
   e.preventDefault();
@@ -864,6 +347,7 @@ async function submitNewJob(e) {
   const locationEl = document.getElementById('job-location-input');
   const reqsEl = document.getElementById('job-reqs-input');
   const contactEl = document.getElementById('job-contact-input');
+  const submitBtn = document.getElementById('post-job-submit');
 
   const title = titleEl ? titleEl.value.trim() : '';
   const company = companyEl ? companyEl.value.trim() : '';
@@ -873,27 +357,29 @@ async function submitNewJob(e) {
   const contact = contactEl ? contactEl.value.trim() : '';
 
   if (!title || !contact) {
-    if (typeof showNotification === 'function') showNotification('Please enter a job title and contact information.', 'error');
+    setPostJobError(!title ? 'Add a job title.' : 'Add an email or phone number so people can apply.');
+    (!title ? titleEl : contactEl)?.focus();
     return;
   }
+  setPostJobError('');
 
   const session = (typeof getSession === 'function') ? getSession() : JSON.parse(localStorage.getItem('northstar_session') || '{}');
   const authorId = session.id || session.email || 'anonymous_volunteer';
 
+  // Local copy so the job shows in the feed right away. Only what was typed; no filler text.
   const newJobObj = {
     id: `job-${Date.now()}`,
     title: title,
-    company: company || 'Community Employer',
-    pay: pay || '$20.00 / hr',
-    location: location || 'Seattle, WA',
-    requirements: reqs.length ? reqs : ['Same-Day Pay', 'Entry Level'],
+    company: company,
+    pay: pay,
+    location: location,
+    requirements: reqs,
     contact: contact,
-    description: 'Verified community work opportunity. Immediate hire upon application.',
+    description: '',
     authorId: authorId,
     created_at: new Date().toISOString()
   };
 
-  // Always save locally so the job is rendered immediately in the feed
   try {
     const existing = JSON.parse(localStorage.getItem('northstar_custom_posted_jobs') || '[]');
     existing.unshift(newJobObj);
@@ -902,26 +388,34 @@ async function submitNewJob(e) {
     console.warn('Local storage job save error:', err);
   }
 
+  if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Posting…'; }
+
   // Post to backend API
+  let posted = false;
   try {
-    await fetch('/api/jobs', {
+    const res = await fetch('/api/jobs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title, company, pay, location, requirements: reqs, contact, authorId })
     });
+    posted = res.ok;
   } catch (err) {
     console.warn('API job save notice:', err);
   }
 
-  if (typeof closeModal === 'function') {
-    closeModal('post-job-modal');
-  } else if (typeof window.closeModal === 'function') {
-    window.closeModal('post-job-modal');
+  if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Post job'; }
+
+  if (!posted) {
+    // Don't leave a phone-only copy that looks published
+    try {
+      const existing = JSON.parse(localStorage.getItem('northstar_custom_posted_jobs') || '[]');
+      localStorage.setItem('northstar_custom_posted_jobs', JSON.stringify(existing.filter(j => j.id !== newJobObj.id)));
+    } catch (err) {}
+    setPostJobError('Couldn’t post the job. Check your connection and try again.');
+    return;
   }
 
-  if (typeof showNotification === 'function') {
-    showNotification('✨ Opportunity published successfully! Seekers can now view your listing.', 'success');
-  }
+  closeModal('post-job-modal');
 
   // Clear inputs
   if (titleEl) titleEl.value = '';
@@ -937,8 +431,9 @@ async function submitNewJob(e) {
   }
 }
 
+// Kept for older callers: resume matching now goes through Companion
 async function runAIMatchingEngine() {
-  showNotification('🤖 Running Gemini AI Job Matcher against active seeker resumes...', 'info');
+  if (typeof window.handleMatchClick === 'function') window.handleMatchClick();
 }
 </script>
 </body>

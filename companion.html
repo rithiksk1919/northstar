@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#FFFFFF">
+<title>Companion · Northstar</title>
+<link rel="icon" href="favicon.png">
+<script src="js/ns-boot.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=container-queries"></script>
+<script src="js/tailwind-config.js"></script>
+<link rel="stylesheet" href="css/app.css">
+<style>
+    #companion-page { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+    #chatbot-messages-list { padding: 6px 16px 12px; }
+    .companion-empty {
+        margin: auto 0;
+        display: flex; flex-direction: column; align-items: center; text-align: center;
+        padding: 12px 12px 24px;
+    }
+    .companion-form {
+        display: flex; align-items: center; gap: 8px;
+        padding: 6px 16px 10px;
+        background: var(--paper);
+    }
+    .companion-form .ns-input {
+        min-height: 46px;
+        border-radius: 999px;
+        border-color: transparent;
+        background: var(--sand);
+        padding: 0 20px;
+    }
+    .companion-form .ns-input:focus { background: #fff; }
+    .companion-send {
+        width: 46px; height: 46px; flex-shrink: 0;
+        border-radius: 50%;
+        background: var(--ink); color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        transition: transform 0.16s var(--ease), opacity 0.2s ease;
+    }
+    .companion-send:active { transform: scale(0.94); }
+    .companion-send:disabled { opacity: 0.35; }
+    #chatbot-suggestion-chips { padding: 4px 16px 8px; }
+    .companion-count {
+        position: absolute; top: -2px; right: -2px;
+        min-width: 18px; height: 18px; padding: 0 5px;
+        border-radius: 999px; background: var(--ink); color: #fff;
+        font-size: 11px; font-weight: 700; line-height: 18px; text-align: center;
+    }
+    .companion-notice {
+        margin: 0 16px 6px; padding: 10px 14px;
+        border-radius: 12px; background: var(--sand);
+        font-size: 13px; font-weight: 600; color: var(--ink-2);
+    }
+</style>
+</head>
+<body>
+
+<div class="app-frame">
+
+    <header class="ns-header">
+        <div class="min-w-0">
+            <p id="companion-meta" class="ns-header__meta !mt-0 truncate">Ask about beds, meals, gigs or your resume</p>
+            <h1 class="ns-header__title">Companion</h1>
+        </div>
+        <div class="ns-header__actions">
+            <button type="button" class="ns-icon-btn relative" onclick="openCompanionChats()" aria-label="Your chats" title="Your chats">
+                <span class="material-symbols-outlined">history</span>
+                <span id="companion-chats-count" class="companion-count hidden">0</span>
+            </button>
+            <button type="button" class="ns-icon-btn" onclick="startNewCompanionChat()" aria-label="Start a new chat" title="New chat">
+                <span class="material-symbols-outlined">edit_square</span>
+            </button>
+        </div>
+    </header>
+
+    <p id="companion-notice" class="companion-notice hidden" role="status"></p>
+
+    <div id="companion-page">
+        <div id="chatbot-messages-list" class="ns-chat__list" aria-live="polite">
+            <div id="companion-empty" class="companion-empty">
+                <img src="assets/illustrations/chat.svg" alt="" width="170" height="128">
+                <h2 class="text-[22px] font-extrabold mt-5 leading-tight">How can I help today?</h2>
+                <p class="ns-card-sub mt-2 max-w-[280px]">I can find a bed, a meal or a shower nearby, point you to gigs, or help with your resume.</p>
+            </div>
+        </div>
+
+        <div id="chatbot-suggestion-chips" class="ns-chat__chips"></div>
+
+        <form id="chatbot-input-form" class="companion-form" onsubmit="handleAIChatSubmit(event)">
+            <label for="chatbot-input-field" class="sr-only">Message Companion</label>
+            <input type="text" id="chatbot-input-field" class="ns-input flex-1" placeholder="Ask Companion" autocomplete="off" enterkeyhint="send">
+            <button type="submit" id="chatbot-send-btn" class="companion-send" aria-label="Send">
+                <span class="material-symbols-outlined">arrow_upward</span>
+            </button>
+        </form>
+    </div>
+
+    <nav class="bottom-nav ns-nav" aria-label="Main"></nav>
+
+    <!-- Your chats: open, start new, delete (swipe down to close) -->
+    <div id="companion-chats-sheet" class="ns-sheet-wrap hidden" role="dialog" aria-modal="true" aria-labelledby="companion-chats-title">
+        <div class="ns-sheet-backdrop" onclick="closeModal('companion-chats-sheet')"></div>
+        <div class="modal-drawer ns-sheet translate-y-full">
+            <div class="ns-sheet__handle"></div>
+            <div class="flex items-center justify-between gap-3">
+                <h2 id="companion-chats-title" class="ns-sheet__title">Your chats</h2>
+                <button type="button" class="ns-icon-btn ns-icon-btn--sm" onclick="closeModal('companion-chats-sheet')" aria-label="Close">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <button type="button" class="ns-btn ns-btn--primary mt-4" onclick="startNewCompanionChat()">
+                <span class="material-symbols-outlined">edit_square</span> New chat
+            </button>
+            <div id="companion-chats-list" class="ns-list mt-2"></div>
+            <div class="flex flex-col items-center mt-3">
+                <button type="button" id="companion-clear-all" class="ns-link !text-[13px] !text-muted" onclick="clearAllCompanionChats(this)">Delete all chats</button>
+                <p class="ns-hint text-center !mt-1">Chats are saved on this phone only.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/northstar.js"></script>
+</body>
+</html>
