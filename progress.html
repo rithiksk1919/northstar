@@ -4,9 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#FFFFFF">
-<title>Me · Northstar</title>
+<title>Progress · Northstar</title>
 <link rel="icon" href="favicon.png">
 <script src="js/ns-boot.js"></script>
+<script src="js/user-data.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com?plugins=container-queries"></script>
@@ -126,6 +127,7 @@
         const isGuest = !session || session.isGuest;
         const role = typeof getRole === 'function' ? getRole() : 'seeker';
         const isVolunteer = role === 'volunteer';
+        document.title = isVolunteer ? 'Me · Northstar' : 'Progress · Northstar';
 
         document.getElementById('me-avatar').textContent = isGuest || !name
             ? 'N'
@@ -171,6 +173,7 @@
         ).join('') + `<a href="resume-builder.html" class="ns-chip"><span class="material-symbols-outlined">add</span>${skills.length ? 'Add skill' : 'Add your skills'}</a>`;
     }
 
+    window.addEventListener('ns:userdata', e => { e.preventDefault(); renderProfile(); if (typeof renderProgressPage === 'function') renderProgressPage(); });
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', renderProfile);
     else renderProfile();
 })();

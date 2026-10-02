@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "app": "cd expo-app && npx expo start"
   },
   "dependencies": {
     "@google/genai": "^2.18.0",

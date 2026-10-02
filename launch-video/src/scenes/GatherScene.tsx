@@ -1,7 +1,7 @@
 import React from "react";
-import { AbsoluteFill, Easing, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Easing, interpolate, useVideoConfig } from "remotion";
 import { Star } from "../components";
-import { C, clamp, easeInOut } from "../theme";
+import { C, clamp, easeInOut, useT } from "../theme";
 import { LogoTile, TILE_ASPECT } from "./LogoTile";
 
 // S9: back to dawn; the three stars from the app icon gather, then the sky tightens into the icon tile.
@@ -17,11 +17,13 @@ const STARS = [
   { x: 0.757, y: 0.437, s: 0.1, fromX: 1.0, fromY: 0.2, d: 5 },
 ];
 
-export const GatherScene: React.FC = () => {
-  const frame = useCurrentFrame();
+// `speed` lets a shorter slot play the same timing (round 3); 1 = original.
+export const GatherScene: React.FC<{ readonly speed?: number }> = ({ speed = 1 }) => {
+  const frame = useT() * speed;
+  const { width: W, height: H } = useVideoConfig();
   const tighten = interpolate(frame, [17, 28], [0, 1], { ...clamp, easing: easeInOut });
-  const w = interpolate(tighten, [0, 1], [1920, LOCKUP_TILE_W]);
-  const h = interpolate(tighten, [0, 1], [1080, LOCKUP_TILE_W * TILE_ASPECT]);
+  const w = interpolate(tighten, [0, 1], [W, LOCKUP_TILE_W]);
+  const h = interpolate(tighten, [0, 1], [H, LOCKUP_TILE_W * TILE_ASPECT]);
   const unit = Math.min(w, h * 1.1);
 
   return (
@@ -29,8 +31,8 @@ export const GatherScene: React.FC = () => {
       <div
         style={{
           position: "absolute",
-          left: 960 - w / 2,
-          top: 540 - h / 2,
+          left: W / 2 - w / 2,
+          top: H / 2 - h / 2,
           width: w,
           height: h,
           borderRadius: interpolate(tighten, [0, 1], [0, LOCKUP_TILE_W * 0.2]),
@@ -68,8 +70,8 @@ export const GatherScene: React.FC = () => {
       <div
         style={{
           position: "absolute",
-          left: 960 - LOCKUP_TILE_W / 2,
-          top: 540 - (LOCKUP_TILE_W * TILE_ASPECT) / 2,
+          left: W / 2 - LOCKUP_TILE_W / 2,
+          top: H / 2 - (LOCKUP_TILE_W * TILE_ASPECT) / 2,
           opacity: interpolate(frame, [26, 30], [0, 1], clamp),
         }}
       >

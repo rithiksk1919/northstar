@@ -1279,8 +1279,9 @@ function renderBottomNav() {
   const isVolunteer = userRole === 'volunteer';
 
   const isDashboard = path.includes('dashboard') || path.includes('call-shelter');
-  // The resume builder is opened from Me, so Me stays highlighted there
-  const isMe = path.includes('progress') || path.includes('profile') || path.includes('resume');
+  const isResume = path.includes('resume');
+  // Volunteers have no Resume tab; the builder is seeker-only anyway
+  const isMe = path.includes('progress') || path.includes('profile') || (isVolunteer && isResume);
   const isJobs = path.includes('opportunities') || path.includes('jobs');
   const isMap = path.includes('map');
   const isCompanion = path.includes('companion');
@@ -1288,7 +1289,7 @@ function renderBottomNav() {
 
   const currentActiveTab = isVolunteer
     ? (isDonate ? 'v_donate' : isJobs ? 'v_jobs' : isCompanion ? 'companion' : isMe ? 'me' : 'v_dashboard')
-    : (isMap ? 'map' : isMe ? 'me' : isJobs ? 'jobs' : isCompanion ? 'companion' : 'dashboard');
+    : (isMap ? 'map' : isResume ? 'resume' : isMe ? 'me' : isJobs ? 'jobs' : isCompanion ? 'companion' : 'dashboard');
 
   window.activeTab = currentActiveTab;
   syncChatbotFABVisibility(currentActiveTab);
@@ -1298,8 +1299,9 @@ function renderBottomNav() {
       { id: 'dashboard', label: 'Home', icon: 'home', href: 'seeker-dashboard.html', active: isDashboard },
       { id: 'map', label: 'Map', icon: 'map', href: 'resource-map.html', active: isMap },
       { id: 'jobs', label: 'Gigs', icon: 'work', href: 'opportunities.html', active: isJobs },
+      { id: 'resume', label: 'Resume', icon: 'description', href: 'resume-builder.html', active: isResume },
       { id: 'companion', label: 'Companion', icon: 'chat_bubble', href: 'companion.html', active: isCompanion },
-      { id: 'me', label: 'Me', icon: 'person', href: 'progress.html', active: isMe }
+      { id: 'me', label: 'Progress', icon: 'trending_up', href: 'progress.html', active: isMe }
     ],
     volunteer: [
       { id: 'v_dashboard', label: 'Home', icon: 'home', href: 'helper-dashboard.html', active: isDashboard },
@@ -1312,7 +1314,7 @@ function renderBottomNav() {
 
   const tabs = NAV_CONFIG[isVolunteer ? 'volunteer' : 'seeker'];
 
-  nav.className = 'bottom-nav ns-nav';
+  nav.className = `bottom-nav ns-nav${tabs.length > 5 ? ' ns-nav--dense' : ''}`;
   nav.removeAttribute('style');
   nav.setAttribute('aria-label', 'Main');
   nav.innerHTML = tabs.map(tab => {

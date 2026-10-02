@@ -1,8 +1,8 @@
-# Shotlist — Northstar launch film
+# Shotlist — Northstar launch film (round 3)
 
-**Format:** 15.0 s · 16:9 · 1920×1080 · 30 fps (450 frames) · Remotion
-**Style:** the grammar in [`style_guide.md`](style_guide.md), with Northstar's own palette, type, logo and screens.
-**Story:** *Tonight → next month.* Northstar gets you a bed tonight and helps you toward a job.
+**Format:** 15.0 s · 16:9 · 1920×1080 · 30 fps (450 frames) · silent · Remotion
+**Style:** the grammar in [`style_guide.md`](style_guide.md) (same reference as round 1), applied to the full product brief.
+**Story:** *A bed tonight → a job tomorrow.* The **step-by-step job guide** is the hero: the longest take, about 4.6 s.
 
 ---
 
@@ -10,92 +10,83 @@
 
 | Reference grammar | Northstar version |
 |---|---|
-| Dusk gradient bookends (World A) | **Night-to-dawn gradient**: logo navy `#1B273E` at the top, amber `#FFD43B` dawn glow at a curved horizon |
-| Glossy sphere hero object | The **four-point star** from `assets/brand/northstar-mark.svg` (`#F3B43C`), glossy with soft bloom |
-| Objects gather into the mark | Three stars (big plus two small, as in the app icon) settle into place, then match-cut to the icon tile |
-| Field `#FEFFFD` / ink `#161815` | Northstar field `#FFFFFF` / ink `#111111` (`css/app.css` tokens) |
-| Ghost ink | `#111111` at 30% (≈ `#B8B8B8`); matches `--muted #737373` family |
-| Neo-grotesk, Medium 500, −2.5% | **Plus Jakarta Sans 600**, tracking −0.025em (the app's real font; 600 compensates for Jakarta's lighter color) |
-| Assistant avatar (gradient dot) | A small amber star dot, Companion's avatar |
-| Floating reactions (hearts) | **Amber map pins and little stars** rising with a spring |
-| Emoji glyph scramble | **Material Symbols** glyphs from `assets/fonts/` (bed, restaurant, work, wifi_off) |
-| Accent color | Only from the screens and the amber `#FFD43B`; the frame never adds color |
+| Dusk gradient bookends | Night-navy `#1B273E` → amber `#FFD43B` dawn horizon, with the four-point star from `northstar-mark.svg` as the hero object |
+| White field / ink | `#FFFFFF` / `#111111` (`css/app.css`) |
+| Neo-grotesk Medium, tight tracking | **Plus Jakarta Sans 600**, −0.025em (the app's real font) |
+| Say → show loop | Each type card names the beat that follows it |
+| Pull-back reveal from a bubble or widget | From the yellow **"Right now"** card out to the full dashboard in the phone |
+| Sticker burst | **Our own glossy tiles**: Material Symbols (bed, restaurant, shower, work, star) on amber, navy and white chips. No third-party or stock objects |
+| Caption + curved carousel of widgets | A curved carousel of **real Northstar screens**, including the "Give help" side |
+| Accent = the product only | Amber shows up only where the app itself uses it (Right now card, pay label, guide arrow, ring, buttons) |
 
-**Assets (all real, all ours):**
-- Logo tile: `assets/brand/northstar-logo.png` (navy tile, amber stars, white house)
-- Star shape: the amber path in `assets/brand/northstar-mark.svg`
-- Screens: captured from the running app at 390×844 (phone viewport), with seeded demo data, from
-  `companion.html`, `seeker-dashboard.html`, `resource-map.html`, `opportunities.html`,
-  `resume-builder.html`, `call-shelter.html`
-- Phone frame: a drawn light bezel (no Apple/Android hardware marks)
+## Where every pixel comes from
+
+| Element | Source |
+|---|---|
+| Logo tile, star mark | `assets/brand/northstar-logo.png`, `assets/brand/northstar-mark.svg` |
+| Home, Right now card, Near you | Capture of `seeker-dashboard.html` (already in `launch-video/public/screens/dashboard.png`) |
+| Map, bottom panel, directions + route | New capture of `resource-map.html` after tapping Directions on Downtown Emergency Service Center. If live transit times come back, I'll use them; otherwise the brief's example `Leave at 5:10 PM · Bus 545` is shown as the departure chip |
+| Gig card | Capture of `opportunities.html` ("Get Paid to Lift", $25.00 / hr · Cash, No ID needed) |
+| **Job guide** | **Rebuilt in vector from `expo-app/JobGuide.js` + `guideScript.js`**: the exact arrow SVG path (`#FFD43B`, 4px `#111` stroke), the 4px amber ring with its pulse, the bottom card (tag pill, 26/800 title, 16 px `#555` detail, `#FFF7D1` message box, yellow 56 px "Open Gmail" button), the yellow "‹ Northstar" pill, and the step copy verbatim |
+| The job post under the guide | **A plain, unbranded post page** (title, pay, body text, `reply` button, `email` option). No Craigslist logo, name or styling |
+| Mail compose | **A neutral compose sheet** (To / Subject / message, Send button). No Gmail or Google branding. The guide button keeps its real label, "Open Gmail" |
+| Carousel screens | Captures of `index.html` (role: Find help / Give help), `companion.html`, `resume-builder.html`, `progress.html`, `helper-dashboard.html` ("Thanks for helping out today."), `donate.html` |
 
 ---
 
 ## Shots
 
-Timecodes are `seconds` (frames at 30 fps).
+### S1 · Dawn open (0.00–1.50 · f0–45) · World A
+- Navy-to-amber gradient with a curved horizon. The glossy star rises off it.
+- Typewriter in white with caret, 13 characters per second: `help is closer|`
+- Crane up with the frame hazing lighter. **1.30–1.50:** luminance bloom to white.
 
-### S1 · Open: dawn (0.00–1.50 · f0–45) · World A
-- **Picture:** full-bleed gradient. Navy `#1B273E` at the top blends into `#2A3A66` and meets a curved horizon glowing amber `#FFD43B` → `#F3B43C`, with a warm haze `#FFF7D1` just above the curve. The glossy four-point star sits on the horizon, half reflected in it.
-- **Camera:** slow crane up. The horizon drops from 62% to 78% of frame height, the frame gets lighter, and the star rises slightly.
-- **Type:** `Introducing` (Jakarta 600, 44 px, white at 90%) blurs in at 0.5 s (blur 20 px → 0, 0.4 s) at 45% height.
-- **Out:** hard cut on the same palette to S2.
+### S2 · Say (1.50–2.40 · f45–72) · World B
+- Ghost → ink reveal, centered, 84 px: `A bed tonight.`
+- 2% drift, then a hard white-to-white cut.
 
-### S2 · Tagline (1.50–3.20 · f45–96) · World A
-- **Picture:** the same gradient, now higher and hazier; the star is small at the top center.
-- **Type, part 1 (1.50–2.30):** typewriter `help is closer|` with thin caret, 13 characters per second, white, 48 px, centered.
-- **Type, part 2 (2.30–3.00):** hard switch to oversized `than you think`, 100 px, tinted `#FFE58A` with a soft glow. Each word blur-ins (20 px → 0, scale 1.04 → 1.00), 0.15 s apart.
-- **Camera:** push-in 1.00 → 1.05.
-- **Out (3.00–3.20):** luminance bloom. Haze fills the frame to `#FFFFFF`.
+### S3 · Right now → pull back (2.40–4.40 · f72–132) · World C
+- **2.40:** tight crop (scale 1.6) on the real yellow **"Right now · Shelter open all night"** card.
+- **2.90–3.50:** pull back to 1.0. The light phone bezel resolves around the whole dashboard (`Hi, Sam`, filters, Near you).
+- **3.70:** **Get directions** shows its pressed state (darken + ring ripple, no hand), and the screen swaps to the map.
+- **4.00–4.40:** the camera begins sliding the phone left.
 
-### S3 · Ask (3.20–4.40 · f96–132) · World C (tight)
-- **Picture:** pure white. A black user pill on the right types in: `is there a bed open tonight?`
-- **0.4 s later:** a Companion bubble (`#F2F2F2`, 18 px radius) with the amber star dot as avatar: `Two shelters near you are open all night.`
-- **Camera:** starts at scale 1.6, centered on the bubbles, and drifts in 2%.
-- **Type behavior:** each bubble springs up (y +12 px → 0) with a single overshoot.
+### S4 · Directions (4.40–6.00 · f132–180) · World C
+- Real map screen. The bottom panel slides up; the place card shows `Verified` and `Open now`.
+- **4.80–5.60:** the route line **draws** across the map (stroke-dashoffset), bus segment then walk.
+- The departure chip pops in with a spring: `Leave at 5:10 PM · Bus 545`.
+- Caption at right of the phone, ghost → ink, 64 px: `Even by bus.`
 
-### S4 · Pull back to phone (4.40–5.80 · f132–174) · World C
-- **Move:** pull back 1.6 → 1.0 (0.6 s, ease-out). A light phone bezel resolves around the bubbles; it is the real `companion.html` screen with those bubbles in it.
-- **5.10:** the screen scrolls up to a real card from `seeker-dashboard.html`, **"Shelters open all night"**, and the camera pushes 8% into it.
-- **Shadow:** soft phone drop shadow (0 30 px 60 px, 10% black).
+### S5 · Say, part 2 (6.00–7.00 · f180–210) · World B
+- `A bed tonight.` returns, then a **partial dissolve**: `A` stays, `bed tonight.` breaks into grain, and `job tomorrow.` writes on. `A` never moves.
 
-### S5 · Map (5.80–7.20 · f174–216) · World C
-- **Picture:** the phone slides to left of center (−220 px, eased). Its screen hard-cuts to `resource-map.html` with real map tiles.
-- **Energy spike (6.10–6.80):** amber pins drop onto the map with staggered springs, and 5–6 small amber stars float up out of the phone and off the right edge with motion blur. This is the "reactions" beat.
-- **Caption:** `Near you`, 28 px, ink, top third, right of the phone, with a ghost → ink reveal.
+### S6 · The job guide ⭐ (7.00–11.60 · f210–348) · World C, close-up
+One continuous take. The camera stays in close-up (scale 1.3–1.5) on the phone, with no cuts.
 
-### S6 · Word roll (7.20–9.20 · f216–276) · Worlds B+C
-- **Picture:** hero word in ink, 125 px, at 22% height. Below it is a ghost column. The phone is centered on top, covering the middle of the words.
-- **Roll (4 slots, 0.5 s each, spring-free ease-in-out):**
-  1. `beds` → phone shows `resource-map.html`, a shelter's detail sheet
-  2. `meals` → `seeker-dashboard.html`, a food/meal place in "Near you"
-  3. `gigs` → `opportunities.html`, the Listings screen
-  4. `resumes` → `resume-builder.html`, "What work have you done?"
-- On each roll, the new top word goes ghost → ink as it lands, and the old one slides up and out of frame.
+| Time | Picture | Guide card (verbatim app copy) |
+|---|---|---|
+| 7.00–7.50 | The real gig card **Get Paid to Lift** · `$25.00 / hr · Cash` (yellow pay label) · `No ID needed`. **View listing** gets its pressed state | — |
+| 7.50–7.80 | The listing opens **inside Northstar**: the yellow `‹ Northstar` pill top-left, the plain post below. The guide card rises from the bottom (0.32 s ease-out, matching the app's own `cardIn` timing) | tag **First** · **Tap "reply"** · *The yellow arrow shows you where.* |
+| 7.80–8.70 | The **yellow arrow bounces** (14 px, matching the app's `nsBounce`) above `reply`, and the **amber ring pulses** around it. Then pressed state | (same) |
+| 8.70–9.40 | A small option list appears. The arrow **glides** to `email` (eased, about 0.4 s), and the ring follows | tag **Next** · **Tap "email"** · *This shows their email address.* |
+| 9.40–10.30 | The camera eases down to the card | tag **Finally** · **Open Gmail and send it** · *Your message is already written. Send it to:* `[demo address]` · message box: *"Hi, I'm Sam. I saw your post for moving help. I've unloaded trucks and prepped meals, and I can start today. My phone is (206) 555-0142."* · big yellow **Open Gmail** button, pressed |
+| 10.30–11.00 | The neutral compose sheet slides up, **already filled**: To, Subject `Moving help`, and the same message. The **Send** button shows its pressed state with a touch ripple | — |
+| 11.00–11.60 | Back in the app: the card turns green-tagged | tag **Done** · **You applied!** · *Nice work. Keep an eye on your phone and email.* |
 
-### S7 · Tonight → next month (9.20–11.00 · f276–330) · World B
-- **Picture:** white, nothing else.
-- **9.20–9.90:** word reveal `A bed tonight.`, 52 px, centered, ghost → ink, 0.2 s per word.
-- **Hold 0.3 s**, with a 2% drift.
-- **10.20–10.55:** partial dissolve. `A` stays; `bed tonight.` breaks into dither/noise and blows off to the right.
-- **10.55–11.00:** `job next month.` writes on with the ghost → ink reveal. `A` does not move.
+- **11.00–11.60 energy spike:** Northstar's glossy icon tiles (bed, restaurant, shower, work, star) burst in around the frame edges, spring once, and fly out. The "You applied!" card stays clear at center.
+- Ends with a pull-back to the full phone.
 
-### S8 · Works offline (11.00–12.20 · f330–366) · World B
-- **Type:** `No signal? Still works.`
-- **11.00–11.40:** letters of `No signal?` scramble through Material Symbols glyphs (`bed`, `restaurant`, `work`, `wifi_off`, `call`) before settling.
-- **11.60:** `Still works.` appends in ghost → ink, and the line re-centers as it grows.
-- Claim backed by the real "Save places for offline / Opens without internet" feature on `seeker-dashboard.html`.
+### S7 · Caption + carousel (11.60–13.00 · f348–390) · World C
+- Caption, ink, 52 px at 20% height: `For finding help — and giving it.`
+- Phone at center, bottom-cropped, showing the dashboard. A curved arc of real screen tiles pans behind it:
+  role choice (Find help / Give help) · Companion · Resume · Progress · **Volunteer Home ("Thanks for helping out today.")** · Donate.
 
-### S9 · Stars gather (12.20–13.20 · f366–396) · World A (short)
-- **Picture:** hard cut back to the dawn gradient (brighter than S1, closer to amber).
-- **Move:** the big star and two small stars drift in from the edges and settle into the exact layout from the app icon.
-- **13.00–13.20:** the navy background tightens into a rounded tile (radius about 22%) with the gradient falling away to white. Match-cut into the icon tile of S10.
+### S8 · Stars gather (13.00–13.60 · f390–408) · World A
+- Back to the dawn. Three stars settle into the app-icon layout, and the sky tightens into the icon tile on white.
 
-### S10 · Lockup (13.20–15.00 · f396–450) · World B
-- **13.20–14.00:** `Meet` · **[northstar-logo.png tile, 96 px, soft shadow]** · `Northstar`, Jakarta 600, 52 px, ghost → ink left to right.
-- **14.00–14.40:** `Meet` fades to ghost and falls away, and the tile and `Northstar` slide together to center.
-- **14.40–15.00:** hold with a 2% drift. `Help is closer than you think.` fades in below in `--muted #737373`, 24 px.
-- **End:** hold the last frame (no fade to black).
+### S9 · Lockup (13.60–15.00 · f408–450) · World B
+- `Meet [logo tile] Northstar` → `Meet` falls away → tile + `Northstar` re-center.
+- `Help is closer than you think.` fades in below in `#737373`. Hold on the last frame.
 
 ---
 
@@ -104,22 +95,24 @@ Timecodes are `seconds` (frames at 30 fps).
 | Shot | Length | Role |
 |---|---|---|
 | S1 | 1.50 | Slow open |
-| S2 | 1.70 | Tagline |
-| S3 | 1.20 | Say (as chat) |
-| S4 | 1.40 | Show |
-| S5 | 1.40 | Show + energy spike |
-| S6 | 2.00 | Breadth (4 × 0.5 s pulse) |
-| S7 | 1.80 | Story beat |
-| S8 | 1.20 | Proof |
-| S9 | 1.00 | Bookend return |
-| S10 | 1.80 | Lockup |
-| **Total** | **15.00** | 10 shots, average 1.5 s (the reference's rhythm compressed to about 60% of its average shot length) |
+| S2 | 0.90 | Say |
+| S3 | 2.00 | Show: help right now |
+| S4 | 1.60 | Show: get there |
+| S5 | 1.00 | Say: the turn |
+| **S6** | **4.60** | **Show: the wow (job guide)** |
+| S7 | 1.40 | Breadth + giving side |
+| S8 | 0.60 | Bookend |
+| S9 | 1.40 | Lockup |
+| **Total** | **15.00** | 9 shots |
+
+## Cut for time (from the brief)
+Splash / Create account / Allow location (the role screen appears in the carousel instead) · offline saving · spoken job tips · resume Q&A · Companion chat · Stripe checkout · food pickup tracking · "Fill in for me" on employer sites. Any of these can be swapped in; S7's carousel is the easiest place.
 
 ---
 
-## Open questions for you
+## Open questions
 
-1. **End card URL:** the repo doesn't list a public domain. Should the lockup add one, as the reference does with its URL beat?
-2. **Chat copy in S3:** `is there a bed open tonight?` → `Two shelters near you are open all night.` is demo copy in the voice of the app's own strings. OK, or do you want real Companion output?
-3. **Demo data:** the screens will be captured with seeded, fictional places and listings, with no real people or addresses. OK?
-4. **Sound:** silent, or should I leave a slot for a music track?
+1. **Thumb tap:** your shot idea has a thumb tapping Send. The reference never shows hands, so I've used the app's own pressed state plus a soft touch ripple. OK, or do you want an actual thumb?
+2. **Third-party UI:** I'm drawing the job post and the mail compose as plain, unbranded screens rather than showing Craigslist or Gmail. OK?
+3. **Demo details:** the message, phone number (a 555 number) and email address in S6 are made up for a fictional "Sam". OK?
+4. **Composition:** this becomes a **third composition**, `NorthstarLaunch3`, so the first two films stay as they are.

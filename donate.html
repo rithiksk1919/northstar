@@ -7,6 +7,7 @@
 <title>Donate · Northstar</title>
 <link rel="icon" href="favicon.png">
 <script src="js/ns-boot.js"></script>
+<script src="js/user-data.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com?plugins=container-queries"></script>
@@ -392,14 +393,14 @@ window.processStripeDonation = async function() {
 
     if (data.url) {
       window.location.href = data.url;
-    } else if (data.demoUrl) {
-      window.location.href = data.demoUrl;
     } else {
-      throw new Error(data.error || 'Could not initiate checkout');
+      const e = new Error(data.error || 'Could not initiate checkout');
+      e.userMessage = data.error;
+      throw e;
     }
   } catch (err) {
     console.warn('Checkout could not start:', err);
-    nsShowError('donate-money-error', 'We couldn’t open checkout. Nothing was charged. Check your connection and try again.');
+    nsShowError('donate-money-error', err.userMessage || 'We couldn’t open checkout. Nothing was charged. Check your connection and try again.');
     if (btn) btn.disabled = false;
     refreshPayButton();
   }

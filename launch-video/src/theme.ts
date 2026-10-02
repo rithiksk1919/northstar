@@ -1,6 +1,6 @@
 import { loadFont } from "@remotion/google-fonts/PlusJakartaSans";
 import { loadFont as loadLocalFont } from "@remotion/fonts";
-import { Easing, staticFile } from "remotion";
+import { Easing, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 
 // Northstar tokens (css/app.css) mapped onto the reference grammar in docs/style_guide.md.
 export const C = {
@@ -48,3 +48,10 @@ export const STAR_PATH =
 // Phone screen captures are 390x844 CSS px (see scripts/capture-screens.mjs).
 export const SCREEN_W = 390;
 export const SCREEN_H = 844;
+
+/** Current time in 30 fps frames, whatever the composition fps. All scene timings are authored at 30 fps. */
+export const useT = () => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  return (frame * 30) / fps;
+};

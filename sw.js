@@ -1,4 +1,4 @@
-const APP_CACHE_NAME = 'northstar-offline-v4';
+const APP_CACHE_NAME = 'northstar-offline-v5';
 const TILE_CACHE_NAME = 'northstar-map-tiles';
 
 const CORE_ASSETS = [
@@ -15,6 +15,7 @@ const CORE_ASSETS = [
   '/progress.html',
   '/css/onboarding.css',
   '/js/ns-boot.js',
+  '/js/user-data.js',
   '/js/tailwind-config.js',
   '/js/northstar.js',
   '/js/auth.js',
@@ -160,6 +161,9 @@ self.addEventListener('fetch', (event) => {
     );
     return;
   }
+
+  // Account data and sign-in always go to the network and are never stored here
+  if (url.origin === self.location.origin && (url.pathname.startsWith('/api/user-data') || url.pathname.startsWith('/api/auth'))) return;
 
   // App shell and local pages (including map.html?offline=true & resource-map.html?offline=true)
   if (url.origin === self.location.origin) {

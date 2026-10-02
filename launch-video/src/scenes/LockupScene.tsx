@@ -1,7 +1,7 @@
 import React from "react";
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, interpolate, useVideoConfig } from "remotion";
 import { lineStyle, wordStyle } from "../components";
-import { C, clamp, easeInOut, easeOut, fontFamily } from "../theme";
+import { C, clamp, easeInOut, easeOut, fontFamily, useT } from "../theme";
 import { LOCKUP_TILE_W } from "./GatherScene";
 import { LogoTile } from "./LogoTile";
 
@@ -11,8 +11,10 @@ export const LOCKUP_FRAMES = 54;
 const SIZE = 84;
 const GAP = 34;
 
-export const LockupScene: React.FC = () => {
-  const frame = useCurrentFrame();
+// `speed` lets a shorter slot play the same timing (round 3); 1 = original.
+export const LockupScene: React.FC<{ readonly speed?: number }> = ({ speed = 1 }) => {
+  const frame = useT() * speed;
+  const { height: H } = useVideoConfig();
   const drift = interpolate(frame, [0, 54], [1, 1.025], clamp);
   // Width-driven layout: the row re-centers itself as words open and collapse.
   const meetOpen = interpolate(frame, [0, 8, 24, 34], [0, 1, 1, 0], { ...clamp, easing: easeInOut });
@@ -43,7 +45,7 @@ export const LockupScene: React.FC = () => {
       <div
         style={{
           position: "absolute",
-          top: 540 + 120,
+          top: H / 2 + 120,
           width: "100%",
           textAlign: "center",
           fontFamily,

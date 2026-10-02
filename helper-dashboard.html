@@ -7,6 +7,7 @@
 <title>Home · Northstar</title>
 <link rel="icon" href="favicon.png">
 <script src="js/ns-boot.js"></script>
+<script src="js/user-data.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com?plugins=container-queries"></script>
@@ -29,26 +30,26 @@
 
     <main class="ns-main dashboard-container volunteer-dashboard-main">
 
-        <!-- Money donated from this phone (js/northstar.js fills #volunteer-total-donations) -->
-        <div class="ns-card ns-card--pad flex items-center justify-between gap-4">
+        <!-- Money donated (saved to the account; js/northstar.js fills #volunteer-total-donations) -->
+        <div class="ns-card ns-card--wash ns-card--pad flex items-center justify-between gap-4">
             <div>
                 <p class="ns-card-sub">You’ve donated</p>
                 <p id="volunteer-total-donations" class="ns-value mt-1">$0</p>
-                <p class="ns-card-sub mt-1">Money donated from this phone</p>
+                <p class="ns-card-sub mt-1">Card donations on your account</p>
             </div>
-            <span class="ns-tile"><span class="material-symbols-outlined">volunteer_activism</span></span>
+            <span class="ns-tile ns-tile--yellow"><span class="material-symbols-outlined">volunteer_activism</span></span>
         </div>
 
         <div class="grid grid-cols-2 gap-3 mt-3">
             <a id="volunteer-post-job-card" href="opportunities.html" class="ns-card ns-card--pad flex flex-col gap-4 min-h-[124px]">
-                <span class="ns-tile ns-tile--plain"><span class="material-symbols-outlined">add</span></span>
+                <span class="ns-tile"><span class="material-symbols-outlined">add</span></span>
                 <span class="mt-auto">
                     <span class="ns-card-title block">Post a job</span>
                     <span class="ns-card-sub block mt-1">Share paid work</span>
                 </span>
             </a>
             <a id="volunteer-donate-card" href="donate.html" class="ns-card ns-card--pad flex flex-col gap-4 min-h-[124px]">
-                <span class="ns-tile ns-tile--plain"><span class="material-symbols-outlined">restaurant</span></span>
+                <span class="ns-tile"><span class="material-symbols-outlined">restaurant</span></span>
                 <span class="mt-auto">
                     <span class="ns-card-title block">Donate</span>
                     <span class="ns-card-sub block mt-1">Money or food</span>

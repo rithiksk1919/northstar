@@ -10,6 +10,7 @@ import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
 import fs from 'fs';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -60,115 +61,6 @@ if (supabaseServiceKey) {
 // Admin client for server-side operations (deliveries, jobs persistence) — never exposed to browser
 const supabase = (supabaseUrl && supabaseServiceKey) ? createClient(supabaseUrl, supabaseServiceKey) : null;
 
-async function seedSupabaseTablesIfEmpty() {
-  if (!supabase) return;
-
-  try {
-    // 1. Seed Deliveries if empty
-    const { data: existingDeliveries, error: delErr } = await supabase.from('deliveries').select('id').limit(1);
-    if (!delErr && (!existingDeliveries || existingDeliveries.length === 0)) {
-      console.log('🌱 Seeding default food deliveries into Supabase...');
-      const seedDeliveries = [
-        {
-          id: 'del_101',
-          items: ['4x Care Packages'],
-          bags: 4,
-          donorArea: 'Capitol Hill, Seattle',
-          destination: 'St. Jude Community Refuge',
-          status: 'pending_driver',
-          timeWindow: 'Today 2:00 PM - 5:00 PM',
-          contactNotes: 'Contact donor upon arrival',
-          etaMinutes: 20,
-          created_at: new Date(Date.now() - 3600000).toISOString()
-        },
-        {
-          id: 'del_102',
-          items: ['1x Warm Blanket & Jacket'],
-          bags: 1,
-          donorArea: 'Ballard, Seattle',
-          destination: 'St. Jude Community Refuge',
-          status: 'pending_driver',
-          timeWindow: 'ASAP',
-          contactNotes: 'Fragile items included',
-          etaMinutes: 15,
-          created_at: new Date(Date.now() - 7200000).toISOString()
-        },
-        {
-          id: 'del_103',
-          items: ['1x Sleeping Bag & Hygiene Kit'],
-          bags: 1,
-          donorArea: 'University District, Seattle',
-          destination: 'St. Jude Community Refuge',
-          status: 'pending_driver',
-          timeWindow: 'Today 4:00 PM - 7:00 PM',
-          contactNotes: 'Call shelter before drop-off',
-          etaMinutes: 25,
-          created_at: new Date(Date.now() - 10800000).toISOString()
-        }
-      ];
-      const { error: insertDelErr } = await supabase.from('deliveries').insert(seedDeliveries);
-      if (insertDelErr) {
-        console.warn('⚠️ Seeding deliveries notice:', insertDelErr.message);
-      } else {
-        console.log('✅ Default food deliveries seeded into Supabase deliveries table!');
-      }
-    }
-
-    // 2. Seed Jobs if empty
-    const { data: existingJobs, error: jobErr } = await supabase.from('jobs').select('id').limit(1);
-    if (!jobErr && (!existingJobs || existingJobs.length === 0)) {
-      console.log('🌱 Seeding default jobs into Supabase...');
-      const seedJobs = [
-        {
-          id: 'job_201',
-          title: 'Community Center Food Prep Helper',
-          company: 'Seattle Harvest Hub',
-          location: 'Capitol Hill, Seattle',
-          type: 'Flexible Shift',
-          pay: '$20.00 / hr Cash',
-          requirements: ['No Experience Required', 'Friendly Attitude'],
-          description: 'Assist kitchen staff with washing, cutting, and packaging donated produce for emergency shelters.',
-          contact: 'volunteer@seattleharvest.org',
-          created_at: new Date().toISOString()
-        },
-        {
-          id: 'job_202',
-          title: 'Shelter Linens & Hygiene Staging Assistant',
-          company: 'St. Jude Refuge',
-          location: 'Ballard, Seattle',
-          type: 'Part-Time / Daily',
-          pay: '$22.00 / hr Cash',
-          requirements: ['Able to lift 25 lbs', 'Dependable'],
-          description: 'Help organize incoming care packages, sort clean bedding, and prepare hygiene kits for evening drop-ins.',
-          contact: 'manager@stjuderefuge.org',
-          created_at: new Date().toISOString()
-        },
-        {
-          id: 'job_203',
-          title: 'Neighborhood Mobile Pantry Driver & Helper',
-          company: 'NorthStar Mutual Aid',
-          location: 'Rainier Valley, Seattle',
-          type: 'Daily Gig',
-          pay: '$24.00 / hr Cash',
-          requirements: ['Valid Driver License', 'Punctual'],
-          description: 'Drive or ride along with our meal distribution van to hand out warm meals and hygiene kits.',
-          contact: 'coordinator@northstarseattle.org',
-          created_at: new Date().toISOString()
-        }
-      ];
-      const { error: insertJobErr } = await supabase.from('jobs').insert(seedJobs);
-      if (insertJobErr) {
-        console.warn('⚠️ Seeding jobs notice:', insertJobErr.message);
-      } else {
-        console.log('✅ Default jobs seeded into Supabase jobs table!');
-      }
-    }
-  } catch (err) {
-    console.warn('⚠️ seedSupabaseTablesIfEmpty error:', err.message);
-  }
-}
-
-
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '5mb' }));
@@ -196,6 +88,8 @@ app.get(['/helper-dashboard.html', '/volunteer-dashboard.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'helper-dashboard.html'));
 });
 
+// The Expo Go wrapper (expo-app/) lives in this folder but isn't part of the website
+app.use('/expo-app', (req, res) => res.status(404).end());
 app.use(express.static(__dirname));
 
 const apify = new ApifyClient({ token: process.env.APIFY_TOKEN });
@@ -204,85 +98,13 @@ const model = genAI.getGenerativeModel({ model: 'gemini-3.6-flash' });
 const stripeKey = process.env.STRIPE_SECRET_KEY || '';
 const stripe = stripeKey ? new Stripe(stripeKey) : null;
 
-let activeDeliveries = [
-  {
-    id: 'del_101',
-    items: ['4x Care Packages'],
-    bags: 4,
-    donorArea: 'Capitol Hill, Seattle',
-    destination: 'St. Jude Community Refuge',
-    status: 'pending_driver',
-    timeWindow: 'Today 2:00 PM - 5:00 PM',
-    created_at: new Date(Date.now() - 3600000).toISOString()
-  },
-  {
-    id: 'del_102',
-    items: ['1x Warm Blanket & Jacket'],
-    bags: 1,
-    donorArea: 'Ballard, Seattle',
-    destination: 'St. Jude Community Refuge',
-    status: 'pending_driver',
-    timeWindow: 'ASAP',
-    created_at: new Date(Date.now() - 7200000).toISOString()
-  },
-  {
-    id: 'del_103',
-    items: ['1x Sleeping Bag & Hygiene Kit'],
-    bags: 1,
-    donorArea: 'University District, Seattle',
-    destination: 'St. Jude Community Refuge',
-    status: 'pending_driver',
-    timeWindow: 'Today 4:00 PM - 7:00 PM',
-    created_at: new Date(Date.now() - 10800000).toISOString()
-  }
-];
+let activeDeliveries = [];
 
-let activeGigs = [
-  {
-    id: 'Ehj2AOaq8RGAGd78USHONQ',
-    title: 'Get Paid to Lift 💪 Earn Daily Cash as a Mover',
-    category: 'Core Keywords',
-    pay: '$25.00 / hr Cash',
-    summary: 'Casual daily labor opportunity unloading trucks and moving items.',
-    safety: 'No ID required casual labor. Cash paid daily.',
-    url: 'https://www.craigslist.org/view/d/seattle-get-paid-to-lift-earn-daily/Ehj2AOaq8RGAGd78USHONQ',
-    postedAt: new Date().toISOString(),
-    isCash: true
-  },
-  {
-    id: 'iKh1EuHWHofcvUTdnacqs3',
-    title: 'START TODAY $40/HR Handyman | Helper | Demo',
-    category: 'Core Keywords',
-    pay: '$40.00 / hr Cash',
-    summary: 'Flexible local handyman, demo, moving, or trade labor gigs paid directly in cash.',
-    safety: 'Under the table cash gig requiring no onboarding paperwork.',
-    url: 'https://www.craigslist.org/view/d/seattle-start-today-40-hr-handyman/iKh1EuHWHofcvUTdnacqs3',
-    postedAt: new Date().toISOString(),
-    isCash: true
-  },
-  {
-    id: 'ure18rin8RGNNY3Ml6t41Q',
-    title: 'Can You Lift Heavy Items? Earn Daily Cash as a Helper',
-    category: 'Core Keywords',
-    pay: '$22.00 / hr Cash',
-    summary: 'Unloading commercial pallet boxes and heavy staging equipment.',
-    safety: 'Entry level immediate hire. Cash paid at end of shift.',
-    url: 'https://www.craigslist.org/view/d/seattle-can-you-lift-heavy-items-earn/ure18rin8RGNNY3Ml6t41Q',
-    postedAt: new Date().toISOString(),
-    isCash: true
-  },
-  {
-    id: '4fKDdW5GyK3edG4E4MKvch',
-    title: 'Home Office & Storage Organizing Helper',
-    category: 'Local & Immediate',
-    pay: '$20.00 / hr Cash',
-    summary: 'Assisting with box sorting and inventory staging at local site.',
-    safety: 'Immediate walk-in entry level daily cash pay.',
-    url: 'https://www.craigslist.org/view/d/bellevue-need-help-organizing-my-home/4fKDdW5GyK3edG4E4MKvch',
-    postedAt: new Date().toISOString(),
-    isCash: true
-  }
-];
+// Real Craigslist gigs only (from the Apify scrape). Saved to Supabase Storage so a restart
+// doesn't lose them; nothing is made up while the list is empty.
+let activeGigs = [];
+let gigsScrapedAt = 0;
+const GIGS_MAX_AGE_MS = 12 * 60 * 60 * 1000;
 
 // Database for Job & Work Opportunities (Populated dynamically when posted)
 const inMemoryJobs = [];
@@ -355,8 +177,8 @@ Return JSON ONLY:
       const parsed = JSON.parse(text);
 
       if (parsed.is_valid && parsed.is_cash_payment && !parsed.is_survey && parsed.no_gov_info_needed) {
-        let payStr = parsed.pay_rate || item.price || '$20/hr Cash';
-        if (!/cash/i.test(payStr)) payStr = `${payStr} Cash`;
+        let payStr = parsed.pay_rate || item.price || '';
+        if (payStr && !/cash/i.test(payStr)) payStr = `${payStr} Cash`;
         newlyApproved.push({
           id: item.listingId || item.id || String(Date.now() + Math.random()),
           title: parsed.clean_title,
@@ -375,9 +197,9 @@ Return JSON ONLY:
         newlyApproved.push({
           id: item.listingId || item.id || String(Date.now() + Math.random()),
           title: itemTitle.replace(/\s*-\s*\$\d+.*$/, '').slice(0, 45),
-          pay: item.price ? (item.price.includes('Cash') ? item.price : `${item.price} Cash`) : '$20.00 / hr Cash',
-          summary: 'Casual daily labor opportunity paying immediate cash in hand for unhoused job seekers.',
-          safety: 'No formal ID or W-2 paperwork required upfront. Cash paid daily.',
+          pay: item.price || '',
+          summary: String(item.description || item.text || '').replace(/\s+/g, ' ').trim().slice(0, 140),
+          safety: '',
           url: itemUrl,
           postedAt: item.postedAt || new Date().toISOString(),
           isCash: true
@@ -405,6 +227,11 @@ Return JSON ONLY:
     return 0;
   });
 
+  // Drop listings older than two weeks; they're usually gone
+  const cutoff = Date.now() - 14 * 24 * 60 * 60 * 1000;
+  activeGigs = activeGigs.filter(g => !g.postedAt || new Date(g.postedAt).getTime() > cutoff).slice(0, 60);
+  gigsScrapedAt = Date.now();
+  saveGigsCache();
   console.log(`✅ Stored ${activeGigs.length} vetted gigs with strict direct permalinks prioritizing cash pay.`);
 }
 
@@ -587,17 +414,17 @@ app.get('/api/jobs', async (req, res) => {
         query = query.eq('author_id', userId);
       }
       const { data, error } = await query;
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         const formattedJobs = data.map(j => ({
           id: j.id,
           title: j.title,
-          company: j.company || 'Community Partner',
-          location: j.location || 'Seattle, WA',
-          type: j.type || 'Flexible Shift',
-          pay: j.pay || '$20.00 / hr Cash',
+          company: j.company || '',
+          location: j.location || '',
+          type: j.type || '',
+          pay: j.pay || '',
           requirements: typeof j.requirements === 'string' ? JSON.parse(j.requirements) : (Array.isArray(j.requirements) ? j.requirements : []),
-          description: j.description || 'Verified community job opportunity.',
-          contact: j.contact || 'Contact Coordinator',
+          description: j.description || '',
+          contact: j.contact || '',
           authorId: j.author_id,
           postedAt: j.created_at
         }));
@@ -866,6 +693,216 @@ app.delete('/api/jobs/:id', async (req, res) => {
   }
 });
 
+// ============================================================
+// Accounts and per-user data (Supabase)
+// Accounts live in the `profiles` table (scrypt password hash). Each person's app data
+// (resume, progress, saved places, chats) is one private JSON file in Supabase Storage,
+// readable only through these endpoints with the signed token handed out at login.
+const USER_BUCKET = 'northstar-user-data';
+const APP_BUCKET_PATH = 'app/gigs.json';
+const TOKEN_SECRET = crypto.createHmac('sha256', String(supabaseServiceKey || process.env.SESSION_SECRET || 'northstar-dev'))
+  .update('northstar-session-v1').digest();
+const TOKEN_TTL_MS = 90 * 24 * 60 * 60 * 1000;
+let userBucketReady = null;
+
+function ensureUserBucket() {
+  if (!supabase) return Promise.resolve(false);
+  if (!userBucketReady) {
+    userBucketReady = (async () => {
+      const { data } = await supabase.storage.getBucket(USER_BUCKET);
+      if (data) return true;
+      const { error } = await supabase.storage.createBucket(USER_BUCKET, { public: false, fileSizeLimit: 2 * 1024 * 1024 });
+      if (error && !/exists/i.test(error.message)) throw error;
+      return true;
+    })().catch(err => { userBucketReady = null; console.warn('User data bucket notice:', err.message); return false; });
+  }
+  return userBucketReady;
+}
+
+async function readStorageJson(objectPath) {
+  if (!(await ensureUserBucket())) return null;
+  const { data, error } = await supabase.storage.from(USER_BUCKET).download(objectPath);
+  if (error || !data) return null;
+  try { return JSON.parse(await data.text()); } catch (e) { return null; }
+}
+
+async function writeStorageJson(objectPath, value) {
+  if (!(await ensureUserBucket())) throw new Error('storage unavailable');
+  const body = Buffer.from(JSON.stringify(value), 'utf8');
+  const { error } = await supabase.storage.from(USER_BUCKET).upload(objectPath, body, { contentType: 'application/json', upsert: true });
+  if (error) throw error;
+}
+
+async function loadGigsCache() {
+  try {
+    const cached = await readStorageJson(APP_BUCKET_PATH);
+    if (cached && Array.isArray(cached.gigs)) {
+      activeGigs = cached.gigs;
+      gigsScrapedAt = Number(cached.scrapedAt) || 0;
+      console.log(`📦 Loaded ${activeGigs.length} gigs from the last scrape.`);
+    }
+  } catch (e) {}
+}
+
+function saveGigsCache() {
+  writeStorageJson(APP_BUCKET_PATH, { scrapedAt: gigsScrapedAt, gigs: activeGigs })
+    .catch(err => console.warn('Gig cache save notice:', err.message));
+}
+
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  const hash = crypto.scryptSync(String(password), salt, 32).toString('hex');
+  return `scrypt$${salt}$${hash}`;
+}
+
+function checkPassword(password, stored) {
+  if (!stored) return false;
+  const pw = String(password);
+  if (stored.startsWith('scrypt$')) {
+    const [, salt, hash] = stored.split('$');
+    const test = crypto.scryptSync(pw, salt, 32);
+    const expected = Buffer.from(hash, 'hex');
+    return expected.length === test.length && crypto.timingSafeEqual(expected, test);
+  }
+  // Older accounts: plain SHA-256 (upgraded to scrypt on their next login)
+  const legacy = crypto.createHash('sha256').update(pw).digest('hex');
+  return legacy === stored;
+}
+
+function signToken(userId) {
+  const payload = Buffer.from(JSON.stringify({ id: userId, exp: Date.now() + TOKEN_TTL_MS })).toString('base64url');
+  const sig = crypto.createHmac('sha256', TOKEN_SECRET).update(payload).digest('base64url');
+  return `${payload}.${sig}`;
+}
+
+function verifyToken(token) {
+  if (!token || typeof token !== 'string' || !token.includes('.')) return null;
+  const [payload, sig] = token.split('.');
+  const expected = crypto.createHmac('sha256', TOKEN_SECRET).update(payload).digest('base64url');
+  if (!sig || sig.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return null;
+  try {
+    const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    return data && data.id && data.exp > Date.now() ? data : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function requireUser(req, res) {
+  const auth = req.headers.authorization || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : (req.body && req.body.token);
+  const data = verifyToken(token);
+  if (!data || data.id !== req.params.id) {
+    res.status(401).json({ success: false, error: 'Please log in again.' });
+    return null;
+  }
+  return data.id;
+}
+
+function cleanUsername(value) {
+  return String(value || '').replace(/\s+/g, ' ').trim().slice(0, 60);
+}
+
+function publicProfile(p) {
+  return { id: p.id, username: p.username, full_name: p.username, role: p.role === 'volunteer' ? 'volunteer' : 'seeker' };
+}
+
+async function findProfilesByUsername(username) {
+  // Case-insensitive exact match (escape LIKE wildcards)
+  const pattern = username.replace(/[\\%_]/g, ch => '\\' + ch);
+  const { data, error } = await supabase.from('profiles').select('id, username, role, pass_hash').ilike('username', pattern).limit(10);
+  if (error) throw error;
+  return data || [];
+}
+
+app.post('/api/auth/signup', async (req, res) => {
+  if (!supabase) return res.status(503).json({ success: false, error: 'Accounts are unavailable right now. Try again soon.' });
+  const username = cleanUsername(req.body && req.body.username);
+  const password = String((req.body && req.body.password) || '');
+  const role = req.body && req.body.role === 'volunteer' ? 'volunteer' : 'seeker';
+  if (username.length < 2) return res.status(400).json({ success: false, error: 'Please enter your name.' });
+  if (password.length < 4) return res.status(400).json({ success: false, error: 'Password must be at least 4 characters.' });
+  try {
+    const existing = await findProfilesByUsername(username);
+    if (existing.length) return res.status(409).json({ success: false, error: 'That username is already taken. Try logging in instead.' });
+    const id = 'user_' + username.toLowerCase().replace(/[^a-z0-9]/g, '_').slice(0, 30) + '_' + crypto.randomBytes(3).toString('hex');
+    const row = { id, username, role, pass_hash: hashPassword(password), updated_at: new Date().toISOString() };
+    const { error } = await supabase.from('profiles').insert(row);
+    if (error) throw error;
+    res.json({ success: true, user: publicProfile(row), token: signToken(id) });
+  } catch (err) {
+    console.warn('Signup error:', err.message);
+    res.status(500).json({ success: false, error: 'Couldn’t create your account. Check your connection and try again.' });
+  }
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  if (!supabase) return res.status(503).json({ success: false, error: 'Accounts are unavailable right now. Try again soon.' });
+  const username = cleanUsername(req.body && req.body.username);
+  const password = String((req.body && req.body.password) || '');
+  if (!username || !password) return res.status(400).json({ success: false, error: 'Enter your username and password.' });
+  try {
+    const matches = await findProfilesByUsername(username);
+    if (!matches.length) return res.status(404).json({ success: false, error: 'No account found with that username.' });
+    let profile = matches.find(p => checkPassword(password, p.pass_hash));
+    if (!profile) {
+      // Accounts from the phone-only build have no password stored here yet. The phone that
+      // made the account proves it (its saved record matched this password and id), and the
+      // password is stored from now on.
+      const legacyId = String((req.body && req.body.legacyId) || '');
+      const unclaimed = legacyId && matches.find(p => !p.pass_hash && p.id === legacyId);
+      if (unclaimed) {
+        const { error } = await supabase.from('profiles').update({ pass_hash: hashPassword(password), updated_at: new Date().toISOString() }).eq('id', unclaimed.id).is('pass_hash', null);
+        if (error) throw error;
+        return res.json({ success: true, user: publicProfile(unclaimed), token: signToken(unclaimed.id) });
+      }
+      if (matches.every(p => !p.pass_hash)) {
+        return res.status(409).json({ success: false, error: 'This account was made before passwords were saved online. Log in once on the phone you made it on, or create a new account.' });
+      }
+      return res.status(401).json({ success: false, error: 'Wrong password. Please try again.' });
+    }
+    if (!profile.pass_hash.startsWith('scrypt$')) {
+      supabase.from('profiles').update({ pass_hash: hashPassword(password), updated_at: new Date().toISOString() }).eq('id', profile.id)
+        .then(({ error }) => { if (error) console.warn('Password upgrade notice:', error.message); });
+    }
+    res.json({ success: true, user: publicProfile(profile), token: signToken(profile.id) });
+  } catch (err) {
+    console.warn('Login error:', err.message);
+    res.status(500).json({ success: false, error: 'Couldn’t log in. Check your connection and try again.' });
+  }
+});
+
+const USER_ID_RE = /^[A-Za-z0-9_.@-]{3,120}$/;
+
+app.get('/api/user-data/:id', async (req, res) => {
+  if (!USER_ID_RE.test(req.params.id)) return res.status(400).json({ success: false });
+  const id = requireUser(req, res);
+  if (!id) return;
+  const doc = await readStorageJson(`users/${id}.json`);
+  res.json({ success: true, updatedAt: (doc && doc.updatedAt) || 0, data: (doc && doc.data) || {} });
+});
+
+app.put('/api/user-data/:id', async (req, res) => {
+  if (!USER_ID_RE.test(req.params.id)) return res.status(400).json({ success: false });
+  const id = requireUser(req, res);
+  if (!id) return;
+  const data = req.body && req.body.data;
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return res.status(400).json({ success: false, error: 'Nothing to save.' });
+  // Only string values (they mirror the phone's saved keys)
+  const clean = {};
+  for (const [k, v] of Object.entries(data)) {
+    if (typeof k === 'string' && k.length <= 80 && (typeof v === 'string' || v === null)) clean[k] = v;
+  }
+  try {
+    const updatedAt = Date.now();
+    await writeStorageJson(`users/${id}.json`, { updatedAt, data: clean });
+    res.json({ success: true, updatedAt });
+  } catch (err) {
+    console.warn('User data save notice:', err.message);
+    res.status(500).json({ success: false, error: 'Couldn’t save right now.' });
+  }
+});
+
 // User Profiles API Endpoints for Cross-Account Synchronization
 app.get('/api/profiles/:id', async (req, res) => {
   if (supabase) {
@@ -912,12 +949,8 @@ app.post('/api/create-checkout-session', async (req, res) => {
     const amountInCents = Math.round(amount * 100);
 
     if (!stripe) {
-      console.warn('⚠️ Stripe API key is not configured in .env. Returning demo checkout URL.');
-      return res.json({
-        success: true,
-        demoMode: true,
-        url: `${req.protocol}://${req.get('host')}/donate.html?status=success&demo=true&amount=${amount}`
-      });
+      // No pretend checkout: say plainly that card donations aren't available
+      return res.status(503).json({ success: false, error: 'Card donations aren’t set up yet. Nothing was charged.' });
     }
 
     const session = await stripe.checkout.sessions.create({
@@ -943,16 +976,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
     res.json({ success: true, id: session.id, url: session.url });
   } catch (err) {
     console.error('⚠️ Stripe Checkout Notice:', err.message);
-    const rawAmount = parseFloat(req.body.amount);
-    const amount = !isNaN(rawAmount) && rawAmount > 0 ? rawAmount : 25;
-    const fallbackUrl = `${req.protocol}://${req.get('host')}/donate.html?status=success&demo=true&amount=${amount}`;
-    
-    res.json({ 
-      success: true, 
-      demoMode: true,
-      notice: err.message,
-      url: fallbackUrl 
-    });
+    res.status(502).json({ success: false, error: 'We couldn’t open checkout. Nothing was charged. Try again in a moment.' });
   }
 });
 
@@ -1431,9 +1455,12 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`✅ Northstar App Ready at http://localhost:${actualPort}`);
   console.log(`🚀 Server running on http://0.0.0.0:${actualPort} (${activeGigs.length} vetted gigs ready)`);
 
-  // Seed Supabase database tables if empty
-  seedSupabaseTablesIfEmpty().catch(err => {
-    console.warn('Startup seed warning:', err?.message || err);
+  // Gigs: last real scrape from storage, then refresh it if it's old
+  loadGigsCache().then(() => {
+    const stale = !gigsScrapedAt || (Date.now() - gigsScrapedAt) > GIGS_MAX_AGE_MS;
+    if (stale && process.env.APIFY_TOKEN) {
+      fetchAndVetGigs().catch(err => console.warn('Gig refresh warning:', err?.message || err));
+    }
   });
 
   // Run Apify scraper on startup only if explicitly enabled (otherwise use pre-seeded gigs & on-demand /api/trigger-scrape)

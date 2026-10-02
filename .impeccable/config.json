@@ -53,6 +53,18 @@
         ],
         "createdAt": "2026-09-30T22:13:52.005Z",
         "reason": "Claude: flagged element is ns-tile, a 42px icon tile with a centered glyph and no text"
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "nsbounce",
+        "createdAt": "2026-10-02T04:35:02.219Z",
+        "reason": "user asked for an animated arrow that moves to guide taps; this is a smooth up-down ease-in-out loop, not elastic easing"
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "nsbounceup",
+        "createdAt": "2026-10-02T04:35:02.370Z",
+        "reason": "user asked for an animated arrow that moves to guide taps; this is a smooth up-down ease-in-out loop, not elastic easing"
       }
     ]
   }

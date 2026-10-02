@@ -12,18 +12,6 @@
   let jobsPollingTimer = null;
   let isFetchInProgress = false;
 
-  // Fallback listings shown before /api/gigs responds. Every URL must be a direct
-  // Craigslist listing permalink (/view/d/...), never a search page.
-  const defaultSeedGigs = [
-    {
-      id: 'ure18rin8RGNNY3Ml6t41Q',
-      title: 'Can You Lift Heavy Items? Earn Daily Cash as a Helper',
-      pay: '$22.00 / hr Cash',
-      summary: 'Unloading commercial pallet boxes and heavy staging equipment.',
-      safety: 'Entry level immediate hire. Cash paid at end of shift.',
-      url: 'https://www.craigslist.org/view/d/seattle-can-you-lift-heavy-items-earn/ure18rin8RGNNY3Ml6t41Q'
-    }
-  ];
 
   function extractPay(text) {
     if (!text) return null;
@@ -81,7 +69,7 @@
     const { amount, cash } = splitPay(payText, isCashFlag);
     return {
       amountHtml: amount
-        ? `<span class="job-pay block text-[17px] font-bold leading-tight tracking-tight">${esc(amount)}</span>${cash ? '<span class="block text-[12px] font-semibold text-muted mt-0.5">Cash</span>' : ''}`
+        ? `<span class="job-pay ns-pay text-[16px] font-bold leading-tight tracking-tight">${esc(amount)}</span>${cash ? '<span class="block text-[12px] font-semibold text-muted mt-1">Cash</span>' : ''}`
         : `<span class="job-pay block text-[13px] font-semibold text-muted">Pay not listed</span>`,
       cash
     };
@@ -219,7 +207,7 @@
     return `
       <article data-job-id="${esc(id)}" data-job-key="${esc(key)}" data-job-kind="posted" class="job-card ns-card">
           <div class="flex items-start gap-3">
-              <span class="ns-tile ns-tile--sm ns-tile--plain" aria-hidden="true"><span class="material-symbols-outlined">${iconName}</span></span>
+              <span class="ns-tile ns-tile--sm" aria-hidden="true"><span class="material-symbols-outlined">${iconName}</span></span>
               <div class="min-w-0 flex-1">
                   <h3 class="job-title ns-card-title break-words">${esc(title)}</h3>
                   ${where ? `<p class="ns-card-sub mt-0.5">${esc(where)}</p>` : ''}
@@ -236,23 +224,8 @@
   }
 
   /**
-   * Builds default seed item objects so state cache is never empty.
-   */
-  function buildSeedItemsList() {
-    return defaultSeedGigs.map((g, idx) => {
-      const id = g.id || `seed-${idx}`;
-      const key = `${id}|${g.title || ''}|${g.pay || ''}|${g.summary || ''}`;
-      return {
-        id,
-        key,
-        html: generateGigCardHtml(g, key, idx)
-      };
-    });
-  }
-
-  /**
-   * Retrieves cached job items synchronously from memory or localStorage,
-   * falling back to defaultSeedGigs so the feed is never blank.
+   * Retrieves cached job items synchronously from memory or localStorage
+   * (real listings from the last load; nothing made up when there are none).
    */
   function currentJobsRole() {
     const rawRole = (typeof getRole === 'function') ? getRole() : (localStorage.getItem('northstar_user_role') || 'seeker');
@@ -279,11 +252,7 @@
     } catch (e) {
       console.warn('Failed to parse cached jobs from localStorage:', e);
     }
-    // Volunteers only see jobs they posted, so the public seed listing doesn't apply
-    if (currentJobsRole() === 'volunteer') return [];
-    const seedList = buildSeedItemsList();
-    window._northstarJobsCache = seedList;
-    return seedList;
+    return [];
   }
 
   function saveCachedJobsItems(itemsList) {
@@ -769,6 +738,63 @@
       window.startJobsAutoRefresh();
     }
   }
+
+  // ---- Inside the Northstar phone app: open listings in the app's step-by-step guide ----
+  // The app (expo-app/) shows the listing with an arrow that points at what to tap next.
+  // It gets a short reply message written from the person's resume, ready to paste.
+  function replyMessageFor(jobTitle) {
+    let resume = null;
+    try { resume = JSON.parse(localStorage.getItem('northstar_latest_resume_data') || 'null'); } catch (e) {}
+    const session = typeof getSession === 'function' ? getSession() : {};
+    const c = (resume && resume.contact_info) || {};
+    const name = c.name || (!session.isGuest && (session.full_name || session.username)) || '';
+    const phone = c.phone || '';
+    const skills = [];
+    if (resume && resume.skills) {
+      ['practical_skills', 'certifications'].forEach(k => (resume.skills[k] || []).forEach(s => { if (s && skills.length < 3) skills.push(String(s).toLowerCase()); }));
+    }
+    const lines = [
+      `Hi, I saw your post${jobTitle ? ` "${jobTitle}"` : ''} and I'm interested.`,
+      `I'm a hard worker, I show up on time, and I can start right away.${skills.length ? ` I have experience with ${skills.join(', ')}.` : ''}`,
+      phone ? `You can call or text me at ${phone}.` : 'Please reply here and let me know when and where to come.',
+      name ? `Thank you,\n${name}` : 'Thank you!'
+    ];
+    return lines.join('\n\n');
+  }
+
+  // Name, phone, email and city for the guide's "Fill in for me" on employer websites
+  function applyProfile() {
+    let resume = null;
+    try { resume = JSON.parse(localStorage.getItem('northstar_latest_resume_data') || 'null'); } catch (e) {}
+    const session = typeof getSession === 'function' ? getSession() : {};
+    const c = (resume && resume.contact_info) || {};
+    const contact = String(c.contact || '');
+    return {
+      name: c.name || (!session.isGuest && (session.full_name || session.username)) || '',
+      phone: c.phone || '',
+      email: /@/.test(contact) ? (contact.match(/[^\s@]+@[^\s@]+\.[^\s@]+/) || [''])[0] : '',
+      city: c.location || ''
+    };
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!window.ReactNativeWebView) return;
+    const link = e.target.closest && e.target.closest('a.apply-cta-btn[href]');
+    if (!link) return;
+    const card = link.closest('.job-card');
+    const title = card ? (card.querySelector('.job-title') || {}).textContent || '' : '';
+    const pay = card ? (card.querySelector('.job-pay') || {}).textContent || '' : '';
+    e.preventDefault();
+    e.stopPropagation();
+    window.ReactNativeWebView.postMessage(JSON.stringify({
+      type: 'job-guide',
+      url: link.href,
+      title: title.trim(),
+      pay: pay.trim(),
+      message: replyMessageFor(title.trim()),
+      profile: applyProfile()
+    }));
+  }, true);
 
   // Warm up cache immediately on script load
   getCachedJobsItems();

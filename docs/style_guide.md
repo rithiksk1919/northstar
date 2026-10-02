@@ -1,7 +1,9 @@
-# Style Guide — reference grammar
+# Style Guide — reference grammar (round 3)
 
 Source: `refs/reference.mp4` (x.com/wabi/status/2104721766690222087), 80.5 s, 3840×2160 @ 60 fps.
 Studied from 161 frames at 0.5 s intervals in `refs/frames/` (frame `f_NNN` = `(NNN-1) × 0.5 s`).
+This is the same reference as round 1 (the frames match byte for byte), so sections 1–10 carry over from `docs/v1/style_guide.md`. Section 11 adds the beats this round leans on.
+Round 2 (a different reference) is archived in `docs/v2/` and `refs/v2/`.
 
 This document records **grammar only**: color logic, type behavior, rhythm, transitions, camera.
 None of the reference's copy, logos, characters, 3D objects or UI is carried into our video.
@@ -177,3 +179,28 @@ Soft ambient pad under World A, then a light percussive tick on each word reveal
 **Do:** one idea per card · white field between every idea · let the product provide the color · pull back to reveal · ease everything · short declarative lines.
 
 **Don't:** put two lines of copy on screen · use color blocks behind type · use slide or wipe transitions · use drop-shadowed text · add grain on white · use more than one new text behavior per shot.
+
+---
+
+## 11. Beats this round leans on (new detail)
+
+### 11a. Sticker burst (energy spike), f_019–f_021, about 1.0 s
+- About 8–10 glossy, soft-lit 3D objects ring the **edges** of the frame around one centered chat bubble. The center stays clear and readable.
+- They enter at scale about 0.6 with 15–30° of rotation, spring to 1.0 with a single overshoot (about 8%), and carry heavy motion blur on the way in.
+- They hold for about 0.3 s, then fly **outward** off the frame edges (blur again), leaving the bubble alone on white.
+- Objects are full-color and saturated. This is the only time the white world gets a burst of color that doesn't come from the product.
+
+### 11b. Caption + curved carousel, f_128–f_139, about 5 s
+- A one-line caption sits in ink at about 20% height, about 2.8% of frame height (the caption size from §3).
+- A phone sits at center, bottom-cropped by the frame.
+- Behind it, square tiles (radius about 22%, about 0.45 × phone width) run on a **shallow arc**: the arc is highest behind the phone and droops toward the frame edges.
+- Tiles turn to face the arc (rotateY up to about ±35° at the edges), shrink toward the edges (about 0.75×), and soften slightly at the far ends.
+- The whole arc pans laterally at a steady rate (about one tile per 0.5 s). Tiles pass *behind* the phone, so the phone reads as the hero.
+
+### 11c. Close-up product beats, f_040–f_060
+- Tight crops (camera scale 1.3–1.6) on one region of a screen; the rest of the phone is off-frame.
+- New content arrives **inside** the crop (a bubble, a widget). The camera then eases back to reveal context, never cutting.
+
+### 11d. What the reference never does
+- **No hands, fingers or cursors** inside product beats (the one arrow cursor is a sticker in the burst, not an interaction).
+- So a tap has to be shown with a UI-native cue (the button's own pressed state, a ring or a ripple) rather than a drawn hand.

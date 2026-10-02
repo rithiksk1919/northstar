@@ -8,6 +8,7 @@
     <title>Northstar</title>
     <link rel="icon" href="favicon.png">
     <script src="js/ns-boot.js"></script>
+    <script src="js/user-data.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com?plugins=container-queries"></script>
@@ -74,9 +75,6 @@
                 <p class="ob-small ob-small--center" style="--i:5">Already have an account?</p>
                 <button id="onboarding-signin-btn" type="button" class="ob-btn ob-btn--secondary" style="--i:5" onclick="showOnboardingStep(2,'signin')">
                     Log in
-                </button>
-                <button id="onboarding-admin-btn" type="button" class="ob-admin" style="--i:6" onclick="nsGo('seeker-dashboard.html')">
-                    Admin test login
                 </button>
             </div>
         </section>
@@ -455,7 +453,7 @@
             if (existingSession) {
                 try {
                     const sess = JSON.parse(existingSession);
-                    if (sess && sess.username && !sess.isGuest) {
+                    if (sess && sess.token && !sess.isGuest) {
                         // Returning user — redirect to dashboard instantly
                         nsGo((sess.role === 'volunteer') ? 'helper-dashboard.html' : 'seeker-dashboard.html', { replace: true });
                     }
@@ -495,87 +493,69 @@
                 if (submitBtn) { submitBtn.disabled = true; submitBtn.style.opacity = '0.7'; }
                 if (submitLabel) submitLabel.textContent = _onboardingMode === 'create' ? 'Creating your account…' : 'Logging in…';
 
-                // ---- Storage helpers ----
-                const STORE_KEY = 'ns_users_v3';
-                function getUsers() {
-                    const defaults = {
-                        'demo':      { username: 'demo',      password: 'demo123',      role: 'seeker',    id: 'demo-seeker-001',      full_name: 'Demo Seeker' },
-                        'seeker':    { username: 'seeker',    password: 'northstar123', role: 'seeker',    id: 'seeker-test-001',      full_name: 'Alex Seeker' },
-                        'volunteer': { username: 'volunteer', password: 'northstar123', role: 'volunteer', id: 'volunteer-test-001',    full_name: 'Jordan Volunteer' }
-                    };
-                    try { return { ...defaults, ...JSON.parse(localStorage.getItem(STORE_KEY) || '{}') }; }
-                    catch(e) { return defaults; }
-                }
-                function saveUser(u) {
+                // ---- Accounts live in Supabase (server: /api/auth/*) ----
+                const role = _selectedOnboardingRole || 'seeker';
+                // Accounts made by older builds were only saved on this phone; move them over on first login
+                let legacyRecord = null;
+                try {
+                    const legacy = JSON.parse(localStorage.getItem('ns_users_v3') || '{}');
+                    const rec = legacy[name.toLowerCase()];
+                    if (rec && rec.password === pass) legacyRecord = rec;
+                } catch (e) {}
+
+                async function callAuth(path, body) {
+                    const controller = new AbortController();
+                    const timer = setTimeout(() => controller.abort(), 15000);
                     try {
-                        const map = getUsers();
-                        map[u.username.toLowerCase()] = u;
-                        localStorage.setItem(STORE_KEY, JSON.stringify(map));
-                    } catch(e) {}
+                        const resp = await fetch(path, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(body),
+                            signal: controller.signal
+                        });
+                        const out = await resp.json().catch(() => ({}));
+                        return { status: resp.status, ...out };
+                    } catch (err) {
+                        return { success: false, status: 0, error: 'Couldn’t reach Northstar. Check your internet connection and try again.' };
+                    } finally {
+                        clearTimeout(timer);
+                    }
                 }
 
-                const users = getUsers();
-                const key   = name.toLowerCase();
-                const role  = _selectedOnboardingRole || 'seeker';
-
+                let result;
                 if (_onboardingMode === 'create') {
-                    // --- CREATE ---
-                    if (users[key]) {
-                        showErr('That username is already taken. Try signing in instead.');
-                        return;
-                    }
-                    const newUser = {
-                        username:  name,
-                        password:  pass,
-                        role:      role,
-                        id:        'user_' + key.replace(/[^a-z0-9]/g,'_') + '_' + Math.floor(Math.random()*9000+1000),
-                        full_name: name
-                    };
-                    saveUser(newUser);
-
-                    // Sync to Supabase profiles. Wait briefly so navigating away doesn't cancel the request.
-                    try {
-                        const sb = window.supabaseClient;
-                        if (sb) {
-                            const saveProfile = sb.from('profiles').upsert({
-                                id: newUser.id, username: newUser.username,
-                                role: newUser.role, updated_at: new Date().toISOString()
-                            }).then(({ error }) => { if (error) console.warn('Profile sync failed:', error.message); });
-                            await Promise.race([saveProfile, new Promise(r => setTimeout(r, 2000))]);
-                        }
-                    } catch(e) {}
-
-                    localStorage.setItem('northstar_session', JSON.stringify({
-                        id: newUser.id, username: newUser.username,
-                        full_name: newUser.full_name, role: newUser.role, isGuest: false
-                    }));
-                    if (typeof window.setRole === 'function') window.setRole(newUser.role);
-                    const dashUrl = (newUser.role === 'volunteer') ? 'helper-dashboard.html' : 'seeker-dashboard.html';
-                    showLocationStep(dashUrl);
-
+                    result = await callAuth('/api/auth/signup', { username: name, password: pass, role });
                 } else {
-                    // --- SIGN IN ---
-                    const record = users[key];
-                    if (!record) {
-                        showErr('No account found with that username.');
-                        return;
+                    result = await callAuth('/api/auth/login', { username: name, password: pass, legacyId: legacyRecord ? legacyRecord.id : '' });
+                    if (!result.success && result.status === 404 && legacyRecord) {
+                        result = await callAuth('/api/auth/signup', { username: legacyRecord.username || name, password: pass, role: legacyRecord.role || role });
                     }
-                    if (record.password !== pass) {
-                        if (passInput) {
-                            passInput.style.animation = 'shake 0.4s ease';
-                            setTimeout(() => { passInput.style.animation = ''; }, 600);
-                        }
-                        showErr('Wrong password. Please try again.');
-                        return;
-                    }
-                    localStorage.setItem('northstar_session', JSON.stringify({
-                        id: record.id, username: record.username,
-                        full_name: record.full_name || record.username,
-                        role: record.role, isGuest: false
-                    }));
-                    if (typeof window.setRole === 'function') window.setRole(record.role);
-                    nsGo((record.role === 'volunteer') ? 'helper-dashboard.html' : 'seeker-dashboard.html');
                 }
+
+                if (!result.success || !result.user || !result.token) {
+                    if (result.status === 401 && passInput) {
+                        passInput.style.animation = 'shake 0.4s ease';
+                        setTimeout(() => { passInput.style.animation = ''; }, 600);
+                    }
+                    showErr(result.error || 'Something went wrong. Please try again.');
+                    return;
+                }
+
+                const user = result.user;
+                // Data on this phone from before this account existed (a guest's, or the old phone-only
+                // account's) becomes theirs; a different person's data is cleared by js/user-data.js
+                if (typeof window.nsAdoptPhoneData === 'function') {
+                    window.nsAdoptPhoneData(user.id, legacyRecord ? [legacyRecord.id] : []);
+                }
+
+                localStorage.setItem('northstar_session', JSON.stringify({
+                    id: user.id, username: user.username, full_name: user.full_name || user.username,
+                    role: user.role, isGuest: false, token: result.token
+                }));
+                if (typeof window.setRole === 'function') window.setRole(user.role);
+                const dashUrl = (user.role === 'volunteer') ? 'helper-dashboard.html' : 'seeker-dashboard.html';
+                if (_onboardingMode === 'create') showLocationStep(dashUrl);
+                else nsGo(dashUrl);
             };
 
             // ---- CSS for shake animation ----
