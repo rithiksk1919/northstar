@@ -1,4 +1,4 @@
-const APP_CACHE_NAME = 'northstar-offline-v10';
+const APP_CACHE_NAME = 'northstar-offline-v11';
 const TILE_CACHE_NAME = 'northstar-map-tiles';
 
 const CORE_ASSETS = [

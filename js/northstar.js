@@ -74,9 +74,11 @@ window.nsDisplayName = nsDisplayName;
 
 // Fill the round account button (#profile-btn) in the page header with the user's initial
 function renderAccountHeaderAvatar() {
+  const session = getSession();
+  const isGuest = !session || session.isGuest;
   const name = nsDisplayName();
   const role = getRole();
-  const initial = (name.charAt(0) || (role === 'volunteer' ? 'V' : 'S')).toUpperCase();
+  const initial = (isGuest ? 'G' : (name.charAt(0) || (role === 'volunteer' ? 'V' : 'S'))).toUpperCase();
   document.querySelectorAll('#profile-btn').forEach(btn => {
     btn.textContent = initial;
     btn.title = name ? `Signed in as ${name}. Open settings` : 'Open settings';
