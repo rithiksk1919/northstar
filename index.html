@@ -371,18 +371,19 @@
         });
 
         // After creating an account or exploring: ask once for location, then go home
+        // (the login screen is replaced in history, so Back from the dashboard doesn't return here)
         let _afterLocationUrl = 'seeker-dashboard.html';
         window.showLocationStep = function (nextUrl) {
             _afterLocationUrl = nextUrl || 'seeker-dashboard.html';
             let asked = false;
             try { asked = localStorage.getItem('northstar_location_asked') === '1'; } catch (e) {}
-            if (asked || !navigator.geolocation) { nsGo(_afterLocationUrl); return; }
+            if (asked || !navigator.geolocation) { nsGo(_afterLocationUrl, { replace: true }); return; }
             showOnboardingStep(4);
         };
 
         window.finishLocationStep = function (allow) {
             try { localStorage.setItem('northstar_location_asked', '1'); } catch (e) {}
-            const go = () => nsGo(_afterLocationUrl);
+            const go = () => nsGo(_afterLocationUrl, { replace: true });
             if (!allow || !navigator.geolocation || window.isSecureContext === false) { go(); return; }
             const btn = document.getElementById('ob-location-allow');
             if (btn) { btn.disabled = true; btn.textContent = 'One moment…'; }
@@ -403,8 +404,10 @@
         window.dismissOnboarding = function(guestDismiss) {
             if (guestDismiss) {
                 // Set a lightweight guest session and redirect to dashboard
-                const guestSession = { id: 'guest', username: 'Guest', role: 'seeker', isGuest: true };
+                const guestSession = { id: 'guest', username: 'Guest', role: 'seeker', isGuest: true, loggedInAt: Date.now() };
+                try { sessionStorage.setItem('ns_session_active', '1'); } catch (e) {}
                 localStorage.setItem('northstar_session', JSON.stringify(guestSession));
+                try { localStorage.setItem('northstar_user_role', 'seeker'); } catch (e) {}
                 showLocationStep('seeker-dashboard.html');
                 return;
             }
@@ -448,16 +451,23 @@
         document.addEventListener('DOMContentLoaded', () => {
             updateLandingRoleCards();
 
-            // ---- Session check: skip onboarding if user already logged in ----
-            const existingSession = localStorage.getItem('northstar_session');
-            if (existingSession) {
-                try {
-                    const sess = JSON.parse(existingSession);
-                    if (sess && sess.token && !sess.isGuest) {
-                        // Returning user — redirect to dashboard instantly
-                        nsGo((sess.role === 'volunteer') ? 'helper-dashboard.html' : 'seeker-dashboard.html', { replace: true });
-                    }
-                } catch(e) {}
+            // ---- Session check: only skip onboarding if logged into an account within the last 5 minutes ----
+            const SESSION_TTL_MS = 5 * 60 * 1000;
+            const sess = (typeof window.nsGetValidSession === 'function')
+                ? window.nsGetValidSession({ isIndex: true })
+                : (() => {
+                    try {
+                        const s = JSON.parse(localStorage.getItem('northstar_session') || 'null');
+                        const last = s ? Math.max(Number(s.lastActiveAt) || 0, Number(s.loggedInAt) || 0) : 0;
+                        const age = last ? (Date.now() - last) : Infinity;
+                        if (s && s.token && !s.isGuest && age >= -60000 && age < SESSION_TTL_MS) return s;
+                        localStorage.removeItem('northstar_session');
+                        localStorage.removeItem('northstar_user_role');
+                    } catch (e) {}
+                    return null;
+                })();
+            if (sess && sess.token && !sess.isGuest) {
+                nsGo((sess.role === 'volunteer') ? 'helper-dashboard.html' : 'seeker-dashboard.html', { replace: true });
             }
 
             // ---- Auth submit: self-contained, no external dependencies ----
@@ -548,14 +558,15 @@
                     window.nsAdoptPhoneData(user.id, legacyRecord ? [legacyRecord.id] : []);
                 }
 
+                try { sessionStorage.setItem('ns_session_active', '1'); } catch (e) {}
                 localStorage.setItem('northstar_session', JSON.stringify({
                     id: user.id, username: user.username, full_name: user.full_name || user.username,
-                    role: user.role, isGuest: false, token: result.token
+                    role: user.role, isGuest: false, token: result.token, loggedInAt: Date.now()
                 }));
                 if (typeof window.setRole === 'function') window.setRole(user.role);
                 const dashUrl = (user.role === 'volunteer') ? 'helper-dashboard.html' : 'seeker-dashboard.html';
                 if (_onboardingMode === 'create') showLocationStep(dashUrl);
-                else nsGo(dashUrl);
+                else nsGo(dashUrl, { replace: true });
             };
 
             // ---- CSS for shake animation ----

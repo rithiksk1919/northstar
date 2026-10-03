@@ -337,6 +337,12 @@ if (!window._donationDelegationSetup) {
                 window.openDeliverFoodModal(e);
             }
         });
+
+        // Arriving from the dashboard's "Deliver food" card: open the pickup list straight away
+        if (window.location.hash === '#deliver') {
+            try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch (err) {}
+            setTimeout(() => { if (window.openDeliverFoodModal) window.openDeliverFoodModal(); }, 350);
+        }
     };
 
     if (document.readyState === 'loading') {
@@ -783,18 +789,13 @@ window.initDonationStatusBar = async function() {
         const res = await fetch('/api/deliveries');
         const data = await res.json();
 
-        let activeJob = null;
-        if (role === 'volunteer') {
-            activeJob = (data.deliveries || []).find(d =>
-                d.driver_id === session.id &&
-                ['pending_driver', 'driver_assigned', 'in_transit', 'delivered'].includes(d.status)
-            );
-        } else {
-            activeJob = (data.deliveries || []).find(d =>
-                d.donor_id === session.id &&
-                ['pending_driver', 'driver_assigned', 'in_transit', 'delivered'].includes(d.status)
-            );
-        }
+        const live = ['pending_driver', 'driver_assigned', 'in_transit', 'delivered'];
+        const list = data.deliveries || [];
+        // The person may be driving a pickup or waiting on one they donated (both happen from this page)
+        const driving = list.find(d => d.driver_id === session.id && live.includes(d.status));
+        const donated = list.find(d => d.donor_id === session.id && live.includes(d.status));
+        const activeJob = driving || donated;
+        const asDriver = !!driving;
 
         if (activeJob) {
             bar.classList.remove('hidden');
@@ -805,7 +806,7 @@ window.initDonationStatusBar = async function() {
             const dest = activeJob.destination || 'the shelter';
             let done = false;
 
-            if (role === 'volunteer') {
+            if (asDriver) {
                 if (activeJob.status === 'delivered') {
                     done = true;
                     label.textContent = 'Delivery complete';

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  AppState,
   BackHandler,
   Linking,
   Platform,
@@ -41,6 +42,16 @@ export default function App() {
   // Ask once so the map's "near me" works inside the app
   useEffect(() => {
     Location.requestForegroundPermissionsAsync().catch(() => {});
+  }, []);
+
+  // Re-check 5-minute login window every time the app is opened/brought to foreground
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active' && webRef.current) {
+        webRef.current.injectJavaScript('if (typeof window.nsCheckSessionExpiry === "function") window.nsCheckSessionExpiry(); true;');
+      }
+    });
+    return () => sub.remove();
   }, []);
 
   // Android back button goes back inside the app first

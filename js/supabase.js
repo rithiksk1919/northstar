@@ -40,7 +40,9 @@
   }
 
   if (window.supabase && typeof window.supabase.createClient === 'function') {
-    window.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+    window.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
     console.log('✅ [Supabase] Client initialized for project:', supabaseUrl);
   } else {
     console.error('[Supabase] supabase-js library not loaded. Check CDN script tag.');

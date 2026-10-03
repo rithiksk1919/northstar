@@ -151,7 +151,9 @@ function initGlobalSupabaseClient(url, key) {
     if (!cleanUrl.startsWith('https://')) {
       return null;
     }
-    supabaseClientInstance = window.supabase.createClient(cleanUrl, cleanKey);
+    supabaseClientInstance = window.supabase.createClient(cleanUrl, cleanKey, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
     window.supabaseClient = supabaseClientInstance;
     return supabaseClientInstance;
   }
@@ -435,8 +437,10 @@ window.handleAuthFormSubmit = async function(e) {
         full_name: newUserRecord.full_name,
         email: newUserRecord.email,
         role: selectedRole,
-        isGuest: false
+        isGuest: false,
+        loggedInAt: Date.now()
       };
+      try { sessionStorage.setItem('ns_session_active', '1'); } catch (e) {}
       localStorage.setItem('northstar_session', JSON.stringify(sessionData));
       if (typeof window.setRole === 'function') window.setRole(selectedRole);
 
@@ -468,9 +472,11 @@ window.handleAuthFormSubmit = async function(e) {
               full_name: data.user.user_metadata?.full_name || '',
               email: email,
               role: role,
-              isGuest: false
+              isGuest: false,
+              loggedInAt: Date.now()
             };
             saveRegisteredUserRecord({ ...sessionData, password });
+            try { sessionStorage.setItem('ns_session_active', '1'); } catch (e) {}
             localStorage.setItem('northstar_session', JSON.stringify(sessionData));
             if (typeof window.setRole === 'function') window.setRole(role);
             await redirectToRoleDashboard(sessionData);
@@ -487,8 +493,10 @@ window.handleAuthFormSubmit = async function(e) {
           full_name: localCheck.user.full_name || '',
           email: localCheck.user.email,
           role: localCheck.user.role || selectedRole,
-          isGuest: false
+          isGuest: false,
+          loggedInAt: Date.now()
         };
+        try { sessionStorage.setItem('ns_session_active', '1'); } catch (e) {}
         localStorage.setItem('northstar_session', JSON.stringify(sessionData));
         if (typeof window.setRole === 'function') window.setRole(sessionData.role);
         await redirectToRoleDashboard(sessionData);

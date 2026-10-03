@@ -289,8 +289,8 @@
             </button>
 
             <div id="sheet-body">
-                <div id="place-focus-card"></div>
-                <p class="rm-list-head ns-card-sub">All places</p>
+                <div id="place-focus-card" class="hidden"></div>
+                <p class="rm-list-head ns-card-sub hidden">All places</p>
                 <div id="places-list" class="drawer-content-list ns-list">
                     <!-- Populated by renderDrawerPlaces() -->
                 </div>
@@ -347,7 +347,7 @@
                     </span>
                     <input type="checkbox" id="open-now-btn" class="ns-switch" onchange="toggleOpenNowFilter()">
                 </label>
-                <button type="button" class="ns-row" onclick="closeModal('map-filters-modal'); locateAndCenterUser();">
+                <button type="button" class="ns-row" onclick="closeModal('map-filters-modal'); _centerOnMeRequested = true; locateAndCenterUser();">
                     <span class="ns-tile ns-tile--plain ns-tile--sm"><span class="material-symbols-outlined">near_me</span></span>
                     <span class="ns-row__body">
                         <span class="ns-row__title block">Use my location</span>
@@ -615,13 +615,111 @@
     const params = new URLSearchParams(window.location.search);
     const cat = params.get('category');
     const q = params.get('q');
-    if (cat && document.querySelector(`.cat-pill-btn[data-cat="${cat}"]`)) toggleCategoryFilter(cat);
+    const filter = params.get('filter');
+    let changed = false;
+    if (cat && document.querySelector(`.cat-pill-btn[data-cat="${cat}"]`)) {
+      toggleCategoryFilter(cat);
+      params.delete('category');
+      changed = true;
+    }
     if (q) {
       const input = document.getElementById('map-search-input');
       if (input) input.value = q;
       setMapSearch(q, true);
+      params.delete('q');
+      changed = true;
+    }
+    if (filter) {
+      // From Give help → "I'll drop it off myself": head to the food bank they picked
+      if (filter === 'food_dropoff') {
+        let planned = '';
+        try { planned = String(localStorage.getItem('northstar_planned_dropoff') || '').trim().toLowerCase(); } catch (e) {}
+        const norm = s => String(s || '').trim().toLowerCase();
+        const all = planned ? getResourcesData() : [];
+        const match = planned && (
+          all.find(r => norm(r.name) === planned || (Array.isArray(r.aliases) && r.aliases.some(a => norm(a) === planned))) ||
+          all.find(r => { const n = norm(r.name); return n.length > 6 && (planned.includes(n) || n.includes(planned)); })
+        );
+        if (match) {
+          params.set('resource', String(match.id));
+        } else if (document.querySelector('.cat-pill-btn[data-cat="food"]')) {
+          toggleCategoryFilter('food');
+        }
+      }
+      params.delete('filter');
+      changed = true;
+    }
+    if (changed) {
+      const qs = params.toString();
+      window.history.replaceState({}, '', window.location.pathname + (qs ? `?${qs}` : ''));
+      // A place picked above is focused by the deep-link path once the markers are drawn
+      if (params.has('resource') && typeof applyCombinedFilters === 'function') applyCombinedFilters();
     }
   }
+
+  function clearFocusedPlace(event) {
+    if (event && event.stopPropagation) event.stopPropagation();
+    focusedPlaceId = null;
+    currentFocusId = null;
+    window.northstarSelectedMapResourceId = null;
+    if (typeof clearActiveRouteOnMap === 'function') clearActiveRouteOnMap();
+    applyCombinedFilters();
+    if (typeof snapPlacesSheet === 'function') snapPlacesSheet('peek');
+  }
+  window.clearFocusedPlace = clearFocusedPlace;
+
+  function resetMapToHome(opts = {}) {
+    focusedPlaceId = null;
+    currentFocusId = null;
+    window.northstarSelectedMapResourceId = null;
+    if (typeof clearActiveRouteOnMap === 'function') clearActiveRouteOnMap();
+    if (typeof closeTransitModal === 'function') closeTransitModal();
+    if (typeof closeModal === 'function') {
+      closeModal('map-filters-modal');
+      closeModal('add-resource-modal');
+    }
+
+    mapSearchQuery = '';
+    const searchInput = document.getElementById('map-search-input');
+    if (searchInput) searchInput.value = '';
+    const clearBtn = document.getElementById('map-search-clear');
+    if (clearBtn) clearBtn.classList.add('hidden');
+
+    activeMapMode = 'nearby';
+    isOfflineView = !navigator.onLine;
+    activeScopeFilter = 'everyone';
+    isOpenNowFilterActive = false;
+    const openNowBtn = document.getElementById('open-now-btn');
+    if (openNowBtn) openNowBtn.checked = false;
+    setPressed(document.getElementById('scope-btn-everyone'), true);
+    setPressed(document.getElementById('scope-btn-verified'), false);
+    syncModeButtons();
+
+    activeRadiusMiles = 5;
+    effectiveRadiusMiles = 5;
+    radiusChosenByUser = false;
+
+    activeSelectedCategories = ['all'];
+    document.querySelectorAll('.cat-pill-btn').forEach(btn => {
+      const on = btn.dataset.cat === 'all';
+      setPressed(btn, on);
+      const iconEl = btn.querySelector('.material-symbols-outlined');
+      const baseIcon = btn.dataset.icon || '';
+      if (iconEl) {
+        iconEl.textContent = on ? 'check' : baseIcon;
+        iconEl.classList.toggle('hidden', !on && !baseIcon);
+      }
+    });
+
+    applyCombinedFilters();
+    if (typeof snapPlacesSheet === 'function') {
+      snapPlacesSheet('peek', { animate: !opts.silent });
+    }
+    if (!opts.silent && map && userRadiusCircle && typeof map.fitBounds === 'function') {
+      map.fitBounds(userRadiusCircle.getBounds(), Object.assign({ animate: true }, mapFitPadding()));
+    }
+  }
+  window.resetMapToHome = resetMapToHome;
 
   document.addEventListener('DOMContentLoaded', () => {
     initPlacesSheet();
@@ -643,6 +741,27 @@
       }
     }
     syncFilterSummary();
+
+    // Tapping the Map tab in the bottom nav while already on the map returns to the home map screen
+    document.addEventListener('click', (e) => {
+      const navLink = e.target.closest('.bottom-nav a[data-nav-tab="map"], .bottom-nav a[href="resource-map.html"]');
+      if (navLink) {
+        e.preventDefault();
+        resetMapToHome();
+      }
+    });
+  });
+
+  // Reset back to the clean home map screen whenever leaving and returning to the map
+  window.addEventListener('pagehide', () => {
+    resetMapToHome({ silent: true });
+  });
+  window.addEventListener('pageshow', (e) => {
+    const sp = new URLSearchParams(window.location.search);
+    const hasDeepLink = sp.has('resource') || sp.has('category') || sp.has('q') || sp.has('filter');
+    if (e.persisted && !hasDeepLink) {
+      resetMapToHome({ silent: true });
+    }
   });
 
   // ---- Page UI helpers (filters sheet, mode buttons, focused place) ----
@@ -720,9 +839,18 @@
 
   function renderFocusCard(res) {
     const card = document.getElementById('place-focus-card');
+    const listHead = document.querySelector('.rm-list-head');
     if (!card) return;
 
     if (!res) {
+      if (lastFilteredCount > 0) {
+        card.innerHTML = '';
+        card.classList.add('hidden');
+        if (listHead) listHead.classList.add('hidden');
+        return;
+      }
+      card.classList.remove('hidden');
+      if (listHead) listHead.classList.add('hidden');
       const savedMode = activeMapMode === 'saved';
       if (mapSearchQuery) {
         card.innerHTML = `
@@ -744,6 +872,9 @@
         </div>`;
       return;
     }
+
+    card.classList.remove('hidden');
+    if (listHead) listHead.classList.remove('hidden');
 
     const st = placeStatus(res);
     const saved = isPlaceSaved(res.id);
@@ -780,9 +911,14 @@
           <h3 class="text-[18px] font-extrabold leading-snug tracking-tight">${esc(res.name)}</h3>
           <p class="ns-card-sub mt-0.5 line-clamp-2">${[dist ? esc(dist) : '', esc(where)].filter(Boolean).join(' · ')}</p>
         </div>
-        <button type="button" class="ns-icon-btn ns-icon-btn--bare flex-shrink-0 -mr-2 -mt-1" onclick="toggleSavePlace('${jsArg(res.id)}', event)" aria-pressed="${saved}" aria-label="${saved ? 'Remove from saved' : 'Save this place'}">
-          <span class="material-symbols-outlined ${saved ? 'ms-fill' : ''}">bookmark</span>
-        </button>
+        <div class="flex items-center gap-1 flex-shrink-0 -mr-2 -mt-1">
+          <button type="button" class="ns-icon-btn ns-icon-btn--bare" onclick="toggleSavePlace('${jsArg(res.id)}', event)" aria-pressed="${saved}" aria-label="${saved ? 'Remove from saved' : 'Save this place'}">
+            <span class="material-symbols-outlined ${saved ? 'ms-fill' : ''}">bookmark</span>
+          </button>
+          <button type="button" class="ns-icon-btn ns-icon-btn--bare" onclick="clearFocusedPlace(event)" aria-label="Close place details">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
       </div>
       <div class="flex flex-wrap gap-2 mt-3">${badges}</div>
       <div class="place-info mt-3">${info}</div>
@@ -813,6 +949,12 @@
       maxZoom: 19,
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
+
+    map.on('click', () => {
+      if (focusedPlaceId || (typeof placesSheet !== 'undefined' && placesSheet.state !== 'peek')) {
+        clearFocusedPlace();
+      }
+    });
 
     // Do not rebuild every marker while NorthStar is programmatically
     // focusing a resource. Rebuilding markers destroys an open popup.
@@ -896,12 +1038,14 @@
     userLocationMarker = L.marker([latitude, longitude], { icon: blueDotIcon, zIndexOffset: 1000 }).addTo(map);
     userLocationMarker.bindTooltip('You are here', { direction: 'top', offset: [0, -10] });
 
-    // Auto-fit around the radius circle, unless a search is showing: then keep the results in view
-    const keepResults = !!mapSearchQuery && !_centerOnMeRequested;
+    // Auto-fit around the radius circle, unless a search or a focused place is showing: then keep it in view
+    const keepForSearch = !!mapSearchQuery && !_centerOnMeRequested;
+    const keepForFocus = !!focusedPlaceId && !_centerOnMeRequested;
+    const keepResults = keepForSearch || keepForFocus;
     _centerOnMeRequested = false;
-    if (keepResults) {
+    if (keepForSearch) {
       _fitOnNextSearch = true;
-    } else if (map && typeof map.fitBounds === 'function' && userRadiusCircle) {
+    } else if (!keepForFocus && map && typeof map.fitBounds === 'function' && userRadiusCircle) {
       map.fitBounds(userRadiusCircle.getBounds(), Object.assign({ animate: true }, mapFitPadding()));
     }
 
@@ -1218,6 +1362,14 @@
           radiusPins = filterPlacesByRadius(pinned, wider);
         }
       }
+      // A place the person tapped or deep-linked stays on the map even if it sits outside the radius
+      if (focusedPlaceId && !radiusPins.some(p => String(p.id) === String(focusedPlaceId))) {
+        const keep = pinned.find(p => String(p.id) === String(focusedPlaceId));
+        if (keep) {
+          const refCoords = getActiveReferenceCoords();
+          radiusPins = [...radiusPins, { ...keep, distanceMiles: calculateDistanceMiles(refCoords.lat, refCoords.lng, keep.lat, keep.lng) }];
+        }
+      }
       if (userRadiusCircle && effectiveRadiusMiles !== prevEffectiveRadius) {
         userRadiusCircle.setRadius(effectiveRadiusMiles * 1609.34);
         if (map && typeof map.fitBounds === 'function') {
@@ -1239,22 +1391,25 @@
 
     lastFilteredCount = filteredPins.length;
     currentFocusId = resolveFocusId(filteredPins);
+    if (!currentFocusId) focusedPlaceId = null;
     renderLeafletMarkers(filteredPins);
     renderDrawerPlaces(filteredPins);
     syncFilterSummary();
     if (_fitOnNextSearch) {
       _fitOnNextSearch = false;
       fitMapToResults(filteredPins);
-      if (filteredPins.length > 1 && typeof snapPlacesSheet === 'function') snapPlacesSheet('half');
+      if (typeof snapPlacesSheet === 'function') {
+        snapPlacesSheet(filteredPins.length === 0 || currentFocusId ? 'half' : 'peek');
+      }
+    } else if (typeof snapPlacesSheet === 'function' && placesSheet.state !== 'full') {
+      snapPlacesSheet(filteredPins.length === 0 || currentFocusId ? 'half' : 'peek');
     }
   }
 
-  // The bottom sheet shows the tapped place, or the closest one
+  // The bottom sheet only focuses a place when the person explicitly tapped one (or deep-linked via ?resource=)
   function resolveFocusId(items) {
-    if (!items || !items.length) return null;
-    if (focusedPlaceId && items.some(p => String(p.id) === String(focusedPlaceId))) return String(focusedPlaceId);
-    const nearest = items.filter(hasPin).reduce((best, p) => (best === null || p.distanceMiles < best.distanceMiles ? p : best), null) || items[0];
-    return nearest ? String(nearest.id) : null;
+    if (!items || !items.length || !focusedPlaceId) return null;
+    return items.some(p => String(p.id) === String(focusedPlaceId)) ? String(focusedPlaceId) : null;
   }
 
   function updateVisiblePlaces() {
@@ -1408,7 +1563,7 @@
 
   // BOTTOM SHEET: drag / flick between peek (title only), half (the chosen place) and full (whole list)
   const placesSheet = {
-    state: 'half',      // 'peek' | 'half' | 'full'
+    state: 'peek',      // 'peek' | 'half' | 'full'
     y: 0,               // current translateY in px (0 = fully open)
     snaps: { full: 0, half: 0, peek: 0 },
     suppressClick: false
@@ -1433,7 +1588,7 @@
     const height = Math.max(240, main.clientHeight - topSpace);
     sheet.style.height = `${height}px`;
     const headerH = header ? header.offsetHeight : 64;
-    const cardH = card ? card.offsetHeight : 0;
+    const cardH = (card && !card.classList.contains('hidden')) ? card.offsetHeight : 0;
     const peek = Math.max(0, height - headerH);
     const halfVisible = Math.min(height * 0.62, headerH + cardH);
     placesSheet.snaps = {
@@ -1469,12 +1624,13 @@
   }
   window.snapPlacesSheet = snapPlacesSheet;
 
-  // Kept for existing callers: true opens the full list, false shows the chosen place, no arg toggles
+  // Kept for existing callers: true opens the full list, false shows the chosen place (or peek), no arg toggles
   function toggleBottomDrawer(forceState) {
+    const collapsedState = (currentFocusId || lastFilteredCount === 0) ? 'half' : 'peek';
     if (typeof forceState === 'boolean') {
-      snapPlacesSheet(forceState ? 'full' : 'half');
+      snapPlacesSheet(forceState ? 'full' : collapsedState);
     } else {
-      snapPlacesSheet(placesSheet.state === 'full' ? 'half' : 'full');
+      snapPlacesSheet(placesSheet.state === 'full' ? collapsedState : 'full');
     }
   }
 
@@ -1536,11 +1692,15 @@
 
       // Project where a flick would land, then rest at the closest point
       const projected = placesSheet.y + velocity * 180;
-      const order = ['full', 'half', 'peek'];
+      const order = (currentFocusId || lastFilteredCount === 0) ? ['full', 'half', 'peek'] : ['full', 'peek'];
       let best = order[0];
       order.forEach(k => {
         if (Math.abs(placesSheet.snaps[k] - projected) < Math.abs(placesSheet.snaps[best] - projected)) best = k;
       });
+      if (best === 'peek' && focusedPlaceId) {
+        clearFocusedPlace();
+        return;
+      }
       snapPlacesSheet(best);
     };
 
@@ -1556,9 +1716,9 @@
 
     // Keyboard: arrow keys on the header move between the three positions
     header.addEventListener('keydown', (e) => {
-      const order = ['peek', 'half', 'full'];
+      const order = (currentFocusId || lastFilteredCount === 0) ? ['peek', 'half', 'full'] : ['peek', 'full'];
       const i = order.indexOf(placesSheet.state);
-      if (e.key === 'ArrowUp' && i < 2) { e.preventDefault(); snapPlacesSheet(order[i + 1]); }
+      if (e.key === 'ArrowUp' && i < order.length - 1) { e.preventDefault(); snapPlacesSheet(order[i + 1]); }
       if (e.key === 'ArrowDown' && i > 0) { e.preventDefault(); snapPlacesSheet(order[i - 1]); }
     });
 
@@ -1568,7 +1728,7 @@
     }
     window.addEventListener('resize', () => snapPlacesSheet(placesSheet.state, { animate: false }));
 
-    snapPlacesSheet('half', { animate: false });
+    snapPlacesSheet('peek', { animate: false });
   }
 
   // How much of the map the sheet currently covers
@@ -1616,7 +1776,7 @@
       return { ...pin, distanceMiles: dist };
     }).sort((a, b) => (Number.isFinite(a.distanceMiles) ? a.distanceMiles : 1e9) - (Number.isFinite(b.distanceMiles) ? b.distanceMiles : 1e9));
 
-    const focusRes = sorted.find(r => String(r.id) === currentFocusId) || sorted[0];
+    const focusRes = currentFocusId ? (sorted.find(r => String(r.id) === currentFocusId) || null) : null;
     renderFocusCard(focusRes);
 
     listEl.innerHTML = sorted.map((res) => {
@@ -1655,6 +1815,12 @@
       const resourceId = params.get('resource');
 
       if (!resourceId || !map) return false;
+
+      // One-time deep link: forget the parameter right away so the re-renders below
+      // (filters relaxing, radius growing) don't schedule this focus again and again.
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete('resource');
+      window.history.replaceState({}, '', cleanUrl.pathname + cleanUrl.search);
 
       const resources = getResourcesData();
       const wanted = String(resolvePlaceId(resourceId));
@@ -1715,13 +1881,6 @@
         resource.lng,
         true
       );
-
-      // IMPORTANT:
-      // Remove the query parameter after the one-time deep-link focus.
-      // This stops future radius/filter updates from re-focusing the resource.
-      const cleanUrl = new URL(window.location.href);
-      cleanUrl.searchParams.delete('resource');
-      window.history.replaceState({}, '', cleanUrl.pathname + cleanUrl.search);
 
       return true;
 
@@ -1794,14 +1953,14 @@
     }, 1000);
 
     applyCombinedFilters();
-    toggleBottomDrawer(false);
+    snapPlacesSheet('half');
   }
 
   // Tapping a pin: show it in the bottom sheet without zooming in
   function focusPlaceInSheet(resId) {
     focusedPlaceId = String(resId);
-    toggleBottomDrawer(false);
     applyCombinedFilters();
+    snapPlacesSheet('half');
   }
   window.focusPlaceInSheet = focusPlaceInSheet;
   window.selectAndFocusPlace = selectAndFocusPlace;

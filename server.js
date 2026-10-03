@@ -449,19 +449,16 @@ app.get('/api/jobs', async (req, res) => {
 
 // API Endpoint: Post a new job opportunity (Helper Funnel) with Supabase persistence
 
-app.post('/api/generate-resume', async (req, res) => {
-  console.log('✅ /api/generate-resume called');
-  console.log('Resume request:', req.body);
-
+// Runs one resume generation. Resolves to { status, body } (never rejects).
+async function runResumeGeneration(confirmed) {
   try {
-    const confirmed = req.body;
-    const northstarAiUrl = process.env.NORTHSTAR_AI_URL;
+    const northstarAiUrl = String(process.env.NORTHSTAR_AI_URL || '').trim().replace(/\/+$/, '');
 
     // ── Remote HTTP path ──────────────────────────────────────────────────
     if (northstarAiUrl) {
       if (!process.env.NORTHSTAR_AI_KEY) {
         console.error('Error: NORTHSTAR_AI_URL is set but NORTHSTAR_AI_KEY is missing.');
-        return res.status(500).json({ success: false, error: 'Remote AI service is not configured correctly.' });
+        return { status: 500, body: { success: false, error: 'Remote AI service is not configured correctly.' } };
       }
 
       console.log(`🌐 [Resume] Forwarding to remote AI service: ${northstarAiUrl}/resume`);
@@ -473,7 +470,7 @@ app.post('/api/generate-resume', async (req, res) => {
       try {
         aiResponse = await fetch(`${northstarAiUrl}/resume`, {
           method: 'POST',
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
             'X-NorthStar-AI-Key': process.env.NORTHSTAR_AI_KEY
           },
@@ -483,10 +480,7 @@ app.post('/api/generate-resume', async (req, res) => {
       } catch (fetchErr) {
         clearTimeout(resumeTimeout);
         if (fetchErr.name === 'AbortError') {
-          return res.status(504).json({
-            success: false,
-            error: 'NorthStar AI took too long to respond. Please try again.'
-          });
+          return { status: 504, body: { success: false, error: 'NorthStar AI took too long to respond. Please try again.' } };
         }
         throw fetchErr;
       }
@@ -495,119 +489,118 @@ app.post('/api/generate-resume', async (req, res) => {
       const result = await aiResponse.json();
 
       if (!result.success) {
-        return res.status(422).json({
-          success: false,
-          error: 'The generated resume did not pass factuality validation.',
-          validation: result.validation
-        });
+        return {
+          status: 422,
+          body: { success: false, error: 'The generated resume did not pass factuality validation.', validation: result.validation }
+        };
       }
 
-      return res.json({
-        success: true,
-        resume: result.resume,
-        repairs: result.repairs,
-        validation: result.validation
-      });
+      return {
+        status: 200,
+        body: { success: true, resume: result.resume, repairs: result.repairs, validation: result.validation }
+      };
     }
 
     // ── Local Python spawn fallback ────────────────────────────────────────
-    const pythonPath = NORTHSTAR_AI_PYTHON;
-    const pipelinePath = NORTHSTAR_RESUME_PIPELINE;
+    return await new Promise((resolve) => {
+      let settled = false;
+      const done = (status, body) => { if (!settled) { settled = true; resolve({ status, body }); } };
 
-    const child = spawn(pythonPath, [pipelinePath], {
-      cwd: NORTHSTAR_AI_DIR,
-    });
+      const child = spawn(NORTHSTAR_AI_PYTHON, [NORTHSTAR_RESUME_PIPELINE], { cwd: NORTHSTAR_AI_DIR });
 
-    let stdout = '';
-    let stderr = '';
+      let stdout = '';
+      let stderr = '';
 
-    // Timeout to prevent hanging forever
-    const timeout = setTimeout(() => {
-      console.error('Resume AI process timed out. Killing child process.');
-      child.kill('SIGKILL');
-      if (!res.headersSent) {
-        res.status(504).json({
-          success: false,
-          error: 'NorthStar AI took too long to respond. Please try again.',
-        });
-      }
-    }, 115000); // 115 seconds (just before frontend 120s timeout)
+      // Timeout to prevent hanging forever
+      const timeout = setTimeout(() => {
+        console.error('Resume AI process timed out. Killing child process.');
+        child.kill('SIGKILL');
+        done(504, { success: false, error: 'NorthStar AI took too long to respond. Please try again.' });
+      }, 115000);
 
-    child.stdout.on('data', (data) => {
-      stdout += data.toString();
-    });
+      child.stdout.on('data', (data) => { stdout += data.toString(); });
+      child.stderr.on('data', (data) => { stderr += data.toString(); });
 
-    child.stderr.on('data', (data) => {
-      stderr += data.toString();
-    });
+      child.on('error', (err) => {
+        clearTimeout(timeout);
+        console.error('Resume AI process error:', err);
+        done(500, { success: false, error: 'Could not start NorthStar AI.' });
+      });
 
-    child.on('error', (err) => {
-      clearTimeout(timeout);
-      console.error('Resume AI process error:', err);
-
-      if (!res.headersSent) {
-        res.status(500).json({
-          success: false,
-          error: 'Could not start NorthStar AI.',
-        });
-      }
-    });
-
-    child.on('close', (code) => {
-      clearTimeout(timeout);
-      
-      if (res.headersSent) return;
-
-      if (code !== 0) {
-        console.error('Resume AI stderr:', stderr);
-
-        return res.status(500).json({
-          success: false,
-          error: 'NorthStar AI resume generation failed.',
-        });
-      }
-
-      try {
-        const result = JSON.parse(stdout);
-
-        if (!result.success) {
-          return res.status(422).json({
-            success: false,
-            error: 'The generated resume did not pass factuality validation.',
-            validation: result.validation,
-          });
+      child.on('close', (code) => {
+        clearTimeout(timeout);
+        if (code !== 0) {
+          console.error('Resume AI stderr:', stderr);
+          return done(500, { success: false, error: 'NorthStar AI resume generation failed.' });
         }
+        try {
+          const result = JSON.parse(stdout);
+          if (!result.success) {
+            return done(422, { success: false, error: 'The generated resume did not pass factuality validation.', validation: result.validation });
+          }
+          return done(200, { success: true, resume: result.resume, repairs: result.repairs, validation: result.validation });
+        } catch (parseError) {
+          console.error('Resume AI JSON parse error:', parseError);
+          console.error('Raw output:', stdout);
+          return done(500, { success: false, error: 'NorthStar AI returned an invalid response.' });
+        }
+      });
 
-        return res.json({
-          success: true,
-          resume: result.resume,
-          repairs: result.repairs,
-          validation: result.validation,
-        });
-      } catch (parseError) {
-        console.error('Resume AI JSON parse error:', parseError);
-        console.error('Raw output:', stdout);
-
-        return res.status(500).json({
-          success: false,
-          error: 'NorthStar AI returned an invalid response.',
-        });
-      }
+      child.stdin.write(JSON.stringify(confirmed));
+      child.stdin.end();
     });
-
-    child.stdin.write(JSON.stringify(confirmed));
-    child.stdin.end();
-
   } catch (error) {
     console.error('Resume endpoint error:', error);
-
-    if (!res.headersSent) {
-      res.status(500).json({
-        success: false,
-        error: 'Resume generation failed.',
-      });
-    }
+    return { status: 500, body: { success: false, error: 'Resume generation failed.' } };
   }
+}
+
+app.post('/api/generate-resume', async (req, res) => {
+  console.log('✅ /api/generate-resume called');
+  console.log('Resume request:', req.body);
+  const { status, body } = await runResumeGeneration(req.body);
+  if (!res.headersSent) res.status(status).json(body);
+});
+
+// ── Background resume jobs ───────────────────────────────────────────────
+// The resume keeps being written on the server even if the person leaves the
+// Resume page. The app polls the job and picks up the result from any page.
+const resumeJobs = new Map();
+const RESUME_JOB_KEEP_MS = 60 * 60 * 1000; // keep finished results for an hour
+
+function pruneResumeJobs() {
+  const now = Date.now();
+  for (const [id, job] of resumeJobs) {
+    if (job.finishedAt && now - job.finishedAt > RESUME_JOB_KEEP_MS) resumeJobs.delete(id);
+    else if (!job.finishedAt && now - job.startedAt > 2 * RESUME_JOB_KEEP_MS) resumeJobs.delete(id);
+  }
+}
+
+app.post('/api/resume-jobs', (req, res) => {
+  pruneResumeJobs();
+  const confirmed = req.body;
+  if (!confirmed || typeof confirmed !== 'object' || !confirmed.name) {
+    return res.status(400).json({ success: false, error: 'Please enter your name.' });
+  }
+  const id = 'rj_' + crypto.randomBytes(12).toString('hex');
+  const job = { id, status: 'running', startedAt: Date.now(), finishedAt: null, httpStatus: null, result: null };
+  resumeJobs.set(id, job);
+  console.log(`✅ [Resume] Background job ${id} started`);
+  runResumeGeneration(confirmed).then(({ status, body }) => {
+    job.status = body && body.success ? 'done' : 'failed';
+    job.httpStatus = status;
+    job.result = body;
+    job.finishedAt = Date.now();
+    console.log(`✅ [Resume] Background job ${id} ${job.status}`);
+  });
+  res.status(202).json({ success: true, jobId: id, status: job.status });
+});
+
+app.get('/api/resume-jobs/:id', (req, res) => {
+  const job = resumeJobs.get(String(req.params.id || ''));
+  if (!job) return res.status(404).json({ success: false, status: 'missing', error: 'That resume job was not found.' });
+  res.set('Cache-Control', 'no-store');
+  res.json({ success: true, jobId: job.id, status: job.status, startedAt: job.startedAt, result: job.result });
 });
 
 
@@ -619,15 +612,16 @@ app.post('/api/jobs', async (req, res) => {
       return res.status(400).json({ error: 'Title and contact details are required.' });
     }
 
+    // Only what the poster typed (same shape GET /api/jobs returns); no invented pay or company
     const newJob = {
       id: `job-${Date.now()}`,
       title,
-      company: company || 'Community Partner Employer',
-      location: location || 'Seattle, WA',
-      type: type || 'Flexible Shift',
-      pay: pay || '$18.00 - $22.00 / hr',
-      requirements: Array.isArray(requirements) ? requirements : (requirements ? [requirements] : ['Reliable', 'Fast Learner']),
-      description: description || 'Community entry-level work opportunity.',
+      company: company || '',
+      location: location || '',
+      type: type || '',
+      pay: pay || '',
+      requirements: Array.isArray(requirements) ? requirements.filter(Boolean) : (requirements ? [requirements] : []),
+      description: description || '',
       contact,
       authorId: authorId || 'anonymous_volunteer',
       postedAt: new Date().toISOString()
@@ -702,7 +696,9 @@ const USER_BUCKET = 'northstar-user-data';
 const APP_BUCKET_PATH = 'app/gigs.json';
 const TOKEN_SECRET = crypto.createHmac('sha256', String(supabaseServiceKey || process.env.SESSION_SECRET || 'northstar-dev'))
   .update('northstar-session-v1').digest();
-const TOKEN_TTL_MS = 90 * 24 * 60 * 60 * 1000;
+// Tokens slide forward via /api/auth/refresh while the person is active. The app logs out
+// after 5 minutes idle; the token gets a small margin past that so a last save still lands.
+const TOKEN_TTL_MS = 7 * 60 * 1000;
 let userBucketReady = null;
 
 function ensureUserBucket() {
@@ -770,7 +766,8 @@ function checkPassword(password, stored) {
 }
 
 function signToken(userId) {
-  const payload = Buffer.from(JSON.stringify({ id: userId, exp: Date.now() + TOKEN_TTL_MS })).toString('base64url');
+  const now = Date.now();
+  const payload = Buffer.from(JSON.stringify({ id: userId, iat: now, exp: now + TOKEN_TTL_MS })).toString('base64url');
   const sig = crypto.createHmac('sha256', TOKEN_SECRET).update(payload).digest('base64url');
   return `${payload}.${sig}`;
 }
@@ -782,7 +779,8 @@ function verifyToken(token) {
   if (!sig || sig.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) return null;
   try {
     const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
-    return data && data.id && data.exp > Date.now() ? data : null;
+    const now = Date.now();
+    return data && data.id && data.iat && (now - data.iat) < TOKEN_TTL_MS && data.exp > now ? data : null;
   } catch (e) {
     return null;
   }
@@ -873,6 +871,16 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 const USER_ID_RE = /^[A-Za-z0-9_.@-]{3,120}$/;
+
+// Sliding session: while the person is active the app swaps its token for a fresh one.
+// After 5 minutes with no activity the token expires and they must log in again.
+app.post('/api/auth/refresh', (req, res) => {
+  const auth = req.headers.authorization || '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : (req.body && req.body.token);
+  const data = verifyToken(token);
+  if (!data) return res.status(401).json({ success: false, error: 'Please log in again.' });
+  res.json({ success: true, token: signToken(data.id) });
+});
 
 app.get('/api/user-data/:id', async (req, res) => {
   if (!USER_ID_RE.test(req.params.id)) return res.status(400).json({ success: false });
@@ -1061,6 +1069,8 @@ app.post('/api/deliveries', async (req, res) => {
       timeWindow: timeWindow || 'Morning (9am - 12pm)',
       status: 'pending_driver',
       driverName: null,
+      driver_id: null,
+      donor_id: donor_id || null,
       etaMinutes: 20,
       contactNotes: contactNotes || 'Contact donor upon arrival',
       created_at: new Date().toISOString()
@@ -1104,6 +1114,9 @@ app.post('/api/deliveries/:id/claim', async (req, res) => {
   try {
     const { id } = req.params;
     const { driverName, driver_id } = req.body;
+    if (!driver_id) {
+      return res.status(400).json({ success: false, error: 'Sign in to claim a pickup.' });
+    }
     
     const takenByOther = (d) => d && d.status !== 'pending_driver' && !(driver_id && d.driver_id === driver_id);
 

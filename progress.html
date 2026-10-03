@@ -80,7 +80,7 @@
                     <span class="me-row__value">211</span>
                     <span class="material-symbols-outlined ns-chevron">chevron_right</span>
                 </a>
-                <button id="switch-account-btn" type="button" class="ns-row" onclick="localStorage.removeItem('northstar_session'); nsGo('index.html');">
+                <button id="switch-account-btn" type="button" class="ns-row" onclick="if (typeof window.nsClearSession === 'function') window.nsClearSession(); else { localStorage.removeItem('northstar_session'); localStorage.removeItem('northstar_user_role'); } nsGo('index.html');">
                     <span class="material-symbols-outlined text-[22px]" aria-hidden="true">logout</span>
                     <span id="me-account-action" class="ns-row__body ns-row__title !font-medium">Sign out</span>
                     <span id="progress-account-label" class="me-row__value truncate max-w-[45%]"></span>

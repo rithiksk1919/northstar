@@ -908,6 +908,34 @@ function generatePlainText() {
 // ============================================================
 // Copy & Export
 // ============================================================
+// navigator.clipboard only exists on https/localhost; elsewhere (http on the phone) fall back to a selection copy
+function rbWriteClipboard(text, sourceEl) {
+  const legacy = () => {
+    try {
+      let el = sourceEl;
+      let temp = null;
+      if (!el) {
+        temp = document.createElement('textarea');
+        temp.value = text;
+        temp.setAttribute('readonly', '');
+        temp.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none';
+        document.body.appendChild(temp);
+        el = temp;
+      }
+      el.focus();
+      el.select();
+      if (el.setSelectionRange) el.setSelectionRange(0, el.value.length);
+      const ok = document.execCommand('copy');
+      if (temp) temp.remove();
+      return ok;
+    } catch (e) { return false; }
+  };
+  if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+    return navigator.clipboard.writeText(text).then(() => true, () => legacy());
+  }
+  return Promise.resolve(legacy());
+}
+
 function copyCleanText() {
   // Generate the latest text first, then copy
   generatePlainText();
@@ -915,22 +943,19 @@ function copyCleanText() {
   if (!textarea || !textarea.value) {
     // Fallback: copy directly from currentGeneratedResumeText
     if (window.currentGeneratedResumeText) {
-      navigator.clipboard.writeText(window.currentGeneratedResumeText)
-        .then(() => { rbCopied(); if (window.showNotification) showNotification('Resume text copied to clipboard!', 'success'); })
-        .catch(() => { if (window.showNotification) showNotification('Copy failed. Please copy manually.', 'error'); });
+      rbWriteClipboard(window.currentGeneratedResumeText).then(ok => {
+        if (ok) { rbCopied(); if (window.showNotification) showNotification('Resume text copied to clipboard!', 'success'); }
+        else if (window.showNotification) showNotification('Copy failed. Please copy manually.', 'error');
+      });
       return;
     }
     if (window.showNotification) showNotification('No resume to copy yet. Generate a resume first.', 'info');
     return;
   }
-  navigator.clipboard.writeText(textarea.value)
-    .then(() => { rbCopied(); if (window.showNotification) showNotification('Resume text copied to clipboard!', 'success'); })
-    .catch(() => {
-      // Fallback for older browsers
-      textarea.select();
-      if (document.execCommand('copy')) rbCopied();
-      if (window.showNotification) showNotification('Resume text copied!', 'success');
-    });
+  rbWriteClipboard(textarea.value, textarea).then(ok => {
+    if (ok) { rbCopied(); if (window.showNotification) showNotification('Resume text copied to clipboard!', 'success'); }
+    else if (window.showNotification) showNotification('Copy failed. Please copy manually.', 'error');
+  });
 }
 
 // Real feedback on the copy buttons (only after the clipboard write succeeded)
@@ -1013,10 +1038,36 @@ async function generateResume() {
 
   console.log('[NorthStar] WIZARD DATA sent to API:', JSON.stringify(confirmed, null, 2));
 
-  // --- Show loading state ---
+  // Runs as a background job on the server so leaving this page doesn't stop it
+  rbShowGenerating();
+
+  try {
+    if (window.nsResumeJob) {
+      await window.nsResumeJob.start(confirmed);
+      rbWatchResumeJob();
+      return;
+    }
+    // Fallback (shared script missing): wait on the request directly
+    const response = await fetch('/api/generate-resume', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(confirmed)
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success || !result.resume) {
+      throw new Error(result.error || 'Generation failed — no resume returned from API');
+    }
+    rbApplyResumeResult(result, confirmed);
+  } catch (err) {
+    rbApplyResumeFailure(err);
+  }
+}
+
+// --- Loading state while the resume is being written ---
+function rbShowGenerating() {
   const wizardContainer = document.getElementById('view-wizard-container');
   const loadingSpinner = document.getElementById('loading-spinner');
-
+  const generateBtn = document.getElementById('btn-generate-resume');
   if (wizardContainer) wizardContainer.classList.add('hidden');
   if (loadingSpinner) { loadingSpinner.classList.remove('hidden'); loadingSpinner.classList.add('flex'); }
   if (generateBtn) generateBtn.disabled = true;
@@ -1024,105 +1075,144 @@ async function generateResume() {
   window.rbGenerating = true;
   const mainEl = document.querySelector('main');
   if (mainEl) mainEl.scrollTop = 0;
+}
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 360000); // 6 minute timeout for local NorthStar AI
+function rbStopGenerating() {
+  const loadingSpinner = document.getElementById('loading-spinner');
+  const generateBtn = document.getElementById('btn-generate-resume');
+  if (loadingSpinner) { loadingSpinner.classList.add('hidden'); loadingSpinner.classList.remove('flex'); }
+  if (generateBtn) generateBtn.disabled = false;
+  window.rbGenerating = false;
+}
 
-  try {
-    const response = await fetch('/api/generate-resume', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(confirmed),
-      signal: controller.signal
-    });
+// Wait for the background job (started here or before leaving the page) to finish
+let rbJobListener = null;
+function rbWatchResumeJob() {
+  if (!window.nsResumeJob) return;
+  if (rbJobListener) window.removeEventListener('ns:resume-job', rbJobListener);
+  rbJobListener = (e) => rbHandleFinishedJob(e.detail);
+  window.addEventListener('ns:resume-job', rbJobListener);
+  window.nsResumeJob.watch();
+}
 
-    clearTimeout(timeoutId);
-
-    const result = await response.json();
-
-    console.log('[NorthStar] API RESULT:', JSON.stringify(result, null, 2));
-
-    if (!response.ok || !result.success || !result.resume) {
-      throw new Error(result.error || 'Generation failed — no resume returned from API');
-    }
-
-    console.log('[NorthStar] RAW NEW RESUME:\n', result.resume);
-    console.log('[NorthStar] Validation:', result.validation);
-    console.log('[NorthStar] Repairs:', result.repairs);
-
-    // ----------------------------------------------------------------
-    // CANONICAL STATE UPDATE — this is the single source of truth
-    // ----------------------------------------------------------------
-    window.currentGeneratedResumeText = result.resume;
-    const parsedResume = parseValidatedResume(result.resume, confirmed);
-
-    if (!parsedResume.summary && 
-        !parsedResume.experience.length && 
-        !parsedResume.skills.certifications.length && 
-        !parsedResume.skills.practical_skills.length) {
-      throw new Error('Generated resume could not be parsed.');
-    }
-
-    window.currentGeneratedResumeData = parsedResume;
-
-    // Completely replace the preview DOM
-    populateResumeData(window.currentGeneratedResumeData);
-
-    // Persist the new resume (for logged-in users; no-op for guests)
-    if (typeof window.saveResumeData === 'function') {
-      window.saveResumeData(window.currentGeneratedResumeData);
-    }
-
-    // Also persist to a direct localStorage key for cross-page resilience
+function rbHandleFinishedJob(job) {
+  if (!job || job.status === 'running') return;
+  if (rbJobListener) { window.removeEventListener('ns:resume-job', rbJobListener); rbJobListener = null; }
+  window.nsResumeJob.clear();
+  document.getElementById('ns-resume-ready-pill')?.remove();
+  const result = job.result || {};
+  if (job.status === 'done' && result.success && result.resume) {
     try {
-      localStorage.setItem('northstar_latest_resume_text', window.currentGeneratedResumeText);
-      localStorage.setItem('northstar_latest_resume_data', JSON.stringify(window.currentGeneratedResumeData));
-    } catch(e) { /* storage quota */ }
-
-    // --- Stop loading state ---
-    if (loadingSpinner) { loadingSpinner.classList.add('hidden'); loadingSpinner.classList.remove('flex'); }
-    if (generateBtn) generateBtn.disabled = false;
-    window.rbGenerating = false;
-
-    // ATS uses the exact latest validated NorthStar AI output.
-    const atsArea = document.getElementById('ats-plain-text-area');
-    if (atsArea) {
-      atsArea.value = window.currentGeneratedResumeText;
+      rbApplyResumeResult(result, job.confirmed || {});
+    } catch (err) {
+      rbApplyResumeFailure(err);
     }
-
-    // Switch only AFTER the newest resume has been parsed and rendered.
-    switchView('preview');
-
-    // Keep ATS synchronized with canonical state.
-    generatePlainText();
-
-    if (window.showNotification) showNotification('Your resume is ready.', 'success');
-
-  } catch (err) {
-    clearTimeout(timeoutId);
-    console.error('[NorthStar] Generation error:', err);
-
-    // --- Stop loading, return to wizard ---
-    if (loadingSpinner) { loadingSpinner.classList.add('hidden'); loadingSpinner.classList.remove('flex'); }
-    if (wizardContainer) wizardContainer.classList.remove('hidden');
-    if (generateBtn) generateBtn.disabled = false;
-    window.rbGenerating = false;
-    rbSetActionsVisible(true);
-
-    let errorMsg = err.message;
-    if (err.name === 'AbortError') {
-      errorMsg = 'Request timed out. The server took too long to respond.';
-    }
-
-    console.error('[NorthStar] FINAL GENERATION FAILURE:', errorMsg);
-    // Show a plain message on the page (showNotification is intentionally silent)
-    rbShowError(err.name === 'AbortError'
-      ? 'This took too long. Your answers are still here, so please try again.'
-      : 'We couldn’t write your resume just now. Your answers are still here, so please try again in a minute.');
-    const mainErr = document.querySelector('main');
-    if (mainErr) mainErr.scrollTop = 0;
-    if (window.showNotification) showNotification(`Error: ${errorMsg}`, 'error');
+  } else {
+    rbApplyResumeFailure(new Error(result.error || 'Generation failed — no resume returned from API'));
   }
+}
+
+function rbApplyResumeResult(result, confirmed) {
+  console.log('[NorthStar] RAW NEW RESUME:\n', result.resume);
+  console.log('[NorthStar] Validation:', result.validation);
+  console.log('[NorthStar] Repairs:', result.repairs);
+
+  // ----------------------------------------------------------------
+  // CANONICAL STATE UPDATE — this is the single source of truth
+  // ----------------------------------------------------------------
+  const parsedResume = parseValidatedResume(result.resume, confirmed);
+
+  if (!parsedResume.summary &&
+      !parsedResume.experience.length &&
+      !parsedResume.skills.certifications.length &&
+      !parsedResume.skills.practical_skills.length) {
+    throw new Error('Generated resume could not be parsed.');
+  }
+
+  window.currentGeneratedResumeText = result.resume;
+  window.currentGeneratedResumeData = parsedResume;
+
+  // Completely replace the preview DOM
+  populateResumeData(window.currentGeneratedResumeData);
+
+  // Persist the new resume (for logged-in users; no-op for guests)
+  if (typeof window.saveResumeData === 'function') {
+    window.saveResumeData(window.currentGeneratedResumeData);
+  }
+
+  // Also persist to a direct localStorage key for cross-page resilience
+  try {
+    localStorage.setItem('northstar_latest_resume_text', window.currentGeneratedResumeText);
+    localStorage.setItem('northstar_latest_resume_data', JSON.stringify(window.currentGeneratedResumeData));
+  } catch(e) { /* storage quota */ }
+
+  // --- Stop loading state ---
+  rbStopGenerating();
+
+  // ATS uses the exact latest validated NorthStar AI output.
+  const atsArea = document.getElementById('ats-plain-text-area');
+  if (atsArea) {
+    atsArea.value = window.currentGeneratedResumeText;
+  }
+
+  // Switch only AFTER the newest resume has been parsed and rendered.
+  switchView('preview');
+
+  // Keep ATS synchronized with canonical state.
+  generatePlainText();
+
+  if (window.showNotification) showNotification('Your resume is ready.', 'success');
+}
+
+function rbApplyResumeFailure(err) {
+  console.error('[NorthStar] Generation error:', err);
+
+  // --- Stop loading, return to wizard ---
+  const wizardContainer = document.getElementById('view-wizard-container');
+  rbStopGenerating();
+  if (wizardContainer) wizardContainer.classList.remove('hidden');
+  rbSetActionsVisible(true);
+
+  const errorMsg = (err && err.message) || 'Resume generation failed.';
+  console.error('[NorthStar] FINAL GENERATION FAILURE:', errorMsg);
+  // Show a plain message on the page (showNotification is intentionally silent)
+  rbShowError(/too long/i.test(errorMsg)
+    ? 'This took too long. Your answers are still here, so please try again.'
+    : 'We couldn’t write your resume just now. Your answers are still here, so please try again in a minute.');
+  const mainErr = document.querySelector('main');
+  if (mainErr) mainErr.scrollTop = 0;
+  if (window.showNotification) showNotification(`Error: ${errorMsg}`, 'error');
+}
+
+// Put the person's answers back in the form (after coming back mid-generation)
+function rbRestoreAnswers(confirmed) {
+  if (!confirmed) return;
+  const set = (id, v) => { const el = document.getElementById(id); if (el && v && !el.value) el.value = v; };
+  set('input-name', confirmed.name);
+  set('input-phone', confirmed.phone);
+  set('input-location', confirmed.location);
+  set('input-contact', confirmed.alternate_contact);
+  set('input-informal-notes', (confirmed.tasks || []).join('\n'));
+  set('input-education', (confirmed.education || []).join('\n'));
+
+  // Chips: what was picked (skills + certificates both live on the skill chips)
+  const pick = (selector, values) => {
+    const wanted = new Set((values || []).map(v => String(v).trim().toLowerCase()));
+    if (!wanted.size) return;
+    document.querySelectorAll(selector).forEach(btn => {
+      const val = String(btn.dataset.val || btn.innerText || '').trim().toLowerCase();
+      if (wanted.has(val)) { btn.classList.add('active-chip'); btn.setAttribute('aria-pressed', 'true'); }
+    });
+  };
+  const certs = Array.isArray(confirmed.certifications) ? confirmed.certifications : [];
+  pick('.chip-btn', confirmed.experience_categories);
+  pick('.skill-chip', [...(confirmed.skills || []), ...certs, ...((confirmed.confirmed_numbers || []).includes('50+') ? ['Heavy Lifting 50+ lbs'] : [])]);
+  pick('.role-chip', confirmed.target_jobs);
+
+  // Typed certificates are the ones that aren't a chip
+  const chipCerts = new Set(Array.from(document.querySelectorAll('.skill-chip')).map(b => String(b.dataset.val || '').trim().toLowerCase()));
+  const custom = certs.filter(c => !chipCerts.has(String(c).trim().toLowerCase()));
+  set('input-custom-certifications', custom.join('\n'));
 }
 
 // ============================================================
@@ -1177,6 +1267,18 @@ function resumeBuilderInit() {
     // Restore the preview from saved state (overwrites static HTML defaults)
     populateResumeData(data);
     console.log('[NorthStar] Restored previous generated resume on SPA init.');
+  }
+
+  // A resume started before leaving this page: keep waiting for it, or show it if it finished
+  const pendingJob = window.nsResumeJob ? window.nsResumeJob.get() : null;
+  if (pendingJob) {
+    rbRestoreAnswers(pendingJob.confirmed);
+    if (pendingJob.status === 'running') {
+      rbShowGenerating();
+      rbWatchResumeJob();
+    } else {
+      rbHandleFinishedJob(pendingJob);
+    }
   }
 }
 

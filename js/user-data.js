@@ -37,12 +37,37 @@
   const rawSet = store.setItem.bind(store);
   const rawRemove = store.removeItem.bind(store);
 
+  const SESSION_TTL_MS = 5 * 60 * 1000;
+
+  function idleMs(s) {
+    const last = typeof window.nsSessionLastActive === 'function'
+      ? window.nsSessionLastActive(s)
+      : Math.max(Number(s.lastActiveAt) || 0, Number(s.loggedInAt) || 0) || NaN;
+    return Number.isFinite(last) ? (Date.now() - last) : Infinity;
+  }
+
   function session() {
-    try { return JSON.parse(rawGet('northstar_session') || 'null'); } catch (e) { return null; }
+    if (typeof window.nsGetValidSession === 'function') {
+      return window.nsGetValidSession();
+    }
+    try {
+      const s = JSON.parse(rawGet('northstar_session') || 'null');
+      if (!s || typeof s !== 'object') return null;
+      const idle = idleMs(s);
+      if (idle < -60000 || idle >= SESSION_TTL_MS) {
+        try { rawRemove('northstar_session'); rawRemove('northstar_user_role'); } catch (e) {}
+        return null;
+      }
+      return s;
+    } catch (e) {
+      return null;
+    }
   }
 
   function accountOf(s) {
-    return s && !s.isGuest && s.id && s.token ? s : null;
+    if (!s || s.isGuest || !s.id || !s.token) return null;
+    const idle = idleMs(s);
+    return (idle >= -60000 && idle < SESSION_TTL_MS) ? s : null;
   }
 
   function chatKeyFor(id) { return `ns_companion_chats_${id}`; }
@@ -92,12 +117,11 @@
 
   // ---- Owner check: a new person on this phone starts clean ----
   const s = session();
-  // Sessions from before accounts moved to Supabase have no token: log in again
-  if (s && !s.isGuest && !s.token) {
-    try { rawRemove('northstar_session'); } catch (e) {}
-    if (!/index\.html$|\/$/.test(location.pathname)) { location.replace('index.html'); return; }
+  if (!s && !/index\.html$|login\.html$|signup\.html$|\/$/.test(location.pathname)) {
+    location.replace('index.html');
+    return;
   }
-  const account = accountOf(session());
+  const account = accountOf(s);
   const owner = account ? account.id : (session() ? 'guest' : '');
   const previousOwner = rawGet(OWNER_KEY) || '';
   if (owner && !previousOwner) {
@@ -146,13 +170,22 @@
   }
 
   function authHeaders() {
-    return { 'Content-Type': 'application/json', Authorization: `Bearer ${account.token}` };
+    // The token is refreshed while the person is active (ns-boot.js), so read the latest one
+    let token = account.token;
+    try {
+      const cur = JSON.parse(rawGet('northstar_session') || 'null');
+      if (cur && cur.id === account.id && cur.token) token = cur.token;
+    } catch (e) {}
+    return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
   }
 
   function handleAuthFailure(resp) {
     if (resp.status !== 401) return false;
     // Token expired or invalid: ask the person to log in again
-    try { rawRemove('northstar_session'); } catch (e) {}
+    try {
+      if (typeof window.nsClearSession === 'function') window.nsClearSession();
+      else { rawRemove('northstar_session'); rawRemove('northstar_user_role'); }
+    } catch (e) {}
     if (!/index\.html$|\/$/.test(location.pathname)) location.href = 'index.html';
     return true;
   }
@@ -201,7 +234,16 @@
     proto.setItem = function (key, value) {
       const prev = this === store ? rawGet(key) : null;
       origSet.call(this, key, value);
-      if (this === store && isUserKey(String(key), account) && prev !== String(value)) scheduleSave(String(key));
+      if (this !== store) return;
+      if (String(key) === 'northstar_session') {
+        // Keep the newest token for this account (used by the last save after signing out)
+        try {
+          const next = JSON.parse(String(value) || 'null');
+          if (next && next.id === account.id && next.token) account.token = next.token;
+        } catch (e) {}
+        return;
+      }
+      if (isUserKey(String(key), account) && prev !== String(value)) scheduleSave(String(key));
     };
     proto.removeItem = function (key) {
       const had = this === store && rawGet(key) != null;

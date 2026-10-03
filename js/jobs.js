@@ -91,7 +91,13 @@
 
   function deduplicate(items) {
     const seen = new Set();
+    const seenIds = new Set();
     return items.filter(item => {
+      const id = item && item.id != null ? String(item.id) : '';
+      if (id) {
+        if (seenIds.has(id)) return false;
+        seenIds.add(id);
+      }
       const key = `${item.title || item.rawTitle || ''}|${item.summary || item.description || ''}`.trim().toLowerCase();
       if (seen.has(key)) return false;
       seen.add(key);

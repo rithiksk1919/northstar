@@ -5,7 +5,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   const currentPath = window.location.pathname.split('/').pop() || 'index.html';
-  const session = JSON.parse(localStorage.getItem('northstar_session')) || { isGuest: true };
+  const session = getSession();
 
   // Index launch view
   if (currentPath === 'index.html' || currentPath === '') {
@@ -29,10 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(err => console.warn('Supabase init fetch failed:', err));
   }
 
-  // Automatic Trigger: Viewing Shelter Info
-  if (currentPath === 'call-shelter.html') {
-    setTimeout(() => updateMilestone('savedLocation', true), 500);
-  }
+  // Automatic Trigger: browsing jobs ("Save a place" is detected from real bookmarks in getUserData)
   if (currentPath === 'opportunities.html' || currentPath === 'jobs.html') {
     updateMilestone('jobMatcher', true);
   }
@@ -67,11 +64,10 @@ window.nsEscape = nsEscape;
 
 function nsDisplayName() {
   const session = getSession();
-  const name = (session && session.user_metadata && session.user_metadata.full_name)
-    || (session && session.full_name)
-    || (session && session.username && session.username !== 'Guest' ? session.username : null)
-    || localStorage.getItem('northstar_full_name')
-    || localStorage.getItem('northstar_username');
+  if (!session || session.isGuest) return '';
+  const name = (session.user_metadata && session.user_metadata.full_name)
+    || session.full_name
+    || (session.username && session.username !== 'Guest' ? session.username : null);
   return name ? String(name).trim() : '';
 }
 window.nsDisplayName = nsDisplayName;
@@ -115,7 +111,9 @@ async function initSupabaseClient() {
     const res = await fetch('/api/config');
     const config = await res.json();
     if (config.supabaseUrl && config.supabaseAnonKey && window.supabase && window.supabase.createClient) {
-      window.supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey);
+      window.supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey, {
+        auth: { persistSession: false, autoRefreshToken: false }
+      });
       console.log('⚡ Supabase Client Connected:', config.supabaseUrl);
     }
   } catch (e) {
@@ -174,8 +172,15 @@ window.signOutUser = async function () {
     }
   }
 
-  localStorage.removeItem('northstar_session');
-  localStorage.removeItem('northstar_user_role');
+  if (typeof window.nsClearSession === 'function') {
+    window.nsClearSession();
+  } else {
+    localStorage.removeItem('northstar_session');
+    localStorage.removeItem('northstar_user_role');
+    localStorage.removeItem('northstar_full_name');
+    localStorage.removeItem('northstar_username');
+    try { sessionStorage.removeItem('ns_session_active'); } catch (e) {}
+  }
   showNotification('Signed out successfully.', 'info');
 
   // Hard navigate back to index.html so Auth Gateway is presented cleanly
@@ -324,7 +329,7 @@ function setRole(role) {
       const raw = localStorage.getItem('northstar_session');
       const session = raw ? JSON.parse(raw) : null;
       // profiles.username is NOT NULL, so an upsert without it is rejected for new rows
-      if (session?.id && session.username && !session.id.startsWith('user-')) {
+      if (session?.id && session.username && !session.isGuest && !session.id.startsWith('user-')) {
         window.supabaseClient
           .from('profiles')
           .upsert({ id: session.id, username: session.username, role: role }, { onConflict: 'id' })
@@ -463,6 +468,25 @@ async function switchUserRole(role, event) {
   window.userRole = role;
   window.activeTab = role === 'volunteer' ? 'v_dashboard' : 'dashboard';
   setRole(role);
+
+  // Remember the choice on the account itself: the stored session (ns-boot reads session.role on the
+  // next page) and the server profile (login hands back the role saved there)
+  try {
+    const raw = localStorage.getItem('northstar_session');
+    const sess = raw ? JSON.parse(raw) : null;
+    if (sess && typeof sess === 'object') {
+      sess.role = role;
+      localStorage.setItem('northstar_session', JSON.stringify(sess));
+      if (!sess.isGuest && sess.id && sess.token) {
+        fetch('/api/profiles', {
+          method: 'POST',
+          keepalive: true,
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${sess.token}` },
+          body: JSON.stringify({ id: sess.id, username: sess.username, role })
+        }).catch(() => {});
+      }
+    }
+  } catch (_) {}
 
   // Land on that side's Home (the splash stays up until the page changes)
   const home = role === 'volunteer' ? 'helper-dashboard.html' : 'seeker-dashboard.html';
@@ -879,7 +903,8 @@ function showNotification(message, type = 'info') {
 }// --- Auth Entry Functions ---
 
 function loginAsGuest() {
-  const session = { username: 'Guest', role: 'seeker', isGuest: true };
+  const session = { username: 'Guest', role: 'seeker', isGuest: true, loggedInAt: Date.now() };
+  try { sessionStorage.setItem('ns_session_active', '1'); } catch (e) {}
   localStorage.setItem('northstar_session', JSON.stringify(session));
   localStorage.removeItem('northstar_data_Guest'); // Clean slate every time for Guest!
 
@@ -897,7 +922,8 @@ function loginAsUser(username, mode) {
   }
 
   const role = currentGatewayMode || 'seeker';
-  const session = { username: username.trim(), role, isGuest: false, mode };
+  const session = { username: username.trim(), role, isGuest: false, mode, loggedInAt: Date.now() };
+  try { sessionStorage.setItem('ns_session_active', '1'); } catch (e) {}
   localStorage.setItem('northstar_session', JSON.stringify(session));
 
   // Ensure initial data structure exists for user account
@@ -948,6 +974,13 @@ window.handleGatewayLogin = window.handleAuthFormSubmit;
 window.logout = logout;
 window.redirectToAuthGateway = function () {
   if (typeof window.closeModal === 'function') window.closeModal('settings-modal');
+  if (typeof window.nsClearSession === 'function') {
+    window.nsClearSession();
+  } else {
+    localStorage.removeItem('northstar_session');
+    localStorage.removeItem('northstar_user_role');
+    try { sessionStorage.removeItem('ns_session_active'); } catch (e) {}
+  }
   // Show the onboarding overlay and go back to step 1
   const overlay = document.getElementById('onboarding-overlay');
   if (overlay) {
@@ -1023,12 +1056,6 @@ if (document.readyState === 'loading') {
   checkGuestLockAccess();
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', checkGuestLockAccess);
-} else {
-  checkGuestLockAccess();
-}
-
 // --- Progress State Management ---
 
 let currentGatewayMode = 'seeker';
@@ -1059,12 +1086,33 @@ function handleGatewayLogin(mode) {
 }
 
 function logout() {
-  localStorage.removeItem('northstar_session');
+  if (typeof window.nsClearSession === 'function') {
+    window.nsClearSession();
+  } else {
+    localStorage.removeItem('northstar_session');
+    localStorage.removeItem('northstar_user_role');
+    localStorage.removeItem('northstar_full_name');
+    localStorage.removeItem('northstar_username');
+    try { sessionStorage.removeItem('ns_session_active'); } catch (e) {}
+  }
   window.location.href = 'index.html';
 }
 
 function getSession() {
-  return JSON.parse(localStorage.getItem('northstar_session')) || { role: 'seeker', isGuest: true, username: 'Guest' };
+  if (typeof window.nsGetValidSession === 'function') {
+    const valid = window.nsGetValidSession();
+    if (valid) return valid;
+  } else {
+    try {
+      const s = JSON.parse(localStorage.getItem('northstar_session') || 'null');
+      const last = s ? Math.max(Number(s.lastActiveAt) || 0, Number(s.loggedInAt) || 0) : 0;
+      const age = last ? (Date.now() - last) : Infinity;
+      if (s && age >= -60000 && age < 5 * 60 * 1000) return s;
+      localStorage.removeItem('northstar_session');
+      localStorage.removeItem('northstar_user_role');
+    } catch (e) {}
+  }
+  return { role: 'seeker', isGuest: true, username: 'Guest' };
 }
 
 const CORE_MILESTONES = [
@@ -1518,6 +1566,12 @@ window.claimAndTrackDelivery = async function(id) {
       window.notifyDeliveriesChanged();
       return;
     }
+    if (!claimRes.ok) {
+      // Not claimed: leave the pickup in the queue so it can be tried again
+      showNotification('Couldn’t claim this pickup right now.', 'error');
+      window.notifyDeliveriesChanged();
+      return;
+    }
 
     try { localStorage.setItem('northstar_last_delivery_id', id); } catch(_) {}
 
@@ -1528,6 +1582,7 @@ window.claimAndTrackDelivery = async function(id) {
       if (target) {
         target.status = 'driver_assigned';
         target.driverName = driverName;
+        if (driverId) target.driver_id = driverId;
         localStorage.setItem('northstar_cached_deliveries', JSON.stringify(cached));
       }
     } catch(_) {}
@@ -1536,8 +1591,9 @@ window.claimAndTrackDelivery = async function(id) {
     window.openUberTrackingModal(id);
     window.notifyDeliveriesChanged();
   } catch (err) {
+    // Network failure: the claim never reached the server, so don't pretend it did
     console.error('Error claiming delivery:', err);
-    window.openUberTrackingModal(id);
+    showNotification('Couldn’t claim this pickup right now.', 'error');
     window.notifyDeliveriesChanged();
   }
 };
@@ -1648,13 +1704,21 @@ window.openUberTrackingModal = function(deliveryId) {
   if (window._uberTrackingInterval) clearInterval(window._uberTrackingInterval);
 
   const fetchAndUpdate = async () => {
+    let shown = false;
     try {
       const res = await fetch(`/api/deliveries/${encodeURIComponent(deliveryId)}`);
-      const data = await res.json();
-      if (data.delivery) window.updateUberTrackingUI(data.delivery);
+      const data = res.ok ? await res.json() : null;
+      if (data && data.delivery) { window.updateUberTrackingUI(data.delivery); shown = true; }
     } catch (e) {
       console.warn('Tracking poll notice:', e);
     }
+    if (shown) return;
+    // Offline or not found on the server: show the last state we have for this pickup
+    try {
+      const cached = JSON.parse(localStorage.getItem('northstar_cached_deliveries') || '[]');
+      const local = Array.isArray(cached) ? cached.find(d => d && d.id === deliveryId) : null;
+      if (local) window.updateUberTrackingUI(local);
+    } catch (_) {}
   };
 
   fetchAndUpdate();
@@ -1904,9 +1968,6 @@ function initGlobalAIChatbot() {
   const store = readChats();
   renderCompanionConversation(activeChat(store));
   updateChatbotSuggestionChips();
-
-  localStorage.setItem('northstar_ai_used', 'true');
-  if (typeof updateMilestone === 'function') updateMilestone('aiCompanion', true);
 
   const q = new URLSearchParams(window.location.search).get('q');
   if (q) {
@@ -2260,15 +2321,17 @@ function getNorthStarCachedResources() {
 // Verified places from the server (same list as the Map), fetched once when needed
 let _nsServerResources = null;
 async function loadNorthStarServerResources() {
-  if (_nsServerResources) return _nsServerResources;
+  if (Array.isArray(_nsServerResources) && _nsServerResources.length) return _nsServerResources;
   try {
     const res = await fetch('/api/resources');
-    const data = await res.json();
-    _nsServerResources = Array.isArray(data.resources) ? data.resources : [];
+    const data = res.ok ? await res.json() : null;
+    const list = data && Array.isArray(data.resources) ? data.resources : [];
+    // Only remember a real answer; a failed fetch is retried next time
+    if (list.length) _nsServerResources = list;
+    return list;
   } catch (err) {
-    _nsServerResources = [];
+    return [];
   }
-  return _nsServerResources;
 }
 
 async function getNorthStarLocationResourceContext(message) {
@@ -2551,6 +2614,12 @@ async function dispatchChatMessage(rawText, isResuming = false) {
   window._chatPending = true;
   if (sendBtn) sendBtn.disabled = true;
 
+  // "Ask Companion a question" counts once a question is actually sent
+  try {
+    localStorage.setItem('northstar_ai_used', 'true');
+    if (typeof updateMilestone === 'function') updateMilestone('aiCompanion', true);
+  } catch (_) {}
+
   try {
     const rawRole = (typeof getRole === 'function') ? getRole() : (localStorage.getItem('northstar_user_role') || 'seeker');
     const isHelperRole = (rawRole === 'volunteer' || rawRole === 'donater' || rawRole === 'helper' || rawRole === 'employer');
@@ -2795,4 +2864,150 @@ if (document.readyState === 'loading') {
   }
 
   window.showOfflineModal = showOfflineModal;
+})();
+// ============================================================
+// Background resume jobs: the resume keeps being written on the server
+// even when the person leaves the Resume page. Any page polls the job and
+// saves the finished result so the Resume page can show it later.
+// ============================================================
+(function () {
+  const JOB_KEY = 'northstar_resume_job';
+  const POLL_MS = 3000;
+  let pollTimer = null;
+  let polling = false;
+
+  function ownerId() {
+    try {
+      const s = JSON.parse(localStorage.getItem('northstar_session') || 'null');
+      return s ? (s.id || s.username || 'guest') : '';
+    } catch (e) { return ''; }
+  }
+
+  function readJob() {
+    try {
+      const job = JSON.parse(localStorage.getItem(JOB_KEY) || 'null');
+      if (!job || !job.id) return null;
+      if (job.owner && job.owner !== ownerId()) { localStorage.removeItem(JOB_KEY); return null; }
+      return job;
+    } catch (e) { return null; }
+  }
+
+  function writeJob(job) {
+    try {
+      if (job) localStorage.setItem(JOB_KEY, JSON.stringify(job));
+      else localStorage.removeItem(JOB_KEY);
+    } catch (e) {}
+  }
+
+  function onResumePage() {
+    return /resume-builder\.html$/.test(window.location.pathname);
+  }
+
+  // Small "Your resume is ready" link on other pages
+  function showReadyPill() {
+    if (onResumePage() || document.getElementById('ns-resume-ready-pill')) return;
+    const a = document.createElement('a');
+    a.id = 'ns-resume-ready-pill';
+    a.href = 'resume-builder.html';
+    a.setAttribute('role', 'status');
+    a.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom));z-index:3000;display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;background:#111;color:#fff;font:600 14px/1.2 "Plus Jakarta Sans",system-ui,sans-serif;box-shadow:0 10px 24px -10px rgba(0,0,0,.5);text-decoration:none;white-space:nowrap';
+    a.innerHTML = '<span class="material-symbols-outlined" aria-hidden="true" style="font-size:18px">description</span><span>Your resume is ready · View</span>';
+    (document.body || document.documentElement).appendChild(a);
+  }
+
+  async function pollOnce() {
+    const job = readJob();
+    if (!job || job.status !== 'running') { stop(); return job; }
+    if (polling) return job;
+    polling = true;
+    // Waiting on the resume page for a long generation is not "idle": keep the session alive
+    if (onResumePage() && document.visibilityState === 'visible' && typeof window.nsMarkActive === 'function') {
+      try { window.nsMarkActive(true); } catch (e) {}
+    }
+    try {
+      const resp = await fetch(`/api/resume-jobs/${encodeURIComponent(job.id)}`, { cache: 'no-store' });
+      if (resp.status === 404) {
+        // Server restarted and lost the job
+        const latest = readJob();
+        if (latest && latest.id === job.id) {
+          latest.status = 'failed';
+          latest.result = { success: false, error: 'The resume was interrupted. Please try again.' };
+          writeJob(latest);
+        }
+      } else if (resp.ok) {
+        const out = await resp.json();
+        if (out && (out.status === 'done' || out.status === 'failed')) {
+          const latest = readJob();
+          if (latest && latest.id === job.id) {
+            latest.status = out.status;
+            latest.result = out.result || null;
+            latest.finishedAt = Date.now();
+            writeJob(latest);
+          }
+        }
+      }
+    } catch (e) { /* offline: try again */ }
+    polling = false;
+
+    const now = readJob();
+    if (now && now.status !== 'running') {
+      stop();
+      window.dispatchEvent(new CustomEvent('ns:resume-job', { detail: now }));
+      if (now.status === 'done') showReadyPill();
+    }
+    return now;
+  }
+
+  function start() {
+    if (pollTimer) return;
+    pollTimer = setInterval(pollOnce, POLL_MS);
+    pollOnce();
+  }
+
+  function stop() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  }
+
+  // Another tab finished (or cleared) the job: relay it here so this page stops waiting too
+  window.addEventListener('storage', function (e) {
+    if (e.key !== JOB_KEY) return;
+    const job = readJob();
+    if (!job) { stop(); return; }
+    if (job.status === 'running') { start(); return; }
+    stop();
+    window.dispatchEvent(new CustomEvent('ns:resume-job', { detail: job }));
+    if (job.status === 'done') showReadyPill();
+  });
+
+  // Start a job; resolves with the job record once the server accepted it
+  async function startResumeJob(confirmed) {
+    const resp = await fetch('/api/resume-jobs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(confirmed)
+    });
+    const out = await resp.json().catch(() => ({}));
+    if (!resp.ok || !out.success || !out.jobId) throw new Error(out.error || 'Could not start your resume.');
+    const job = { id: out.jobId, owner: ownerId(), startedAt: Date.now(), status: 'running', confirmed, result: null };
+    writeJob(job);
+    start();
+    return job;
+  }
+
+  window.nsResumeJob = {
+    start: startResumeJob,
+    get: readJob,
+    clear: () => { stop(); writeJob(null); },
+    poll: pollOnce,
+    watch: start
+  };
+
+  function boot() {
+    const job = readJob();
+    if (!job) return;
+    if (job.status === 'running') start();
+    else if (job.status === 'done') showReadyPill();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
 })();

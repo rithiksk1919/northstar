@@ -137,7 +137,7 @@
                 <span class="ns-card-title">Companion</span>
                 <span class="ns-card-sub">Ask anything</span>
             </a>
-            <a href="donate.html" class="quick-action-card" onclick="event.preventDefault(); history.pushState(null,'','donate.html'); document.getElementById('donation-cards-container') && document.querySelector('[data-action=deliver]') && document.querySelector('[data-action=deliver]').click(); window.location.href='donate.html';">
+            <a href="donate.html#deliver" class="quick-action-card">
                 <span class="ns-art-tile"><img src="assets/illustrations/icons/deliver.svg" alt=""></span>
                 <span class="ns-card-title">Deliver food</span>
                 <span class="ns-card-sub">Claim a pickup</span>
@@ -180,7 +180,7 @@
         <section>
             <div class="ns-section-head" style="display:flex;align-items:center;justify-content:space-between;">
                 <h2>Food pickups</h2>
-                <a id="volunteer-view-all-pickups" href="donate.html" class="ns-link hidden" style="font-size:13px;">See all</a>
+                <a id="volunteer-view-all-pickups" href="donate.html#deliver" class="ns-link hidden" style="font-size:13px;">See all</a>
             </div>
             <div id="dashboard-deliveries-queue">
                 <div class="ns-empty">
@@ -291,8 +291,14 @@ window.addEventListener('northstar_deliveries_updated', () => {
     initVolunteerActiveDelivery();
     renderImpactStats();
 });
-// The account's saved data (card donations) arrived after the page drew
-window.addEventListener('ns:userdata', (e) => { e.preventDefault(); renderImpactStats(); });
+// The account's saved data (card donations) arrived after the page drew: this handler cancels the
+// page reload, so redraw everything that depends on the account here
+window.addEventListener('ns:userdata', (e) => {
+    e.preventDefault();
+    renderImpactStats();
+    initVolunteerActiveDelivery();
+    if (typeof window.renderVolunteerFoodDonationsQueue === 'function') window.renderVolunteerFoodDonationsQueue();
+});
 // Back on this screen (another tab, the tracker, or the phone was locked)
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') { renderImpactStats(); initVolunteerActiveDelivery(); }

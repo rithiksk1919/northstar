@@ -409,6 +409,18 @@ async function submitNewJob(e) {
       body: JSON.stringify({ title, company, pay, location, requirements: reqs, contact, authorId })
     });
     posted = res.ok;
+    if (posted) {
+      // Use the server's record (same id) so the feed doesn't show the phone copy and the server copy as two jobs
+      const out = await res.json().catch(() => ({}));
+      if (out && out.job && out.job.id) {
+        try {
+          const existing = JSON.parse(localStorage.getItem('northstar_custom_posted_jobs') || '[]');
+          const swapped = existing.map(j => (j.id === newJobObj.id ? { ...newJobObj, ...out.job } : j));
+          localStorage.setItem('northstar_custom_posted_jobs', JSON.stringify(swapped));
+          newJobObj.id = out.job.id;
+        } catch (err) {}
+      }
+    }
   } catch (err) {
     console.warn('API job save notice:', err);
   }
