@@ -475,8 +475,12 @@
     return isVolunteer
       ? `
         <div data-jobs-state="empty" class="ns-empty">
-          <p class="ns-empty__title">You haven’t posted a job yet</p>
-          <p class="ns-empty__sub">Jobs you post show up here, and in the Gigs list for people looking for work.</p>
+          <span class="material-symbols-outlined" style="font-size:36px;color:var(--muted);margin-bottom:8px;">post_add</span>
+          <p class="ns-empty__title">No posts yet</p>
+          <p class="ns-empty__sub">Jobs you post show up here and in the Gigs list for people looking for work.</p>
+          <button type="button" onclick="openModal('post-job-modal')" class="ns-btn ns-btn--primary ns-btn--sm mt-4">
+            <span class="material-symbols-outlined" aria-hidden="true">add</span> Post a job
+          </button>
         </div>`
       : `
         <div data-jobs-state="empty" class="ns-empty">

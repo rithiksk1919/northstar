@@ -13,6 +13,85 @@
 <script src="https://cdn.tailwindcss.com?plugins=container-queries"></script>
 <script src="js/tailwind-config.js"></script>
 <link rel="stylesheet" href="css/app.css">
+<style>
+  .impact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .impact-card {
+    background: var(--sand);
+    border-radius: 16px;
+    padding: 14px 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .impact-card__value {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .impact-card__label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .impact-card__icon {
+    font-size: 18px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .donation-hero {
+    background: var(--amber);
+    border-radius: 18px;
+    padding: 18px 18px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .donation-hero__amount {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .donation-hero__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--amber-ink);
+    margin-top: 4px;
+  }
+  .donation-hero__cta {
+    background: #111;
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 9px 16px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: opacity 0.15s;
+  }
+  .donation-hero__cta:hover { opacity: 0.82; }
+  .quick-action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .quick-action-card {
+    background: var(--paper);
+    border: 1.5px solid var(--line);
+    border-radius: 18px;
+    padding: 16px 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.12s, border-color 0.12s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .quick-action-card:active { background: var(--sand); }
+  .quick-action-card .ns-tile { margin-bottom: 8px; }
+</style>
 </head>
 <body>
 
@@ -28,33 +107,57 @@
         </div>
     </header>
 
-    <main class="ns-main dashboard-container volunteer-dashboard-main">
+    <main class="ns-main dashboard-container volunteer-dashboard-main" style="display:flex;flex-direction:column;gap:14px;">
 
-        <!-- Money donated (saved to the account; js/northstar.js fills #volunteer-total-donations) -->
-        <div class="ns-card ns-card--wash ns-card--pad flex items-center justify-between gap-4">
+        <!-- Donation hero banner -->
+        <div class="donation-hero">
             <div>
-                <p class="ns-card-sub">You’ve donated</p>
-                <p id="volunteer-total-donations" class="ns-value mt-1">$0</p>
-                <p class="ns-card-sub mt-1">Card donations on your account</p>
+                <p style="font-size:12px;font-weight:600;color:var(--amber-ink);margin-bottom:4px;">You've given</p>
+                <p id="volunteer-total-donations" class="donation-hero__amount">$0</p>
+                <p class="donation-hero__label">in card donations</p>
             </div>
-            <span class="ns-tile ns-tile--yellow"><span class="material-symbols-outlined">volunteer_activism</span></span>
+            <a href="donate.html" class="donation-hero__cta">Give more</a>
         </div>
 
-        <div class="grid grid-cols-2 gap-3 mt-3">
-            <a id="volunteer-post-job-card" href="opportunities.html" class="ns-card ns-card--pad flex flex-col gap-4 min-h-[124px]">
+        <!-- Quick actions -->
+        <div class="quick-action-grid">
+            <a id="volunteer-post-job-card" href="opportunities.html" class="quick-action-card">
                 <span class="ns-tile"><span class="material-symbols-outlined">add</span></span>
-                <span class="mt-auto">
-                    <span class="ns-card-title block">Post a job</span>
-                    <span class="ns-card-sub block mt-1">Share paid work</span>
-                </span>
+                <span class="ns-card-title">Post a job</span>
+                <span class="ns-card-sub">Share paid work</span>
             </a>
-            <a id="volunteer-donate-card" href="donate.html" class="ns-card ns-card--pad flex flex-col gap-4 min-h-[124px]">
-                <span class="ns-tile"><span class="material-symbols-outlined">restaurant</span></span>
-                <span class="mt-auto">
-                    <span class="ns-card-title block">Donate</span>
-                    <span class="ns-card-sub block mt-1">Money or food</span>
-                </span>
+            <a id="volunteer-donate-card" href="donate.html" class="quick-action-card">
+                <span class="ns-tile"><span class="material-symbols-outlined">volunteer_activism</span></span>
+                <span class="ns-card-title">Donate</span>
+                <span class="ns-card-sub">Money or food</span>
             </a>
+            <a href="companion.html" class="quick-action-card">
+                <span class="ns-tile"><span class="material-symbols-outlined">chat_bubble</span></span>
+                <span class="ns-card-title">Companion</span>
+                <span class="ns-card-sub">Ask anything</span>
+            </a>
+            <a href="donate.html" class="quick-action-card" onclick="event.preventDefault(); history.pushState(null,'','donate.html'); document.getElementById('donation-cards-container') && document.querySelector('[data-action=deliver]') && document.querySelector('[data-action=deliver]').click(); window.location.href='donate.html';">
+                <span class="ns-tile"><span class="material-symbols-outlined">local_shipping</span></span>
+                <span class="ns-card-title">Deliver food</span>
+                <span class="ns-card-sub">Claim a pickup</span>
+            </a>
+        </div>
+
+        <!-- Impact stats -->
+        <div>
+            <div class="ns-section-head"><h2>Your impact</h2></div>
+            <div class="impact-grid" id="volunteer-impact-grid">
+                <div class="impact-card">
+                    <span class="material-symbols-outlined impact-card__icon">volunteer_activism</span>
+                    <span id="impact-donations-count" class="impact-card__value">0</span>
+                    <span class="impact-card__label">Donations made</span>
+                </div>
+                <div class="impact-card">
+                    <span class="material-symbols-outlined impact-card__icon">local_shipping</span>
+                    <span id="impact-deliveries-count" class="impact-card__value">0</span>
+                    <span class="impact-card__label">Food deliveries</span>
+                </div>
+            </div>
         </div>
 
         <!-- Delivery this volunteer is carrying right now -->
@@ -72,9 +175,11 @@
             </div>
         </div>
 
+        <!-- Food pickups queue -->
         <section>
-            <div class="ns-section-head">
+            <div class="ns-section-head" style="display:flex;align-items:center;justify-content:space-between;">
                 <h2>Food pickups</h2>
+                <a id="volunteer-view-all-pickups" href="donate.html" class="ns-link hidden" style="font-size:13px;">See all</a>
             </div>
             <div id="dashboard-deliveries-queue">
                 <div class="ns-empty">
@@ -98,6 +203,23 @@
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setGreeting);
     else setGreeting();
 })();
+
+// Populate impact stats from localStorage
+function renderImpactStats() {
+    try {
+        const donations = JSON.parse(localStorage.getItem('northstar_donations') || '[]');
+        const donationCount = Array.isArray(donations) ? donations.length : 0;
+        const el = document.getElementById('impact-donations-count');
+        if (el) el.textContent = donationCount;
+    } catch (_) {}
+
+    try {
+        const deliveries = JSON.parse(localStorage.getItem('northstar_completed_deliveries') || '[]');
+        const count = Array.isArray(deliveries) ? deliveries.length : 0;
+        const el = document.getElementById('impact-deliveries-count');
+        if (el) el.textContent = count;
+    } catch (_) {}
+}
 
 window.initVolunteerActiveDelivery = async function () {
     const role = localStorage.getItem('northstar_user_role') || 'seeker';
@@ -131,7 +253,10 @@ window.initVolunteerActiveDelivery = async function () {
         console.warn('Could not fetch active delivery status:', err);
     }
 };
-document.addEventListener('DOMContentLoaded', () => { setTimeout(initVolunteerActiveDelivery, 400); });
+document.addEventListener('DOMContentLoaded', () => {
+    renderImpactStats();
+    setTimeout(initVolunteerActiveDelivery, 400);
+});
 window.addEventListener('northstar_deliveries_updated', () => { initVolunteerActiveDelivery(); });
 </script>
 <script src="js/northstar.js"></script>

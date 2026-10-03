@@ -74,3 +74,5 @@ northstar-ai/.gitignore
 .agents/mcp_config.json
 scratch/
 
+.env.save
+.expo/

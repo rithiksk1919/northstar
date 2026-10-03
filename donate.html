@@ -41,11 +41,20 @@
             <button id="profile-btn" type="button" class="ns-icon-btn ns-avatar-btn" aria-label="Open settings" onclick="openSettingsModal()">S</button>
         </div>
     </header>
-
     <main class="ns-main">
 
         <!-- Result after coming back from checkout (?status=success|cancel) -->
         <div id="donation-return-notice" class="hidden mb-4" role="status"></div>
+
+        <!-- Your giving total (volunteer only) -->
+        <div id="donate-impact-banner" class="hidden mb-4" style="background:var(--amber);border-radius:18px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <div>
+                <p style="font-size:12px;font-weight:600;color:var(--amber-ink);margin-bottom:2px;">You've given</p>
+                <p id="donate-total-amount" style="font-size:30px;font-weight:800;color:var(--ink);line-height:1;">$0</p>
+                <p style="font-size:12px;font-weight:600;color:var(--amber-ink);margin-top:3px;">in card donations</p>
+            </div>
+            <span class="material-symbols-outlined" style="font-size:32px;color:var(--amber-ink);opacity:0.5;">favorite</span>
+        </div>
 
         <!-- Active delivery (shown when you have one) -->
         <div id="donation-status-bar" class="hidden mb-4">
@@ -88,15 +97,36 @@
             </button>
         </div>
 
-        <a href="helper-dashboard.html" class="ns-card ns-card--sand flex items-center gap-4 p-4 mt-4">
-            <span class="ns-tile ns-tile--plain ns-tile--sm"><span class="material-symbols-outlined">dashboard</span></span>
+        <a href="helper-dashboard.html" class="ns-card ns-card--amber flex items-center gap-4 p-4 mt-4" style="text-decoration:none;color:inherit;">
+            <span class="ns-tile" style="background:rgba(0,0,0,0.08);"><span class="material-symbols-outlined">favorite</span></span>
             <span class="flex-1 min-w-0">
-                <span class="text-[15px] font-bold block">See what you’ve given</span>
-                <span class="ns-card-sub block">On your dashboard</span>
+                <span class="text-[15px] font-bold block">See your impact</span>
+                <span class="ns-card-sub block" id="donate-given-sub">Back to dashboard</span>
             </span>
             <span class="material-symbols-outlined ns-chevron">chevron_right</span>
         </a>
     </main>
+
+    <script>
+    (function() {
+        try {
+            const role = localStorage.getItem('northstar_user_role') || 'seeker';
+            const banner = document.getElementById('donate-impact-banner');
+            const totalEl = document.getElementById('donate-total-amount');
+            const subEl = document.getElementById('donate-given-sub');
+            const donations = JSON.parse(localStorage.getItem('northstar_donations') || '[]');
+            const sum = Array.isArray(donations) ? donations.reduce((a, d) => a + (Number(d?.amount) || 0), 0) : 0;
+            if (role === 'volunteer' && banner) {
+                if (sum > 0) {
+                    if (totalEl) totalEl.textContent = '$' + sum.toLocaleString();
+                    banner.classList.remove('hidden');
+                }
+            }
+            if (subEl && sum > 0) subEl.textContent = '$' + sum.toLocaleString() + ' given · See dashboard';
+        } catch (_) {}
+    })();
+    </script>
+n>
 
     <nav class="bottom-nav ns-nav" aria-label="Main"></nav>
 

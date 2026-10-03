@@ -428,7 +428,7 @@ function renderDynamicNav() {
     // Seeker Funnel Tabs: [Dashboard, Progress, Jobs, Map, Resume, Settings]
     navItems = [
       { href: 'seeker-dashboard.html', label: 'Dashboard', icon: 'dashboard' },
-      { href: 'progress.html', label: 'Progress', icon: 'timeline' },
+      { href: 'progress.html', label: 'Profile', icon: 'person' },
       { href: 'opportunities.html', label: 'Jobs', icon: 'work' },
       { href: 'resource-map.html', label: 'Map', icon: 'map' },
       { href: 'resume-builder.html', label: 'Resume', icon: 'description' },
@@ -1301,7 +1301,7 @@ function renderBottomNav() {
       { id: 'jobs', label: 'Gigs', icon: 'work', href: 'opportunities.html', active: isJobs },
       { id: 'resume', label: 'Resume', icon: 'description', href: 'resume-builder.html', active: isResume },
       { id: 'companion', label: 'Companion', icon: 'chat_bubble', href: 'companion.html', active: isCompanion },
-      { id: 'me', label: 'Progress', icon: 'trending_up', href: 'progress.html', active: isMe }
+      { id: 'me', label: 'Profile', icon: 'person', href: 'progress.html', active: isMe }
     ],
     volunteer: [
       { id: 'v_dashboard', label: 'Home', icon: 'home', href: 'helper-dashboard.html', active: isDashboard },
@@ -1851,6 +1851,17 @@ function initGlobalAIChatbot() {
     // A question from another screen starts its own chat
     startNewCompanionChat({ keepSheet: true });
     dispatchChatMessage(q);
+  } else {
+    const chat = activeChat(store);
+    if (chat && chat.transcript && chat.transcript.length > 0) {
+      const lastMsg = chat.transcript[chat.transcript.length - 1];
+      if (lastMsg.who === 'user') {
+        // AI never replied before tab was closed/changed, resume processing
+        setTimeout(() => {
+          dispatchChatMessage(lastMsg.text, true);
+        }, 100);
+      }
+    }
   }
 }
 
@@ -2411,7 +2422,7 @@ async function handleAIChatSubmit(e) {
   await dispatchChatMessage(text);
 }
 
-async function dispatchChatMessage(rawText) {
+async function dispatchChatMessage(rawText, isResuming = false) {
   const text = String(rawText || '').trim();
   if (!text) return;
 
@@ -2425,8 +2436,12 @@ async function dispatchChatMessage(rawText) {
   // 1. Capture the CURRENT history snapshot BEFORE adding the new user message
   const previousHistory = (window.northstarChatHistory || []).slice(-10);
 
-  // 2. Safely append user bubble to UI
-  appendUserMessageBubble(text);
+  // 2. Safely append user bubble to UI (skip if resuming from an aborted session)
+  if (!isResuming) {
+    appendUserMessageBubble(text);
+  } else {
+    messagesList.scrollTop = messagesList.scrollHeight;
+  }
 
   // 3. Append typing bubble with staggered wave dots
   const typingBubble = document.createElement('div');
