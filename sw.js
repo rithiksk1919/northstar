@@ -1,4 +1,4 @@
-const APP_CACHE_NAME = 'northstar-offline-v5';
+const APP_CACHE_NAME = 'northstar-offline-v6';
 const TILE_CACHE_NAME = 'northstar-map-tiles';
 
 const CORE_ASSETS = [
@@ -16,6 +16,9 @@ const CORE_ASSETS = [
   '/css/onboarding.css',
   '/js/ns-boot.js',
   '/js/user-data.js',
+  '/js/volunteer-history.js',
+  '/js/resources-data.js',
+  '/js/places.js',
   '/js/tailwind-config.js',
   '/js/northstar.js',
   '/js/auth.js',

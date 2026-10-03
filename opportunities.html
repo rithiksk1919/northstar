@@ -2,7 +2,7 @@
 <html class="light" lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=0.9, viewport-fit=cover">
 <meta name="theme-color" content="#FFFFFF">
 <title>Gigs · Northstar</title>
 <link rel="icon" href="favicon.png">
@@ -32,6 +32,9 @@
 .job-card .card-divider { display: flex; align-items: center; gap: 8px; margin-top: 16px; }
 .job-card .audio-primer-btn { box-shadow: none; border: 1px solid var(--line); }
 .job-card .audio-primer-btn:hover { border-color: #D6CEC1; }
+.post-info { margin: 14px 0 0; padding: 14px 0 0; list-style: none; border-top: 1px solid rgba(17, 17, 17, 0.14); display: flex; flex-direction: column; gap: 9px; }
+.post-info li { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; color: #3D3300; line-height: 1.35; }
+.post-info .material-symbols-outlined { font-size: 20px; color: var(--ink); flex-shrink: 0; }
 </style>
 </head>
 <body>
@@ -51,17 +54,19 @@
     <main class="ns-main">
 
         <!-- Post a job (volunteers only; js/jobs.js toggles .hidden by role) -->
-        <div id="post-job-volunteer-banner" class="hidden ns-card ns-card--amber ns-card--pad mb-3">
-            <div class="flex items-start gap-4">
-                <span class="ns-tile !bg-paper" aria-hidden="true"><span class="material-symbols-outlined">post_add</span></span>
-                <div class="min-w-0">
-                    <p class="ns-card-title">Have work to offer?</p>
-                    <p class="ns-card-sub mt-1">Post a job and it shows up in the Gigs list for people looking for work.</p>
+        <div id="post-job-volunteer-banner" class="hidden mb-3" style="border-radius:20px;background:var(--amber);padding:18px;">
+            <div class="ns-feature !p-0">
+                <div class="ns-feature__body">
+                    <p class="ns-feature__title">Have work to offer?</p>
+                    <p class="ns-feature__sub">Post a job and it shows up in the Gigs list for people looking for work.</p>
                 </div>
+                <img class="ns-feature__art" src="assets/illustrations/work-offer.svg" alt="">
             </div>
-            <button type="button" onclick="openModal('post-job-modal')" class="ns-btn ns-btn--primary ns-btn--sm w-full mt-4">
-                <span class="material-symbols-outlined" aria-hidden="true">add</span> Post a job
-            </button>
+            <ul class="post-info" aria-label="About posting a job">
+                <li><span class="material-symbols-outlined" aria-hidden="true">group</span>Seen by people looking for work in Seattle</li>
+                <li><span class="material-symbols-outlined" aria-hidden="true">payments</span>Free to post. Put the pay up front.</li>
+                <li><span class="material-symbols-outlined" aria-hidden="true">delete</span>Remove it any time from Your posts</li>
+            </ul>
         </div>
 
         <!-- Ask Companion about the listings (seekers; click is bound in js/jobs.js) -->
@@ -71,8 +76,12 @@
             <span class="material-symbols-outlined ns-chevron text-[20px]" aria-hidden="true">chevron_right</span>
         </button>
 
-        <div class="ns-section-head">
+        <div class="ns-section-head" style="display:flex;align-items:center;justify-content:space-between;">
             <h2 id="jobs-section-title">Listings</h2>
+            <!-- Volunteers who already have posts (the empty state has its own button) -->
+            <button id="jobs-add-post-btn" type="button" onclick="openModal('post-job-modal')" class="ns-btn ns-btn--primary ns-btn--sm !w-auto px-4 hidden">
+                <span class="material-symbols-outlined" aria-hidden="true">add</span> Post a job
+            </button>
         </div>
 
         <!-- Shown only when both day gigs and locally posted jobs are listed -->

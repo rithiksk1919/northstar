@@ -20,6 +20,7 @@
     'northstar_donations',
     'northstar_visited_pages',
     'northstar_saved_resources',
+    'northstar_user_saved_places',
     'northstar_ai_used',
     'northstar_app_explored',
     'northstar_progress_customized',

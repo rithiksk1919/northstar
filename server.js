@@ -1219,7 +1219,9 @@ function detectPlaceCategory(lower) {
   if (/\b(shelter|bed|beds|place to stay|sleep|sleeping|stay tonight)\b/.test(lower)) return 'shelter';
   if (/\b(food|meal|meals|eat|hungry|pantry|food bank|lunch|dinner|breakfast)\b/.test(lower)) return 'food';
   if (/\b(shower|showers|restroom|bathroom|toilet|hygiene|laundry)\b/.test(lower)) return 'restroom';
-  if (/\b(wifi|wi-fi|internet|charge|charging|library)\b/.test(lower)) return 'wifi';
+  if (/\b(charge|charging|outlet)\b/.test(lower)) return 'charging';
+  if (/\b(wifi|wi-fi|internet|library|computer)\b/.test(lower)) return 'wifi';
+  if (/\b(day center|drop-in|laundry|mail|lockers)\b/.test(lower)) return 'daycenter';
   return null;
 }
 
@@ -1394,9 +1396,17 @@ app.post('/api/chat', async (req, res) => {
     const lookupOk = lookup && lookup.resource_lookup_status === 'success';
     let fallbackPlaces = [];
     if (category && !lookupOk) {
-      fallbackPlaces = VERIFIED_PLACES.filter(p => p.category === category).slice(0, 5).map(p => ({
-        id: p.id, name: p.name, address: p.address, hours: p.hours, status: p.status, phone: p.phone, description: p.description
-      }));
+      // No location: walk-in places open to everyone first, then the rest
+      const inCat = p => (Array.isArray(p.categories) && p.categories.length ? p.categories : [p.category]).includes(category);
+      const openToAll = p => /^(all|anyone|public)\b/i.test(p.population || '');
+      fallbackPlaces = VERIFIED_PLACES
+        .filter(p => inCat(p) && !p.referralOnly && !p.closedNote && typeof p.lat === 'number')
+        .sort((a, b) => (openToAll(b) - openToAll(a)) || (b.is24Seven - a.is24Seven))
+        .slice(0, 6)
+        .map(p => ({
+          id: p.id, name: p.name, address: p.address, hours: p.hours, phone: p.phone,
+          who_it_is_for: p.population || '', id_required: p.idRequired === true, description: p.description
+        }));
       if (fallbackPlaces.length) {
         verifiedContext.verified_places = fallbackPlaces;
         verifiedContext.user_location_known = false;

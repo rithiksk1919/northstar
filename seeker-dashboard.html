@@ -2,7 +2,7 @@
 <html class="light" lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=0.9, viewport-fit=cover">
 <meta name="theme-color" content="#FFFFFF">
 <title>Home · Northstar</title>
 <link rel="icon" href="favicon.png">
@@ -157,7 +157,7 @@
 <script>
 (function () {
     const SEATTLE = { lat: 47.6062, lng: -122.3321 };
-    const ICONS = { shelter: 'bed', food: 'restaurant', restroom: 'shower', wifi: 'wifi', work: 'work' };
+    const ICONS = { shelter: 'bed', food: 'restaurant', restroom: 'shower', wifi: 'wifi', charging: 'power', daycenter: 'home', work: 'work' };
     const esc = s => (window.nsEscape ? nsEscape(s) : String(s == null ? '' : s));
 
     window.goSearch = function (q) {
@@ -171,7 +171,9 @@
         shelter: 'bed beds shelter sleep stay night housing',
         food: 'food meal meals eat pantry lunch dinner breakfast groceries',
         restroom: 'shower showers restroom bathroom toilet hygiene laundry',
-        wifi: 'wifi wi-fi internet library computer charge charging',
+        wifi: 'wifi wi-fi internet library computer',
+        charging: 'charge charging power outlet phone',
+        daycenter: 'day center drop-in daytime laundry lockers computer phone mail',
         work: 'work job jobs gig gigs labor'
     };
     const STOP = ['near', 'me', 'nearby', 'a', 'an', 'the', 'for', 'in', 'to', 'i', 'need', 'find', 'where', 'is', 'can', 'get', 'some', 'place', 'places', 'open', 'now', 'today', 'tonight'];
@@ -183,7 +185,9 @@
         const ws = words(q);
         if (!ws.length) return { places: [], gigs: [] };
         const places = searchData.places.filter(p => {
-            const hay = [p.name, p.category, p.status, p.description, p.hours, p.address, SYNONYMS[p.category] || ''].join(' ').toLowerCase();
+            const cats = window.nsPlaceCategories ? nsPlaceCategories(p) : [p.category];
+            const hay = [p.name, p.status, p.description, p.notes, p.population, p.hours, p.address,
+                (p.tags || []).join(' ').replace(/_/g, ' '), ...cats.map(c => SYNONYMS[c] || c)].join(' ').toLowerCase();
             return ws.every(w => hit(hay, w));
         }).slice(0, 5);
         const gigs = searchData.gigs.filter(g => {
@@ -209,7 +213,7 @@
               <span class="ns-tile"><span class="material-symbols-outlined">${ICONS[p.category] || 'location_on'}</span></span>
               <span class="ns-row__body">
                 <span class="ns-row__title block truncate">${esc(shortName(p.name))}</span>
-                <span class="ns-row__sub block truncate">${esc([searchData.hasLocation ? fmtMiles(p.dist) : null, p.status].filter(Boolean).join(' · '))}</span>
+                <span class="ns-row__sub block truncate">${esc([searchData.hasLocation && Number.isFinite(p.dist) ? fmtMiles(p.dist) : null, p.status].filter(Boolean).join(' · '))}</span>
               </span>
               ${is247(p) ? '<span class="ns-badge ns-badge--sand ns-badge--dot">Open 24/7</span>' : ''}
             </a>`));
@@ -312,7 +316,9 @@
 
     const fmtMiles = m => (m < 0.1 ? 'Under 0.1 mi' : `${m.toFixed(1)} mi`);
     const shortName = n => String(n || '').replace(/\s*\([^)]*\)\s*/g, ' ').trim();
-    const is247 = p => /24\s*\/\s*7/.test(`${p.hours || ''} ${p.status || ''}`);
+    const is247 = p => p.is24Seven === true;
+    const statusOf = p => (window.nsPlaceStatus ? nsPlaceStatus(p) : { open: null, text: '' });
+    const inCat = (p, c) => (window.nsPlaceCategories ? nsPlaceCategories(p) : [p.category]).includes(c);
 
     function row({ href, icon, title, sub, endTop, endBadge }) {
         return `
@@ -332,25 +338,23 @@
     async function renderPlaces() {
         const loc = knownLocation();
         const from = loc || SEATTLE;
-        let places = [];
-        try {
-            const res = await fetch('/api/resources');
-            const data = await res.json();
-            places = (data.resources || []).filter(p => typeof p.lat === 'number' && typeof p.lng === 'number')
-                .map(p => ({ ...p, dist: miles(from, p) }))
-                .sort((a, b) => a.dist - b.dist);
-            searchData.places = places;
-            searchData.hasLocation = !!loc;
-        } catch (e) {}
+        const all = (window.nsPlaces ? nsPlaces() : []).map(p => ({ ...p, status: statusOf(p).text }));
+        const places = all.filter(p => typeof p.lat === 'number' && typeof p.lng === 'number')
+            .map(p => ({ ...p, dist: miles(from, p) }))
+            .sort((a, b) => a.dist - b.dist);
+        // search also finds places without a map pin (private addresses, phone intake)
+        searchData.places = places.concat(all.filter(p => typeof p.lat !== 'number').map(p => ({ ...p, dist: NaN })));
+        searchData.hasLocation = !!loc;
 
-        // Right now: closest shelter that is open 24/7
-        const shelter = places.find(p => p.category === 'shelter' && is247(p));
+        // Right now: closest shelter open 24/7 that takes walk-ins
+        const shelter = places.find(p => inCat(p, 'shelter') && is247(p) && !p.referralOnly);
         const title = document.getElementById('now-title');
         const meta = document.getElementById('now-meta');
         const cta = document.getElementById('now-cta');
         if (shelter) {
             title.textContent = 'Shelter open all night';
-            meta.textContent = [shortName(shelter.name), loc ? fmtMiles(shelter.dist) : null, 'open 24/7'].filter(Boolean).join(' · ');
+            meta.textContent = [shortName(shelter.name), loc ? fmtMiles(shelter.dist) : null, 'open 24/7',
+                shelter.population && !/^(all|anyone|public)\b/i.test(shelter.population) ? `for ${shelter.population.toLowerCase()}` : null].filter(Boolean).join(' · ');
             cta.setAttribute('href', `resource-map.html?resource=${encodeURIComponent(shelter.id)}`);
         } else {
             title.textContent = 'Find a bed tonight';
@@ -358,10 +362,25 @@
         }
 
         // Near you: closest meal, closest shower, and a gig
-        const food = places.find(p => p.category === 'food');
-        const shower = places.find(p => p.category === 'restroom');
+        const openish = p => statusOf(p).open !== false;
+        // Close by first (2 mi): open now, else hours not listed, else the nearest. Places whose main
+        // purpose is this kind come before ones that just also offer it (a shelter's meal).
+        const taken = new Set();
+        const pick = c => {
+            const near = places.filter(p => inCat(p, c) && !p.referralOnly && p.dist <= 2 && !taken.has(p.id));
+            const main = near.filter(p => p.category === c);
+            for (const list of [main, near]) {
+                const hit = list.find(p => statusOf(p).open === true) || list.find(openish);
+                if (hit) return hit;
+            }
+            return places.find(p => inCat(p, c) && !p.referralOnly && !taken.has(p.id));
+        };
+        const food = pick('food');
+        if (food) taken.add(food.id);
+        const shower = pick('restroom');
         const rows = [];
-        const openBadge = p => is247(p) ? '<span class="ns-badge ns-badge--sand ns-badge--dot">Open 24/7</span>' : '';
+        const openBadge = p => is247(p) ? '<span class="ns-badge ns-badge--sand ns-badge--dot">Open 24/7</span>'
+            : statusOf(p).open === true ? '<span class="ns-badge ns-badge--sand ns-badge--dot">Open now</span>' : '';
         if (food) rows.push(row({
             href: `resource-map.html?resource=${encodeURIComponent(food.id)}`,
             icon: ICONS.food, title: shortName(food.name),
@@ -446,6 +465,8 @@ window.initSeekerActiveDonation = async function () {
 };
 document.addEventListener('DOMContentLoaded', () => { setTimeout(initSeekerActiveDonation, 400); });
 </script>
+<script src="js/resources-data.js"></script>
+<script src="js/places.js"></script>
 <script src="js/northstar.js"></script>
 <script src="js/jobs.js"></script>
 <script src="js/offline-map.js"></script>

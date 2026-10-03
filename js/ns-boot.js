@@ -35,6 +35,11 @@
     }
   } catch (e) { iconsReady(); }
 
+  // Volunteers get the warm page color (css: html.ns-volunteer)
+  try {
+    if (localStorage.getItem('northstar_user_role') === 'volunteer') root.classList.add('ns-volunteer');
+  } catch (e) {}
+
   var NAV_FLAG = 'ns_nav_transition';
   var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 

@@ -417,6 +417,8 @@
 
     const meta = document.getElementById('jobs-header-meta');
     const stateEl = feed.querySelector('[data-jobs-state]');
+    const addPostBtn = document.getElementById('jobs-add-post-btn');
+    if (addPostBtn) addPostBtn.classList.toggle('hidden', !(isVolunteer && total > 0));
     if (meta && total > 0) {
       meta.textContent = isVolunteer
         ? `${total} ${total === 1 ? 'job' : 'jobs'} you posted`
@@ -475,7 +477,7 @@
     return isVolunteer
       ? `
         <div data-jobs-state="empty" class="ns-empty">
-          <span class="material-symbols-outlined" style="font-size:36px;color:var(--muted);margin-bottom:8px;">post_add</span>
+          <img class="ns-empty__art" src="assets/illustrations/clipboard-add.svg" alt="">
           <p class="ns-empty__title">No posts yet</p>
           <p class="ns-empty__sub">Jobs you post show up here and in the Gigs list for people looking for work.</p>
           <button type="button" onclick="openModal('post-job-modal')" class="ns-btn ns-btn--primary ns-btn--sm mt-4">

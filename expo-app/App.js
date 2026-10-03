@@ -124,6 +124,8 @@ export default function App() {
               pullToRefreshEnabled
               setSupportMultipleWindows={false}
               allowsInlineMediaPlayback
+              // Android: follow the pages' viewport setting (they open slightly zoomed out)
+              scalesPageToFit
               onShouldStartLoadWithRequest={onShouldStart}
               onNavigationStateChange={(s) => setCanGoBack(s.canGoBack)}
               onMessage={(e) => {

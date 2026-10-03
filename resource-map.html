@@ -2,7 +2,7 @@
 <html class="light" lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=0.9, viewport-fit=cover">
 <meta name="theme-color" content="#FFFFFF">
 <title>Map · Northstar</title>
 <link rel="icon" href="favicon.png">
@@ -153,6 +153,7 @@
     box-shadow: 0 4px 10px -4px rgba(0, 0, 0, 0.6);
   }
   .rm-pin .material-symbols-outlined { font-size: 18px; }
+  .rm-pin--closed { background: #fff; color: #9a9a9a; border-color: #d6d6d6; box-shadow: 0 2px 6px -3px rgba(0, 0, 0, 0.35); }
   .rm-pin--saved { box-shadow: 0 0 0 3px var(--amber), 0 4px 10px -4px rgba(0, 0, 0, 0.6); }
   .rm-label-pin {
     position: absolute; left: 0; top: 0;
@@ -191,6 +192,17 @@
   .rm-step__icon { width: 36px; height: 36px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--sand); color: var(--ink); }
   .rm-step__icon--bus { background: var(--ink); color: var(--cream); }
   .rm-step__icon .material-symbols-outlined { font-size: 20px; }
+  /* Place card details (who it's for, hours, notes, source) */
+  .place-info { display: flex; flex-direction: column; gap: 6px; }
+  .place-line { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; line-height: 1.4; color: var(--ink-2); }
+  .place-line .material-symbols-outlined { font-size: 18px; color: var(--muted); margin-top: 1px; flex-shrink: 0; }
+  .place-line b { color: var(--ink); font-weight: 700; }
+  .place-hours { display: block; font-size: 12.5px; font-weight: 500; color: var(--muted); margin-top: 1px; }
+  .place-check { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; line-height: 1.4; color: #6B5500; background: var(--amber-wash); border-radius: 10px; padding: 8px 10px; }
+  .place-check .material-symbols-outlined { font-size: 18px; flex-shrink: 0; }
+  .place-flag { background: #FFF1D6; color: #6B4A00; }
+  .place-source { margin-top: 8px; font-size: 12px; color: var(--muted); }
+  .place-source a { color: var(--muted); text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -249,8 +261,8 @@
                 <button type="button" data-cat="charging" data-icon="power" onclick="toggleCategoryFilter('charging')" class="cat-pill-btn ns-chip" aria-pressed="false">
                     <span class="material-symbols-outlined">power</span><span>Charging</span>
                 </button>
-                <button type="button" data-cat="work" data-icon="work" onclick="toggleCategoryFilter('work')" class="cat-pill-btn ns-chip" aria-pressed="false">
-                    <span class="material-symbols-outlined">work</span><span>Gigs</span>
+                <button type="button" data-cat="daycenter" data-icon="home" onclick="toggleCategoryFilter('daycenter')" class="cat-pill-btn ns-chip" aria-pressed="false">
+                    <span class="material-symbols-outlined">home</span><span>Day centers</span>
                 </button>
             </div>
         </div>
@@ -333,7 +345,7 @@
                         <span class="ns-row__title block">Open now</span>
                         <span id="open-now-text" class="ns-row__sub block">Hide places that are closed right now</span>
                     </span>
-                    <input type="checkbox" id="open-now-btn" class="ns-switch" checked onchange="toggleOpenNowFilter()">
+                    <input type="checkbox" id="open-now-btn" class="ns-switch" onchange="toggleOpenNowFilter()">
                 </label>
                 <button type="button" class="ns-row" onclick="closeModal('map-filters-modal'); locateAndCenterUser();">
                     <span class="ns-tile ns-tile--plain ns-tile--sm"><span class="material-symbols-outlined">near_me</span></span>
@@ -420,7 +432,7 @@
                         <select id="res-category" class="ns-select">
                             <option value="food">Meals</option>
                             <option value="shelter">Shelter</option>
-                            <option value="work">Gig work</option>
+                            <option value="daycenter">Day center</option>
                             <option value="wifi">Wi-Fi</option>
                             <option value="restroom">Showers</option>
                             <option value="charging">Charging</option>
@@ -446,6 +458,8 @@
 
 </div><!-- /.app-frame -->
 
+<script src="js/resources-data.js"></script>
+<script src="js/places.js"></script>
 <script src="js/northstar.js"></script>
     <script src="js/jobs.js"></script>
 <script>
@@ -458,9 +472,13 @@
   
   // REAL FILTERING STATE CONTROLLERS
   let activeSelectedCategories = ['all']; // Multi-select array
-  let isOpenNowFilterActive = true;       // Set Open Now active by default on page load
+  let isOpenNowFilterActive = false;      // Off by default: closed places stay visible (dimmed) with their next opening time
   let activeScopeFilter = 'everyone';   // 'everyone' or 'verified'
   let activeRadiusMiles = 5;            // Radius modifier (5, 10, 25 miles)
+  // Until the person picks a distance, widen 5 → 10 → 25 mi when too few places are nearby
+  const MIN_NEARBY_PLACES = 5;
+  let radiusChosenByUser = false;
+  let effectiveRadiusMiles = activeRadiusMiles;
   let activeMapMode = 'nearby';         // 'nearby' or 'saved'
   let isDrawerExpanded = false;
 
@@ -472,7 +490,7 @@
       const stored = localStorage.getItem(USER_SAVED_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed)) return [...new Set(parsed.map(id => (typeof resolvePlaceId === 'function' ? resolvePlaceId(id) : id)))];
       }
     } catch (e) {
       console.warn('Error reading saved places:', e);
@@ -535,450 +553,62 @@
   }
   window.toggleSavePlace = toggleSavePlace;
 
-  const defaultResources = [
-    {
-      id: 'res-real-4',
-      name: "Redmond Library",
-      category: "wifi",
-      lat: 47.6765,
-      lng: -122.1240,
-      rating: 4.6,
-      open_status: "OPEN_NOW",
-      status: "Open · Closes 6:00 PM",
-      statusDetail: "Open · Closes 6:00 PM",
-      address: "15990 NE 85th St, Redmond",
-      icon: "📚",
-      details: "Local community hub that offers open public Wi-Fi, computer workstations, and resources during standard library hours.",
-      verifiedOnly: true,
-      hoursOpen: "11:00",
-      hoursClose: "18:00",
-      daysClosed: [],
-      is24Seven: false,
-      opening_hours: {
-        open_now: true,
-        periods: [
-          { open: { day: 0, time: "1100" }, close: { day: 0, time: "1800" } }, // Sun 11am-6pm
-          { open: { day: 1, time: "1000" }, close: { day: 1, time: "2000" } }, // Mon 10am-8pm
-          { open: { day: 2, time: "1000" }, close: { day: 2, time: "2000" } }, // Tue 10am-8pm
-          { open: { day: 3, time: "1000" }, close: { day: 3, time: "2000" } }, // Wed 10am-8pm
-          { open: { day: 4, time: "1000" }, close: { day: 4, time: "2000" } }, // Thu 10am-8pm
-          { open: { day: 5, time: "1000" }, close: { day: 5, time: "1800" } }, // Fri 10am-6pm
-          { open: { day: 6, time: "1000" }, close: { day: 6, time: "1700" } }  // Sat 10am-5pm
-        ],
-        weekday_text: [
-          "Monday: 10:00 AM – 8:00 PM",
-          "Tuesday: 10:00 AM – 8:00 PM",
-          "Wednesday: 10:00 AM – 8:00 PM",
-          "Thursday: 10:00 AM – 8:00 PM",
-          "Friday: 10:00 AM – 6:00 PM",
-          "Saturday: 10:00 AM – 5:00 PM",
-          "Sunday: 11:00 AM – 6:00 PM"
-        ]
-      }
-    },
-    {
-      id: 'res-real-3',
-      name: "The Sophia Way - Helen's Place (Shelter)",
-      category: "shelter",
-      lat: 47.6755,
-      lng: -122.1795,
-      rating: 2.7,
-      open_status: "OPEN_NOW",
-      status: "Open · 24/7 Emergency Shelter",
-      statusDetail: "Open 24 hours",
-      address: "8045 120th Ave NE, Kirkland",
-      icon: "📍",
-      details: "The Sophia Way - Helen's Place (Shelter) operates a 24/7 emergency shelter and day center for women.",
-      verifiedOnly: true,
-      hoursOpen: "00:00",
-      hoursClose: "23:59",
-      daysClosed: [],
-      is24Seven: true,
-      opening_hours: {
-        open_now: true,
-        periods: [
-          { open: { day: 0, time: "0000" } } // 24/7
-        ],
-        weekday_text: ["Open 24 hours daily"]
-      }
-    },
-    {
-      id: 'res-real-1',
-      name: "Together Center",
-      category: "shelter",
-      lat: 47.6805,
-      lng: -122.1225,
-      rating: 4.5,
-      open_status: "CLOSED_FOR_REST_OF_TODAY",
-      status: "Closed · Opens 9:00 AM Mon",
-      statusDetail: "Closed · Opens 9:00 AM Mon",
-      address: "16305 NE 87th St, Redmond",
-      icon: "📍",
-      details: "Together Center provides housing navigators and comprehensive social services in Redmond.",
-      verifiedOnly: true,
-      hoursOpen: "09:00",
-      hoursClose: "17:00",
-      daysClosed: [0, 6], // Closed on Sun & Sat
-      is24Seven: false,
-      opening_hours: {
-        open_now: false,
-        periods: [
-          { open: { day: 1, time: "0900" }, close: { day: 1, time: "1700" } },
-          { open: { day: 2, time: "0900" }, close: { day: 2, time: "1700" } },
-          { open: { day: 3, time: "0900" }, close: { day: 3, time: "1700" } },
-          { open: { day: 4, time: "0900" }, close: { day: 4, time: "1700" } },
-          { open: { day: 5, time: "0900" }, close: { day: 5, time: "1700" } }
-        ],
-        weekday_text: [
-          "Monday: 9:00 AM – 5:00 PM",
-          "Tuesday: 9:00 AM – 5:00 PM",
-          "Wednesday: 9:00 AM – 5:00 PM",
-          "Thursday: 9:00 AM – 5:00 PM",
-          "Friday: 9:00 AM – 5:00 PM",
-          "Saturday: Closed",
-          "Sunday: Closed"
-        ]
-      }
-    },
-    {
-      id: 'res-real-2',
-      name: "Hopelink Redmond - Food Distribution Center",
-      category: "food",
-      lat: 47.6822,
-      lng: -122.1345,
-      rating: 4.4,
-      open_status: "CLOSED_FOR_REST_OF_TODAY",
-      status: "Closed · Opens 1:00 PM Mon",
-      statusDetail: "Closed · Opens 1:00 PM Mon",
-      address: "8990 154th Ave NE, Redmond",
-      icon: "📍",
-      details: "Hopelink Redmond - Food Distribution Center provides fresh groceries and emergency food distributions during set weekday hours.",
-      verifiedOnly: true,
-      hoursOpen: "13:00",
-      hoursClose: "17:00",
-      daysClosed: [0, 6], // Closed Sun & Sat
-      is24Seven: false,
-      opening_hours: {
-        open_now: false,
-        periods: [
-          { open: { day: 1, time: "1300" }, close: { day: 1, time: "1700" } },
-          { open: { day: 2, time: "1300" }, close: { day: 2, time: "1700" } },
-          { open: { day: 3, time: "1300" }, close: { day: 3, time: "1700" } },
-          { open: { day: 4, time: "1300" }, close: { day: 4, time: "1700" } },
-          { open: { day: 5, time: "1000" }, close: { day: 5, time: "1400" } }
-        ],
-        weekday_text: [
-          "Monday: 1:00 PM – 5:00 PM",
-          "Tuesday: 1:00 PM – 5:00 PM",
-          "Wednesday: 1:00 PM – 5:00 PM",
-          "Thursday: 1:00 PM – 5:00 PM",
-          "Friday: 10:00 AM – 2:00 PM",
-          "Saturday: Closed",
-          "Sunday: Closed"
-        ]
-      }
-    },
-    {
-      id: 'res-real-5',
-      name: "Urban Rest Stop Hygiene Center",
-      category: "restroom",
-      lat: 47.6148,
-      lng: -122.3340,
-      rating: 4.5,
-      open_status: "OPEN_NOW",
-      status: "Open · Closes 7:00 PM",
-      statusDetail: "Open · Closes 7:00 PM",
-      address: "1924 9th Ave, Seattle",
-      icon: "🚿",
-      details: "Clean private showers, laundry facilities, and accessible restrooms.",
-      verifiedOnly: true,
-      hoursOpen: "07:00",
-      hoursClose: "19:00",
-      daysClosed: [],
-      is24Seven: false,
-      opening_hours: {
-        open_now: true,
-        periods: [
-          { open: { day: 0, time: "0700" }, close: { day: 0, time: "1900" } },
-          { open: { day: 1, time: "0700" }, close: { day: 1, time: "1900" } },
-          { open: { day: 2, time: "0700" }, close: { day: 2, time: "1900" } },
-          { open: { day: 3, time: "0700" }, close: { day: 3, time: "1900" } },
-          { open: { day: 4, time: "0700" }, close: { day: 4, time: "1900" } },
-          { open: { day: 5, time: "0700" }, close: { day: 5, time: "1900" } },
-          { open: { day: 6, time: "0700" }, close: { day: 6, time: "1900" } }
-        ]
-      }
-    },
-    {
-      id: 'res-real-6',
-      name: "Downtown Emergency Service Center",
-      category: "shelter",
-      lat: 47.6025,
-      lng: -122.3308,
-      rating: 4.1,
-      open_status: "OPEN_NOW",
-      status: "Open · 24/7 Shelter",
-      statusDetail: "Open 24 hours",
-      address: "515 3rd Ave, Seattle",
-      icon: "🛏️",
-      details: "Overnight emergency shelter, navigation, and crisis outreach.",
-      verifiedOnly: true,
-      hoursOpen: "00:00",
-      hoursClose: "23:59",
-      daysClosed: [],
-      is24Seven: true,
-      opening_hours: {
-        open_now: true,
-        periods: [{ open: { day: 0, time: "0000" } }],
-        weekday_text: ["Open 24 hours daily"]
-      }
-    },
-    {
-      id: 'res-real-7',
-      name: "Mary's Place Family Shelter Hub",
-      category: "shelter",
-      lat: 47.6140,
-      lng: -122.3362,
-      rating: 4.7,
-      open_status: "OPEN_NOW",
-      status: "Open · Closes 8:00 PM",
-      statusDetail: "Open · Closes 8:00 PM",
-      address: "700 Virginia St, Seattle",
-      icon: "🏠",
-      details: "Emergency family shelter beds, hygiene items, and hot meals.",
-      verifiedOnly: true,
-      hoursOpen: "08:00",
-      hoursClose: "20:00",
-      daysClosed: [],
-      is24Seven: false,
-      opening_hours: {
-        open_now: true,
-        periods: [
-          { open: { day: 0, time: "0800" }, close: { day: 0, time: "2000" } },
-          { open: { day: 1, time: "0800" }, close: { day: 1, time: "2000" } },
-          { open: { day: 2, time: "0800" }, close: { day: 2, time: "2000" } },
-          { open: { day: 3, time: "0800" }, close: { day: 3, time: "2000" } },
-          { open: { day: 4, time: "0800" }, close: { day: 4, time: "2000" } },
-          { open: { day: 5, time: "0800" }, close: { day: 5, time: "2000" } },
-          { open: { day: 6, time: "0800" }, close: { day: 6, time: "2000" } }
-        ]
-      }
-    },
-    {
-      id: 'res-real-8',
-      name: "Ballard Food Bank & Community Hub",
-      category: "food",
-      lat: 47.6635,
-      lng: -122.3740,
-      rating: 4.8,
-      open_status: "CLOSED_FOR_REST_OF_TODAY",
-      status: "Closed · Opens 11:00 AM Mon",
-      statusDetail: "Closed · Opens 11:00 AM Mon",
-      address: "1400 Leary Way NW, Seattle",
-      icon: "🍲",
-      details: "Grocery market offering fresh produce and community hygiene supplies.",
-      verifiedOnly: true,
-      hoursOpen: "11:00",
-      hoursClose: "16:00",
-      daysClosed: [0, 6], // Closed Sun & Sat
-      is24Seven: false,
-      opening_hours: {
-        open_now: false,
-        periods: [
-          { open: { day: 1, time: "1100" }, close: { day: 1, time: "1600" } },
-          { open: { day: 2, time: "1100" }, close: { day: 2, time: "1600" } },
-          { open: { day: 3, time: "1100" }, close: { day: 3, time: "1600" } },
-          { open: { day: 4, time: "1100" }, close: { day: 4, time: "1600" } }
-        ]
-      }
-    },
-    {
-      id: 'res-real-9',
-      name: "YouthCare Orion Center",
-      category: "food",
-      lat: 47.6178,
-      lng: -122.3315,
-      rating: 4.6,
-      open_status: "OPEN_NOW",
-      status: "Open · Closes 6:00 PM",
-      statusDetail: "Open · Closes 6:00 PM",
-      address: "1828 Yale Ave, Seattle",
-      icon: "🍲",
-      details: "Hot nutritious meals, case management, and drop-in services for youth.",
-      verifiedOnly: false,
-      hoursOpen: "09:00",
-      hoursClose: "18:00",
-      daysClosed: [],
-      is24Seven: false,
-      opening_hours: {
-        open_now: true,
-        periods: [
-          { open: { day: 0, time: "0900" }, close: { day: 0, time: "1800" } },
-          { open: { day: 1, time: "0900" }, close: { day: 1, time: "1800" } },
-          { open: { day: 2, time: "0900" }, close: { day: 2, time: "1800" } },
-          { open: { day: 3, time: "0900" }, close: { day: 3, time: "1800" } },
-          { open: { day: 4, time: "0900" }, close: { day: 4, time: "1800" } },
-          { open: { day: 5, time: "0900" }, close: { day: 5, time: "1800" } },
-          { open: { day: 6, time: "0900" }, close: { day: 6, time: "1800" } }
-        ]
-      }
-    },
-    {
-      id: 'res-real-10',
-      name: "Compass Center Hygiene & Charging Station",
-      category: "charging",
-      lat: 47.6015,
-      lng: -122.3348,
-      rating: 4.3,
-      open_status: "OPEN_NOW",
-      status: "Open · Closes 6:00 PM",
-      statusDetail: "Open · Closes 6:00 PM",
-      address: "210 Alaskan Way S, Seattle",
-      icon: "⚡",
-      details: "High-speed charging lockers, indoor rest area, and hygiene support.",
-      verifiedOnly: true,
-      hoursOpen: "08:00",
-      hoursClose: "18:00",
-      daysClosed: [],
-      is24Seven: false,
-      opening_hours: {
-        open_now: true,
-        periods: [
-          { open: { day: 0, time: "0800" }, close: { day: 0, time: "1800" } },
-          { open: { day: 1, time: "0800" }, close: { day: 1, time: "1800" } },
-          { open: { day: 2, time: "0800" }, close: { day: 2, time: "1800" } },
-          { open: { day: 3, time: "0800" }, close: { day: 3, time: "1800" } },
-          { open: { day: 4, time: "0800" }, close: { day: 4, time: "1800" } },
-          { open: { day: 5, time: "0800" }, close: { day: 5, time: "1800" } },
-          { open: { day: 6, time: "0800" }, close: { day: 6, time: "1800" } }
-        ]
-      }
-    },
-    {
-      id: 'res-real-11',
-      name: "Seattle Day Labor & Work Center",
-      category: "work",
-      lat: 47.5990,
-      lng: -122.3250,
-      rating: 4.2,
-      open_status: "OPEN_NOW",
-      status: "Open · Closes 2:00 PM",
-      statusDetail: "Open · Closes 2:00 PM",
-      address: "150 S Washington St, Seattle",
-      icon: "💼",
-      details: "Daily paid tasks, staging for maintenance gigs, and direct cash payouts.",
-      verifiedOnly: true,
-      hoursOpen: "06:00",
-      hoursClose: "14:00",
-      daysClosed: [],
-      is24Seven: false,
-      opening_hours: {
-        open_now: true,
-        periods: [
-          { open: { day: 0, time: "0600" }, close: { day: 0, time: "1400" } },
-          { open: { day: 1, time: "0600" }, close: { day: 1, time: "1400" } },
-          { open: { day: 2, time: "0600" }, close: { day: 2, time: "1400" } },
-          { open: { day: 3, time: "0600" }, close: { day: 3, time: "1400" } },
-          { open: { day: 4, time: "0600" }, close: { day: 4, time: "1400" } },
-          { open: { day: 5, time: "0600" }, close: { day: 5, time: "1400" } },
-          { open: { day: 6, time: "0600" }, close: { day: 6, time: "1400" } }
-        ]
-      }
+  // Verified places: js/resources-data.js, built from src/data/northstar_seattle_resources.csv
+  // by scripts/build-resources.py. Places in the same building get a small pin offset.
+  function toMapPlace(p) {
+    const place = { ...p };
+    if (typeof p.lat === 'number' && p.pinSlots > 1) {
+      const angle = (2 * Math.PI * p.pinSlot) / p.pinSlots;
+      place.pinLat = p.lat + 0.00016 * Math.sin(angle);
+      place.pinLng = p.lng + 0.00024 * Math.cos(angle);
     }
-  ];
-
-  const RESOURCE_STORAGE_KEY = 'cached_resources_v2_live_hours';
-
-  function normalizeOfflineResource(item, idx) {
-    const catRaw = (item.category || 'shelter').toLowerCase();
-    let category = 'shelter';
-    let icon = '🛏️';
-    if (catRaw.includes('food') || catRaw.includes('pantry')) {
-      category = 'food';
-      icon = '🍲';
-    } else if (catRaw.includes('health') || catRaw.includes('medical') || catRaw.includes('clinic')) {
-      category = 'health';
-      icon = '🏥';
-    } else if (catRaw.includes('restroom') || catRaw.includes('hygiene')) {
-      category = 'restroom';
-      icon = '🚿';
-    }
-
-    return {
-      id: item.id || `offline-res-${idx}`,
-      name: item.name || 'Essential Resource',
-      category: category,
-      lat: Number(item.lat) || 47.6062,
-      lng: Number(item.lng) || -122.3321,
-      rating: item.rating || null,
-      open_status: item.open_24_7 ? 'OPEN_NOW' : 'OPEN_NOW',
-      status: item.open_24_7 ? 'Open 24 hours' : (item.opening_hours || 'Open today'),
-      statusDetail: item.opening_hours || (item.open_24_7 ? 'Open 24 hours' : 'Open today'),
-      address: item.address || 'Seattle, WA',
-      phone: item.phone || '',
-      icon: item.icon || icon,
-      details: item.details || '',
-      verifiedOnly: true,
-      is24Seven: Boolean(item.open_24_7),
-      opening_hours: { open_now: true }
-    };
+    return place;
+  }
+  const defaultResources = (window.NS_RESOURCES || []).map(toMapPlace);
+  // Older place ids (saved places, Companion links) -> current ones
+  const PLACE_ALIASES = {};
+  defaultResources.forEach(p => (p.aliases || []).forEach(old => { PLACE_ALIASES[old] = p.id; }));
+  function resolvePlaceId(id) { return PLACE_ALIASES[id] || id; }
+  window.resolvePlaceId = resolvePlaceId;
+  function hasPin(p) { return typeof p.lat === 'number' && typeof p.lng === 'number'; }
+  function placeInCategories(p, cats) {
+    const list = Array.isArray(p.categories) && p.categories.length ? p.categories : [p.category];
+    return list.some(c => cats.includes(c));
   }
 
-  function getResourcesData() {
-    const isOfflineMode = !navigator.onLine || window.location.search.includes('offline=true');
+  // Places people add themselves (not verified) stay on this phone
+  const CUSTOM_PLACES_KEY = 'northstar_custom_places';
+  const OLD_RESOURCE_CACHE_KEY = 'cached_resources_v2_live_hours';
+  function getCustomPlaces() {
     try {
-      const offlineRaw = localStorage.getItem('northstar_offline_resources');
-      if (offlineRaw) {
-        const offlineParsed = JSON.parse(offlineRaw);
-        if (Array.isArray(offlineParsed) && offlineParsed.length > 0) {
-          const normalizedOffline = offlineParsed.map(normalizeOfflineResource);
-          if (isOfflineMode) {
-            return normalizedOffline;
-          }
-          // Merge offline essentials with default resources avoiding duplicate names
-          const existingNames = new Set(normalizedOffline.map(r => r.name.toLowerCase()));
-          const merged = [
-            ...normalizedOffline,
-            ...defaultResources.filter(r => !existingNames.has((r.name || '').toLowerCase()))
-          ];
-          return merged;
-        }
+      // One-time move: older builds kept added places inside a cached copy of the whole list
+      const old = localStorage.getItem(OLD_RESOURCE_CACHE_KEY);
+      if (old) {
+        const added = (JSON.parse(old) || []).filter(r => r && String(r.id).startsWith('res-custom-'));
+        if (added.length && !localStorage.getItem(CUSTOM_PLACES_KEY)) localStorage.setItem(CUSTOM_PLACES_KEY, JSON.stringify(added));
+        localStorage.removeItem(OLD_RESOURCE_CACHE_KEY);
+        localStorage.removeItem('cached_resources');
       }
-
-      const stored = localStorage.getItem(RESOURCE_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
-        }
-      }
+      const list = JSON.parse(localStorage.getItem(CUSTOM_PLACES_KEY) || '[]');
+      return Array.isArray(list) ? list : [];
     } catch (e) {
-      console.warn('Error reading cached resources:', e);
+      return [];
     }
-    localStorage.setItem(RESOURCE_STORAGE_KEY, JSON.stringify(defaultResources));
-    return defaultResources;
+  }
+  function saveCustomPlaces(list) {
+    try { localStorage.setItem(CUSTOM_PLACES_KEY, JSON.stringify(list)); } catch (e) {}
+  }
+
+  // Plain-words status for a place right now (js/places.js)
+  const placeStatus = (p, now) => window.nsPlaceStatus(p, now);
+  window.placeStatus = placeStatus;
+
+  function getResourcesData() {
+    return [...getCustomPlaces(), ...defaultResources].map(p => ({ ...p, status: placeStatus(p).text }));
   }
 
   async function loadResourcesFromDatabase() {
-    if (!navigator.onLine || window.location.search.includes('offline=true')) {
-      if (typeof updateVisiblePlaces === 'function') {
-        updateVisiblePlaces();
-      }
-      return;
-    }
-    if (window.supabaseClient) {
-      try {
-        const { data, error } = await window.supabaseClient.from('resources').select('*');
-        if (!error && Array.isArray(data) && data.length > 0) {
-          localStorage.setItem('cached_resources', JSON.stringify(data));
-          if (typeof updateVisiblePlaces === 'function') {
-            updateVisiblePlaces();
-          }
-        }
-      } catch (err) {
-        console.warn('Could not query Supabase resources table, keeping offline/cached items:', err);
-      }
-    }
+    if (typeof updateVisiblePlaces === 'function') updateVisiblePlaces();
   }
 
   function applyUrlFilters() {
@@ -1027,6 +657,7 @@
     restroom: { icon: 'shower', label: 'Showers' },
     wifi: { icon: 'wifi', label: 'Wi-Fi' },
     charging: { icon: 'power', label: 'Charging' },
+    daycenter: { icon: 'home', label: 'Day center' },
     work: { icon: 'work', label: 'Gig work' },
     health: { icon: 'medical_services', label: 'Health care' }
   };
@@ -1066,14 +697,14 @@
     let n = 0;
     if (activeMapMode === 'saved') n++;
     if (activeScopeFilter === 'verified') n++;
-    if (!isOpenNowFilterActive) n++;
-    if (activeRadiusMiles !== 5) n++;
+    if (isOpenNowFilterActive) n++;
+    if (radiusChosenByUser && activeRadiusMiles !== 5) n++;
     const countEl = document.getElementById('filters-count');
     if (countEl) {
       countEl.textContent = n;
       countEl.classList.toggle('hidden', n === 0);
     }
-    [5, 10, 25].forEach(m => setPressed(document.getElementById(`radius-btn-${m}`), m === activeRadiusMiles));
+    [5, 10, 25].forEach(m => setPressed(document.getElementById(`radius-btn-${m}`), m === effectiveRadiusMiles));
     const applyBtn = document.getElementById('filters-apply-btn');
     if (applyBtn) {
       applyBtn.textContent = lastFilteredCount === 0
@@ -1114,40 +745,60 @@
       return;
     }
 
-    const isOpen = isPlaceOpenNow(res);
+    const st = placeStatus(res);
     const saved = isPlaceSaved(res.id);
-    const phone = (res.phone || '').trim();
-    const tel = phone.replace(/[^0-9+]/g, '');
-    const meta = categoryMeta(res.category);
+    const tel = (res.tel || (res.phone || '').replace(/[^0-9+]/g, '')).trim();
+    const pinned = hasPin(res);
+    const cats = (Array.isArray(res.categories) && res.categories.length ? res.categories : [res.category]).slice(0, 3);
+    const statusBadge = st.open === true
+      ? `<span class="ns-badge ns-badge--sand ns-badge--dot">${esc(st.text.startsWith('Open 24') ? 'Open 24 hours' : 'Open now')}</span>`
+      : st.open === null
+        ? '<span class="ns-badge ns-badge--sand"><span class="material-symbols-outlined">call</span>Call first</span>'
+        : `<span class="ns-badge ns-badge--sand">${esc(res.closedNote ? 'Closed for now' : 'Closed now')}</span>`;
     const badges = [
       res.verifiedOnly ? '<span class="ns-badge ns-badge--leaf"><span class="material-symbols-outlined">verified</span>Verified</span>' : '',
-      isOpen
-        ? '<span class="ns-badge ns-badge--sand ns-badge--dot">Open now</span>'
-        : '<span class="ns-badge ns-badge--sand">Closed now</span>',
-      `<span class="ns-badge ns-badge--sand"><span class="material-symbols-outlined">${meta.icon}</span>${esc(meta.label)}</span>`
+      statusBadge,
+      res.referralOnly ? '<span class="ns-badge place-flag"><span class="material-symbols-outlined">info</span>Referral only</span>' : '',
+      res.idRequired ? '<span class="ns-badge place-flag"><span class="material-symbols-outlined">person</span>ID needed</span>' : '',
+      ...cats.map(c => { const m = categoryMeta(c); return `<span class="ns-badge ns-badge--sand"><span class="material-symbols-outlined">${m.icon}</span>${esc(m.label)}</span>`; })
     ].join('');
-    // Stored status text can be stale ("Open · Closes 7 PM"); drop it when it contradicts the live check
-    const statusText = (!isOpen && /^\s*open/i.test(res.status || '')) ? '' : res.status;
-    const statusLine = [statusText, res.address].filter(Boolean).map(esc).join('<br>');
 
     const dist = formatMiles(res.distanceMiles);
+    const where = pinned ? res.address : 'Address kept private · call for help';
+    const src = (res.sources || [])[0];
+    const srcDate = src && src.asOf ? formatAsOf(src.asOf) : '';
+    const info = [
+      res.population ? `<p class="place-line"><span class="material-symbols-outlined">group</span><span><b>For:</b> ${esc(res.population)}</span></p>` : '',
+      `<p class="place-line"><span class="material-symbols-outlined">schedule</span><span class="${st.open === true ? 'text-leaf font-semibold' : ''}">${esc(st.text)}${res.hours && !/^(see spl|building hours|call)/i.test(res.hours) && !/^(24 hours daily|24\/7)$/i.test(res.hours.trim()) && !res.closedNote ? `<span class="place-hours">${esc(res.hours)}</span>` : ''}</span></p>`,
+      res.description ? `<p class="place-line"><span class="material-symbols-outlined">info</span><span>${esc(res.description)}</span></p>` : '',
+      res.checkNote && !res.closedNote ? `<p class="place-check"><span class="material-symbols-outlined">warning</span><span>${esc(res.checkNote)}. Call to confirm before you go.</span></p>` : ''
+    ].join('');
+
     card.innerHTML = `
       <div class="flex items-start justify-between gap-3">
         <div class="min-w-0">
           <h3 class="text-[18px] font-extrabold leading-snug tracking-tight">${esc(res.name)}</h3>
-          <p class="ns-card-sub mt-0.5 line-clamp-2">${[dist ? esc(dist) : '', statusLine].filter(Boolean).join(' · ')}</p>
+          <p class="ns-card-sub mt-0.5 line-clamp-2">${[dist ? esc(dist) : '', esc(where)].filter(Boolean).join(' · ')}</p>
         </div>
         <button type="button" class="ns-icon-btn ns-icon-btn--bare flex-shrink-0 -mr-2 -mt-1" onclick="toggleSavePlace('${jsArg(res.id)}', event)" aria-pressed="${saved}" aria-label="${saved ? 'Remove from saved' : 'Save this place'}">
           <span class="material-symbols-outlined ${saved ? 'ms-fill' : ''}">bookmark</span>
         </button>
       </div>
       <div class="flex flex-wrap gap-2 mt-3">${badges}</div>
+      <div class="place-info mt-3">${info}</div>
+      ${src ? `<p class="place-source">Source: ${src.url ? `<a href="${esc(src.url)}" target="_blank" rel="noopener">${esc(src.title)}</a>` : esc(src.title)}${srcDate ? ` · ${esc(srcDate)}` : ''}</p>` : ''}
       <div class="flex items-center gap-3 mt-4">
-        ${tel ? `<a href="tel:${esc(tel)}" class="ns-btn ns-btn--ghost !w-auto px-6 flex-shrink-0" aria-label="Call ${esc(res.name)}"><span class="material-symbols-outlined">call</span><span>Call</span></a>` : ''}
-        <button type="button" class="ns-btn ns-btn--primary flex-1" onclick="openTransitModal('${jsArg(res.name)}', '${jsArg(res.address)}', ${Number(res.lat)}, ${Number(res.lng)})">
+        ${tel ? `<a href="tel:${esc(tel)}" class="ns-btn ${pinned && !res.referralOnly ? 'ns-btn--ghost !w-auto px-6 flex-shrink-0' : 'ns-btn--primary flex-1'}" aria-label="Call ${esc(res.name)}"><span class="material-symbols-outlined">call</span><span>Call${pinned && !res.referralOnly ? '' : ' ' + esc(res.phone.split(/[;(]/)[0].trim())}</span></a>` : ''}
+        ${pinned && !res.referralOnly ? `<button type="button" class="ns-btn ns-btn--primary flex-1" onclick="openTransitModal('${jsArg(res.name)}', '${jsArg(res.address)}', ${Number(res.lat)}, ${Number(res.lng)})">
           <span>Directions</span><span class="material-symbols-outlined">keyboard_double_arrow_right</span>
-        </button>
+        </button>` : ''}
       </div>`;
+  }
+
+  function formatAsOf(v) {
+    const m = /^(\d{4})-(\d{2})$/.exec(String(v).split('|')[0].trim());
+    if (!m) return String(v);
+    return `${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][Number(m[2]) - 1]} ${m[1]}`;
   }
 
   function initLeafletCleanMap() {
@@ -1222,7 +873,7 @@
     if (userLocationMarker) map.removeLayer(userLocationMarker);
     if (userRadiusCircle) map.removeLayer(userRadiusCircle);
 
-    const radiusMeters = activeRadiusMiles * 1609.34;
+    const radiusMeters = effectiveRadiusMiles * 1609.34;
 
     userRadiusCircle = L.circle([latitude, longitude], {
       radius: radiusMeters,
@@ -1274,8 +925,9 @@
         // If user is outside Puget Sound / Seattle (>60 mi away), anchor to Seattle mock cluster
         if (dist > 60) {
           renderBlueDot(47.6062, -122.3321);
-        } else if (renderBlueDot(latitude, longitude) !== false) {
-          map.flyTo([latitude, longitude], 14, { animate: true });
+        } else if (renderBlueDot(latitude, longitude) !== false && userRadiusCircle) {
+          // Show the whole search circle (it may have widened to 10 or 25 mi)
+          map.fitBounds(userRadiusCircle.getBounds(), Object.assign({ animate: true }, mapFitPadding()));
         }
       },
       (err) => {
@@ -1359,6 +1011,8 @@
   // Helper: Dynamic Google Maps / Places API compatible "Open Now" evaluator
   function isPlaceOpenNow(place, targetDate = new Date()) {
     if (!place) return false;
+    if (place.closedNote) return false;
+    if (Array.isArray(place.categories)) return placeStatus(place, targetDate).open === true;
 
     // 1. Explicit closed flag (Google Places / Supabase / cached state)
     if (place.open_status === 'CLOSED_FOR_REST_OF_TODAY' || place.open_status === 'CLOSED') {
@@ -1452,18 +1106,9 @@
     restroom: 'shower showers restroom bathroom toilet hygiene laundry',
     wifi: 'wifi wi-fi internet library computer',
     charging: 'charge charging power outlet phone',
-    work: 'work job jobs gig gigs labor'
+    work: 'work job jobs gig gigs labor',
+    daycenter: 'day center drop-in daytime warm laundry lockers computer phone mail'
   };
-  // Extra searchable text per place from the verified list (/api/resources): full names
-  // like "(DESC)", descriptions and services the map's own copy leaves out
-  const searchExtra = {};
-  fetch('/api/resources').then(r => r.json()).then(data => {
-    (data.resources || []).forEach(r => {
-      searchExtra[r.id] = [r.name, r.status, r.description, r.hours, r.address].filter(Boolean).join(' ');
-    });
-    if (mapSearchQuery) applyCombinedFilters();
-  }).catch(() => {});
-
   const SEARCH_STOP_WORDS = ['near', 'me', 'nearby', 'a', 'an', 'the', 'for', 'in', 'to', 'i', 'need', 'find', 'where', 'is', 'can', 'get', 'some', 'place', 'places', 'open', 'now', 'today', 'tonight'];
   function searchWords() {
     return mapSearchQuery.toLowerCase().replace(/[^a-z0-9\s-]/g, ' ').split(/\s+/)
@@ -1471,8 +1116,9 @@
   }
   function matchesMapSearch(pin) {
     if (!mapSearchQuery) return true;
-    const hay = [pin.name, pin.category, pin.status, pin.details, pin.description, pin.address,
-      SEARCH_SYNONYMS[pin.category] || '', searchExtra[pin.id] || '']
+    const cats = Array.isArray(pin.categories) && pin.categories.length ? pin.categories : [pin.category];
+    const hay = [pin.name, pin.status, pin.details, pin.description, pin.address, pin.notes, pin.population, pin.hours,
+      (pin.tags || []).join(' ').replace(/_/g, ' '), ...cats.map(c => SEARCH_SYNONYMS[c] || c)]
       .join(' ').toLowerCase();
     const words = searchWords();
     if (!words.length) return true;
@@ -1537,7 +1183,7 @@
       const searching = !!mapSearchQuery;
 
       // Category Match
-      const matchesCategory = searching || activeSelectedCategories.includes('all') || activeSelectedCategories.includes(pin.category);
+      const matchesCategory = searching || activeSelectedCategories.includes('all') || placeInCategories(pin, activeSelectedCategories);
 
       // Verified Scope Match
       let matchesScope = true;
@@ -1548,7 +1194,7 @@
       // Dynamic "Open Now" Real-Time Hours Status Check
       let matchesOpenNow = true;
       if (isOpenNowFilterActive && !searching) {
-        matchesOpenNow = isPlaceOpenNow(pin);
+        matchesOpenNow = isPlaceOpenNow(pin) || (pin.hoursKnown === false && !pin.closedNote);
       }
 
       return matchesCategory && matchesScope && matchesOpenNow && matchesMapSearch(pin);
@@ -1557,13 +1203,39 @@
     // 2. Radius distance filtering:
     // In 'nearby' mode, enforce strict radius distance threshold.
     // In 'saved' mode, prioritize showing the user's bookmarked places while calculating their distance.
+    // If the person hasn't picked a distance, widen it until enough places show up.
+    const prevEffectiveRadius = effectiveRadiusMiles;
+    effectiveRadiusMiles = activeRadiusMiles;
+    let radiusPins = [];
+    if (activeMapMode !== 'saved') {
+      const pinned = baseMatchingPins.filter(hasPin);
+      radiusPins = filterPlacesByRadius(pinned, mapSearchQuery ? 500 : effectiveRadiusMiles);
+      if (!mapSearchQuery && !radiusChosenByUser) {
+        for (const wider of [10, 25]) {
+          if (radiusPins.length >= MIN_NEARBY_PLACES) break;
+          if (wider <= effectiveRadiusMiles) continue;
+          effectiveRadiusMiles = wider;
+          radiusPins = filterPlacesByRadius(pinned, wider);
+        }
+      }
+      if (userRadiusCircle && effectiveRadiusMiles !== prevEffectiveRadius) {
+        userRadiusCircle.setRadius(effectiveRadiusMiles * 1609.34);
+        if (map && typeof map.fitBounds === 'function') {
+          map.fitBounds(userRadiusCircle.getBounds(), Object.assign({ animate: true }, mapFitPadding()));
+        }
+      }
+    }
+
     const filteredPins = (activeMapMode === 'saved')
       ? baseMatchingPins.map(place => {
           const refCoords = getActiveReferenceCoords();
-          const dist = calculateDistanceMiles(refCoords.lat, refCoords.lng, place.lat, place.lng);
+          const dist = hasPin(place) ? calculateDistanceMiles(refCoords.lat, refCoords.lng, place.lat, place.lng) : NaN;
           return { ...place, distanceMiles: dist };
         })
-      : filterPlacesByRadius(baseMatchingPins, mapSearchQuery ? 500 : activeRadiusMiles);
+      : [
+          ...radiusPins,
+          ...baseMatchingPins.filter(p => !hasPin(p)).map(p => ({ ...p, distanceMiles: NaN }))
+        ];
 
     lastFilteredCount = filteredPins.length;
     currentFocusId = resolveFocusId(filteredPins);
@@ -1581,7 +1253,7 @@
   function resolveFocusId(items) {
     if (!items || !items.length) return null;
     if (focusedPlaceId && items.some(p => String(p.id) === String(focusedPlaceId))) return String(focusedPlaceId);
-    const nearest = items.reduce((best, p) => (best === null || p.distanceMiles < best.distanceMiles ? p : best), null);
+    const nearest = items.filter(hasPin).reduce((best, p) => (best === null || p.distanceMiles < best.distanceMiles ? p : best), null) || items[0];
     return nearest ? String(nearest.id) : null;
   }
 
@@ -1597,7 +1269,7 @@
 
     const savedIds = getSavedPlaceIds();
 
-    items.forEach(res => {
+    items.filter(hasPin).forEach(res => {
       const meta = categoryMeta(res.category);
       const isFocus = currentFocusId !== null && String(res.id) === currentFocusId;
       const isSaved = savedIds.includes(res.id);
@@ -1610,12 +1282,12 @@
           })
         : L.divIcon({
             className: 'custom-leaflet-pin ns-pin',
-            html: `<div class="rm-pin${isSaved ? ' rm-pin--saved' : ''}"><span class="material-symbols-outlined">${meta.icon}</span></div>`,
+            html: `<div class="rm-pin${isSaved ? ' rm-pin--saved' : ''}${placeStatus(res).open === false ? ' rm-pin--closed' : ''}"><span class="material-symbols-outlined">${meta.icon}</span></div>`,
             iconSize: [36, 36],
             iconAnchor: [18, 18]
           });
 
-      const marker = L.marker([res.lat, res.lng], {
+      const marker = L.marker([res.pinLat || res.lat, res.pinLng || res.lng], {
         icon: customIcon,
         title: res.name,
         keyboard: true,
@@ -1686,9 +1358,9 @@
       }
     };
 
-    const currentData = getResourcesData();
-    currentData.unshift(newRes);
-    localStorage.setItem(RESOURCE_STORAGE_KEY, JSON.stringify(currentData));
+    const added = getCustomPlaces();
+    added.unshift(newRes);
+    saveCustomPlaces(added);
 
     closeAddResourceModal();
     const form = document.getElementById('new-resource-form');
@@ -1701,6 +1373,8 @@
   // RADIUS MODIFIER LOGIC
   function setSearchRadius(miles) {
     activeRadiusMiles = miles;
+    effectiveRadiusMiles = miles;
+    radiusChosenByUser = true;
     
     [5, 10, 25].forEach(m => {
       const btn = document.getElementById(`radius-btn-${m}`);
@@ -1919,7 +1593,9 @@
         ? `Results for “${mapSearchQuery}”`
         : activeMapMode === 'saved'
           ? 'Saved places'
-          : `Places within ${activeRadiusMiles} mi`;
+          : effectiveRadiusMiles > activeRadiusMiles
+            ? `Places within ${effectiveRadiusMiles} mi · few closer than ${activeRadiusMiles}`
+            : `Places within ${effectiveRadiusMiles} mi`;
     }
 
     if (!items || items.length === 0) {
@@ -1936,27 +1612,29 @@
     const refCoords = getActiveReferenceCoords();
 
     const sorted = [...items].map(pin => {
-      const dist = pin.distanceMiles !== undefined ? pin.distanceMiles : calculateDistanceMiles(refCoords.lat, refCoords.lng, pin.lat, pin.lng);
+      const dist = pin.distanceMiles !== undefined ? pin.distanceMiles : (hasPin(pin) ? calculateDistanceMiles(refCoords.lat, refCoords.lng, pin.lat, pin.lng) : NaN);
       return { ...pin, distanceMiles: dist };
-    }).sort((a, b) => a.distanceMiles - b.distanceMiles);
+    }).sort((a, b) => (Number.isFinite(a.distanceMiles) ? a.distanceMiles : 1e9) - (Number.isFinite(b.distanceMiles) ? b.distanceMiles : 1e9));
 
     const focusRes = sorted.find(r => String(r.id) === currentFocusId) || sorted[0];
     renderFocusCard(focusRes);
 
     listEl.innerHTML = sorted.map((res) => {
       const meta = categoryMeta(res.category);
-      const isOpen = isPlaceOpenNow(res);
+      const st = placeStatus(res);
       const isSaved = isPlaceSaved(res.id);
+      const who = res.population && !/^(all|public|anyone)\b/i.test(res.population) ? res.population : '';
       const sub = [
-        esc(formatMiles(res.distanceMiles)),
-        isOpen ? '<span class="text-leaf font-semibold">Open now</span>' : 'Closed now',
-        res.verifiedOnly ? 'Verified' : ''
-      ].filter(Boolean).join(', ');
+        hasPin(res) ? esc(formatMiles(res.distanceMiles)) : 'Call for location',
+        st.open === true ? '<span class="text-leaf font-semibold">Open now</span>' : st.open === null ? 'Call first' : esc(st.text || 'Closed'),
+        res.referralOnly ? 'Referral only' : '',
+        who ? esc(who.length > 32 ? who.slice(0, 30) + '…' : who) : ''
+      ].filter(Boolean).join(' · ');
 
       return `
         <div class="ns-row place-card">
           <button type="button" class="flex items-center gap-4 flex-1 min-w-0 text-left" onclick="selectAndFocusPlace('${jsArg(res.id)}', ${Number(res.lat)}, ${Number(res.lng)})" aria-label="Show ${esc(res.name)} on the map">
-            <span class="ns-tile ns-tile--plain"><span class="material-symbols-outlined">${meta.icon}</span></span>
+            <span class="ns-tile"><span class="material-symbols-outlined">${meta.icon}</span></span>
             <span class="ns-row__body">
               <span class="ns-row__title block truncate">${esc(res.name)}</span>
               <span class="ns-row__sub block">${sub}</span>
@@ -1979,11 +1657,19 @@
       if (!resourceId || !map) return false;
 
       const resources = getResourcesData();
-      const resource = resources.find(
-        r => String(r.id) === String(resourceId)
-      );
+      const wanted = String(resolvePlaceId(resourceId));
+      const resource = resources.find(r => String(r.id) === wanted);
 
       if (!resource) return false;
+
+      // No map pin (private address): open its card in the list
+      if (!hasPin(resource)) {
+        revealPlace(resource);
+        focusedPlaceId = wanted;
+        applyCombinedFilters();
+        if (typeof snapPlacesSheet === 'function') snapPlacesSheet('half');
+        return true;
+      }
 
       const refCoords = getActiveReferenceCoords();
       const distanceMiles = calculateDistanceMiles(
@@ -1995,7 +1681,7 @@
 
       // Expand only enough to make this resource eligible/visible.
       // This happens once when arriving from the chatbot.
-      if (Number.isFinite(distanceMiles) && distanceMiles > activeRadiusMiles) {
+      if (Number.isFinite(distanceMiles) && distanceMiles > effectiveRadiusMiles) {
         if (distanceMiles <= 10) {
           activeRadiusMiles = 10;
         } else if (distanceMiles <= 25) {
@@ -2010,13 +1696,13 @@
       }
 
       let targetMarker = mapMarkers.find(
-        m => String(m.resId) === String(resourceId)
+        m => String(m.resId) === wanted
       );
 
       // If a filter hides the linked place, relax just that filter once
       if (!targetMarker) {
         revealPlace(resource);
-        targetMarker = mapMarkers.find(m => String(m.resId) === String(resourceId));
+        targetMarker = mapMarkers.find(m => String(m.resId) === wanted);
       }
 
       if (!targetMarker || !targetMarker.marker) {
@@ -2053,13 +1739,13 @@
     if (activeMapMode === 'saved' && !isPlaceSaved(resource.id)) {
       switchMapMode('nearby');
     }
-    if (!activeSelectedCategories.includes('all') && !activeSelectedCategories.includes(resource.category)) {
+    if (!activeSelectedCategories.includes('all') && !placeInCategories(resource, activeSelectedCategories)) {
       toggleCategoryFilter('all');
     }
     if (activeScopeFilter === 'verified' && resource.verifiedOnly !== true) {
       setScopeFilter('everyone');
     }
-    if (isOpenNowFilterActive && !isPlaceOpenNow(resource)) {
+    if (isOpenNowFilterActive && !isPlaceOpenNow(resource) && !(resource.hoursKnown === false && !resource.closedNote)) {
       toggleOpenNowFilter();
     }
   }
@@ -2076,6 +1762,10 @@
 
   function selectAndFocusPlace(resId, lat, lng, autoOpenPopup = false) {
     if (!map) return;
+    if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lng)) || lat === null) {
+      focusPlaceInSheet(resId);
+      return;
+    }
 
     window.northstarSelectedMapResourceId = String(resId);
     focusedPlaceId = String(resId);

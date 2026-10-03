@@ -65,6 +65,15 @@
         "value": "nsbounceup",
         "createdAt": "2026-10-02T04:35:02.370Z",
         "reason": "user asked for an animated arrow that moves to guide taps; this is a smooth up-down ease-in-out loop, not elastic easing"
+      },
+      {
+        "rule": "pulsing-dot",
+        "value": "*",
+        "files": [
+          "helper-dashboard.html"
+        ],
+        "createdAt": "2026-10-03T03:31:50.137Z",
+        "reason": "Claude: no pulsing dot in this page's markup; the match is the shared .typing-dot Companion typing indicator (css/app.css), animated only while a real reply is in flight, same exception already recorded for companion/seeker-dashboard/progress"
       }
     ]
   }

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 110" fill="none" stroke="#111111" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <!-- open flaps -->
+  <path d="M34 42 L18 26 L56 16 L70 34 Z" fill="#FFD43B"/>
+  <path d="M106 42 L122 26 L84 16 L70 34 Z" fill="#FFD43B"/>
+  <!-- box -->
+  <path d="M34 42 L70 34 L106 42 L106 92 L70 102 L34 92 Z" fill="#FFFFFF"/>
+  <path d="M34 42 L70 52 L106 42"/>
+  <path d="M70 52 V 102"/>
+  <path d="M46 74 H 58" stroke-width="2.6"/>
+  <!-- sparkles -->
+  <path d="M12 58 Q12 66 20 66 Q12 66 12 74 Q12 66 4 66 Q12 66 12 58 Z" fill="#111111" stroke-width="2"/>
+  <path d="M126 54 Q126 62 134 62 Q126 62 126 70 Q126 62 118 62 Q126 62 126 54 Z" fill="#111111" stroke-width="2"/>
+  <path d="M70 2 Q70 8 76 8 Q70 8 70 14 Q70 8 64 8 Q70 8 70 2 Z" fill="#111111" stroke-width="1.6"/>
+</svg>

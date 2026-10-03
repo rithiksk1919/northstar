@@ -2,7 +2,7 @@
 <html class="light" lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=0.9, viewport-fit=cover">
 <meta name="theme-color" content="#FFFFFF">
 <title>Progress · Northstar</title>
 <link rel="icon" href="favicon.png">
@@ -88,6 +88,17 @@
                 </button>
             </div>
 
+            <!-- Your history (helpers only; js/volunteer-history.js fills it) -->
+            <section id="volunteer-history-section" class="hidden">
+                <div class="ns-section-head" style="display:flex;align-items:center;justify-content:space-between;">
+                    <h2>Your history</h2>
+                    <button id="history-see-all" type="button" class="ns-link hidden" style="font-size:13px;" onclick="openHistorySheet()">See all</button>
+                </div>
+                <div id="volunteer-history-recent">
+                    <div class="ns-empty"><p class="ns-empty__title">Loading your history…</p></div>
+                </div>
+            </section>
+
             <!-- First steps (progress list, real milestones from js/northstar.js) -->
             <section id="first-steps">
                 <div class="ns-section-head">
@@ -105,6 +116,7 @@
 </div>
 
 <script src="js/northstar.js"></script>
+<script src="js/volunteer-history.js"></script>
 <script>
 (function () {
     const esc = s => (window.nsEscape ? nsEscape(s) : String(s == null ? '' : s));

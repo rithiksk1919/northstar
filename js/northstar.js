@@ -386,30 +386,91 @@ function renderRoleHeaderToggle() {
   }
 }
 
-function switchUserRole(role) {
+// ---- Switching between Find help and Give help ------------------------------------
+// A short full-screen splash for each direction, then that side's Home.
+//   Give help: yellow fills the screen from the tap, a hand rises and a heart lifts out of it.
+//   Find help: the dark Northstar color fills the screen, a path draws up to the North Star.
+const ROLE_SPLASH = {
+  volunteer: {
+    tone: 'give',
+    title: 'Giving help',
+    sub: 'Thanks for showing up for your neighbors.',
+    art: `<svg viewBox="0 0 200 200" fill="none" stroke="#111" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <g class="rs-heart"><path d="M100 98 C 84 86 66 74 66 58 C 66 47 75 40 84 40 C 91 40 96 44 100 50 C 104 44 109 40 116 40 C 125 40 134 47 134 58 C 134 74 116 86 100 98 Z" fill="#fff"/></g>
+      <g class="rs-hand"><path d="M28 138 H 50 L 78 128 H 108 C 118 128 118 142 108 142 L 142 126 C 152 121 160 132 152 139 L 118 166 H 28 Z" fill="#fff"/><path d="M108 142 H 86"/></g>
+      <path class="rs-spark rs-spark--1" d="M156 52 Q156 62 166 62 Q156 62 156 72 Q156 62 146 62 Q156 62 156 52 Z" fill="#111" stroke-width="3"/>
+      <path class="rs-spark rs-spark--2" d="M42 70 Q42 78 50 78 Q42 78 42 86 Q42 78 34 78 Q42 78 42 70 Z" fill="#111" stroke-width="3"/>
+      <path class="rs-spark rs-spark--3" d="M150 96 Q150 101 155 101 Q150 101 150 106 Q150 101 145 101 Q150 101 150 96 Z" fill="#111" stroke-width="2"/>
+    </svg>`
+  },
+  seeker: {
+    tone: 'find',
+    title: 'Finding help',
+    sub: 'Beds, meals and gigs near you.',
+    art: `<svg viewBox="0 0 200 200" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path class="rs-path" d="M60 182 C 60 150 120 150 112 118 C 106 96 96 92 100 74" stroke="#FFD43B" stroke-width="5" stroke-dasharray="2 12"/>
+      <circle class="rs-pin" cx="60" cy="182" r="7" fill="#fff"/>
+      <circle class="rs-glow" cx="100" cy="52" r="34" stroke="#FFD43B" stroke-width="3"/>
+      <path class="rs-star" d="M100 14 C 102 34 106 44 112 48 C 118 54 128 56 146 58 C 128 60 118 62 112 68 C 106 72 102 82 100 102 C 98 82 94 72 88 68 C 82 62 72 60 54 58 C 72 56 82 54 88 48 C 94 44 98 34 100 14 Z" fill="#FFD43B"/>
+      <circle class="rs-twinkle rs-twinkle--1" cx="40" cy="40" r="3" fill="#fff"/>
+      <circle class="rs-twinkle rs-twinkle--2" cx="164" cy="104" r="2.5" fill="#fff"/>
+      <circle class="rs-twinkle rs-twinkle--3" cx="158" cy="26" r="2" fill="#fff"/>
+    </svg>`
+  }
+};
+
+function playRoleSplash(role, origin) {
+  const cfg = ROLE_SPLASH[role];
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  return new Promise(resolve => {
+    if (!cfg) { resolve(); return; }
+    document.querySelectorAll('.ns-role-splash').forEach(el => el.remove());
+    const host = document.querySelector('.app-frame') || document.body;
+    const box = host.getBoundingClientRect();
+    const x = origin && Number.isFinite(origin.x) ? origin.x - box.left : box.width / 2;
+    const y = origin && Number.isFinite(origin.y) ? origin.y - box.top : box.height / 2;
+    const el = document.createElement('div');
+    el.className = `ns-role-splash ns-role-splash--${cfg.tone}${reduce ? ' is-reduced' : ''}`;
+    el.setAttribute('role', 'status');
+    el.setAttribute('aria-live', 'polite');
+    el.style.setProperty('--rs-x', `${x}px`);
+    el.style.setProperty('--rs-y', `${y}px`);
+    el.innerHTML = `
+      <div class="ns-role-splash__art">${cfg.art}</div>
+      <p class="ns-role-splash__title">${cfg.title}</p>
+      <p class="ns-role-splash__sub">${cfg.sub}</p>`;
+    host.appendChild(el);
+    setTimeout(resolve, reduce ? 450 : 1650);
+  });
+}
+window.playRoleSplash = playRoleSplash;
+
+let _roleSwitching = false;
+async function switchUserRole(role, event) {
+  if (role !== 'seeker' && role !== 'volunteer') return;
+  if (_roleSwitching) return;
+  if (getRole() === role) {
+    if (typeof closeModal === 'function') closeModal('settings-modal');
+    return;
+  }
+  _roleSwitching = true;
+  const origin = event && Number.isFinite(event.clientX) && event.clientX > 0 ? { x: event.clientX, y: event.clientY } : null;
+  if (typeof closeModal === 'function') closeModal('settings-modal');
+
+  // Splash first: changing the role can redirect pages that belong to the other side
+  await playRoleSplash(role, origin);
+
   window.userRole = role;
   window.activeTab = role === 'volunteer' ? 'v_dashboard' : 'dashboard';
   setRole(role);
-  renderBottomNav();
-  showNotification(`Switched mode to: ${role === 'seeker' ? 'Seeker (I Need Help)' : 'Volunteer (I Want to Help)'}`, 'info');
 
-  const currentPath = window.location.pathname.split('/').pop() || 'index.html';
-  if (role === 'volunteer') {
-    if (currentPath !== 'helper-dashboard.html') {
-      if (typeof navigateToPageInstant === 'function') {
-        navigateToPageInstant('helper-dashboard.html');
-      } else {
-        window.location.href = 'helper-dashboard.html';
-      }
-    }
-  } else if (role === 'seeker' && (currentPath === 'helper-dashboard.html' || currentPath === 'donate.html')) {
-    if (typeof navigateToPageInstant === 'function') {
-      navigateToPageInstant('seeker-dashboard.html');
-    } else {
-      window.location.href = 'seeker-dashboard.html';
-    }
-  }
+  // Land on that side's Home (the splash stays up until the page changes)
+  const home = role === 'volunteer' ? 'helper-dashboard.html' : 'seeker-dashboard.html';
+  if (typeof nsGo === 'function') nsGo(home, { replace: true });
+  else window.location.replace(home);
+  setTimeout(() => { _roleSwitching = false; }, 4000);
 }
+window.switchUserRole = switchUserRole;
 
 function renderDynamicNav() {
   renderBottomNav();
@@ -772,8 +833,8 @@ window.openSettingsModal = function () {
         <div class="mt-6">
           <span class="ns-label" id="settings-role-label">I’m using Northstar to</span>
           <div class="ns-segment" role="group" aria-labelledby="settings-role-label">
-            <button type="button" id="settings-role-seeker" onclick="switchUserRole('seeker'); setTimeout(() => openSettingsModal(), 10);">Find help</button>
-            <button type="button" id="settings-role-volunteer" onclick="switchUserRole('volunteer'); setTimeout(() => openSettingsModal(), 10);">Give help</button>
+            <button type="button" id="settings-role-seeker" onclick="switchUserRole('seeker', event)">Find help</button>
+            <button type="button" id="settings-role-volunteer" onclick="switchUserRole('volunteer', event)">Give help</button>
           </div>
           <p class="ns-hint">Switching changes your home screen and tabs.</p>
         </div>
@@ -1277,6 +1338,7 @@ function renderBottomNav() {
 
   const userRole = getRole();
   const isVolunteer = userRole === 'volunteer';
+  document.documentElement.classList.toggle('ns-volunteer', isVolunteer);
 
   const isDashboard = path.includes('dashboard') || path.includes('call-shelter');
   const isResume = path.includes('resume');
@@ -1395,6 +1457,7 @@ async function renderVolunteerFoodDonationsQueue() {
 
   const emptyStateHTML = `
     <div class="ns-empty">
+      <img class="ns-empty__art" src="assets/illustrations/box.svg" alt="">
       <p class="ns-empty__title">No pickups waiting</p>
       <p class="ns-empty__sub">When someone posts a food donation, it shows up here for you to claim.</p>
     </div>
@@ -1420,7 +1483,7 @@ async function renderVolunteerFoodDonationsQueue() {
       const meta = [bags ? `${bags} ${bags === 1 ? 'bag' : 'bags'}` : '', nsEscape(d.timeWindow || '')].filter(Boolean).join(' · ');
       return `
         <div class="ns-row">
-          <span class="ns-tile"><span class="material-symbols-outlined">local_shipping</span></span>
+          <span class="ns-art-tile"><img src="assets/illustrations/icons/deliver.svg" alt=""></span>
           <div class="ns-row__body">
             <p class="ns-row__title truncate">${itemLabel}</p>
             ${route ? `<p class="ns-row__sub truncate">${route}</p>` : ''}
@@ -2191,16 +2254,7 @@ function calculateNorthStarDistanceMiles(lat1, lon1, lat2, lon2) {
 }
 
 function getNorthStarCachedResources() {
-  try {
-    const raw = localStorage.getItem('cached_resources_v2_live_hours');
-    if (!raw) return [];
-
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (err) {
-    console.warn('[NorthStar AI] Could not read map resources:', err);
-    return [];
-  }
+  return Array.isArray(window.NS_RESOURCES) ? window.NS_RESOURCES : [];
 }
 
 // Verified places from the server (same list as the Map), fetched once when needed
@@ -2279,10 +2333,14 @@ async function getNorthStarLocationResourceContext(message) {
         const userLat = position.coords.latitude;
         const userLng = position.coords.longitude;
 
+        const cats = r => (Array.isArray(r.categories) && r.categories.length ? r.categories : [r.category]);
+        const statusOf = r => (window.nsPlaceStatus ? window.nsPlaceStatus(r) : { open: null, text: r.status || '' });
         const matching = resources
           .filter(resource =>
             resource &&
-            resource.category === category &&
+            cats(resource).includes(category) &&
+            !resource.referralOnly &&
+            !resource.closedNote &&
             typeof resource.lat === 'number' &&
             typeof resource.lng === 'number'
           )
@@ -2307,7 +2365,26 @@ async function getNorthStarLocationResourceContext(message) {
           return;
         }
 
-        const nearest = matching[0];
+        // Close by (2 mi) first: places mainly for this, open now, then "call first"; else the nearest
+        const near = matching.filter(m => m.distance_miles <= 2);
+        const main = near.filter(m => m.resource.category === category);
+        let nearest = null;
+        for (const list of [main, near]) {
+          nearest = list.find(m => statusOf(m.resource).open === true) || list.find(m => statusOf(m.resource).open !== false);
+          if (nearest) break;
+        }
+        nearest = nearest || matching[0];
+        const describe = r => ({
+          id: r.id || '',
+          name: r.name || '',
+          address: r.address || '',
+          status: statusOf(r).text,
+          hours: r.hours || '',
+          who_it_is_for: r.population || '',
+          id_required: r.idRequired === true,
+          phone: r.phone || '',
+          notes: r.description || ''
+        });
 
         const resolvedResource = {
           resource_lookup_requested: true,
@@ -2321,14 +2398,19 @@ async function getNorthStarLocationResourceContext(message) {
             name: nearest.resource.name || '',
             category: nearest.resource.category || '',
             address: nearest.resource.address || '',
-            status: nearest.resource.status || '',
-            statusDetail: nearest.resource.statusDetail || '',
-            details: nearest.resource.details || '',
+            status: statusOf(nearest.resource).text,
+            hours: nearest.resource.hours || '',
+            who_it_is_for: nearest.resource.population || '',
+            id_required: nearest.resource.idRequired === true,
+            phone: nearest.resource.phone || '',
+            details: nearest.resource.description || '',
             verifiedOnly: nearest.resource.verifiedOnly === true,
             lat: nearest.resource.lat,
             lng: nearest.resource.lng,
             distance_miles: Number(nearest.distance_miles.toFixed(2))
-          }
+          },
+          // a few more close by, so Companion can mention options for other groups (women, youth...)
+          other_nearby: matching.filter(m => m !== nearest).slice(0, 3).map(m => ({ ...describe(m.resource), distance_miles: Number(m.distance_miles.toFixed(2)) }))
         };
 
         window.northstarLastVerifiedResource = resolvedResource.nearest_resource;
