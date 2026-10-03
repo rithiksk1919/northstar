@@ -110,7 +110,7 @@ nav a:active,
 .bg-white .ripple-effect,
 .bg-slate-50 .ripple-effect,
 .bg-amber-400 .ripple-effect,
-.bg-\\[\\#FFE855\\] .ripple-effect {
+.bg-\[\#FFE855\] .ripple-effect {
   background-color: rgba(0, 0, 0, 0.12);
 }
 
@@ -1309,6 +1309,7 @@ html.dark .card-description {
   height: auto !important;
   max-height: none !important;
   -webkit-line-clamp: unset !important;
+  line-clamp: unset !important;
   margin-left: 0 !important;
   padding-left: 0 !important;
 }
